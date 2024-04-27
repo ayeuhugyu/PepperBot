@@ -1,0 +1,103 @@
+import * as action from "../lib/discord_action.js";
+import {
+    Command,
+    CommandData,
+    SubCommand,
+    SubCommandData,
+} from "../lib/types/commands.js";
+import { Collection, PermissionFlagsBits } from "discord.js";
+import fs from "fs";
+import * as log from "../lib/log.js";
+
+const configNonDefault = await import("../../config.json", {
+    assert: { type: "json" },
+});
+const config = configNonDefault.default;
+
+const data = new CommandData();
+data.setName("");
+data.setDescription("");
+data.setPermissions([]);
+data.setPermissionsReadable("");
+data.setWhitelist([]);
+data.setCanRunFromBot(true);
+data.setDMPermission(true);
+data.setAliases();
+data.addStringOption((option) =>
+    option.setName("").setDescription("").setRequired(true)
+);
+const command = new Command(
+    data,
+    async function getArguments(message) {
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        args.set(
+            "ARGUMENT",
+            message.content
+                .slice(config.generic.prefix.length + commandLength)
+                .trim()
+        );
+        return args;
+    },
+    async function execute(message, args, fromInteraction) {},
+    [] // subcommands
+);
+
+export default command;
+
+/*
+example subcommand:
+const subcommand1data = new CommandData();
+subcommand1data.setName("");
+subcommand1data.setDescription("");
+subcommand1data.setPermissions([]);
+subcommand1data.setPermissionsReadable("");
+subcommand1data.setWhitelist([]);
+subcommand1data.setCanRunFromBot(true);
+subcommand1data.addStringOption((option) =>
+    option.setName("").setDescription("").setRequired(true)
+);
+
+const subcommand1 = new SubCommand(
+    subcommand1data,
+    async function getArguments(message) {
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        args.set(
+            "ARGUMENT",
+                message.content
+                .slice(config.generic.prefix.length + commandLength)
+                .split(" ")[0]
+                .trim()
+        );
+        return args;
+    },
+    async function execute(message, args, fromInteraction) {}
+);
+
+command.addSubCommand(subcommand1)
+
+additional notes:
+subcommands do not (as of now) support aliases, only the main command does
+subcommands do not (as of now) support additional subcommands, only the main command does
+subcommands need to have their own argument in the getArgs function.
+if you're going to use subcommands, your getArgs function in the main command should include somewhere:
+        args.set(
+            "_SUBCOMMAND",
+            message.content.split(" ")[1].trim()
+        );
+or similiar
+you also need to have the following in your main data:
+data.addStringOption((option) =>
+    option
+        .setName("subcommand")
+        .setDescription("subcommand to run")
+        .setRequired(false)
+        .addChoices([
+            {name: "subcommandname", value: "subcommandname"},
+        ])
+);
+but obviously choices would have all of your subcommands
+this just allows for the use of subcommands from slash commands
+
+*/

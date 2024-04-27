@@ -1,0 +1,151 @@
+import { REST, Routes } from "discord.js";
+import { client } from "./bot.js";
+import * as log from "./lib/log.js";
+import fs from "fs";
+
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
+
+async function getCommands() {
+    const commandFiles = fs
+        .readdirSync("src/commands/")
+        .filter((file) => file.endsWith(".js"));
+    let commands = [];
+    for (const file of commandFiles) {
+        const filePath = `./commands/${file}`;
+        import(filePath)
+            .then((command) => {
+                const data = command.default.data.toJSON();
+                if (!(data.whitelist && data.whitelist.length > 0)) {
+                    commands.push(data);
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    }
+    return commands;
+}
+
+const commands = await getCommands();
+
+// Construct and prepare an instance of the REST module
+const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+
+// and deploy your commands!
+async function deployToGuild(guild) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!guild.id) {
+                guild = { name: "idConvertedGuild", id: guild };
+            }
+            log.debug(
+                `refreshing ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})`
+            );
+            const data = await rest.put(
+                Routes.applicationGuildCommands(client.user.id, guild.id),
+                { body: commands }
+            );
+            log.debug(
+                `reloaded ${data.length} application (/) commands. for guild ${guild.name} (${guild.id})`
+            );
+            resolve();
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+async function undeployFromGuild(guild) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!guild.id) {
+                guild = { name: "idConvertedGuild", id: guild };
+            }
+            log.debug(
+                `deleting ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`
+            );
+            const data = await rest.put(
+                Routes.applicationGuildCommands(client.user.id, guild.id),
+                { body: [] }
+            );
+            log.debug(
+                `deleted ${data.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`
+            );
+            resolve();
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+async function register(g) {
+    try {
+        if (g === "global") {
+            const data = await rest.put(
+                Routes.applicationCommands(client.user.id),
+                {
+                    body: commands,
+                }
+            );
+            return;
+        }
+        if (g) {
+            await deployToGuild(g);
+            return;
+        }
+        await Promise.all(
+            client.guilds.cache.map(async (guild) => {
+                await deployToGuild(guild);
+            })
+        );
+        /*
+        const data = await rest.put(
+            Routes.applicationCommands(client.user.id),
+            {
+                body: commands,
+            }
+        );*/
+        return;
+    } catch (error) {
+        log.error(error);
+    }
+}
+
+async function unregister(g) {
+    try {
+        if (g === "global") {
+            const data = await rest.put(
+                Routes.applicationCommands(client.user.id),
+                {
+                    body: [],
+                }
+            );
+            return;
+        }
+        if (g) {
+            await undeployFromGuild(g);
+            return;
+        }
+        if (g === "global") {
+            const data = await rest.put(
+                Routes.applicationCommands(client.user.id),
+                {
+                    body: [],
+                }
+            );
+            return;
+        }
+        await Promise.all(
+            client.guilds.cache.map(async (guild) => {
+                await undeployFromGuild(guild);
+            })
+        );
+
+        return;
+    } catch (error) {
+        console.error(error);
+    }
+}
+export { register, unregister };
