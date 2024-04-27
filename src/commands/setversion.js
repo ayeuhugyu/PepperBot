@@ -3,13 +3,16 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
+const configNonDefault = await import("../../config.json", {
+    assert: { type: "json" },
+});
+const config = configNonDefault.default;
 
 const data = new CommandData();
 data.setName("setversion");
 data.setDescription("change bot version");
 data.setPermissions([]);
+data.setAliases(["version", "setv", "vset"]);
 data.setPermissionsReadable("");
 data.setWhitelist(["440163494529073152"]);
 data.setCanRunFromBot(true);
