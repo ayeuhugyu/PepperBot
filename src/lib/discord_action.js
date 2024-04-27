@@ -168,10 +168,3 @@ export async function editMessage(message, content) {
         log.error(err);
     }
 }
-
-export async function notifyMe(...message) {
-    sendMessage(
-        await client.channels.fetch(config.lib.notification_channel),
-        `<@440163494529073152> You have: Notification: ${message}`
-    );
-}

@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
 import * as log from "./lib/log.js";
+import util from "util";
 import prettyBytes from "pretty-bytes";
 import fs from "fs";
 
@@ -67,12 +68,19 @@ client.on(Events.ClientReady, async () => {
     );
 });
 
+await init();
+
+const channel = await client.channels.fetch(config.lib.notification_channel);
+
 process.on("uncaughtException", (err, origin) => {
     log.fatal(err);
+    channel.send(
+        `<@440163494529073152> uncaught exception: \n\`\`\`${util.inspect(
+            err
+        )}\`\`\``
+    );
 });
 
 process.on("exit", () => {
     log.info("exiting pepperbot");
 });
-
-init();
