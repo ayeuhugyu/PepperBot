@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import fs from "fs";
-import request from "request";
 import statistics from "./statistics.js";
 
 const configNonDefault = await import("../../config.json", {
@@ -76,24 +75,14 @@ async function download(url, filename) {
             .replaceAll("-", "_")
             .replaceAll("/", "_")
             .replaceAll("\\", "_");
-        request
-            .get(url)
-            .on("error", (err) => {
-                log.error(err);
-                reject(err);
-            })
-            .pipe(
-                fs
-                    .createWriteStream(
-                        `${config.paths.gptdownloads}/${fixedFileName}`
-                    )
-                    .on("finish", () => {
-                        resolve(true);
-                    })
-                    .on("error", (err) => {
-                        reject(err);
-                    })
+        fetch(url).then((res) => {
+            const ws = fs.createWriteStream(
+                `${config.paths.soundboard}/${fixedFileName}`
             );
+            stream.Readable.fromWeb(res.body).pipe(ws);
+            ws.on("finish", () => resolve(true));
+            ws.on("error", (err) => reject(err));
+        });
     });
 }
 
