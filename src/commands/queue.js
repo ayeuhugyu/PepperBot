@@ -321,7 +321,7 @@ data.addStringOption((option) =>
         .setDescription("the subcommand to run")
         .setRequired(false)
         .addChoices(
-            { name: "add", value: "queue" },
+            { name: "add", value: "add" },
             { name: "skip", value: "skip" },
             { name: "clear", value: "clear" },
             { name: "play", value: "play" }
