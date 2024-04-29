@@ -27,9 +27,8 @@ export const client = new Client({
 async function init() {
     log.debug("initializing bot...");
     log.debug("logging into discord...");
-
     try {
-        await client.login(process.env["DISCORD_TOKEN"]);
+        await client.login(process.env.DISCORD_TOKEN);
     } catch (err) {
         log.error("failed to login into discord. wifi down? token invalid?");
         log.error(err);

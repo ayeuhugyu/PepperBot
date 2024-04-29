@@ -1,3 +1,4 @@
+import * as log from "../lib/log.js";
 import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
@@ -20,21 +21,19 @@ async function getCommands() {
     let commands = {};
     for (const file of commandFiles) {
         const filePath = `./${file}`;
-        import(filePath)
-            .then((command) => {
-                if (
-                    command.default.data.aliases &&
-                    command.default.data.aliases.length > 0
-                ) {
-                    command.default.data.aliases.forEach((alias) => {
-                        commands[alias] = command.default.data;
-                    });
-                }
-                commands[command.default.data.name] = command.default.data;
-            })
-            .catch((err) => {
-                console.error(err);
+        try {
+        const command = await import(filePath);
+        if (
+            command.default.data.aliases &&
+            command.default.data.aliases.length > 0
+        ) {
+            command.default.data.aliases.forEach((alias) => {
+                commands[alias] = command.default.data;
             });
+        }
+        commands[command.default.data.name] = command.default.data; } catch (err) {
+            log.error(err)
+        }
     }
     return commands;
 }

@@ -4,3 +4,4 @@ resources/
 logs/
 package-lock.json
 src.zip
+testUtils/
