@@ -21,19 +21,21 @@ async function getCommands() {
     let commands = {};
     for (const file of commandFiles) {
         const filePath = `./${file}`;
-        try {
-        const command = await import(filePath);
-        if (
-            command.default.data.aliases &&
-            command.default.data.aliases.length > 0
-        ) {
-            command.default.data.aliases.forEach((alias) => {
-                commands[alias] = command.default.data;
+        import(filePath)
+            .then((command) => {
+                if (
+                    command.default.data.aliases &&
+                    command.default.data.aliases.length > 0
+                ) {
+                    command.default.data.aliases.forEach((alias) => {
+                        commands[alias] = command.default.data;
+                    });
+                }
+                commands[command.default.data.name] = command.default.data;
+            })
+            .catch((err) => {
+                console.error(err);
             });
-        }
-        commands[command.default.data.name] = command.default.data; } catch (err) {
-            log.error(err)
-        }
     }
     return commands;
 }

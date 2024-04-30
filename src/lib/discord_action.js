@@ -95,7 +95,9 @@ export async function reply(message, content) {
     let sent;
     try {
         const msg = await fixMsg(content);
-        sent = await message.reply(msg).catch((err) => {});
+        sent = await message.reply(msg).catch((err) => {
+            log.error(err);
+        });
         if (!sent && message instanceof CommandInteraction) {
             sent = await message.followUp(msg).catch(() => {});
             if (!sent) {

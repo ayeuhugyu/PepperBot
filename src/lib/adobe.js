@@ -17,24 +17,15 @@ export function search({ query, limit, creatorId, quality }) {
 export async function cleanupSearchResults(searchResults) {
     const json = await searchResults.json();
     const files = json.files;
-    let fileData = {};
+    let fileData = [];
     files.forEach((file) => {
-        fileData[file.id] = {
+        fileData.push({
             id: file.id,
             title: file.title,
             creatorId: file.creator_id,
             url: file.thumbnail_url,
-        };
+            pageUrl: `https://stock.adobe.com/de/${file.id}`,
+        });
     });
     return fileData;
 }
-console.log(
-    await cleanupSearchResults(
-        await search({
-            query: "hell",
-            limit: 5,
-            quality: 240,
-            creatorId: 53815,
-        })
-    )
-);
