@@ -30,12 +30,6 @@ data.addStringOption((option) =>
         .setDescription("what to search for")
         .setRequired(true)
 );
-data.addIntegerOption((option) =>
-    option
-        .setName("limit")
-        .setDescription("amount of images to return")
-        .setRequired(false)
-);
 const command = new Command(
     data,
     async function getArguments(message) {
