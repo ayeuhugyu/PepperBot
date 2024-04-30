@@ -1,9 +1,11 @@
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
-import { Collection } from "discord.js";
+import { ButtonBuilder, ButtonStyle, Collection } from "discord.js";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import * as adobe from "../lib/adobe.js";
 import default_embed from "../lib/default_embed.js";
+
+import chatbubble from "./chatbubble.js";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -77,11 +79,30 @@ const command = new Command(
                 menu.addPage(embed);
                 index++;
             });
+
+            const button = new ButtonBuilder()
+                .setCustomId("bubble")
+                .setLabel("Create Chat Bubble")
+                .setStyle(ButtonStyle.Danger);
+
             const built = menu.build();
             const sent = await action.reply(message, {
                 embeds: [built.embed],
-                components: [built.actionRow],
+                components: [built.actionRow.addComponents(button)],
                 ephemeral: true,
+            });
+            const collector = sent.createMessageComponentCollector({
+                time: 240_000,
+            });
+            collector.on("collect", async (interaction) => {
+                if (interaction.customId === "bubble") {
+                    const args = new Collection();
+                    args.set("image", {
+                        url: interaction.message.embeds[0].image.url,
+                        name: "chatbubble.jpg",
+                    });
+                    chatbubble.execute(interaction, args, true);
+                }
             });
             menu.begin(sent, 240_000, built);
         } else {

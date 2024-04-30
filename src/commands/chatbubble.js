@@ -27,7 +27,7 @@ data.addStringOption((option) =>
     option
         .setName("tail")
         .setDescription("the position of the end of the tail")
-        .setRequired(true)
+        .setRequired(false)
         .addChoices(
             { name: "left", value: "left" },
             { name: "center", value: "center" },
@@ -50,7 +50,8 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        if (!args.get("image") || !args.get("tail")) {
+        if (!args.get("tail")) args.set("tail", "left");
+        if (!args.get("image")) {
             action.reply(message, {
                 content: "provide the correct arguments RETARD",
             });
@@ -109,13 +110,6 @@ const command = new Command(
                 background: { r: 0, g: 0, b: 0, alpha: 0 },
             });
 
-        tailImg.toFile("fuck.png", (err, inf) => {});
-        console.log(
-            `fullHeight: ${fullHeight}, tailHeight: ${tailHeight}, reportedHeight: ${await tailImg
-                .metadata()
-                .then((metadata) => metadata.height)}`
-        );
-
         outputImg = await outputImg
             .composite([
                 {
@@ -133,6 +127,7 @@ const command = new Command(
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),
             ],
+            ephemeral: true,
         });
     }
 );
