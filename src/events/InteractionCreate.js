@@ -53,7 +53,7 @@ async function chatInputCommand(interaction) {
             log.warn(
                 "attempt to get undefined value || erorr getting option value"
             );
-            return null;
+            return undefined;
         }
     };
     let blackliststring = fs.readFileSync(config.paths.blacklist_file, "utf-8");

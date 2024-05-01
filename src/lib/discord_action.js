@@ -1,9 +1,6 @@
-import discord, { CommandInteraction } from "discord.js";
-import { client } from "../bot.js";
+import { CommandInteraction } from "discord.js";
 import * as log from "./log.js";
 import * as files from "./files.js";
-import fs from "fs";
-import { type } from "os";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -68,9 +65,6 @@ export async function fixMsg(msg) {
 }
 
 export async function sendMessage(channel, content) {
-    if (!(channel instanceof discord.TextChannel)) {
-        channel = await client.channels.fetch(channel.toString());
-    }
     try {
         channel.sendTyping();
         const sent = await channel.send(await fixMsg(content)).catch((err) => {
@@ -98,13 +92,14 @@ export async function reply(message, content) {
         const msg = await fixMsg(content);
         if (message.replied) {
             sent = await message.followUp(msg).catch(() => {});
-        } else {
-            sent = await message.reply(msg).catch((err) => {
-                log.error(err);
-            });
         }
         if (!sent && message.deferred) {
             sent = await message.editReply(msg).catch(() => {});
+        }
+        if (!sent) {
+            sent = await message.reply(msg).catch((err) => {
+                log.error(err);
+            });
         }
         if (!sent && channel) {
             sent = await channel.send(msg).catch(() => {});
@@ -120,16 +115,6 @@ export async function reply(message, content) {
 
 export async function sendDM(user, content) {
     try {
-        if (!(user instanceof discord.User)) {
-            const usersCache = client.users.cache;
-            if (typeof user === "number") {
-                user = user.toString();
-            }
-            if (typeof user === "string") {
-                user = usersCache.get(user);
-            }
-        }
-
         const msg = await user.send(await fixMsg(content)).catch((err) => {
             log.error(err);
         });

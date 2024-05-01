@@ -1,6 +1,5 @@
 import fsextra from "fs-extra";
 import fs from "fs";
-import { inTextFilesList } from "./types/textFilesHandler.js";
 
 const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
 const config = configNonDefault.default
@@ -19,21 +18,4 @@ export async function textToFile(text, name) {
     const file = `${config.paths.containers}/${name}.txt`;
     fs.writeFileSync(file, text);
     return file;
-}
-
-export async function inTextFilesHandler(text) {
-    if (text.includes("file://")) {
-        const files = text.split("file://");
-        let filenames = [];
-        files.forEach((file) => {
-            const filename = file.substring(0, file.indexOf(" "));
-            filenames.push(filename);
-        });
-        return new inTextFilesList({
-            directFileNames: filenames,
-            originalText: text,
-        });
-    } else {
-        return text;
-    }
 }

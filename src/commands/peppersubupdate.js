@@ -34,13 +34,14 @@ const command = new Command(
     async function execute(message, args, isInteraction) {
         if (args.get("message")) {
             const embed = default_embed().setDescription(args.get("message"));
-            await action.sendMessage(config.commands.announcement_channel, {
+            const sent = await action.sendMessage(config.commands.announcement_channel, {
                 embeds: [embed],
             });
             if (isInteraction) {
                 action.reply(message, { content: "sent!", ephemeral: true });
             }
             action.deleteMessage(message);
+            sent.crosspost()
         } else {
             action.reply(message, "provide a message to say you baffoon!");
         }

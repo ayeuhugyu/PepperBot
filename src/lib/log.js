@@ -40,7 +40,7 @@ function format(thing) {
     } else if (thing instanceof Error) {
         return thing.stack || thing.toString();
     } else {
-        return util.inspect(thing, { colors: true });
+        return util.inspect(thing, { colors: true, depth: 5 });
     }
 }
 

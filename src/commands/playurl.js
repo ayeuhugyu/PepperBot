@@ -116,9 +116,9 @@ const command = new Command(
                         audioPlayer.play(resource);
                         return;
                     }
-                    if (info.lengthSeconds > 60 * 30) {
+                    if (info.lengthSeconds > 60 * 120) {
                         action.reply(
-                            "sound is too long, max length is 30 minutes. this is to prevent abuse."
+                            "sound is too long, max length is 120 minutes. this is to prevent abuse."
                         );
                         return;
                     }
@@ -144,6 +144,21 @@ const command = new Command(
                                 `${config.paths.ytdl_cache}/${correctedFileName}.webm`
                             );
                             audioPlayer.play(resource);
+                        }).catch(err => {
+                            if (err.httpStatus === 410) {
+                                action.editMessage(
+                                    msg,
+                                    "attempt to download returned status code \"GONE\", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos."
+                                );
+                            } else {
+                                action.editMessage(
+                                    msg,
+                                    "error while downloading url, see logs for more info"
+                                );
+                                log.error(err);
+                            }
+                            fs.unlinkSync(
+                                `${config.paths.ytdl_cache}/${correctedFileName}.webm`)
                         });
                 } catch (err) {
                     action.reply(

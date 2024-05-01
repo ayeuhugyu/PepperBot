@@ -93,9 +93,9 @@ data.addStringOption((option) =>
         .setName("subcommand")
         .setDescription("subcommand to run")
         .setRequired(false)
-        .addChoices([
+        .addChoices(
             {name: "subcommandname", value: "subcommandname"},
-        ])
+        )
 );
 but obviously choices would have all of your subcommands
 this just allows for the use of subcommands from slash commands

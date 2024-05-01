@@ -40,13 +40,14 @@ const command = new Command(
             const embed = default_embed()
                 .setTitle(`SMALL UPDATE/PATCH ${persistent_data.version}`)
                 .setDescription(args.get("message"));
-            await action.sendMessage(config.commands.announcement_channel, {
+            const sent = await action.sendMessage(config.commands.announcement_channel, {
                 embeds: [embed],
             });
             if (isInteraction) {
                 action.reply(message, { content: "sent!", ephemeral: true });
             }
             action.deleteMessage(message);
+            sent.crosspost()
         } else {
             action.reply(message, "provide a message to say you baffoon!");
         }
