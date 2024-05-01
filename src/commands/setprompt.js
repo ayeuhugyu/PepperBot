@@ -3,10 +3,10 @@ import * as action from "../lib/discord_action.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
-import request from "request";
-
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
+const configNonDefault = await import("../../config.json", {
+    assert: { type: "json" },
+});
+const config = configNonDefault.default;
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {
@@ -16,24 +16,14 @@ async function download(url, filename) {
             .replaceAll("-", "_")
             .replaceAll("/", "_")
             .replaceAll("\\", "_");
-        request
-            .get(url)
-            .on("error", (err) => {
-                log.error(err);
-                reject(err);
-            })
-            .pipe(
-                fs
-                    .createWriteStream(
-                        `${config.paths.gptdownloads}/${fixedFileName}`
-                    )
-                    .on("finish", () => {
-                        resolve(true);
-                    })
-                    .on("error", (err) => {
-                        reject(err);
-                    })
+        fetch(url).then((res) => {
+            const ws = fs.createWriteStream(
+                `${config.paths.soundboard}/${fixedFileName}`
             );
+            stream.Readable.fromWeb(res.body).pipe(ws);
+            ws.on("finish", () => resolve(true));
+            ws.on("error", (err) => reject(err));
+        });
     });
 }
 

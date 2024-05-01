@@ -23,6 +23,14 @@ data.addStringOption((option) =>
             "which log to send, \noptions include: debug.log, info.log, warn.log, error.log, messages.log"
         )
         .setRequired(true)
+        .setChoices(
+            { name: "debug.log", value: "debug.log" },
+            { name: "info.log", value: "info.log" },
+            { name: "warn.log", value: "warn.log" },
+            { name: "error.log", value: "error.log" },
+            { name: "fatal.log", value: "fatal.log" },
+            { name: "messages.log", value: "messages.log" }
+        )
 );
 const command = new Command(
     data,
@@ -44,7 +52,10 @@ const command = new Command(
                 .readdirSync(`${config.paths.logs}`)
                 .filter((file) => file.endsWith(".log"));
             if (!logs.includes(args.get("log"))) {
-                action.reply(message, "There's no such thing!");
+                action.reply(
+                    message,
+                    "There's no such thing! this could also mean there just haven't been any of that type of log since the last time i ran p/cleanup"
+                );
                 return;
             }
             action.reply(message, {

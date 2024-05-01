@@ -3,8 +3,10 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
+const configNonDefault = await import("../../config.json", {
+    assert: { type: "json" },
+});
+const config = configNonDefault.default;
 
 const data = new CommandData();
 data.setName("say");
@@ -24,7 +26,9 @@ const command = new Command(
         const args = new Collection();
         args.set(
             "message",
-            message.content.slice(config.generic.prefix.length + commandLength).trim()
+            message.content
+                .slice(config.generic.prefix.length + commandLength)
+                .trim()
         );
         return args;
     },

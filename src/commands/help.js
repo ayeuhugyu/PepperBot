@@ -1,3 +1,4 @@
+import * as log from "../lib/log.js";
 import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";

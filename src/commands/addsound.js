@@ -1,8 +1,8 @@
-import request from "request"; // yes i know this is deprecated i will fix it later (no i won't)
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
+import stream from "stream";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -17,24 +17,14 @@ async function download(url, filename) {
             .replaceAll("-", "_")
             .replaceAll("/", "_")
             .replaceAll("\\", "_");
-        request
-            .get(url)
-            .on("error", (err) => {
-                log.error(err);
-                reject(err);
-            })
-            .pipe(
-                fs
-                    .createWriteStream(
-                        `${config.paths.soundboard}/${fixedFileName}`
-                    )
-                    .on("finish", () => {
-                        resolve(true);
-                    })
-                    .on("error", (err) => {
-                        reject(err);
-                    })
+        fetch(url).then((res) => {
+            const ws = fs.createWriteStream(
+                `${config.paths.soundboard}/${fixedFileName}`
             );
+            stream.Readable.fromWeb(res.body).pipe(ws);
+            ws.on("finish", () => resolve(true));
+            ws.on("error", (err) => reject(err));
+        });
     });
 }
 

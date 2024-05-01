@@ -35,7 +35,7 @@ export class StringPagedMenuBuilder {
     }
     begin(sentMessage, duration, { actionRow, embed, currentPage, pages }) {
         sentMessage.edit({ embeds: [embed], components: [actionRow] });
-        let collector = sentMessage.createMessageComponentCollector({
+        const collector = sentMessage.createMessageComponentCollector({
             time: duration,
         });
         collector.on("collect", async (interaction) => {
@@ -102,7 +102,7 @@ export class AdvancedPagedMenuBuilder {
     }
     begin(sentMessage, duration, { actionRow, embed, currentPage, pages }) {
         sentMessage.edit({ embeds: [embed], components: [actionRow] });
-        let collector = sentMessage.createMessageComponentCollector({
+        const collector = sentMessage.createMessageComponentCollector({
             time: duration,
         });
         collector.on("collect", async (interaction) => {
