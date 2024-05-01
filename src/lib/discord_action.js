@@ -3,6 +3,7 @@ import { client } from "../bot.js";
 import * as log from "./log.js";
 import * as files from "./files.js";
 import fs from "fs";
+import { type } from "os";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -91,20 +92,21 @@ export async function reply(message, content) {
         log.warn("attempt to reply to a message that does not exist");
         return;
     }
-    channel.sendTyping();
+    if (!(typeof content === "string") && !content.ephemeral) channel.sendTyping();
     let sent;
     try {
         const msg = await fixMsg(content);
-        sent = await message.reply(msg).catch((err) => {
-            log.error(err);
-        });
-        if (!sent && message instanceof CommandInteraction) {
+        if (message.replied) {
             sent = await message.followUp(msg).catch(() => {});
-            if (!sent) {
-                sent = await message.editReply(msg).catch(() => {});
-            }
+        } else {
+            sent = await message.reply(msg).catch((err) => {
+                log.error(err);
+            });
         }
-        if (!sent) {
+        if (!sent && message.deferred) {
+            sent = await message.editReply(msg).catch(() => {});
+        }
+        if (!sent && channel) {
             sent = await channel.send(msg).catch(() => {});
         }
         if (!sent) {
