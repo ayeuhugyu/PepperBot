@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import fs from "fs";
 import statistics from "./statistics.js";
+import * as log from "./log.js"
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
