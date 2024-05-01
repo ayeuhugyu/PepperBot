@@ -104,7 +104,15 @@ const command = new Command(
                         .replaceAll(" ", "_")
                         .replaceAll("-", "_")
                         .replaceAll("/", "_")
-                        .replaceAll("\\", "_");
+                        .replaceAll("\\", "_")
+                        .replaceAll(".", "_")
+                        .replaceAll("|", "_")
+                        .replaceAll('"', "_")
+                        .replaceAll(":", "_")
+                        .replaceAll("?", "_")
+                        .replaceAll("*", "_")
+                        .replaceAll("<", "_")
+                        .replaceAll(">", "_");
                     if (sounds.includes(`${correctedFileName}.webm`)) {
                         action.reply(
                             message,

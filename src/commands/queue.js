@@ -17,6 +17,7 @@ import {
     TextInputBuilder,
     TextInputStyle,
     ButtonStyle,
+    ButtonInteraction,
 } from "discord.js";
 import * as log from "../lib/log.js";
 import { google } from "googleapis";
@@ -150,7 +151,9 @@ const functions = {
     play: async function (queue, interaction) {
         if (queue.state === queueStates.playing) {
             queue.stop();
-            interaction.deferUpdate();
+            if (interaction instanceof ButtonInteraction) {
+                interaction.deferUpdate();
+            }
             //action.reply(interaction, { content: "stopped", ephemeral: true });
         } else if (queue.state === (queueStates.idle || queueStates.paused)) {
             if (queue.queues.length == 0) {
@@ -182,19 +185,25 @@ const functions = {
             queue.connection.on("disconnect", queue.onDisconect);
             queue.connection.on("destroyed", queue.onDisconect);
             queue.play(queue.currentIndex);
-            interaction.deferUpdate();
+            if (interaction instanceof ButtonInteraction) {
+                interaction.deferUpdate();
+            }
             //action.reply(interaction, { content: "playing", ephemeral: true });
         }
     },
     skip: async function (queue, interaction) {
         queue.next();
-        interaction.deferUpdate();
+        if (interaction instanceof ButtonInteraction) {
+            interaction.deferUpdate();
+        }
         //action.reply(interaction, { content: "skipped", ephemeral: true });
     },
     clear: async function (queue, interaction, args, embed, row, sentMessage) {
         queue.clear();
         refresh(queue, interaction, args, embed, row, sentMessage);
-        interaction.deferUpdate();
+        if (interaction instanceof ButtonInteraction) {
+            interaction.deferUpdate();
+        }
         //action.reply(interaction, { content: "cleared", ephemeral: true });
     },
     add: queue,

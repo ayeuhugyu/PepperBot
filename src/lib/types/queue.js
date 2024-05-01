@@ -53,13 +53,21 @@ async function download(url, queueManager) {
                 return;
             }
             const sounds = await fs.readdirSync("resources/ytdl_cache");
-            const correctedFileName =
-                title
-                    .toLowerCase()
-                    .replaceAll(" ", "_")
-                    .replaceAll("-", "_")
-                    .replaceAll("/", "_")
-                    .replaceAll(".", "_") + "_ytdl";
+            const correctedFileName = title
+                .toLowerCase()
+                .replaceAll(" ", "_")
+                .replaceAll("-", "_")
+                .replaceAll("/", "_")
+                .replaceAll("\\", "_")
+                .replaceAll(".", "_")
+                .replaceAll("|", "_")
+                .replaceAll('"', "_")
+                .replaceAll(":", "_")
+                .replaceAll("?", "_")
+                .replaceAll("*", "_")
+                .replaceAll("<", "_")
+                .replaceAll(">", "_");
+
             let msg = await action.sendMessage(
                 queueManager.messageChannel,
                 `checking for existence of \`${correctedFileName}.webm\`...`
@@ -75,7 +83,7 @@ async function download(url, queueManager) {
                     msg,
                     `downloading \`${correctedFileName}.webm\`...`
                 );
-                fsextra.ensureFileSync(
+                await fsextra.ensureFileSync(
                     `${config.paths.ytdl_cache}/${correctedFileName}.webm`
                 );
                 await ytdl(url, { filter: "audioonly" })
@@ -94,10 +102,6 @@ async function download(url, queueManager) {
                         );
                     })
                     .on("error", (err) => {
-                        log.error(err);
-                        reject();
-                    })
-                    .catch((err) => {
                         log.error(err);
                         reject();
                     });
