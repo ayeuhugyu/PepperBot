@@ -195,6 +195,8 @@ const functions = {
         queue.next();
         if (interaction instanceof ButtonInteraction) {
             interaction.deferUpdate();
+        } else {
+            interaction.reply({ content: "skipped", ephemeral: true });
         }
         //action.reply(interaction, { content: "skipped", ephemeral: true });
     },
@@ -203,6 +205,8 @@ const functions = {
         refresh(queue, interaction, args, embed, row, sentMessage);
         if (interaction instanceof ButtonInteraction) {
             interaction.deferUpdate();
+        } else {
+            interaction.reply({ content: "cleared", ephemeral: true });
         }
         //action.reply(interaction, { content: "cleared", ephemeral: true });
     },
@@ -415,7 +419,7 @@ const command = new Command(
         const add = new ButtonBuilder()
             .setLabel("📥 Add")
             .setStyle(ButtonStyle.Success)
-            .setCustomId("queue");
+            .setCustomId("add");
         const row = new ActionRowBuilder().addComponents(
             play,
             skip,
