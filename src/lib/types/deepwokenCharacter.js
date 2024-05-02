@@ -468,10 +468,6 @@ export function getCharacterImage(race, variant) {
         );
         if (variantDir.includes(variant + ".png")) {
             return `resources/images/deepwokenRaces/${race}/${variant}.png`;
-            /*{
-                attachment: `resources/images/deepwokenRaces/${race}/${variant}.png`,
-                name: `${variant}.png`,
-            };*/
         } else {
             log.warn("invalid variant for race " + race);
         }

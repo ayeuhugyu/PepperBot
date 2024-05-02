@@ -37,7 +37,7 @@ const command = new Command(
             const embed = default_embed()
                 .setTitle(`IMPORTANT PEPPERBOT ANNOUNCEMENT`)
                 .setDescription(args.get("message"));
-            await action.sendMessage(config.commands.announcement_channel, {
+            const sent = await action.sendMessage(config.commands.announcement_channel, {
                 content: `<@&${config.commands.announcement_role}> PepperBot Announcement! 🌶`,
                 embeds: [embed],
             });
@@ -46,6 +46,7 @@ const command = new Command(
                 action.reply(message, { content: "sent!", ephemeral: true });
             }
             action.deleteMessage(message);
+            sent.crosspost()
         } else {
             action.reply(message, "provide a message to say you baffoon!");
         }

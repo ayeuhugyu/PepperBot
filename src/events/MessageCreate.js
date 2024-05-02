@@ -84,6 +84,11 @@ async function processDiabolicalEvent(message) {
     ) {
         const random = Math.random() * 250;
         if (random > 249) {
+            const random2 = Math.random() * 100;
+            if (random2 > 90) {
+                message.react()
+                return;
+            }
             const event =
                 diabolical_events.default[
                     Math.floor(Math.random() * diabolical_events.default.length)
@@ -146,6 +151,9 @@ async function processCommand(message) {
             return;
         }
     };
+    message.awaitModalSubmit = async function() {
+
+    }
 
     let blackliststring = fs.readFileSync(config.paths.blacklist_file, "utf-8");
     let blacklists = await JSON.parse(blackliststring);

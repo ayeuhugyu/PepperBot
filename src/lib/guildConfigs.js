@@ -21,7 +21,6 @@ log.debug("guild configurations cached");
 const defaultGuildConfig = {
     guildId: "discord.guild.id",
     prefix: "p/",
-    channelId: undefined,
     functions: {
         exploreVisible: true,
         gptEnabled: true,

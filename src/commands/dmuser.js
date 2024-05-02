@@ -31,7 +31,9 @@ const command = new Command(
         if (message.mentions.users.first()) {
             args.set("user", message.mentions.users.first());
         } else {
-            args.set("user", message.content.split(" ")[1]);
+            if (message.client.users.cache.get(message.content.split(" ")[1])) {
+                args.set("user", message.client.users.cache.get(message.content.split(" ")[1]));
+            }
         }
         if (args.get("user")) {
             args.set(

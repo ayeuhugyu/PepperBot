@@ -27,3 +27,5 @@ manager
         });
     })
     .catch(log.error);
+
+export default manager;
