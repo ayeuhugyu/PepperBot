@@ -38,7 +38,7 @@ const command = new Command(
             return;
         }
         if (args.get("message")) {
-            action.sendMessage(message.channelId, args.get("message"));
+            action.sendMessage(message.channel, args.get("message"));
             if (fromInteraction) {
                 console.log("from interaction");
                 action.reply(message, {

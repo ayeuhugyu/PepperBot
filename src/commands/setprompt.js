@@ -3,6 +3,8 @@ import * as action from "../lib/discord_action.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
+import * as stream from "stream";
+import fsExtra from "fs-extra";
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
 });
@@ -16,9 +18,10 @@ async function download(url, filename) {
             .replaceAll("-", "_")
             .replaceAll("/", "_")
             .replaceAll("\\", "_");
+        fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
-                `${config.paths.soundboard}/${fixedFileName}`
+                `resources/gptdownloads/${fixedFileName}`
             );
             stream.Readable.fromWeb(res.body).pipe(ws);
             ws.on("finish", () => resolve(true));

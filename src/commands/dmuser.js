@@ -32,7 +32,12 @@ const command = new Command(
             args.set("user", message.mentions.users.first());
         } else {
             if (message.client.users.cache.get(message.content.split(" ")[1])) {
-                args.set("user", message.client.users.cache.get(message.content.split(" ")[1]));
+                args.set(
+                    "user",
+                    message.client.users.cache.get(
+                        message.content.split(" ")[1]
+                    )
+                );
             }
         }
         if (args.get("user")) {
@@ -41,7 +46,7 @@ const command = new Command(
                 message.content.slice(
                     config.generic.prefix.length +
                         commandLength +
-                        args.get("user").toString().length +
+                        message.content.split(" ")[1].length +
                         1
                 )
             );

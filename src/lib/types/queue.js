@@ -43,9 +43,20 @@ async function download(url, queueManager) {
     try {
         return new Promise(async (resolve, reject) => {
             const title = await fetchTitleFromURL(url).catch((err) => {
-                log.error(err + "\nerror while fetching video title");
-                reject();
-                return;
+                if (err.statusCode === 410) {
+                    action.sendMessage(
+                        queueManager.messageChannel,
+                        'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
+                    );
+                    return;
+                } else {
+                    action.sendMessage(
+                        queueManager.messageChannel,
+                        "error while downloading url, see logs for more info"
+                    );
+                    log.error(err);
+                    return;
+                }
             });
             if (!title) {
                 log.error("error while fetching video title");
@@ -103,14 +114,15 @@ async function download(url, queueManager) {
                     })
                     .on("error", (err) => {
                         log.error(err);
-                        if (err.httpStatus === 410) {
+                        if (err.statusCode === 410) {
                             action.sendMessage(
                                 queueManager.messageChannel,
-                                "attempt to download returned status code \"GONE\", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos."
+                                'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
                             );
                         }
                         fs.unlinkSync(
-                            `${config.paths.ytdl_cache}/${correctedFileName}.webm`)
+                            `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                        );
                         reject();
                     });
             }

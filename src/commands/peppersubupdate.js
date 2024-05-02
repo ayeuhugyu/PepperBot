@@ -4,8 +4,10 @@ import { Collection } from "discord.js";
 import fs from "fs";
 import default_embed from "../lib/default_embed.js";
 
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
+const configNonDefault = await import("../../config.json", {
+    assert: { type: "json" },
+});
+const config = configNonDefault.default;
 
 const data = new CommandData();
 data.setName("peppersubupdate");
@@ -34,14 +36,19 @@ const command = new Command(
     async function execute(message, args, isInteraction) {
         if (args.get("message")) {
             const embed = default_embed().setDescription(args.get("message"));
-            const sent = await action.sendMessage(config.commands.announcement_channel, {
-                embeds: [embed],
-            });
+            const sent = await action.sendMessage(
+                message.client.channels.cache.get(
+                    config.commands.announcement_channel
+                ),
+                {
+                    embeds: [embed],
+                }
+            );
             if (isInteraction) {
                 action.reply(message, { content: "sent!", ephemeral: true });
             }
             action.deleteMessage(message);
-            sent.crosspost()
+            sent.crosspost();
         } else {
             action.reply(message, "provide a message to say you baffoon!");
         }

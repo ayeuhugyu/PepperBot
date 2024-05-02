@@ -2,6 +2,7 @@ import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
+import fsExtra from "fs-extra";
 import stream from "stream";
 
 const configNonDefault = await import("../../config.json", {
@@ -17,6 +18,7 @@ async function download(url, filename) {
             .replaceAll("-", "_")
             .replaceAll("/", "_")
             .replaceAll("\\", "_");
+        fsExtra.ensureFileSync(`${config.paths.soundboard}/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
                 `${config.paths.soundboard}/${fixedFileName}`

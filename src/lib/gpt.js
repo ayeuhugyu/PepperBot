@@ -1,7 +1,9 @@
 import OpenAI from "openai";
 import fs from "fs";
 import statistics from "./statistics.js";
-import * as log from "./log.js"
+import * as log from "./log.js";
+import * as stream from "stream";
+import fsExtra from "fs-extra";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -77,9 +79,10 @@ async function download(url, filename) {
             .replaceAll("-", "_")
             .replaceAll("/", "_")
             .replaceAll("\\", "_");
+        fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
-                `${config.paths.soundboard}/${fixedFileName}`
+                `resources/gptdownloads/${fixedFileName}`
             );
             stream.Readable.fromWeb(res.body).pipe(ws);
             ws.on("finish", () => resolve(true));

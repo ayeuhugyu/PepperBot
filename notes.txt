@@ -1,12 +1,10 @@
 todo:
 
-redo log system to have log objects
 fix various errors
 
 here's some common ones:
-Unknown interaction
-Unknown message
 markovChain[word].push is not a function (what??????)
+This action requires a webhook token, but none is available. (WHAT THE HELL IS EVEN CASUING THIS I LITERALLY PASS THE TOKEN 😭😭)
 
 p/pepperupdate bug fixes / optimizations: 
 fixed replies attempting to reply after a followup
@@ -17,3 +15,5 @@ the sharding script now exports the sharding manager, allowing me to do whatever
 p/playurl & p/queue error response is slightly more understandable, also now deletes the file if it was unable to download it
 removed imports of 'client' in discord action script. should hopefully avoid future possible recursive imports. if anything is broken, please let me know. the only commands or functions this should affect are those that just send a message directly in the channel without replying, and those that dm a user.
 increased depth of logged objects
+fixed GPT being unable to download text files (i forgot to import a library)
+also fixed the same issue in p/setprompt

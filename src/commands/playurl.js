@@ -6,6 +6,7 @@ import ytdl from "ytdl-core";
 import * as log from "../lib/log.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
+import util from "util";
 import { google } from "googleapis";
 const youtube = google.youtube("v3");
 
@@ -95,7 +96,25 @@ const command = new Command(
                         });
                         return;
                     }
-                    const info = await ytdl.getInfo(args.get("sound"));
+                    const info = await ytdl
+                        .getInfo(args.get("sound"))
+                        .catch((err) => {
+                            if (err.statusCode === 410) {
+                                action.reply(
+                                    message,
+                                    'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
+                                );
+                                return;
+                            } else {
+                                action.reply(
+                                    message,
+                                    "error while downloading url, see logs for more info"
+                                );
+                                log.error(err);
+                                return;
+                            }
+                        });
+                    if (!info) return;
                     const sounds = await fs.readdirSync(
                         config.paths.ytdl_cache
                     );
@@ -152,11 +171,14 @@ const command = new Command(
                                 `${config.paths.ytdl_cache}/${correctedFileName}.webm`
                             );
                             audioPlayer.play(resource);
-                        }).catch(err => {
-                            if (err.httpStatus === 410) {
+                        })
+                        .catch((err) => {
+                            console.log(err.statusCode);
+                            console.log(err.StatusCode === 410);
+                            if (err.statusCode === 410) {
                                 action.editMessage(
                                     msg,
-                                    "attempt to download returned status code \"GONE\", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos."
+                                    'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
                                 );
                             } else {
                                 action.editMessage(
@@ -166,7 +188,8 @@ const command = new Command(
                                 log.error(err);
                             }
                             fs.unlinkSync(
-                                `${config.paths.ytdl_cache}/${correctedFileName}.webm`)
+                                `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                            );
                         });
                 } catch (err) {
                     action.reply(
