@@ -1,19 +1,14 @@
 import * as action from "../lib/discord_action.js";
 import {
     Command,
-    SubCommand,
     CommandData,
-    SubCommandData,
 } from "../lib/types/commands.js";
-import { StringPagedMenuBuilder } from "../lib/types/menuBuilders.js";
-import { Collection } from "discord.js";
-import fs from "fs";
-import util from "util";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
 });
 const config = configNonDefault.default;
+
 const data = new CommandData();
 data.setName("test");
 data.setDescription("generic testing command");
@@ -28,18 +23,8 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        const menu = new StringPagedMenuBuilder();
-        menu.addPage("Hello, world!");
-        menu.addPage("Goodbye, world!");
-        menu.addPage("Even More Data!");
-        menu.addPage("I could do this all day!");
-
-        const builtMenu = menu.build();
-        const sentMessage = await message.channel.send({
-            embeds: [builtMenu.embed],
-            components: [builtMenu.actionRow],
-        });
-        menu.begin(sentMessage, 30_000, builtMenu);
+        action.reply(message, "refresh test")
+        //action.reply(message, "REFRESH TEST")
     }
 );
 

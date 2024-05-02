@@ -12,11 +12,6 @@ const configNonDefault = await import("../../config.json", {
 });
 const config = configNonDefault.default;
 
-function removeBetween(str, firstSubstring, secondSubstring) {
-    const regex = new RegExp(`${firstSubstring}.*${secondSubstring}`, "s");
-    return str.replace(regex, "");
-}
-
 const data = new CommandData();
 data.setName("cquery");
 data.setDescription("queries adobe stock for christos georghiou images");
@@ -70,14 +65,12 @@ const command = new Command(
             });
         } else if (cleanResult.length > 1) {
             const menu = new AdvancedPagedMenuBuilder();
-            let index = 1;
-            cleanResult.forEach((file) => {
+            cleanResult.forEach((file, index) => {
                 const embed = default_embed()
-                    .setTitle(`[${index}] - ${file.title}`)
+                    .setTitle(`[${index + 1}] - ${file.title}`)
                     .setImage(file.url)
                     .setURL(file.pageUrl);
                 menu.addPage(embed);
-                index++;
             });
 
             const button = new ButtonBuilder()

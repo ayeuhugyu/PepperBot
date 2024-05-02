@@ -1,8 +1,6 @@
 import * as action from "../lib/discord_action.js";
 import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
-import e from "express";
-import { execPath } from "process";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },

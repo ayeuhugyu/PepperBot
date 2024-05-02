@@ -8,6 +8,7 @@ import {
 } from "../lib/types/menuBuilders.js";
 import { Collection } from "discord.js";
 import fs from "fs";
+import commandsObject from "../lib/commands.js";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -21,25 +22,20 @@ async function getCommands() {
     let commands = {};
     for (const file of commandFiles) {
         const filePath = `./${file}`;
-        import(filePath)
-            .then((command) => {
-                if (
-                    command.default.data.aliases &&
-                    command.default.data.aliases.length > 0
-                ) {
-                    command.default.data.aliases.forEach((alias) => {
-                        commands[alias] = command.default.data;
-                    });
-                }
-                commands[command.default.data.name] = command.default.data;
-            })
-            .catch((err) => {
-                console.error(err);
+        const command = await import(filePath);
+        if (
+            command.data.aliases &&
+            command.data.aliases.length > 0
+        ) {
+            command.data.aliases.forEach((alias) => {
+                commands[alias] = command.default.data;
             });
+        }
+        commands[command.default.data.name] = command.default.data;
     }
     return commands;
 }
-
+ // todo: convert this to use the new commandsObject
 const commands = await getCommands();
 
 const command_option_types = {

@@ -57,6 +57,7 @@ const command = new Command(
             });
             return;
         }
+        let replied = false
 
         const supportedFiletypes = [
             "jpeg",
@@ -121,7 +122,8 @@ const command = new Command(
             ])
             .toFormat("gif")
             .toBuffer();
-
+        if (replied) return;
+        replied = true;
         action.reply(message, {
             content: "hewwo :3 here is your chat bubble pookie-wookie bear!",
             files: [

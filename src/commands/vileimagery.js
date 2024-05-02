@@ -10,6 +10,10 @@ const configNonDefault = await import("../../config.json", {
 });
 const config = configNonDefault.default;
 
+const files = fs
+    .readdirSync(config.paths.vile_imagery)
+    .filter((file) => file.endsWith(".png"));
+
 const data = new CommandData();
 data.setName("vileimagery");
 data.setDescription("return some fucked up shit");
@@ -35,9 +39,6 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        const files = fs
-            .readdirSync(config.paths.vile_imagery)
-            .filter((file) => file.endsWith(".png"));
         let file;
 
         if (args.get("image")) {

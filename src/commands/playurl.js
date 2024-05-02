@@ -6,7 +6,6 @@ import ytdl from "ytdl-core";
 import * as log from "../lib/log.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
-import util from "util";
 import { google } from "googleapis";
 const youtube = google.youtube("v3");
 

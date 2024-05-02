@@ -5,18 +5,11 @@ import {
     ButtonBuilder,
     ButtonStyle,
     ActionRowBuilder,
-    TextChannel,
-    VoiceChannel,
-    NewsChannel,
-    StageChannel,
-    ForumChannel,
-    MediaChannel,
 } from "discord.js";
 import default_embed from "../lib/default_embed.js";
 import fs from "fs";
 import { client } from "../bot.js";
 import * as log from "../lib/log.js";
-import { type } from "os";
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },

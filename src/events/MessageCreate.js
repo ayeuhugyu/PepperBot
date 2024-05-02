@@ -11,6 +11,7 @@ import * as log from "../lib/log.js";
 import { client } from "../bot.js";
 import * as gpt from "../lib/gpt.js";
 import * as action from "../lib/discord_action.js";
+import commandsObject from "../lib/commands.js"
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
@@ -22,29 +23,10 @@ const diabolical_events = await import(
     { assert: { type: "json" } }
 );
 
-const commands = new Collection();
-const commandFiles = fs
-    .readdirSync("src/commands")
-    .filter((file) => file.endsWith(".js"));
-for (const file of commandFiles) {
-    const command = await import(`../commands/${file}`);
-    try {
-        if (
-            command.default.data.aliases &&
-            command.default.data.aliases.length > 0
-        ) {
-            command.default.data.aliases.forEach((value) => {
-                commands.set(value, command.default.execute);
-            });
-        }
-        commands.set(command.default.data.name, command.default.execute);
-        const data = command.default.data.toJSON();
-        commands.set(data.name, command.default.execute);
-    } catch (err) {
-        log.error(err);
-        log.error(`failed to load command: ${file}, likely missing data`);
-    }
-}
+const commands = commandsObject.commandExecutions;
+commandsObject.on("refresh", newCommandsObject => {
+    commands = newCommandsObject.commandExecutions;
+})
 
 async function processDM(message) {
     if (message.channel.type === 1) {

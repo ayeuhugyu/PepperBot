@@ -5,7 +5,7 @@ import {
     SubCommand,
     SubCommandData,
 } from "../lib/types/commands.js";
-import { Collection, PermissionFlagsBits } from "discord.js";
+import { Collection } from "discord.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
 import default_embed from "../lib/default_embed.js";
@@ -15,7 +15,7 @@ const configNonDefault = await import("../../config.json", {
 });
 const config = configNonDefault.default;
 
-const viewdata = new CommandData();
+const viewdata = new SubCommandData();
 viewdata.setName("view");
 viewdata.setDescription("view the blacklist");
 viewdata.setPermissions([]);

@@ -191,6 +191,8 @@ async function addReference(message, conversation) {
     }
 }
 
+// todo: rewrite references system, it sucks holy shit
+
 export async function respond(message) {
     let conversation;
     const readableContent = await fixIncomingMessage(message);

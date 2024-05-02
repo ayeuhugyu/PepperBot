@@ -2,35 +2,18 @@ import { Events, Collection } from "discord.js";
 import * as fs from "fs";
 import * as log from "../lib/log.js";
 import * as action from "../lib/discord_action.js";
+import commandsObject from "../lib/commands.js"
 
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
 });
 const config = configNonDefault.default;
 
-const commands = new Collection();
-const commandFiles = fs
-    .readdirSync("src/commands")
-    .filter((file) => file.endsWith(".js"));
-for (const file of commandFiles) {
-    const command = await import(`../commands/${file}`);
-    try {
-        if (
-            command.default.data.aliases &&
-            command.default.data.aliases.length > 0
-        ) {
-            command.default.data.aliases.forEach((value) => {
-                commands.set(value, command.default.execute);
-            });
-        }
-        commands.set(command.default.data.name, command.default.execute);
-        const data = command.default.data.toJSON();
-        commands.set(data.name, command.default.execute);
-    } catch (err) {
-        log.error(err);
-        log.error(`failed to load command: ${file}, likely missing data`);
-    }
-}
+const commands = commandsObject.commandsWithoutAliasesExecutions;
+
+commandsObject.on("refresh", newCommandsObject => {
+    commands = newCommandsObject.commandsWithoutAliasesExecutions;
+})
 
 async function chatInputCommand(interaction) {
     interaction.author = interaction.user;
@@ -42,12 +25,13 @@ async function chatInputCommand(interaction) {
                 arg = "subcommand";
             }
             const option = interaction.options.getOriginal(arg);
-            if (option.type === 7) {
-                return option.channel;
-            } else if (option.type === 11) {
-                return option.attachment;
-            } else {
-                return option.value;
+            switch (option.type) {
+                case 7:
+                    return option.channel;
+                case 11:
+                    return option.attachment;
+                default:
+                    return option.value;
             }
         } catch {
             log.warn(
