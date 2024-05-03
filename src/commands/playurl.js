@@ -168,25 +168,6 @@ const command = new Command(
                                 `${config.paths.ytdl_cache}/${correctedFileName}.webm`
                             );
                             audioPlayer.play(resource);
-                        })
-                        .catch((err) => {
-                            console.log(err.statusCode);
-                            console.log(err.StatusCode === 410);
-                            if (err.statusCode === 410) {
-                                action.editMessage(
-                                    msg,
-                                    'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
-                                );
-                            } else {
-                                action.editMessage(
-                                    msg,
-                                    "error while downloading url, see logs for more info"
-                                );
-                                log.error(err);
-                            }
-                            fs.unlinkSync(
-                                `${config.paths.ytdl_cache}/${correctedFileName}.webm`
-                            );
                         });
                 } catch (err) {
                     action.reply(
