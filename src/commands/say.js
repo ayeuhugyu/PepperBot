@@ -31,7 +31,11 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        if (message.content.startsWith("p/say p/say")) {
+        if (
+            message.content.startsWith(
+                `${config.generic.prefix}say ${config.generic.prefix}say`
+            )
+        ) {
             action.reply(message, `bro really thought 😂😂😂`);
             return;
         }

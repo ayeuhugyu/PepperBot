@@ -8,7 +8,6 @@ import {
 } from "../lib/types/menuBuilders.js";
 import { Collection } from "discord.js";
 import fs from "fs";
-import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -22,10 +21,10 @@ async function getCommands() {
         const filePath = `./${file}`;
         const command = await import(filePath);
         if (
-            command.data.aliases &&
-            command.data.aliases.length > 0
+            command.default.data.aliases &&
+            command.default.data.aliases.length > 0
         ) {
-            command.data.aliases.forEach((alias) => {
+            command.default.data.aliases.forEach((alias) => {
                 commands[alias] = command.default.data;
             });
         }
@@ -33,7 +32,7 @@ async function getCommands() {
     }
     return commands;
 }
- // todo: convert this to use the new commandsObject
+// todo: convert this to use the new commandsObject
 const commands = await getCommands();
 
 const command_option_types = {

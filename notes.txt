@@ -30,7 +30,9 @@ specific command changes:
 - fixed p/corrupt not replacing $s and _s
 - p/vileimagery no longer reads the whole vileimagery folder every time you run the command
 - removed client import from p/info
+- fixed p/say being able to loop on dev version of pepperbot
 - chatbubble replies are no longer ephemeral. should fix some embedding issues
+
 
 other changes:
 

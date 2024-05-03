@@ -1,13 +1,17 @@
-import events from "node:events"
+import events from "node:events";
 import { Collection } from "discord.js";
+import fs from "fs";
 
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
+const commandExecutions = new Collection();
+const commandsWithoutAliasesExecutions = new Collection();
 
 async function getCommands() {
     const commandFiles = fs
         .readdirSync("src/commands")
         .filter((file) => file.endsWith(".js"));
+    console.log(commandFiles);
     for (const file of commandFiles) {
         const command = await import(`../commands/${file}`);
         try {
@@ -17,26 +21,35 @@ async function getCommands() {
             ) {
                 command.default.data.aliases.forEach((value) => {
                     commands.set(value, command.default);
+                    commandExecutions.set(value, command.default.execute);
                 });
             }
             commands.set(command.default.data.name, command.default);
             const data = command.default.data.toJSON();
             commands.set(data.name, command.default);
             commandsWithoutAliases.set(data.name, command.default);
+            commandExecutions.set(data.name, command.default.execute);
+            commandsWithoutAliasesExecutions.set(
+                data.name,
+                command.default.execute
+            );
+            console.log(data.name);
         } catch (err) {
             log.error(err);
             log.error(`failed to load command: ${file}, likely missing data`);
         }
     }
 }
+await getCommands();
+console.log(commands);
 
 const emitter = new events.EventEmitter();
 
 export default {
     commands: commands,
-    commandExecutions: commands.map((command) => command.execute),
+    commandExecutions: commandExecutions,
     commandsWithoutAliases: commandsWithoutAliases,
-    commandsWithoutAliasesExecutions: commandsWithoutAliases.map((command) => command.execute),
+    commandsWithoutAliasesExecutions: commandsWithoutAliasesExecutions,
     emitter: emitter,
     on: emitter.on,
     once: emitter.once,
@@ -64,7 +77,7 @@ export default {
         }
     },
     refreshAll: async () => {
-        await getCommands()
+        await getCommands();
         this.emitter.emit("refresh", this);
-    }
+    },
 };
