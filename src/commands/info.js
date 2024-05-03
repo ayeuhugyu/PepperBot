@@ -3,7 +3,6 @@ import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import fs from "fs";
-import { client } from "../bot.js";
 import path from "path";
 import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
@@ -56,7 +55,7 @@ const command = new Command(
     async function execute(message, args, isInteraction) {
         const memory = process.memoryUsage();
 
-        let guilds = await client.shard.fetchClientValues("guilds.cache.size");
+        let guilds = await message.client.shard.fetchClientValues("guilds.cache.size");
         const persistent_data = JSON.parse(
             fs.readFileSync(config.paths.persistent_data_file, "utf-8")
         );

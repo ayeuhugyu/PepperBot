@@ -29,6 +29,7 @@ specific command changes:
 - hopefully fixed p/chatbubble being able to reply multiple times? (I HAVE LITERALLY NO IDEA WHATS CAUSING THIS???)
 - fixed p/corrupt not replacing $s and _s
 - p/vileimagery no longer reads the whole vileimagery folder every time you run the command
+- removed client import from p/info
 
 other changes:
 

@@ -4,7 +4,6 @@ import fsextra from "fs-extra";
 
 let guildConfigs = {};
 async function getAllGuildConfigs() {
-    guildConfigs = {};
     const guildFiles = fs
         .readdirSync("resources/data/guildConfigs")
         .filter((file) => file.endsWith(".json"));
