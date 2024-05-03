@@ -1,9 +1,7 @@
 import * as voice from "@discordjs/voice";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const players = {};
 

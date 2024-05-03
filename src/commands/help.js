@@ -9,11 +9,9 @@ import {
 import { Collection } from "discord.js";
 import fs from "fs";
 import commandsObject from "../lib/commands.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 async function getCommands() {
     const commandFiles = fs

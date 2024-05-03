@@ -1,8 +1,8 @@
 import fsextra from "fs-extra";
 import fs from "fs";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
+const config = globals.config;
 
 export async function generateLSText(path) {
     const files = fs.readdirSync(path);

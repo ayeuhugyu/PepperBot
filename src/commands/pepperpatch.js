@@ -3,11 +3,9 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import default_embed from "../lib/default_embed.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const data = new CommandData();
 data.setName("pepperpatch");

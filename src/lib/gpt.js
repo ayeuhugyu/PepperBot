@@ -4,11 +4,9 @@ import statistics from "./statistics.js";
 import * as log from "./log.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const openai = new OpenAI({
     apiKey: process.env.OPEN_AI_API_KEY,

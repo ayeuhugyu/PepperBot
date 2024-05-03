@@ -1,12 +1,10 @@
 import fs from "fs";
 import * as log from "../lib/log.js";
 import { Events } from "discord.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
-
-const reaction_roles_non_default = await import("../../resources/data/reaction_roles.json", { assert: { type: 'json'}});    
-const reaction_roles = reaction_roles_non_default.default
+const config = globals.config;
+const reaction_roles = globals.reaction_roles;
 
 function collectorFilter(reaction, args) {
     if (reaction.emoji.name === args.emoji) return true;

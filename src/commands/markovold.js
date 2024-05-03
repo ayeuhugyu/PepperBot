@@ -1,11 +1,9 @@
 import * as action from "../lib/discord_action.js";
 import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const messages = await fs.readFileSync(
     `${config.paths.logs}/messages.log`,

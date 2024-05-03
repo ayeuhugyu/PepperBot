@@ -9,11 +9,9 @@ import { Collection, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
 import commandsObject from "../lib/commands.js"
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const data = new CommandData();
 data.setName("refresh");

@@ -3,11 +3,9 @@ import * as fs from "fs";
 import * as log from "../lib/log.js";
 import * as action from "../lib/discord_action.js";
 import commandsObject from "../lib/commands.js"
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const commands = commandsObject.commandsWithoutAliasesExecutions;
 

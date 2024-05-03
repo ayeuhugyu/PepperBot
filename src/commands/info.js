@@ -6,6 +6,9 @@ import fs from "fs";
 import { client } from "../bot.js";
 import path from "path";
 import { stat } from "fs/promises";
+import * as globals from "../lib/globals.js";
+
+const config = globals.config;
 
 const dirSize = async (directory) => {
     let files = await fs.readdirSync(directory);
@@ -23,11 +26,6 @@ const dirSize = async (directory) => {
         0
     );
 };
-
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
 
 async function convertMilisecondsToReadable(time) {
     var milliseconds = Math.floor((time % 1000) / 100),

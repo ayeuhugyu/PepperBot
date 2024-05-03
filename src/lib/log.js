@@ -2,11 +2,9 @@ import chalk from "chalk";
 import * as util from "util";
 import fs from "fs";
 import fsextra from "fs-extra";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const Level = {
     Debug: "Debug",

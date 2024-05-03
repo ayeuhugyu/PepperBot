@@ -9,11 +9,9 @@ import { Collection } from "discord.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
 import default_embed from "../lib/default_embed.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const viewdata = new SubCommandData();
 viewdata.setName("view");

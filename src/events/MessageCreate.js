@@ -12,16 +12,10 @@ import { client } from "../bot.js";
 import * as gpt from "../lib/gpt.js";
 import * as action from "../lib/discord_action.js";
 import commandsObject from "../lib/commands.js"
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
-
-const diabolical_events = await import(
-    "../../resources/data/diabolical_events.json",
-    { assert: { type: "json" } }
-);
+const config = globals.config;
+const diabolical_events = globals.diabolical_events
 
 const commands = commandsObject.commandExecutions;
 commandsObject.on("refresh", newCommandsObject => {

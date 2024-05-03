@@ -4,11 +4,9 @@ import default_embed from "../lib/default_embed.js";
 import * as textfiles from "../lib/files.js";
 import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const files = fs
     .readdirSync(config.paths.vile_imagery)

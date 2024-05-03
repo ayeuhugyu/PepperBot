@@ -4,13 +4,10 @@ import { ButtonBuilder, ButtonStyle, Collection } from "discord.js";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import * as adobe from "../lib/adobe.js";
 import default_embed from "../lib/default_embed.js";
-
 import chatbubble from "./chatbubble.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const data = new CommandData();
 data.setName("cquery");

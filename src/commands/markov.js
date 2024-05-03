@@ -2,11 +2,9 @@ import * as action from "../lib/discord_action.js";
 import fs from "fs";
 import { tokenize, textify } from "../lib/tokenizer.js";
 import { Command, CommandData } from "../lib/types/commands.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const escapeString = (token) => `_+${token}`;
 const fromTokens = (tokens) => escapeString(tokens.join(""));

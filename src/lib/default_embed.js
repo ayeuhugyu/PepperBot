@@ -1,8 +1,8 @@
 import { EmbedBuilder } from "discord.js";
 import fs from "fs";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../../config.json", { assert: { type: 'json' }});
-const config = configNonDefault.default
+const config = globals.config;
 
 export default function () {
     const embed = new EmbedBuilder();

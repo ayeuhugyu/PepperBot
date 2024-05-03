@@ -18,13 +18,11 @@ import {
 import fs from "fs";
 import * as log from "../lib/log.js";
 import guildConfigs from "../lib/guildConfigs.js";
+import * as globals from "../lib/globals.js";
 
 // command incomplete, do not remove whitelist yet
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const configureguilddata = new SubCommandData();
 configureguilddata.setName("guild");

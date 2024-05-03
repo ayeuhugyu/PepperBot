@@ -8,11 +8,9 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import { google } from "googleapis";
 const youtube = google.youtube("v3");
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 function isValidYouTubeUrl(url) {
     const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;

@@ -1,15 +1,11 @@
-import dotenv from "dotenv";
-dotenv.config();
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
 import * as log from "./lib/log.js";
 import util from "util";
 import prettyBytes from "pretty-bytes";
 import fs from "fs";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 export const client = new Client({
     intents: [

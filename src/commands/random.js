@@ -14,11 +14,9 @@ import * as log from "../lib/log.js";
 import { randomBuildIdea as randomUnbiasedBuildIdea } from "../lib/deepwokenUnbiasedBuildIdea.js";
 import { randomBuildIdea as randomBiasedBuildIdea } from "../lib/deepwokenBiasedBuildIdea.js";
 import e from "express";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const deepwoken_names = await import(
     "../../resources/data/deepwoken_names.json",

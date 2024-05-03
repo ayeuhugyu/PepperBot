@@ -6,6 +6,9 @@ import * as action from "../discord_action.js";
 import { google } from "googleapis";
 import fsextra from "fs-extra";
 const youtube = google.youtube("v3");
+import * as globals from "../globals.js";
+
+const config = globals.config;
 
 export const queueStates = {
     idle: "idle",
@@ -13,8 +16,6 @@ export const queueStates = {
     playing: "playing",
     downloading: "downloading",
 };
-
-const config = JSON.parse(fs.readFileSync("config.json", "utf-8"));
 
 function fetchTitleFromURL(url) {
     return new Promise(async (resolve, reject) => {

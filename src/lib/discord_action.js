@@ -1,11 +1,9 @@
 import { CommandInteraction } from "discord.js";
 import * as log from "./log.js";
 import * as files from "./files.js";
+import * as globals from "./globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 export async function fixMsg(msg) {
     const ogMsg = msg;

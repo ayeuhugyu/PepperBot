@@ -5,10 +5,9 @@ import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+import * as globals from "../lib/globals.js";
+
+const config = globals.config;
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {

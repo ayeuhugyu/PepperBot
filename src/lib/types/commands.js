@@ -3,8 +3,9 @@ import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 import fs from "fs";
 import guildConfigs from "../guildConfigs.js";
 import statistics from "../statistics.js";
+import * as globals from "../globals.js";
 
-const config = JSON.parse(fs.readFileSync("config.json", "utf-8"));
+const config = globals.config;
 
 export class SubCommandData extends SlashCommandSubcommandBuilder {
     setWhitelist(whitelist) {

@@ -2,11 +2,9 @@ import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { AttachmentBuilder, Collection } from "discord.js";
 import sharp from "sharp";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const data = new CommandData();
 data.setName("chatbubble");

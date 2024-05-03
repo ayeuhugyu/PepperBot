@@ -17,3 +17,6 @@ p/vileimagery no longer reads the whole vileimagery folder every time you run th
 converted interactionOptions.get() type differences to be a switch case
 commands are now only cached once, increasing starting times significantly. 
 new p/refresh command allows me to refresh induvidual commands without restarting the bot
+constant json files are now no longer imported in every file, instead in just one
+should decrease restart times (i have no idea if this even did anything tbh)
+dotenv is no longer configured multiple times

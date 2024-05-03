@@ -1,12 +1,8 @@
 import { getVoiceConnection } from "@discordjs/voice";
 import * as log from "../lib/log.js";
-import { client } from "../bot.js";
-import fs from "fs";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 export default {
     name: "voiceStateUpdate",

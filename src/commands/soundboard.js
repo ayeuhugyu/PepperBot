@@ -5,11 +5,9 @@ import * as voice from "../lib/voice.js";
 import * as textfiles from "../lib/files.js";
 import * as log from "../lib/log.js";
 import { Command, CommandData } from "../lib/types/commands.js";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 function autocorrect(message) {
     message.toLowerCase();

@@ -4,11 +4,9 @@ import { Collection } from "discord.js";
 import fs from "fs";
 import fsExtra from "fs-extra";
 import stream from "stream";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {

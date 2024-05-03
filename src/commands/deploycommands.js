@@ -3,11 +3,9 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import * as slashcommands from "../register_commands.js";
 import fs from "fs";
+import * as globals from "../lib/globals.js";
 
-const configNonDefault = await import("../../config.json", {
-    assert: { type: "json" },
-});
-const config = configNonDefault.default;
+const config = globals.config;
 
 const data = new CommandData();
 data.setName("deploycommands");
