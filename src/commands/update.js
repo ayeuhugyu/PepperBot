@@ -11,7 +11,9 @@ const config = globals.config;
 
 const data = new CommandData();
 data.setName("update");
-data.setDescription("perform all the actions i gotta do for updates in one command");
+data.setDescription(
+    "perform all the actions i gotta do for updates in one command"
+);
 data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist(["440163494529073152"]);
@@ -40,11 +42,15 @@ const command = new Command(
             );
             const version = persistent_data.version;
             const setversionArgs = new Collection();
-            setversionArgs.set("version", version + 1);
+            setversionArgs.set("version", Number(version) + 1);
             const deployCommandsArgs = new Collection();
             deployCommandsArgs.set("guild", "global");
             await setversion.execute(message, setversionArgs, isInteraction);
-            await deploycommands.execute(message, deployCommandsArgs, isInteraction);
+            await deploycommands.execute(
+                message,
+                deployCommandsArgs,
+                isInteraction
+            );
             await pepperupdate.execute(message, args, isInteraction);
         } else {
             action.reply(message, "provide an update log you baffoon!");
