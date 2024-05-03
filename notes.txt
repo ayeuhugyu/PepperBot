@@ -36,3 +36,5 @@ announcements:
 
 i'm not gonna make any promises on this comin out soon because i probably have to rewrite a bunch of code for it (cuz the original code is horrid), but i'm workin on a way to configure guild configs. 
 don't be suprised if i forget about it soon though.
+
+also i'm gonna be using this kindof format for update logs now, i like it better it looks a lot cleaner
