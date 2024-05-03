@@ -5,6 +5,8 @@ fix various errors
 here's some common ones:
 markovChain[word].push is not a function (what??????)
 
+commands to run for update:
+
 p/undeploy
 
 p/pepperupdate even more small stuff:
@@ -12,6 +14,7 @@ p/pepperupdate even more small stuff:
 new stuff:
 
 - new p/refresh command allows me to refresh induvidual commands without restarting the bot
+- new p/update command allows me to do all the stuff i do for updates in one command
 
 general command changes:
 
