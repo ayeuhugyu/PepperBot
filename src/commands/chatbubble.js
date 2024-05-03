@@ -126,8 +126,7 @@ const command = new Command(
             content: "hewwo :3 here is your chat bubble pookie-wookie bear!",
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),
-            ],
-            ephemeral: true,
+            ]
         });
     }
 );
