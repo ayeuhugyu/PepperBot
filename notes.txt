@@ -34,6 +34,7 @@ other changes:
 
 - removed some more unused code
 - dotenv is no longer configured multiple times
+- fixed various reference errors that i never actually checked for
 
 announcements:
 
@@ -41,3 +42,5 @@ i'm not gonna make any promises on this comin out soon because i probably have t
 don't be suprised if i forget about it soon though.
 
 also i'm gonna be using this kindof format for update logs now, i like it better it looks a lot cleaner
+
+also, i'm gonna have to do a lotta testing for this, but i just got bun to run it without any erorrs, so i might be able to switch from node to bun.

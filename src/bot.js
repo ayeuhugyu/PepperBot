@@ -3,7 +3,7 @@ import * as log from "./lib/log.js";
 import util from "util";
 import prettyBytes from "pretty-bytes";
 import fs from "fs";
-import * as globals from "./globals.js";
+import * as globals from "./lib/globals.js";
 
 const config = globals.config;
 

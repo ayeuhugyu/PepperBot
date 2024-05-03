@@ -1,4 +1,5 @@
 import events from "node:events"
+import { Collection } from "discord.js";
 
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
@@ -29,12 +30,14 @@ async function getCommands() {
     }
 }
 
+const emitter = new events.EventEmitter();
+
 export default {
     commands: commands,
     commandExecutions: commands.map((command) => command.execute),
     commandsWithoutAliases: commandsWithoutAliases,
     commandsWithoutAliasesExecutions: commandsWithoutAliases.map((command) => command.execute),
-    emitter: new events.EventEmitter(),
+    emitter: emitter,
     on: emitter.on,
     once: emitter.once,
     refresh: async (command) => {

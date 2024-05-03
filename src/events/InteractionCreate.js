@@ -7,7 +7,7 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-const commands = commandsObject.commandsWithoutAliasesExecutions;
+let commands = commandsObject.commandsWithoutAliasesExecutions;
 
 commandsObject.on("refresh", newCommandsObject => {
     commands = newCommandsObject.commandsWithoutAliasesExecutions;

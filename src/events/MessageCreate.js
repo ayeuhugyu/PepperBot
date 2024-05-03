@@ -17,7 +17,7 @@ import * as globals from "../lib/globals.js";
 const config = globals.config;
 const diabolical_events = globals.diabolical_events
 
-const commands = commandsObject.commandExecutions;
+let commands = commandsObject.commandExecutions;
 commandsObject.on("refresh", newCommandsObject => {
     commands = newCommandsObject.commandExecutions;
 })
