@@ -1,7 +1,5 @@
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
-import { Collection, PermissionFlagsBits } from "discord.js";
-import fs from "fs";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -17,15 +15,7 @@ data.setDMPermission(true);
 const command = new Command(
     data,
     async function getArguments(message) {
-        const commandLength = message.content.split(" ")[0].length - 1;
-        const args = new Collection();
-        args.set(
-            "ARGUMENT",
-            message.content
-                .slice(config.generic.prefix.length + commandLength)
-                .trim()
-        );
-        return args;
+        return null;
     },
     async function execute(message, args) {
         await action.reply(message, "Bye Bye! 🌶");

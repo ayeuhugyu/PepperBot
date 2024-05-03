@@ -8,7 +8,6 @@ import {
 import { Collection, PermissionFlagsBits } from "discord.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
-import commandsObject from "../lib/commands.js"
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -23,7 +22,10 @@ data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.setAliases();
 data.addStringOption((option) =>
-    option.setName("command").setDescription("command to refresh").setRequired(true)
+    option
+        .setName("command")
+        .setDescription("command to refresh")
+        .setRequired(true)
 );
 const command = new Command(
     data,
@@ -39,13 +41,20 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction) {
+        const commandsObject = await import("../lib/commands.js"); // i need to import it in here to avoid circular dependencies
         if (!args.get("command")) {
-            action.reply(message, { content: "supply a command to refresh, baffoon!", ephemeral: true });
+            action.reply(message, {
+                content: "supply a command to refresh, baffoon!",
+                ephemeral: true,
+            });
             return;
         }
-        const sent = await action.reply(message, `refreshing \`p/${args.get("command")}\``)
-        await commandsObject.refresh(args.get("command"));
-        action.editMessage(sent, `refreshed \`p/${args.get("command")}\``)
+        const sent = await action.reply(
+            message,
+            `refreshing \`p/${args.get("command")}\``
+        );
+        await commandsObject.default.refresh(args.get("command"));
+        action.editMessage(sent, `refreshed \`p/${args.get("command")}\``);
     }
 );
 

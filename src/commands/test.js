@@ -1,8 +1,5 @@
 import * as action from "../lib/discord_action.js";
-import {
-    Command,
-    CommandData,
-} from "../lib/types/commands.js";
+import { Command, CommandData } from "../lib/types/commands.js";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -21,8 +18,8 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        action.reply(message, "refresh test")
-        //action.reply(message, "REFRESH TEST")
+        action.reply(message, "refresh test");
+        //action.reply(message, "REFRESH TEST");
     }
 );
 

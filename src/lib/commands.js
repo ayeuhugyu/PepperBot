@@ -1,6 +1,8 @@
 import events from "node:events";
 import { Collection } from "discord.js";
 import fs from "fs";
+import * as log from "./log.js";
+import decache from "decache";
 
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
@@ -11,7 +13,6 @@ async function getCommands() {
     const commandFiles = fs
         .readdirSync("src/commands")
         .filter((file) => file.endsWith(".js"));
-    console.log(commandFiles);
     for (const file of commandFiles) {
         const command = await import(`../commands/${file}`);
         try {
@@ -33,15 +34,15 @@ async function getCommands() {
                 data.name,
                 command.default.execute
             );
-            console.log(data.name);
         } catch (err) {
             log.error(err);
             log.error(`failed to load command: ${file}, likely missing data`);
         }
     }
 }
+
 await getCommands();
-console.log(commands);
+log.debug("cached commands");
 
 const emitter = new events.EventEmitter();
 
@@ -54,6 +55,7 @@ export default {
     on: emitter.on,
     once: emitter.once,
     refresh: async (command) => {
+        await decache(`../commands/${command}.js`);
         const commandFile = await import(`../commands/${command}.js`);
         try {
             if (
@@ -68,7 +70,7 @@ export default {
             const data = commandFile.default.data.toJSON();
             commands.set(data.name, commandFile.default);
             commandsWithoutAliases.set(data.name, commandFile.default);
-            this.emitter.emit("refresh", this);
+            emitter.emit("refresh", this);
         } catch (err) {
             log.error(err);
             log.error(

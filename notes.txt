@@ -32,7 +32,7 @@ specific command changes:
 - removed client import from p/info
 - fixed p/say being able to loop on dev version of pepperbot
 - chatbubble replies are no longer ephemeral. should fix some embedding issues
-
+- removed unused boilerplate from p/restart
 
 other changes:
 

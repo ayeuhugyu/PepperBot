@@ -18,21 +18,25 @@ async function getCommands() {
         .filter((file) => file.endsWith(".js"));
     let commands = {};
     for (const file of commandFiles) {
-        const filePath = `./${file}`;
-        const command = await import(filePath);
-        if (
-            command.default.data.aliases &&
-            command.default.data.aliases.length > 0
-        ) {
-            command.default.data.aliases.forEach((alias) => {
-                commands[alias] = command.default.data;
-            });
+        if (file !== "help.js" && file !== "refresh.js") {
+            const filePath = `./${file}`;
+            const command = await import(filePath);
+            if (
+                command.default.data.aliases &&
+                command.default.data.aliases.length > 0
+            ) {
+                command.default.data.aliases.forEach((alias) => {
+                    commands[alias] = command.default.data;
+                });
+            }
+            commands[command.default.data.name] = command.default.data;
         }
-        commands[command.default.data.name] = command.default.data;
     }
     return commands;
 }
-// todo: convert this to use the new commandsObject
+
+//todo: convert this to the new commandsObject
+
 const commands = await getCommands();
 
 const command_option_types = {

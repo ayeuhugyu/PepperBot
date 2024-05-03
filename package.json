@@ -16,8 +16,12 @@
     "opusscript": "^0.0.8",
     "path": "^0.12.7",
     "pretty-bytes": "^6.1.1",
+    "sharp": "^0.33.3",
     "tweetnacl": "^1.0.3",
     "youtube-dl-exec": "^2.5.8",
     "ytdl-core": "^4.11.5"
+  },
+  "devDependencies": {
+    "decache": "^4.6.2"
   }
 }
