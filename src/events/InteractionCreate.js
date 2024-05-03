@@ -2,16 +2,12 @@ import { Events, Collection } from "discord.js";
 import * as fs from "fs";
 import * as log from "../lib/log.js";
 import * as action from "../lib/discord_action.js";
-import commandsObject from "../lib/commands.js"
+import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-let commands = commandsObject.commandsWithoutAliasesExecutions;
-
-commandsObject.on("refresh", newCommandsObject => {
-    commands = newCommandsObject.commandsWithoutAliasesExecutions;
-})
+const commands = commandsObject.commandsWithoutAliasesExecutions;
 
 async function chatInputCommand(interaction) {
     interaction.author = interaction.user;

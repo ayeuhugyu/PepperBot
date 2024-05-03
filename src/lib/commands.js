@@ -1,8 +1,6 @@
-import events from "node:events";
 import { Collection } from "discord.js";
 import fs from "fs";
 import * as log from "./log.js";
-import decache from "decache";
 
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
@@ -44,42 +42,9 @@ async function getCommands() {
 await getCommands();
 log.debug("cached commands");
 
-const emitter = new events.EventEmitter();
-
 export default {
     commands: commands,
     commandExecutions: commandExecutions,
     commandsWithoutAliases: commandsWithoutAliases,
     commandsWithoutAliasesExecutions: commandsWithoutAliasesExecutions,
-    emitter: emitter,
-    on: emitter.on,
-    once: emitter.once,
-    refresh: async (command) => {
-        await decache(`../commands/${command}.js`);
-        const commandFile = await import(`../commands/${command}.js`);
-        try {
-            if (
-                commandFile.default.data.aliases &&
-                commandFile.default.data.aliases.length > 0
-            ) {
-                commandFile.default.data.aliases.forEach((value) => {
-                    commands.set(value, commandFile.default);
-                });
-            }
-            commands.set(commandFile.default.data.name, commandFile.default);
-            const data = commandFile.default.data.toJSON();
-            commands.set(data.name, commandFile.default);
-            commandsWithoutAliases.set(data.name, commandFile.default);
-            emitter.emit("refresh", this);
-        } catch (err) {
-            log.error(err);
-            log.error(
-                `failed to load command: ${command}, likely missing data`
-            );
-        }
-    },
-    refreshAll: async () => {
-        await getCommands();
-        this.emitter.emit("refresh", this);
-    },
 };

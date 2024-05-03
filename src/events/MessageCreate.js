@@ -11,16 +11,13 @@ import * as log from "../lib/log.js";
 import { client } from "../bot.js";
 import * as gpt from "../lib/gpt.js";
 import * as action from "../lib/discord_action.js";
-import commandsObject from "../lib/commands.js"
+import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
-const diabolical_events = globals.diabolical_events
+const diabolical_events = globals.diabolical_events;
 
-let commands = commandsObject.commandExecutions;
-commandsObject.on("refresh", newCommandsObject => {
-    commands = newCommandsObject.commandExecutions;
-})
+const commands = commandsObject.commandExecutions;
 
 async function processDM(message) {
     if (message.channel.type === 1) {

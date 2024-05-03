@@ -18,7 +18,7 @@ async function getCommands() {
         .filter((file) => file.endsWith(".js"));
     let commands = {};
     for (const file of commandFiles) {
-        if (file !== "help.js" && file !== "refresh.js") {
+        if (file !== "help.js") {
             const filePath = `./${file}`;
             const command = await import(filePath);
             if (

@@ -11,38 +11,37 @@ p/undeploy
 
 p/pepperupdate even more small stuff:
 
-new stuff:
+**new stuff:**
 
-- new p/refresh command allows me to refresh induvidual commands without restarting the bot
-- new p/update command allows me to do all the stuff i do for updates in one command
+-   new p/update command allows me to do all the stuff i do for updates in one command
 
-general command changes:
+**general command changes:**
 
-- converted interactionOptions.get() type differences to be a switch case
-- commands are now only cached once, increasing starting times significantly.
-- constant json files are now no longer imported in every file, instead in just one. should decrease restart times (i have no idea if this even did anything tbh) 
-- fixed new guilds recieving duplicate commands
-- fixed some subcommands data being CommandData instead of SubCommandData
+-   converted interactionOptions.get() type differences to be a switch case
+-   commands are now only cached once, increasing starting times significantly.
+-   constant json files are now no longer imported in every file, instead in just one. should decrease restart times (i have no idea if this even did anything tbh)
+-   fixed new guilds recieving duplicate commands
+-   fixed some subcommands data being CommandData instead of SubCommandData
 
-specific command changes: 
+**specific command changes: **
 
-- hopefully fixed p/chatbubble being able to reply multiple times? (I HAVE LITERALLY NO IDEA WHATS CAUSING THIS???)
-- fixed p/corrupt not replacing $s and _s
-- p/vileimagery no longer reads the whole vileimagery folder every time you run the command
-- removed client import from p/info
-- fixed p/say being able to loop on dev version of pepperbot
-- chatbubble replies are no longer ephemeral. should fix some embedding issues
-- removed unused boilerplate from p/restart
+-   hopefully fixed p/chatbubble being able to reply multiple times? (I HAVE LITERALLY NO IDEA WHATS CAUSING THIS???)
+-   fixed p/corrupt not replacing $s and _s
+-   p/vileimagery no longer reads the whole vileimagery folder every time you run the command
+-   removed client import from p/info
+-   fixed p/say being able to loop on dev version of pepperbot
+-   chatbubble replies are no longer ephemeral. should fix some embedding issues
+-   removed unused boilerplate from p/restart
 
-other changes:
+**other changes:**
 
-- removed some more unused code
-- dotenv is no longer configured multiple times
-- fixed various reference errors that i never actually checked for
+-   removed some more unused code
+-   dotenv is no longer configured multiple times
+-   fixed various reference errors that i never actually checked for
 
-announcements:
+**announcements:**
 
-i'm not gonna make any promises on this comin out soon because i probably have to rewrite a bunch of code for it (cuz the original code is horrid), but i'm workin on a way to configure guild configs. 
+i'm not gonna make any promises on this comin out soon because i probably have to rewrite a bunch of code for it (cuz the original code is horrid), but i'm workin on a way to configure guild configs.
 don't be suprised if i forget about it soon though.
 
 also i'm gonna be using this kindof format for update logs now, i like it better it looks a lot cleaner
