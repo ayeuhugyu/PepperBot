@@ -186,6 +186,7 @@ export class AudioPlayerQueueManager {
         if (this.currentIndex >= this.queues.length) {
             this.currentIndex = 0;
             this.play(this.currentIndex);
+            return;
         }
         this.play(this.currentIndex);
     }
@@ -265,10 +266,11 @@ export class AudioPlayerQueueManager {
         }
         this.player.on("stateChange", (oldState, newState) => {
             if (
-                newState == "idle" &&
+                newState.status == "idle" &&
                 this.state !== (queueStates.idle || queueStates.paused)
-            )
+            ) {
                 this.next();
+            }
         });
         this.player.on("error", (error) => {
             log.error(error);

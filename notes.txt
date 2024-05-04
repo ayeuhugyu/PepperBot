@@ -7,9 +7,6 @@ markovChain[word].push is not a function (what??????)
 
 commands to run for update:
 
-p/pepperpatch fixed diabolical events causing fatal errors
-fixed queue subcommands just not working..?
-
 p/update even more small stuff:
 
 **new stuff:**
