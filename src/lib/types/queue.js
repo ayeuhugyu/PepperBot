@@ -185,6 +185,7 @@ export class AudioPlayerQueueManager {
         this.currentIndex++;
         if (this.currentIndex >= this.queues.length) {
             this.currentIndex = 0;
+            this.play(this.currentIndex);
         }
         this.play(this.currentIndex);
     }
