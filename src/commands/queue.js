@@ -449,7 +449,8 @@ const command = new Command(
                 });
             }
         });
-    }
+    },
+    [add, clear, skip, play]
 );
 
 export default command;

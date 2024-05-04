@@ -63,8 +63,8 @@ async function processDiabolicalEvent(message) {
                 return;
             }
             const event =
-                diabolical_events.default[
-                    Math.floor(Math.random() * diabolical_events.default.length)
+                diabolical_events[
+                    Math.floor(Math.random() * diabolical_events.length)
                 ];
             action.reply(message, event);
         }
