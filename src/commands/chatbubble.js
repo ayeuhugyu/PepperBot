@@ -75,17 +75,16 @@ const command = new Command(
             });
             return;
         }
-
-        const inputImg = await fetch(args.get("image").url);
-        if (!inputImg.width || !inputImg.height) {
+        const originalImg = args.get("image");
+        if (!originalImg.width || !originalImg.height) {
             action.reply(message, {
                 content:
-                    "accoridng to discord, this image does not have a height or width defined. please try again with a different image.",
+                    "this image does not appear to have a valid height or width defined. please try again with a different image.",
                 ephemeral: true,
             });
             return;
         }
-        if (imputImg.width > 2048 || inputImg.height > 2048) {
+        if (originalImg.width > 4096 || originalImg.height > 4096) {
             action.reply(message, {
                 content:
                     "image too big, please try again with a smaller image.",
@@ -93,6 +92,8 @@ const command = new Command(
             });
             return;
         }
+
+        const inputImg = await fetch(args.get("image").url);
         const inputImgBuf = await inputImg.arrayBuffer();
 
         let outputImg = await sharp(inputImgBuf, { animated: true });
