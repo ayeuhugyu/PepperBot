@@ -33,6 +33,7 @@ p/update some smallish stuff
 - fixed queue not handling status correctly
 - fixed queue embeds not being updated properly when someone uses the text commands instead of the buttons
 - fixed fatal error caused by attempting to play age restricted videos from the queue
+- fixed markdown-related syntax working in the queue embed (apparently was a side effect of the hyperlinks)
 
 - added back queue event system
 - extended queue response collector time by 5x (to 20 minutes, rather than the original 4. however, this is excessively long, so if yall start abusing this i WILL be lowering it.)
