@@ -50,10 +50,35 @@ async function isExistingVideo(url) {
     }
 }
 
+async function isAgeRestricted(url) {
+    try {
+        const videoId = await ytdl.getURLVideoID(url);
+        const response = await youtube.videos.list({
+            auth: process.env.YOUTUBE_API_KEY,
+            part: "contentDetails",
+            id: videoId,
+        });
+
+        let isAgeRestricted;
+        if (
+            response.data.items[0].contentDetails.contentRating.ytRating ===
+            "ytAgeRestricted"
+        ) {
+            isAgeRestricted = true;
+        }
+        return isAgeRestricted;
+    } catch (error) {
+        return true;
+    }
+}
+
 async function refresh(queue, interaction, args, embed, row, sentMessage) {
     let text;
     if (queue.queues.length > 0 && queue.readableQueue.length > 0) {
         text = queue.readableQueue.map((item, index) => {
+            if (queue.state === "playing" && index === queue.currentIndex) {
+                return `**[${index + 1}] - ${item}**`;
+            }
             return `[${index + 1}] - ${item}`;
         });
         if (embed) embed.setDescription(text.join("\n"));
@@ -82,6 +107,14 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
             action.reply(interaction, {
                 content:
                     "that video does not appear to exist, please give me an actual video",
+                ephemeral: true,
+            });
+            return;
+        }
+        if (await isAgeRestricted(input)) {
+            action.reply(interaction, {
+                content:
+                    "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
                 ephemeral: true,
             });
             return;
@@ -130,6 +163,14 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
                 action.reply(interaction, {
                     content:
                         "that video does not appear to exist, please give me an actual video",
+                    ephemeral: true,
+                });
+                return;
+            }
+            if (await isAgeRestricted(input)) {
+                action.reply(interaction, {
+                    content:
+                        "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
                     ephemeral: true,
                 });
                 return;
@@ -429,7 +470,7 @@ const command = new Command(
             components: [row],
         });
         const collector = sentMessage.createMessageComponentCollector({
-            time: 240_000,
+            time: 1200_000,
         });
         collector.on("collect", async (interaction) => {
             if (functions[interaction.customId]) {
@@ -448,6 +489,16 @@ const command = new Command(
                     ephemeral: true,
                 });
             }
+        });
+        queue.emitter.on("update", () => {
+            refresh(queue, message, args, embed, row, sentMessage);
+        });
+        collector.on("end", async () => {
+            action.editMessage(sentMessage, {
+                content:
+                    "to avoid memory leaks, this collector has been stopped. to use the buttons again, run the command again",
+                components: [],
+            });
         });
     },
     [add, clear, skip, play]

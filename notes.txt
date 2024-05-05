@@ -9,33 +9,47 @@
 
 commands to run for update:
 
-p/update some queue stuff
+p/update some smallish stuff
 
 **new stuff:**
 
 **general changes:**
 
 - fixed diabolical events causing errors
+- optimized the way in which references are handled by the GPT script very very slightly
+
+**specific command changes: **
+
+- added a resolution limit to p/chatbubble to fix a memory leak (its 4096px by 4096px)
+- fixed being able to trigger a p/say loop by some weird fucking method i don't even know how to describe
+- fixed p/markovold
+
+**the queue changes, as expected:**
+
+- removed some useless code from queue
 - fixed queue subcommands being nonexistant
 - fixed queue not looping
 - fixed queue trying to play the sound twice when looping
 - fixed queue not handling status correctly
+- fixed queue embeds not being updated properly when someone uses the text commands instead of the buttons
+- fixed fatal error caused by attempting to play age restricted videos from the queue
 
-**specific command changes: **
-
-- added a resolution limit to p/chatbubble
-
-**other changes:**
+- added back queue event system
+- extended queue response collector time by 5x (to 20 minutes, rather than the original 4. however, this is excessively long, so if yall start abusing this i WILL be lowering it.)
+- added an indicator for when the queue stops collecting inputs
+- queues are now hyperlinks, letting you just click on them to view it on youtube
+- queue now displays what song is currently playing
 
 **shit on the todo list:**
 
-- fix p/markovold causing an error
 - add p/corrupt image support
 - redo the way replies are handled by the GPT script
 - AI image processing
-- p/queue shows currently playing
 - p/queue shows duration
 - p/queue buttons for remaining functions
+- "saving queues" whatever tf that means
+
+if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 
 **announcements:**
 

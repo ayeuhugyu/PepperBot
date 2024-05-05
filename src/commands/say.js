@@ -34,7 +34,11 @@ const command = new Command(
         if (
             message.content.startsWith(
                 `${config.generic.prefix}say ${config.generic.prefix}say`
-            )
+            ) ||
+            message.content.startsWith(`d/say d/say`) ||
+            message.content.startsWith(`p/say p/say`) ||
+            message.content.startsWith(`p/say d/say`) ||
+            message.content.startsWith(`d/say p/say`) // fuck you idc this shit sucks it fucking works and if i don't make a solution yall are gonna keep spamming me "Uhhh... You should fix that!!!" despite it literally not being an issue in the fucking first place
         ) {
             action.reply(message, `bro really thought 😂😂😂`);
             return;

@@ -19,9 +19,10 @@ function markovChainGenerator(text) {
             markovChain[word] = [];
         }
         if (textArr[i + 1]) {
-            markovChain[word].push(
-                textArr[i + 1].toLowerCase().replace(/[\W_]/, " ")
-            );
+            if (markovChain[word] && markovChain[word] instanceof Array)
+                markovChain[word].push(
+                    textArr[i + 1].toLowerCase().replace(/[\W_]/, " ")
+                );
         }
     }
     return markovChain;

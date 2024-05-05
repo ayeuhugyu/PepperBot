@@ -9,7 +9,8 @@ import * as globals from "./globals.js";
 const config = globals.config;
 
 const openai = new OpenAI({
-    apiKey: process.env.OPEN_AI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY,
+    Authorization: process.env.OPENAI_API_KEY,
 });
 
 const botPrompt = `
@@ -161,7 +162,7 @@ async function fixIncomingMessage(message) {
     return messageContent;
 }
 
-export function generateConversationData(id, prompt) {
+export function generateConversationData(id, prompt, defaultMessage) {
     let conversation = new Conversation(id);
     if (!prompt) {
         conversation.addMessage("system", botPrompt);
@@ -189,8 +190,6 @@ async function addReference(message, conversation) {
     }
 }
 
-// todo: rewrite references system, it sucks holy shit
-
 export async function respond(message) {
     let conversation;
     const readableContent = await fixIncomingMessage(message);
@@ -201,14 +200,13 @@ export async function respond(message) {
                 message.author.id
             );
             conversation = conversations[message.author.id];
-            await addReference(message, conversation);
         } else {
             conversation = conversations[message.author.id];
         }
     } else {
         conversation = await generateConversationData(message.author.id);
-        await addReference(message, conversation);
-    }
+    } // basically: if no conversation, create a new one. if they mentioned the bot, create a new one. else, get the existing one.
+    await addReference(message, conversation);
     conversation.addMessage("user", readableContent);
     try {
         const completion = await openai.chat.completions
@@ -223,7 +221,7 @@ export async function respond(message) {
         if (completion === undefined) {
             return;
         }
-        conversation
+        await conversation
             .addMessage("assistant", completion.choices[0].message.content)
             .catch((err) => {
                 log.error(err);

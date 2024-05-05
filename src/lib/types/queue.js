@@ -2,6 +2,7 @@ import * as log from "../log.js";
 import * as voice from "../voice.js";
 import ytdl from "ytdl-core";
 import fs from "node:fs";
+import Events from "node:events";
 import * as action from "../discord_action.js";
 import { google } from "googleapis";
 import fsextra from "fs-extra";
@@ -33,7 +34,10 @@ function fetchTitleFromURL(url) {
             id: videoId,
         });
         try {
-            resolve(info.data.items[0].snippet.title);
+            resolve(
+                info.data.items[0].snippet.title,
+                info.data.items[0].snippet.isNSFW
+            );
         } catch (err) {
             reject("error while fetching video title");
         }
@@ -160,6 +164,10 @@ export class AudioPlayerQueueManager {
     player = null;
     voiceConnection = null;
     messageChannel = null;
+    emitter = new Events.EventEmitter();
+    on = this.emitter.on;
+    emit = this.emitter.emit;
+
     async play(index) {
         if (!index) index = this.currentIndex;
         if (this.queues[index]) {
@@ -177,6 +185,7 @@ export class AudioPlayerQueueManager {
             const resource = await voice.createAudioResource(resourceLocation);
             this.player.play(resource);
             this.state = queueStates.playing;
+            this.emitter.emit("update", this.readableQueue);
         } else {
             log.warn("invalid index in queue");
         }
@@ -189,6 +198,7 @@ export class AudioPlayerQueueManager {
             return;
         }
         this.play(this.currentIndex);
+        this.emitter.emit("update", this.readableQueue);
     }
     previous() {
         this.currentIndex--;
@@ -196,6 +206,7 @@ export class AudioPlayerQueueManager {
         if (this.currentIndex < 0) {
             this.currentIndex = this.queues.length - 1;
         }
+        this.emitter.emit("update", this.readableQueue);
     }
     async add(queue) {
         if (queue.includes("&list=")) {
@@ -206,7 +217,9 @@ export class AudioPlayerQueueManager {
             }
             queues.forEach((queue) => {
                 try {
-                    this.readableQueue.push(queue.snippet.title);
+                    this.readableQueue.push(
+                        `[${queue.snippet.title}](https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId})`
+                    );
                     this.queues.push(
                         `https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId}`
                     );
@@ -216,12 +229,15 @@ export class AudioPlayerQueueManager {
             });
         } else {
             try {
-                this.readableQueue.push(await fetchTitleFromURL(queue));
+                this.readableQueue.push(
+                    `[${await fetchTitleFromURL(queue)}](${queue})`
+                );
                 this.queues.push(queue);
             } catch (e) {
                 return;
             }
         }
+        this.emitter.emit("update", this.readableQueue);
     }
     remove(index) {
         if (!index) {
@@ -233,29 +249,24 @@ export class AudioPlayerQueueManager {
         } else {
             log.warn("attempt to remove invalid index");
         }
+        this.emitter.emit("update", this.readableQueue);
     }
     clear() {
         this.queues = [];
         this.readableQueue = [];
         this.currentIndex = 0;
+        this.emitter.emit("update", this.readableQueue);
     }
     stop() {
         this.state = queueStates.idle;
         this.player.stop();
+        this.emitter.emit("update", this.readableQueue);
     }
-    pause() {
-        this.state = queueStates.paused;
-        this.player.pause();
-    }
-    resume() {
-        if (this.state !== queueStates.paused) return;
-        this.state = queueStates.playing;
-        this.player.unpause();
-    }
-    onDisconect() {
+    onDisconect = () => {
         if (this.player) this.player.stop();
+        this.stop();
         this.connection = undefined;
-    }
+    };
     constructor({ voiceConnection, player, messageChannel }) {
         this.voiceConnection = voiceConnection;
         this.player = player;
