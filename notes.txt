@@ -1,41 +1,31 @@
-todo:
+**shit on the todo list:**
 
-fix various errors
-
-here's some common ones:
-markovChain[word].push is not a function (what??????)
+- fix p/markovold causing an error
+- add p/corrupt image support
+- redo the way replies are handled by the GPT script
+- AI image processing
+- p/queue shows currently playing
+- p/queue shows duration
 
 commands to run for update:
 
-p/update even more small stuff:
+p/update some queue stuff
 
 **new stuff:**
 
--   new p/update command allows me to do all the stuff i do for updates in one command
+**general changes:**
 
-**general command changes:**
-
--   converted interactionOptions.get() type differences to be a switch case
--   commands are now only cached once, increasing starting times significantly.
--   constant json files are now no longer imported in every file, instead in just one. should decrease restart times (i have no idea if this even did anything tbh)
--   fixed new guilds recieving duplicate commands
--   fixed some subcommands data being CommandData instead of SubCommandData
+- fixed diabolical events causing errors
+- fixed queue subcommands being nonexistant
+- fixed queue not looping
+- fixed queue trying to play the sound twice when looping
+- fixed queue not handling status correctly
 
 **specific command changes: **
 
--   ~~hopefully fixed p/chatbubble being able to reply multiple times? (I HAVE LITERALLY NO IDEA WHATS CAUSING THIS???)~~ did not fix it, am not fucking fixing it, fuck this stupid fucking gif.
--   fixed p/corrupt not replacing $s and _s
--   p/vileimagery no longer reads the whole vileimagery folder every time you run the command
--   removed client import from p/info
--   fixed p/say being able to loop on dev version of pepperbot
--   chatbubble replies are no longer ephemeral. should fix some embedding issues
--   removed unused boilerplate from p/restart
+- added a resolution limit to p/chatbubble
 
 **other changes:**
-
--   removed some more unused code
--   dotenv is no longer configured multiple times
--   fixed various reference errors that i never actually checked for
 
 **shit on the todo list:**
 
@@ -43,12 +33,13 @@ p/update even more small stuff:
 - add p/corrupt image support
 - redo the way replies are handled by the GPT script
 - AI image processing
+- p/queue shows currently playing
+- p/queue shows duration
+- p/queue buttons for remaining functions
 
 **announcements:**
 
-i'm not gonna make any promises on this comin out soon because i probably have to rewrite a bunch of code for it (cuz the original code is horrid), but i'm workin on a way to configure guild configs.
-don't be suprised if i forget about it soon though.
+im gonna be including the past patches between major updates in the update logs because uhhhhh
+i like it
+fuck you
 
-also i'm gonna be using this kindof format for update logs now, i like it better it looks a lot cleaner
-
-also, i'm gonna have to do a lotta testing for this, but i just got bun to run it without any erorrs, so i might be able to switch from node to bun.

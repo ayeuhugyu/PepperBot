@@ -55,7 +55,7 @@ const command = new Command(
             });
             return;
         }
-        let replied = false
+        let replied = false;
 
         const supportedFiletypes = [
             "jpeg",
@@ -77,6 +77,22 @@ const command = new Command(
         }
 
         const inputImg = await fetch(args.get("image").url);
+        if (!inputImg.width || !inputImg.height) {
+            action.reply(message, {
+                content:
+                    "accoridng to discord, this image does not have a height or width defined. please try again with a different image.",
+                ephemeral: true,
+            });
+            return;
+        }
+        if (imputImg.width > 2048 || inputImg.height > 2048) {
+            action.reply(message, {
+                content:
+                    "image too big, please try again with a smaller image.",
+                ephemeral: true,
+            });
+            return;
+        }
         const inputImgBuf = await inputImg.arrayBuffer();
 
         let outputImg = await sharp(inputImgBuf, { animated: true });
@@ -126,7 +142,7 @@ const command = new Command(
             content: "hewwo :3 here is your chat bubble pookie-wookie bear!",
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),
-            ]
+            ],
         });
     }
 );
