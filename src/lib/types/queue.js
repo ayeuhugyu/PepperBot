@@ -240,16 +240,19 @@ export class AudioPlayerQueueManager {
         this.emitter.emit("update", this.readableQueue);
     }
     remove(index) {
-        if (!index) {
+        if (!index && index !== 0) {
             log.warn("attempt to remove null from queue");
-            return;
+            return false;
         }
         if (this.queues[index]) {
             this.queues.splice(index, 1);
+            this.readableQueue.splice(index, 1);
+            this.emitter.emit("update", this.readableQueue);
+            return true;
         } else {
             log.warn("attempt to remove invalid index");
+            return false;
         }
-        this.emitter.emit("update", this.readableQueue);
     }
     clear() {
         this.queues = [];

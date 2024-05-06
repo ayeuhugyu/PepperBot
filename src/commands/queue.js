@@ -94,7 +94,13 @@ async function refresh(queue, interaction, args, embed, row, sentMessage) {
 
 async function queue(queue, interaction, args, embed, row, sentMessage) {
     if (args.get("url")) {
-        const input = args.get("url");
+        let input = args.get("url");
+        if (input.startsWith("<")) {
+            input = input.slice(1);
+        }
+        if (input.endsWith(">")) {
+            input = input.slice(0, -1);
+        }
         if (!(await isValidYouTubeUrl(input))) {
             action.reply(interaction, {
                 content:
@@ -148,9 +154,15 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
     interaction.showModal(modal);
     const filter = (interaction) => interaction.customId === "queue";
     interaction
-        .awaitModalSubmit({ filter, time: 60_000 })
+        .awaitModalSubmit({ filter, time: 120_000 })
         .then(async (interaction) => {
-            const input = interaction.fields.getTextInputValue("url");
+            let input = interaction.fields.getTextInputValue("url");
+            if (input.startsWith("<")) {
+                input = input.slice(1);
+            }
+            if (input.endsWith(">")) {
+                input = input.slice(0, -1);
+            }
             if (!(await isValidYouTubeUrl(input))) {
                 action.reply(interaction, {
                     content:
@@ -250,6 +262,86 @@ const functions = {
         //action.reply(interaction, { content: "cleared", ephemeral: true });
     },
     add: queue,
+    remove: async function (queue, interaction, args, embed, row, sentMessage) {
+        if (args.get("url")) {
+            const input = args.get("url");
+            let response = false;
+            let readable;
+            if (queue.queues[input - 1]) {
+                readable = queue.readableQueue[input - 1];
+                response = await queue.remove(input - 1);
+            } else {
+                action.reply(interaction, {
+                    content: "invalid index",
+                    ephemeral: true,
+                });
+                return;
+            }
+            if (!response) {
+                action.reply(interaction, {
+                    content: "invalid index",
+                    ephemeral: true,
+                });
+                return;
+            }
+            action.reply(interaction, {
+                content: `removed ${readable} from queue`,
+                ephemeral: true,
+            });
+            return;
+        }
+        if (!args.get("url") && args.get("isFromMessage")) {
+            action.reply(interaction, {
+                content: "please supply an index",
+                ephemeral: true,
+            });
+            return;
+        }
+
+        const modal = new ModalBuilder();
+        modal.setTitle("Remove from Queue");
+        modal.setCustomId("queue");
+
+        const url = new TextInputBuilder()
+            .setPlaceholder("enter a valid index in the queue")
+            .setLabel("Index")
+            .setStyle(TextInputStyle.Short)
+            .setCustomId("url");
+
+        const actionRow = new ActionRowBuilder().addComponents(url);
+        modal.addComponents(actionRow);
+        interaction.showModal(modal);
+        const filter = (interaction) => interaction.customId === "queue";
+        interaction
+            .awaitModalSubmit({ filter, time: 120_000 })
+            .then(async (interaction) => {
+                let input = interaction.fields.getTextInputValue("url");
+                let response = false;
+                let readable;
+                if (queue.queues[input - 1]) {
+                    readable = queue.readableQueue[input - 1];
+                    response = await queue.remove(input - 1);
+                } else {
+                    action.reply(interaction, {
+                        content: "invalid index",
+                        ephemeral: true,
+                    });
+                    return;
+                }
+                if (!response) {
+                    action.reply(interaction, {
+                        content: "invalid index",
+                        ephemeral: true,
+                    });
+                    return;
+                }
+                action.reply(interaction, {
+                    content: `removed ${readable} from queue`,
+                    ephemeral: true,
+                });
+            })
+            .catch(log.error);
+    },
 };
 
 const adddata = new SubCommandData();
@@ -268,6 +360,7 @@ const add = new SubCommand(
         return args;
     },
     async function execute(message, args) {
+        if (args.get("index")) args.set("url", args.get("index"));
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -278,6 +371,35 @@ const add = new SubCommand(
             queues[message.guild.id] = queue;
         }
         functions.add(queue, message, args);
+    }
+);
+
+const removedata = new SubCommandData();
+removedata.setName("add");
+removedata.setDescription("adds a url to the queue");
+removedata.setPermissions([]);
+removedata.setPermissionsReadable("");
+removedata.setWhitelist([]);
+removedata.setCanRunFromBot(true);
+const remove = new SubCommand(
+    removedata,
+    async function getArguments(message) {
+        const args = new Collection();
+        args.set("url", message.content.split(" ")[1]);
+        args.set("isFromMessage", true);
+        return args;
+    },
+    async function execute(message, args) {
+        let queue = queues[message.guild.id];
+        if (!queue) {
+            queue = new AudioPlayerQueueManager({
+                guild: message.guild.id,
+                player: await voice.createAudioPlayer(message.guild.id),
+                messageChannel: message.channel,
+            });
+            queues[message.guild.id] = queue;
+        }
+        functions.remove(queue, message, args);
     }
 );
 
@@ -374,6 +496,7 @@ data.addStringOption((option) =>
         .setRequired(false)
         .addChoices(
             { name: "add", value: "add" },
+            { name: "remove", value: "remove" },
             { name: "skip", value: "skip" },
             { name: "clear", value: "clear" },
             { name: "play", value: "play" }
@@ -382,8 +505,14 @@ data.addStringOption((option) =>
 data.addStringOption((option) =>
     option
         .setName("url")
+        .setDescription("url to add to the queue (if using add method)")
+        .setRequired(false)
+);
+data.addIntegerOption((option) =>
+    option
+        .setName("index")
         .setDescription(
-            "url to add/remove from the queue (if using add/remove method)"
+            "index to remove from the queue (if using remove method)"
         )
         .setRequired(false)
 );
@@ -455,6 +584,10 @@ const command = new Command(
             .setLabel("⭕ Clear")
             .setStyle(ButtonStyle.Secondary)
             .setCustomId("clear");
+        const remove = new ButtonBuilder()
+            .setLabel("❌ Remove")
+            .setStyle(ButtonStyle.Danger)
+            .setCustomId("remove");
         const add = new ButtonBuilder()
             .setLabel("📥 Add")
             .setStyle(ButtonStyle.Success)
@@ -463,6 +596,7 @@ const command = new Command(
             play,
             skip,
             clear,
+            remove,
             add
         );
         const sentMessage = await action.reply(message, {
@@ -501,7 +635,7 @@ const command = new Command(
             });
         });
     },
-    [add, clear, skip, play]
+    [add, remove, clear, skip, play]
 );
 
 export default command;

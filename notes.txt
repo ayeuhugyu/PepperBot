@@ -1,45 +1,14 @@
-**shit on the todo list:**
+-------------------------------------------------------------------------------------------------------------
 
-- fix p/markovold causing an error
-- add p/corrupt image support
-- redo the way replies are handled by the GPT script
-- AI image processing
-- p/queue shows currently playing
-- p/queue shows duration
+template:
 
-commands to run for update:
-
-p/update some smallish stuff
+p/update some stuff
 
 **new stuff:**
 
 **general changes:**
 
-- fixed diabolical events causing errors
-- optimized the way in which references are handled by the GPT script very very slightly
-
 **specific command changes: **
-
-- added a resolution limit to p/chatbubble to fix a memory leak (its 4096px by 4096px)
-- fixed being able to trigger a p/say loop by some weird fucking method i don't even know how to describe
-- fixed p/markovold
-
-**the queue changes, as expected:**
-
-- removed some useless code from queue
-- fixed queue subcommands being nonexistant
-- fixed queue not looping
-- fixed queue trying to play the sound twice when looping
-- fixed queue not handling status correctly
-- fixed queue embeds not being updated properly when someone uses the text commands instead of the buttons
-- fixed fatal error caused by attempting to play age restricted videos from the queue
-- fixed markdown-related syntax working in the queue embed (apparently was a side effect of the hyperlinks)
-
-- added back queue event system
-- extended queue response collector time by 5x (to 20 minutes, rather than the original 4. however, this is excessively long, so if yall start abusing this i WILL be lowering it.)
-- added an indicator for when the queue stops collecting inputs
-- queues are now hyperlinks, letting you just click on them to view it on youtube
-- queue now displays what song is currently playing
 
 **shit on the todo list:**
 
@@ -54,7 +23,32 @@ if you've got anything you want me to add to the todo list, go ahead and ping me
 
 **announcements:**
 
-im gonna be including the past patches between major updates in the update logs because uhhhhh
-i like it
-fuck you
+-------------------------------------------------------------------------------------------------------------
 
+commands to run for update:
+
+p/update some more queue stuff (dude i wonder how many changes i've made to this command holy shit 😭😭)
+
+**general changes:**
+
+- you can no longer send messages in here if you aren't the bot or me.
+
+**the queue changes, as expected:**
+
+- fixed p/queue identifying urls with the syntax to remove the embed as invalid videos
+- extended the time p/queue will wait for you to submit the modal from 60 seconds to 120 seconds
+- added button for remove function
+
+**shit on the todo list:**
+
+- add p/corrupt image support
+- redo the way replies are handled by the GPT script
+- AI image processing
+- p/queue shows duration
+- p/queue buttons for remaining functions
+- fix p/queue add and remove not working with slash commands
+- "saving queues" whatever tf that means
+
+if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
+
+-------------------------------------------------------------------------------------------------------------

@@ -165,9 +165,27 @@ async function processCommand(message) {
     log.info(logmsg);
 }
 
+function getIsDisgraceful(message) {
+    if (message.guild && message.guild.id == "1112819622505365556") {
+        if (message.channel && message.channel.id == "1171660137946157146") {
+            if (
+                message.member.id !== "440163494529073152" &&
+                message.member.id !== message.client.user.id
+            ) {
+                action.sendDM(message.author, { content: "Disgraceful." });
+                action.deleteMessage(message);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 export default {
     name: Events.MessageCreate,
     async execute(message) {
+        const DNI = getIsDisgraceful(message);
+        if (DNI) return;
         await Promise.all([
             processDM(message),
             processDiabolicalEvent(message),

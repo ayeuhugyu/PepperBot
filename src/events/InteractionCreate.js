@@ -64,9 +64,31 @@ async function chatInputCommand(interaction) {
     log.info(logmsg);
 }
 
+function getIsDisgraceful(message) {
+    if (message.guild && message.guild.id == "1112819622505365556") {
+        if (message.channel && message.channel.id == "1171660137946157146") {
+            if (
+                message.member.id !== "440163494529073152" &&
+                message.member.id !== message.client.user.id
+            ) {
+                action.sendDM(message.user, { content: "Disgraceful." });
+                action.deleteMessage(message);
+                action.reply(message, {
+                    content: "Disgraceful.",
+                    ephemeral: true,
+                });
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 export default {
     name: Events.InteractionCreate,
     async execute(interaction) {
+        const DNI = getIsDisgraceful(interaction);
+        if (DNI) return;
         if (interaction.isChatInputCommand()) {
             chatInputCommand(interaction);
         }
