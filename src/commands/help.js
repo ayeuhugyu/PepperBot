@@ -3,7 +3,6 @@ import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import {
-    StringPagedMenuBuilder,
     AdvancedPagedMenuBuilder,
 } from "../lib/types/menuBuilders.js";
 import { Collection } from "discord.js";
@@ -124,7 +123,7 @@ const command = new Command(
                 commandPage.setDescription(text);
 
                 if (command.options && command.options.length > 0) {
-                    menu.addPage(commandPage);
+                    menu.full.addPage(commandPage);
                     command.options.forEach((option) => {
                         const optionPage = default_embed();
                         optionPage.setTitle(option.name);
@@ -138,15 +137,14 @@ TYPE: ${command_option_types[option.type]}`;
                                 .join(", ")}`;
                         }
                         optionPage.setDescription(optionText);
-                        menu.addPage(optionPage);
+                        menu.full.addPage(optionPage);
                     });
-                    const builtMenu = menu.build();
                     const sentMessage = await action.reply(message, {
-                        embeds: [builtMenu.embed],
-                        components: [builtMenu.actionRow],
+                        embeds: [menu.embed],
+                        components: [menu.actionRow],
                         ephemeral: true,
                     });
-                    menu.begin(sentMessage, 120_000, builtMenu);
+                    menu.full.begin(sentMessage, 120_000, menu);
                 } else {
                     action.reply(message, {
                         embeds: [commandPage],

@@ -81,15 +81,36 @@ async function refresh(queue, interaction, args, embed, row, sentMessage) {
             }
             return `[${index + 1}] - ${item}`;
         });
-        if (embed) embed.setDescription(text.join("\n"));
+        const fullText = text.join("\n");
+        const segments = fullText.match(/(.|\n){1,15}/g);
+        if (segments.length > 1) {
+            const Menu = new AdvancedPagedMenuBuilder();
+            segments.forEach(segment => {
+                const newEmbed = default_embed();
+                newEmbed.setTitle("Queue");
+                newEmbed.setDescription(segment);
+                Menu.addPage(newEmbed);
+            })
+
+            action.editMessage(sentMessage, {
+                embeds: [Menu.embed],
+                components: [row, Menu.actionRow],
+            });
+        } else {
+            if (embed) {
+                embed.setDescription(fullText);
+                action.editMessage(sentMessage, {
+                    embeds: [embed],
+                    components: [row],
+                });
+            }
+        }
+        if (embed) embed.setDescription(fullText);
     } else {
-        if (!embed) return; // please actually fix this sometime this is NOT a good long term solution
+        if (!embed) return;
         embed.setDescription("queue is empty");
     }
-    action.editMessage(sentMessage, {
-        embeds: [embed],
-        components: [row],
-    });
+
 }
 
 async function queue(queue, interaction, args, embed, row, sentMessage) {
@@ -188,7 +209,6 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
                 return;
             }
             await queue.add(input);
-            refresh(queue, interaction, args, embed, row, sentMessage);
             action.reply(interaction, {
                 content: "added to queue",
                 ephemeral: true,
@@ -198,6 +218,7 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
 }
 
 let queues = {};
+let queueEmbeds = {}
 const functions = {
     play: async function (queue, interaction) {
         if (queue.state === queueStates.playing) {
@@ -205,7 +226,6 @@ const functions = {
             if (interaction instanceof ButtonInteraction) {
                 interaction.deferUpdate();
             }
-            //action.reply(interaction, { content: "stopped", ephemeral: true });
         } else if (queue.state === (queueStates.idle || queueStates.paused)) {
             if (queue.queues.length == 0) {
                 action.reply(interaction, {
@@ -239,7 +259,6 @@ const functions = {
             if (interaction instanceof ButtonInteraction) {
                 interaction.deferUpdate();
             }
-            //action.reply(interaction, { content: "playing", ephemeral: true });
         }
     },
     skip: async function (queue, interaction) {
@@ -249,7 +268,6 @@ const functions = {
         } else {
             interaction.reply({ content: "skipped", ephemeral: true });
         }
-        //action.reply(interaction, { content: "skipped", ephemeral: true });
     },
     clear: async function (queue, interaction, args, embed, row, sentMessage) {
         queue.clear();
@@ -259,7 +277,6 @@ const functions = {
         } else {
             interaction.reply({ content: "cleared", ephemeral: true });
         }
-        //action.reply(interaction, { content: "cleared", ephemeral: true });
     },
     add: queue,
     remove: async function (queue, interaction, args, embed, row, sentMessage) {
@@ -359,7 +376,8 @@ const add = new SubCommand(
         args.set("isFromMessage", true);
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, isInteraction) {
+        if (isInteraction) args.set("isFromMessage", true);
         if (args.get("index")) args.set("url", args.get("index"));
         let queue = queues[message.guild.id];
         if (!queue) {
@@ -389,7 +407,9 @@ const remove = new SubCommand(
         args.set("isFromMessage", true);
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, isInteraction) {
+        if (args.get("index")) args.set("url", args.get("index"));
+        if (isInteraction) args.set("isFromMessage", true);
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -603,6 +623,7 @@ const command = new Command(
             embeds: [embed],
             components: [row],
         });
+        queueEmbeds[message.channel.id] = sentMessage;
         const collector = sentMessage.createMessageComponentCollector({
             time: 1200_000,
         });
@@ -624,10 +645,18 @@ const command = new Command(
                 });
             }
         });
-        queue.emitter.on("update", () => {
+
+        function onUpdate() {
+            if (queueEmbeds[message.channel.id] !== sentMessage) {
+                queue.emitter.off("update", onUpdate);
+                return;
+            }
             refresh(queue, message, args, embed, row, sentMessage);
-        });
+        }
+
+        queue.emitter.on("update", onUpdate);
         collector.on("end", async () => {
+            row.setComponents([]);
             action.editMessage(sentMessage, {
                 content:
                     "to avoid memory leaks, this collector has been stopped. to use the buttons again, run the command again",

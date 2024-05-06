@@ -67,18 +67,17 @@ const command = new Command(
                     .setTitle(`[${index + 1}] - ${file.title}`)
                     .setImage(file.url)
                     .setURL(file.pageUrl);
-                menu.addPage(embed);
+                menu.full.addPage(embed);
             });
 
             const button = new ButtonBuilder()
                 .setCustomId("bubble")
                 .setLabel("Create Chat Bubble")
                 .setStyle(ButtonStyle.Danger);
-
-            const built = menu.build();
+                
             const sent = await action.reply(message, {
-                embeds: [built.embed],
-                components: [built.actionRow.addComponents(button)],
+                embeds: [menu.embed],
+                components: [menu.actionRow.addComponents(button)],
                 ephemeral: true,
             });
             const collector = sent.createMessageComponentCollector({
@@ -94,7 +93,7 @@ const command = new Command(
                     chatbubble.execute(interaction, args, true);
                 }
             });
-            menu.begin(sent, 240_000, built);
+            menu.full.begin(sent, 240_000, menu);
         } else {
             action.reply(message, "no results found");
         }

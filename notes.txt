@@ -12,13 +12,6 @@ p/update some stuff
 
 **shit on the todo list:**
 
-- add p/corrupt image support
-- redo the way replies are handled by the GPT script
-- AI image processing
-- p/queue shows duration
-- p/queue buttons for remaining functions
-- "saving queues" whatever tf that means
-
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 
 **announcements:**
@@ -31,13 +24,15 @@ p/update some more queue stuff (dude i wonder how many changes i've made to this
 
 **general changes:**
 
-- you can no longer send messages in here if you aren't the bot or me.
+- removed string paged menu builders, they were stupid.
+- merged the build function of paged menu builders into the constructor
 
 **the queue changes, as expected:**
 
-- fixed p/queue identifying urls with the syntax to remove the embed as invalid videos
-- extended the time p/queue will wait for you to submit the modal from 60 seconds to 120 seconds
-- added button for remove function
+- fixed p/queue add and remove not working with slash commands
+- fixed p/queue refreshing twice when adding songs to it
+- fixed memory leak with queues where it would try to update every queue message at once, now it only updates the most recent ones in each channel
+- fixed queues adding the buttons back after they've been removed when they refresh
 
 **shit on the todo list:**
 
@@ -46,8 +41,8 @@ p/update some more queue stuff (dude i wonder how many changes i've made to this
 - AI image processing
 - p/queue shows duration
 - p/queue buttons for remaining functions
-- fix p/queue add and remove not working with slash commands
 - "saving queues" whatever tf that means
+- have p/sendlog return only recent logs
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 
