@@ -50,6 +50,20 @@ async function isExistingVideo(url) {
     }
 }
 
+async function getDuration(url) {
+    try {
+        const videoId = await ytdl.getURLVideoID(url);
+        const response = await youtube.videos.list({
+            auth: process.env.YOUTUBE_API_KEY,
+            part: "snippet",
+            id: videoId,
+        });
+        return response.contentDetails.duration;
+    } catch (error) {
+        return false;
+    }
+}
+
 async function isAgeRestricted(url) {
     try {
         const videoId = await ytdl.getURLVideoID(url);
@@ -81,36 +95,69 @@ async function refresh(queue, interaction, args, embed, row, sentMessage) {
             }
             return `[${index + 1}] - ${item}`;
         });
-        const fullText = text.join("\n");
-        const segments = fullText.match(/(.|\n){1,15}/g);
-        if (segments.length > 1) {
-            const Menu = new AdvancedPagedMenuBuilder();
-            segments.forEach(segment => {
-                const newEmbed = default_embed();
-                newEmbed.setTitle("Queue");
-                newEmbed.setDescription(segment);
-                Menu.addPage(newEmbed);
-            })
+        const lines = text.trim().split("\n");
+        const chunks = [];
 
-            action.editMessage(sentMessage, {
+        for (let i = 1; i < lines.length; i += 15) {
+            chunks.push(lines.slice(i, i + 15).join("\n"));
+        }
+        let title = "Queue"
+        if (queue.state == "playing") {
+            title += ` | Now Playing Song ${queue.currentIndex}`
+        }
+        const duration = getDuration(queue.queue[queue.currentIndex]) 
+        if (duration) {
+            title += ` | Duration: ${duration}`
+        }
+        if (chunks.length > 1 && queue.readableQueue.length > 15) {
+            const Menu = new AdvancedPagedMenuBuilder();
+            chunks.forEach((chunks, index) => {
+                const newEmbed = default_embed();
+                newEmbed.setTitle(`Queue`);
+                newEmbed.setDescription(chunks);
+                Menu.addPage(newEmbed);
+            }); // while this does technically work, its not exactly optimized to say the least, as it creates a new paged menu every time the queue is refreshed, which happens A LOT. this is a temporary solution until i can figure out a better way to do this.
+
+            await action.editMessage(sentMessage, {
                 embeds: [Menu.embed],
                 components: [row, Menu.actionRow],
             });
+            Menu.begin(sentMessage, 1200_000, Menu)
         } else {
             if (embed) {
-                embed.setDescription(fullText);
+                embed.setDescription(text);
                 action.editMessage(sentMessage, {
                     embeds: [embed],
                     components: [row],
                 });
             }
         }
-        if (embed) embed.setDescription(fullText);
     } else {
         if (!embed) return;
         embed.setDescription("queue is empty");
     }
+}
 
+function isUsableUrl(url) {
+    if (!isValidYouTubeUrl(url)) {
+        return (
+            false,
+            "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL."
+        );
+    }
+    if (!isExistingVideo(url)) {
+        return (
+            false,
+            "that video does not appear to exist, please give me an actual video"
+        );
+    }
+    if (isAgeRestricted(url)) {
+        return (
+            false,
+            "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again."
+        );
+    }
+    return true, undefined;
 }
 
 async function queue(queue, interaction, args, embed, row, sentMessage) {
@@ -122,26 +169,10 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
         if (input.endsWith(">")) {
             input = input.slice(0, -1);
         }
-        if (!(await isValidYouTubeUrl(input))) {
+        const [isUsable, issue] = isUsableUrl(input);
+        if (!isUsable) {
             action.reply(interaction, {
-                content:
-                    "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL.",
-                ephemeral: true,
-            });
-            return;
-        }
-        if (!(await isExistingVideo(input))) {
-            action.reply(interaction, {
-                content:
-                    "that video does not appear to exist, please give me an actual video",
-                ephemeral: true,
-            });
-            return;
-        }
-        if (await isAgeRestricted(input)) {
-            action.reply(interaction, {
-                content:
-                    "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
+                content: issue,
                 ephemeral: true,
             });
             return;
@@ -184,26 +215,10 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
             if (input.endsWith(">")) {
                 input = input.slice(0, -1);
             }
-            if (!(await isValidYouTubeUrl(input))) {
+            const [isUsable, issue] = isUsableUrl(input);
+            if (!isUsable) {
                 action.reply(interaction, {
-                    content:
-                        "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL.",
-                    ephemeral: true,
-                });
-                return;
-            }
-            if (!(await isExistingVideo(input))) {
-                action.reply(interaction, {
-                    content:
-                        "that video does not appear to exist, please give me an actual video",
-                    ephemeral: true,
-                });
-                return;
-            }
-            if (await isAgeRestricted(input)) {
-                action.reply(interaction, {
-                    content:
-                        "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
+                    content: issue,
                     ephemeral: true,
                 });
                 return;
@@ -218,7 +233,8 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
 }
 
 let queues = {};
-let queueEmbeds = {}
+let queueEmbeds = {};
+
 const functions = {
     play: async function (queue, interaction) {
         if (queue.state === queueStates.playing) {

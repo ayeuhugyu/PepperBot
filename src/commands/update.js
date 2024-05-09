@@ -42,7 +42,7 @@ const command = new Command(
             );
             const version = persistent_data.version;
             const setversionArgs = new Collection();
-            setversionArgs.set("version", Number(version) + 1);
+            setversionArgs.set("version", parseInt(version) + 1);
             const deployCommandsArgs = new Collection();
             deployCommandsArgs.set("guild", "global");
             await setversion.execute(message, setversionArgs, isInteraction);

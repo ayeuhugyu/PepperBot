@@ -89,6 +89,8 @@ const command = new Command(
                     args.set("image", {
                         url: interaction.message.embeds[0].image.url,
                         name: "chatbubble.jpg",
+                        height: parseInt(interaction.message.embeds[0].image.height),
+                        width: parseInt(interaction.message.embeds[0].image.width),
                     });
                     chatbubble.execute(interaction, args, true);
                 }

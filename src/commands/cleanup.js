@@ -15,10 +15,21 @@ data.setPermissionsReadable("");
 data.setWhitelist([config.generic.global_whitelist]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
+data.addStringOption((option) => {
+    option.setName("what").setDescription("what to cleanup").setRequired(false)
+})
 const command = new Command(
     data,
     async function getArguments(message) {
-        return null;
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        args.set(
+            "message",
+            message.content
+                .slice(config.generic.prefix.length + commandLength)
+                .trim()
+        );
+        return args;
     },
     async function execute(message, args) {
         const sounds = await fs.readdirSync("resources/ytdl_cache");
@@ -35,6 +46,26 @@ const command = new Command(
             if (log.endsWith(".log") && !(log == "messages.log")) {
                 files.push("logs/" + log);
             } // avoids adding dirs because im too lazy to do allat rn
+        }
+        if (args.get("what") == "logs") {
+            files = []
+            for (const log of logs) {
+                if (log.endsWith(".log") && !(log == "messages.log")) {
+                    files.push("logs/" + log);
+                } // avoids adding dirs because im too lazy to do allat rn
+            }
+        }
+        if (args.get("what") == "videos") {
+            files = []
+            for (const sound of sounds) {
+                files.push("resources/ytdl_cache/" + sound);
+            }
+        }
+        if (args.get("what") == "gptdownloads") {
+            files = []
+            for (const file of gptdownloads) {
+                files.push("resources/gptdownloads/" + file);
+            }
         }
         let filesize = 0;
         files.forEach((file) => {

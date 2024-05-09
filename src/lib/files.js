@@ -16,6 +16,6 @@ export async function generateLSText(path) {
 export async function textToFile(text, name) {
     fsextra.ensureFileSync(`${config.paths.containers}/${name}.txt`);
     const file = `${config.paths.containers}/${name}.txt`;
-    fs.writeFileSync(file, text);
+    await fs.writeFileSync(file, text);
     return file;
 }

@@ -17,6 +17,7 @@ if you've got anything you want me to add to the todo list, go ahead and ping me
 **announcements:**
 
 -------------------------------------------------------------------------------------------------------------
+run in terminal `npm i shelljs` when you get home
 
 commands to run for update:
 
@@ -26,6 +27,10 @@ p/update some more queue stuff (dude i wonder how many changes i've made to this
 
 - removed string paged menu builders, they were stupid.
 - merged the build function of paged menu builders into the constructor
+- fixed p/cquery chatbubbles having undefind heights
+- added a p/git log subcommand, returns a graph of the commits to the repo
+- p/cleanup can now cleanup only specific sections
+- changed p/update to use parseInt instead of Number because i was THAT bored
 
 **the queue changes, as expected:**
 
@@ -33,16 +38,17 @@ p/update some more queue stuff (dude i wonder how many changes i've made to this
 - fixed p/queue refreshing twice when adding songs to it
 - fixed memory leak with queues where it would try to update every queue message at once, now it only updates the most recent ones in each channel
 - fixed queues adding the buttons back after they've been removed when they refresh
+- merged p/queue add checks into one function, rather than the same thing copy pasted twice
+- p/queue now displays the duration of whats playing in the title, i decided not to do a progress bar because the only way to do that would be to edit an absolute ton of messages, which would probably very quickly be used to make my internet suffer
 
 **shit on the todo list:**
 
 - add p/corrupt image support
 - redo the way replies are handled by the GPT script
 - AI image processing
-- p/queue shows duration
-- p/queue buttons for remaining functions
 - "saving queues" whatever tf that means
 - have p/sendlog return only recent logs
+- optimize the p/queue pages, rn it creates a new page menu every time the queue is refreshed
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 
