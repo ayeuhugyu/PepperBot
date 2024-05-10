@@ -57,7 +57,7 @@ data.addStringOption((option) =>
         .setName("subcommand")
         .setDescription("subcommand to use")
         .setRequired(false)
-        .setChoices({ name: "graph", value: "graph" })
+        .setChoices({ name: "log", value: "log" })
 );
 
 const command = new Command(
