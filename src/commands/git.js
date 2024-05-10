@@ -1,20 +1,47 @@
 import * as action from "../lib/discord_action.js";
-import { Command, CommandData, SubCommand, SubCommandData } from "../lib/types/commands.js";
+import {
+    Command,
+    CommandData,
+    SubCommand,
+    SubCommandData,
+} from "../lib/types/commands.js";
 import * as globals from "../lib/globals.js";
 import { Collection } from "discord.js";
-import shell from "shelljs"
-import files from "../lib/files.js"
+import shell from "shelljs";
+import * as files from "../lib/files.js";
 
 const config = globals.config;
 
-const graphdata = new SubCommandData()
-graphdata.setName("graph");
+const graphdata = new SubCommandData();
+graphdata.setName("log");
 graphdata.setDescription("returns a graph of the git history");
 graphdata.setPermissions([]);
 graphdata.setPermissionsReadable("");
 graphdata.setWhitelist([]);
 graphdata.setCanRunFromBot(true);
-graphdata.setDMPermission(true);
+
+const graph = new SubCommand(
+    graphdata,
+    async function getArguments(message) {
+        return null;
+    },
+    async function execute(message, args, fromInteraction) {
+        const output = await shell.exec(
+            `git log --graph --abbrev-commit --decorate --format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)" --all`,
+            { silent: true }
+        );
+        const file = await files.textToFile(output.stdout, "gitlog");
+        action.reply(message, {
+            content: "here's a log of commits to the pepperbot repository",
+            files: [
+                {
+                    attachment: file,
+                    name: "gitlog.txt",
+                },
+            ],
+        });
+    }
+);
 
 const data = new CommandData();
 data.setName("git");
@@ -26,46 +53,29 @@ data.setAliases(["github", "openpepper", "repo"]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.addStringOption((option) =>
-    option.setName("subcommand").setDescription("subcommand to use").setRequired(false).setChoices(
-        { name: "graph", value: "graph" }
-    )
+    option
+        .setName("subcommand")
+        .setDescription("subcommand to use")
+        .setRequired(false)
+        .setChoices({ name: "graph", value: "graph" })
 );
 
-const graph = new SubCommand(
-    graphdata,
-    async function getArguments(message) {
-        return null;
-    },
-    async function execute(message, args, fromInteraction) {
-        const output = shell.exec(`git log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all`)
-        const file = await files.textToFile(output.stdout, "gitlog")
-        action.reply(message, {
-            content: "here's a log of commits to the pepperbot repository",
-            files: [
-                {
-                    attaqachment: file,
-                    name: "gitlog.txt"
-                }
-            ]
-        })
-    },
-);
 const command = new Command(
     data,
     async function getArguments(message) {
         const args = new Collection();
-        args.set(
-            "_SUBCOMMAND",
-            message.content.split(" ")[1].trim()
-        );
-        return args
+        args.set("_SUBCOMMAND", message.content.split(" ")[1]);
+        return args;
     },
     async function execute(message, args, fromInteraction) {
-        let content = ""
+        let content = "";
         if (args.get("_SUBCOMMAND")) {
-            content += `${args.get("_SUBCOMMAND")} is not a valid subcommand. anyways, `
+            content += `${args.get(
+                "_SUBCOMMAND"
+            )} is not a valid subcommand. anyways, `;
         }
-        content += "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/"
+        content +=
+            "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/";
         action.reply(message, {
             content: content,
             ephemeral: true,

@@ -34,10 +34,7 @@ function fetchTitleFromURL(url) {
             id: videoId,
         });
         try {
-            resolve(
-                info.data.items[0].snippet.title,
-                info.data.items[0].snippet.isNSFW
-            );
+            resolve(info.data.items[0].snippet.title);
         } catch (err) {
             reject("error while fetching video title");
         }

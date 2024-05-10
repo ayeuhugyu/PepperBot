@@ -2,9 +2,7 @@ import * as log from "../lib/log.js";
 import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
-import {
-    AdvancedPagedMenuBuilder,
-} from "../lib/types/menuBuilders.js";
+import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import * as globals from "../lib/globals.js";
@@ -140,7 +138,7 @@ TYPE: ${command_option_types[option.type]}`;
                         menu.full.addPage(optionPage);
                     });
                     const sentMessage = await action.reply(message, {
-                        embeds: [menu.embed],
+                        embeds: [menu.pages[menu.currentPage]],
                         components: [menu.actionRow],
                         ephemeral: true,
                     });

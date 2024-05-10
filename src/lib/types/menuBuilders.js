@@ -6,7 +6,6 @@ export class AdvancedPagedMenuBuilder {
         this.pages = [];
         let pages = this.pages;
         let currentPage = 0;
-        let embed = pages[currentPage];
         let actionRow = new ActionRowBuilder();
         let previousButton = new ButtonBuilder()
             .setCustomId("previous")
@@ -18,11 +17,10 @@ export class AdvancedPagedMenuBuilder {
             .setStyle(ButtonStyle.Primary);
         actionRow.setComponents(previousButton, nextButton);
         return {
-            embed: embed,
             actionRow: actionRow,
             currentPage: currentPage,
             pages: pages,
-            full: this
+            full: this,
         };
     }
 
@@ -32,8 +30,8 @@ export class AdvancedPagedMenuBuilder {
     setPages(pages) {
         this.pages = pages;
     }
-    begin(sentMessage, duration, { actionRow, embed, currentPage, pages }) {
-        sentMessage.edit({ embeds: [embed], components: [actionRow] });
+    begin(sentMessage, duration, { actionRow, currentPage, pages }) {
+        let embed = pages[currentPage];
         const collector = sentMessage.createMessageComponentCollector({
             time: duration,
         });
@@ -66,5 +64,13 @@ export class AdvancedPagedMenuBuilder {
                 });
             }
         });
+        this.collector = collector;
+    }
+    stop(menu) {
+        if (menu && menu.collector) {
+            try {
+                menu.collector.stop();
+            } catch (err) {}
+        }
     }
 }

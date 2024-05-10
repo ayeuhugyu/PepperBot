@@ -74,9 +74,9 @@ const command = new Command(
                 .setCustomId("bubble")
                 .setLabel("Create Chat Bubble")
                 .setStyle(ButtonStyle.Danger);
-                
+
             const sent = await action.reply(message, {
-                embeds: [menu.embed],
+                embeds: [menu.pages[menu.currentPage]],
                 components: [menu.actionRow.addComponents(button)],
                 ephemeral: true,
             });
@@ -89,8 +89,12 @@ const command = new Command(
                     args.set("image", {
                         url: interaction.message.embeds[0].image.url,
                         name: "chatbubble.jpg",
-                        height: parseInt(interaction.message.embeds[0].image.height),
-                        width: parseInt(interaction.message.embeds[0].image.width),
+                        height: parseInt(
+                            interaction.message.embeds[0].image.height
+                        ),
+                        width: parseInt(
+                            interaction.message.embeds[0].image.width
+                        ),
                     });
                     chatbubble.execute(interaction, args, true);
                 }

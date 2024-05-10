@@ -15,16 +15,16 @@ data.setPermissionsReadable("");
 data.setWhitelist([config.generic.global_whitelist]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.addStringOption((option) => {
+data.addStringOption((option) =>
     option.setName("what").setDescription("what to cleanup").setRequired(false)
-})
+);
 const command = new Command(
     data,
     async function getArguments(message) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
         args.set(
-            "message",
+            "what",
             message.content
                 .slice(config.generic.prefix.length + commandLength)
                 .trim()
@@ -48,7 +48,7 @@ const command = new Command(
             } // avoids adding dirs because im too lazy to do allat rn
         }
         if (args.get("what") == "logs") {
-            files = []
+            files = [];
             for (const log of logs) {
                 if (log.endsWith(".log") && !(log == "messages.log")) {
                     files.push("logs/" + log);
@@ -56,13 +56,13 @@ const command = new Command(
             }
         }
         if (args.get("what") == "videos") {
-            files = []
+            files = [];
             for (const sound of sounds) {
                 files.push("resources/ytdl_cache/" + sound);
             }
         }
         if (args.get("what") == "gptdownloads") {
-            files = []
+            files = [];
             for (const file of gptdownloads) {
                 files.push("resources/gptdownloads/" + file);
             }

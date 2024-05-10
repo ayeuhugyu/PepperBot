@@ -6,6 +6,7 @@ import {
     SubCommand,
     SubCommandData,
 } from "../lib/types/commands.js";
+import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import { AudioPlayerQueueManager, queueStates } from "../lib/types/queue.js";
 import ytdl from "ytdl-core";
 import * as voice from "../lib/voice.js";
@@ -26,9 +27,33 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
+let queues = {};
+let queueEmbeds = {};
+let queuePageBuilders = {};
+
 function isValidYouTubeUrl(url) {
     const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
     return pattern.test(url);
+}
+
+function convertISO8601ToHumanReadable(duration) {
+    const match = duration.match(
+        /P(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?/
+    );
+    const days = parseInt(match[1]) || 0;
+    const hours = parseInt(match[2]) || 0;
+    const minutes = parseInt(match[3]) || 0;
+    const seconds = parseInt(match[4]) || 0;
+
+    // Pad hours, minutes, and seconds with leading zeros if necessary
+    const paddedHours = hours.toString().padStart(2, "0");
+    const paddedMinutes = minutes.toString().padStart(2, "0");
+    const paddedSeconds = seconds.toString().padStart(2, "0");
+    let string = ``;
+    if (days > 0) {
+        string += `${days}:`;
+    }
+    return string + `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
 }
 
 async function isExistingVideo(url) {
@@ -55,11 +80,14 @@ async function getDuration(url) {
         const videoId = await ytdl.getURLVideoID(url);
         const response = await youtube.videos.list({
             auth: process.env.YOUTUBE_API_KEY,
-            part: "snippet",
+            part: "contentDetails",
             id: videoId,
         });
-        return response.contentDetails.duration;
+        return convertISO8601ToHumanReadable(
+            response.data.items[0].contentDetails.duration
+        );
     } catch (error) {
+        log.error(error);
         return false;
     }
 }
@@ -86,8 +114,14 @@ async function isAgeRestricted(url) {
     }
 }
 
-async function refresh(queue, interaction, args, embed, row, sentMessage) {
+async function refresh(queue, interaction, args, row, sentMessage) {
     let text;
+    const embed = default_embed();
+    if (queuePageBuilders[interaction.channel.id]) {
+        const builder = queuePageBuilders[interaction.channel.id];
+        builder.stop(builder);
+    }
+
     if (queue.queues.length > 0 && queue.readableQueue.length > 0) {
         text = queue.readableQueue.map((item, index) => {
             if (queue.state === "playing" && index === queue.currentIndex) {
@@ -95,34 +129,39 @@ async function refresh(queue, interaction, args, embed, row, sentMessage) {
             }
             return `[${index + 1}] - ${item}`;
         });
+        text = text.join("\n");
         const lines = text.trim().split("\n");
         const chunks = [];
 
-        for (let i = 1; i < lines.length; i += 15) {
+        for (let i = 0; i < lines.length; i += 15) {
             chunks.push(lines.slice(i, i + 15).join("\n"));
         }
-        let title = "Queue"
+        let title = "Queue";
         if (queue.state == "playing") {
-            title += ` | Now Playing Song ${queue.currentIndex}`
+            title += ` | Now Playing Song ${queue.currentIndex + 1}`;
+            const duration = await getDuration(
+                queue.queues[queue.currentIndex]
+            );
+            if (duration) {
+                title += ` | Duration: ${duration}`;
+            }
         }
-        const duration = getDuration(queue.queue[queue.currentIndex]) 
-        if (duration) {
-            title += ` | Duration: ${duration}`
-        }
+        embed.setTitle(title);
         if (chunks.length > 1 && queue.readableQueue.length > 15) {
             const Menu = new AdvancedPagedMenuBuilder();
             chunks.forEach((chunks, index) => {
                 const newEmbed = default_embed();
-                newEmbed.setTitle(`Queue`);
+                newEmbed.setTitle(title);
                 newEmbed.setDescription(chunks);
-                Menu.addPage(newEmbed);
+                Menu.full.addPage(newEmbed);
             }); // while this does technically work, its not exactly optimized to say the least, as it creates a new paged menu every time the queue is refreshed, which happens A LOT. this is a temporary solution until i can figure out a better way to do this.
 
-            await action.editMessage(sentMessage, {
-                embeds: [Menu.embed],
+            sentMessage = await action.editMessage(sentMessage, {
+                embeds: [Menu.pages[Menu.currentPage]],
                 components: [row, Menu.actionRow],
             });
-            Menu.begin(sentMessage, 1200_000, Menu)
+            await Menu.full.begin(sentMessage, 1200_000, Menu);
+            queuePageBuilders[sentMessage.channel.id] = Menu.full;
         } else {
             if (embed) {
                 embed.setDescription(text);
@@ -134,33 +173,41 @@ async function refresh(queue, interaction, args, embed, row, sentMessage) {
         }
     } else {
         if (!embed) return;
+        embed.setTitle("Queue");
         embed.setDescription("queue is empty");
+        action.editMessage(sentMessage, {
+            embeds: [embed],
+            components: [row],
+        });
     }
 }
 
 function isUsableUrl(url) {
     if (!isValidYouTubeUrl(url)) {
-        return (
-            false,
-            "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL."
-        );
+        return {
+            result: false,
+            issue: "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL.",
+        };
     }
     if (!isExistingVideo(url)) {
-        return (
-            false,
-            "that video does not appear to exist, please give me an actual video"
-        );
+        return {
+            result: false,
+            issue: "that video does not appear to exist, please give me an actual video",
+        };
     }
     if (isAgeRestricted(url)) {
-        return (
-            false,
-            "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again."
-        );
+        return {
+            result: false,
+            issue: "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
+        };
     }
-    return true, undefined;
+    return {
+        result: true,
+        issue: undefined,
+    };
 }
 
-async function queue(queue, interaction, args, embed, row, sentMessage) {
+async function queue(queue, interaction, args, row, sentMessage) {
     if (args.get("url")) {
         let input = args.get("url");
         if (input.startsWith("<")) {
@@ -169,7 +216,9 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
         if (input.endsWith(">")) {
             input = input.slice(0, -1);
         }
-        const [isUsable, issue] = isUsableUrl(input);
+        const urlState = isUsableUrl(input);
+        const isUsable = urlState.result;
+        const issue = urlState.issue;
         if (!isUsable) {
             action.reply(interaction, {
                 content: issue,
@@ -215,7 +264,9 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
             if (input.endsWith(">")) {
                 input = input.slice(0, -1);
             }
-            const [isUsable, issue] = isUsableUrl(input);
+            const urlState = isUsableUrl(input);
+            const isUsable = urlState.result;
+            const issue = urlState.issue;
             if (!isUsable) {
                 action.reply(interaction, {
                     content: issue,
@@ -231,9 +282,6 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
         })
         .catch(log.error);
 }
-
-let queues = {};
-let queueEmbeds = {};
 
 const functions = {
     play: async function (queue, interaction) {
@@ -285,9 +333,9 @@ const functions = {
             interaction.reply({ content: "skipped", ephemeral: true });
         }
     },
-    clear: async function (queue, interaction, args, embed, row, sentMessage) {
+    clear: async function (queue, interaction, args, row, sentMessage) {
         queue.clear();
-        refresh(queue, interaction, args, embed, row, sentMessage);
+        refresh(queue, interaction, args, row, sentMessage);
         if (interaction instanceof ButtonInteraction) {
             interaction.deferUpdate();
         } else {
@@ -295,7 +343,7 @@ const functions = {
         }
     },
     add: queue,
-    remove: async function (queue, interaction, args, embed, row, sentMessage) {
+    remove: async function (queue, interaction, args, row, sentMessage) {
         if (args.get("url")) {
             const input = args.get("url");
             let response = false;
@@ -598,15 +646,7 @@ const command = new Command(
         }
         let embed = default_embed(message);
         embed.setTitle("Queue");
-        let text;
-        if (queue.queues.length > 0 && queue.readableQueue.length > 0) {
-            text = queue.readableQueue.map((item, index) => {
-                return `[${index + 1}] - ${item}`;
-            });
-            embed.setDescription(text.join("\n"));
-        } else {
-            embed.setDescription("queue is empty");
-        }
+        embed.setDescription("loading queue");
 
         const play = new ButtonBuilder()
             .setLabel("⏯ Play/Stop")
@@ -653,7 +693,10 @@ const command = new Command(
                     row,
                     sentMessage
                 );
-            } else {
+            } else if (
+                !interaction.customId === "next" &&
+                !interaction.customId === "previous"
+            ) {
                 action.reply(interaction, {
                     content:
                         "how the hell did you manage to press an invalid button what the hell 😭😭😭",
@@ -667,9 +710,9 @@ const command = new Command(
                 queue.emitter.off("update", onUpdate);
                 return;
             }
-            refresh(queue, message, args, embed, row, sentMessage);
+            refresh(queue, message, args, row, sentMessage);
         }
-
+        refresh(queue, message, args, row, sentMessage);
         queue.emitter.on("update", onUpdate);
         collector.on("end", async () => {
             row.setComponents([]);
