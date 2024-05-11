@@ -66,7 +66,7 @@ async function isExistingVideo(url) {
         });
 
         let isExistingVideo;
-        if (response) {
+        if (response.data.items[0].snippet.title) {
             isExistingVideo = true;
         }
         return isExistingVideo;
@@ -87,7 +87,6 @@ async function getDuration(url) {
             response.data.items[0].contentDetails.duration
         );
     } catch (error) {
-        log.error(error);
         return false;
     }
 }
@@ -101,7 +100,7 @@ async function isAgeRestricted(url) {
             id: videoId,
         });
 
-        let isAgeRestricted;
+        let isAgeRestricted = false;
         if (
             response.data.items[0].contentDetails.contentRating.ytRating ===
             "ytAgeRestricted"
@@ -182,20 +181,20 @@ async function refresh(queue, interaction, args, row, sentMessage) {
     }
 }
 
-function isUsableUrl(url) {
-    if (!isValidYouTubeUrl(url)) {
+async function isUsableUrl(url) {
+    if (!(await isValidYouTubeUrl(url))) {
         return {
             result: false,
             issue: "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL.",
         };
     }
-    if (!isExistingVideo(url)) {
+    if (!(await isExistingVideo(url))) {
         return {
             result: false,
             issue: "that video does not appear to exist, please give me an actual video",
         };
     }
-    if (isAgeRestricted(url)) {
+    if (await isAgeRestricted(url)) {
         return {
             result: false,
             issue: "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
@@ -216,10 +215,10 @@ async function queue(queue, interaction, args, row, sentMessage) {
         if (input.endsWith(">")) {
             input = input.slice(0, -1);
         }
-        const urlState = isUsableUrl(input);
+        const urlState = await isUsableUrl(input);
         const isUsable = urlState.result;
         const issue = urlState.issue;
-        if (!isUsable) {
+        if (!isUsable && issue) {
             action.reply(interaction, {
                 content: issue,
                 ephemeral: true,
