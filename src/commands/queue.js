@@ -206,6 +206,10 @@ async function isUsableUrl(url) {
     };
 }
 
+async function fixQueueSaveName(name) {
+    return name.replaceAll(" ", "_").replaceAll("/", "_").replaceAll("\\", "_").replaceAll(":", "_").replaceAll("*", "_").replaceAll("?", "_").replaceAll("\"", "_").replaceAll("<", "_").replaceAll(">", "_").replaceAll("|", "_");
+}
+
 async function queue(queue, interaction, args, row, sentMessage) {
     if (args.get("url")) {
         let input = args.get("url");
@@ -564,6 +568,74 @@ const play = new SubCommand(
     }
 );
 
+const savedata = new SubCommandData();
+savedata.setName("save");
+savedata.setDescription("saves a list as the given name");
+savedata.setPermissions([]);
+savedata.setPermissionsReadable("");
+savedata.setWhitelist([]);
+savedata.setCanRunFromBot(true);
+const save = new SubCommand(
+    savedata,
+    async function getArguments(message) {
+        const args = new Collection();
+        args.set("name", message.content.split(" ")[1]);
+        args.set("isFromMessage", true);
+        return args;
+    },
+    async function execute(message, args, isInteraction) {
+        let queue = queues[message.guild.id];
+        if (!queue) {
+            action.reply(message, "how tf am i gonna save nothing")
+            return
+        }
+        if (queue.readableQueue.length == 0) {
+            action.reply(message, "how tf am i gonna save nothing")
+            return
+        }
+        if (!args.get("name")) {
+            action.reply(message, "what tf am i supposed to save this as")
+            return
+        }
+        queue.save(fixQueueSaveName(args.get("name")));
+        action.reply(message, `saved queue as ${args.get("name")}`);
+    }
+);
+
+const loaddata = new SubCommandData();
+loaddata.setName("load");
+loaddata.setDescription("loads a list");
+loaddata.setPermissions([]);
+loaddata.setPermissionsReadable("");
+loaddata.setWhitelist([]);
+loaddata.setCanRunFromBot(true);
+const load = new SubCommand(
+    loaddata,
+    async function getArguments(message) {
+        const args = new Collection();
+        args.set("name", message.content.split(" ")[1]);
+        args.set("isFromMessage", true);
+        return args;
+    },
+    async function execute(message, args, isInteraction) {
+        let queue = queues[message.guild.id];
+        if (!queue) {
+            queue = new AudioPlayerQueueManager({
+                guild: message.guild.id,
+                player: await voice.createAudioPlayer(message.guild.id),
+                messageChannel: message.channel,
+            });
+            queues[message.guild.id] = queue;
+        }
+        if (!args.get("name")) {
+            action.reply(message, "what tf am i supposed to load")
+            return
+        }
+        queue.load(fixQueueSaveName(args.get("name")));
+        action.reply(message, `loaded queue ${args.get("name")}`);
+    }
+);
+
 const data = new CommandData();
 data.setName("queue");
 data.setDescription("manage the music queue");
@@ -722,7 +794,7 @@ const command = new Command(
             });
         });
     },
-    [add, remove, clear, skip, play]
+    [add, remove, clear, skip, play, save, load]
 );
 
 export default command;

@@ -262,6 +262,23 @@ export class AudioPlayerQueueManager {
         this.player.stop();
         this.emitter.emit("update", this.readableQueue);
     }
+    save(name) {
+        const saveObject = {
+            queues: this.queues,
+            readableQueue: this.readableQueue,
+            currentIndex: this.currentIndex
+        }
+        fs.ensureFileSync(`resources/data/queues/${name}.json`);
+        fs.writeFileSync(`resources/data/queues/${name}.json`, JSON.stringify(saveObject))
+        return `resources/data/queues/${name}.json`
+    }
+    load(name) {
+        const saveObject = JSON.parse(fs.readFileSync(`resources/data/queues/${name}.json`))
+        this.queues = saveObject.queues;
+        this.readableQueue = saveObject.readableQueue;
+        this.currentIndex = saveObject.currentIndex;
+        this.emitter.emit("update", this.readableQueue);
+    }
     onDisconect = () => {
         if (this.player) this.player.stop();
         this.stop();

@@ -13,7 +13,6 @@ import fs from "fs";
 import * as log from "../lib/log.js";
 import { randomBuildIdea as randomUnbiasedBuildIdea } from "../lib/deepwokenUnbiasedBuildIdea.js";
 import { randomBuildIdea as randomBiasedBuildIdea } from "../lib/deepwokenBiasedBuildIdea.js";
-import e from "express";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
