@@ -263,7 +263,7 @@ async function queue(queue, interaction, args, row, sentMessage) {
             if (input.endsWith(">")) {
                 input = input.slice(0, -1);
             }
-            const urlState = isUsableUrl(input);
+            const urlState = await isUsableUrl(input);
             const isUsable = urlState.result;
             const issue = urlState.issue;
             if (!isUsable) {
