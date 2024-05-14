@@ -9,6 +9,7 @@ import { Collection } from "discord.js";
 import { google } from "googleapis";
 const youtube = google.youtube("v3");
 import * as globals from "../lib/globals.js";
+import process from "node:process"
 
 const config = globals.config;
 

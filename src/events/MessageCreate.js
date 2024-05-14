@@ -13,6 +13,7 @@ import * as gpt from "../lib/gpt.js";
 import * as action from "../lib/discord_action.js";
 import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
+import process from "node:process"
 
 const config = globals.config;
 const diabolical_events = globals.diabolical_events;

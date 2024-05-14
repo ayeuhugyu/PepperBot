@@ -2,6 +2,7 @@ import { REST, Routes } from "discord.js";
 import { client } from "./bot.js";
 import * as log from "./lib/log.js";
 import fs from "fs";
+import process from "node:process"
 
 BigInt.prototype.toJSON = function () {
     return this.toString();
@@ -35,7 +36,7 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
 // and deploy your commands!
 async function deployToGuild(guild) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
             if (!guild.id) {
                 guild = { name: "idConvertedGuild", id: guild };
@@ -43,7 +44,7 @@ async function deployToGuild(guild) {
             log.debug(
                 `refreshing ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})`
             );
-            const data = await rest.put(
+            const data = rest.put(
                 Routes.applicationGuildCommands(client.user.id, guild.id),
                 { body: commands }
             );
@@ -58,7 +59,7 @@ async function deployToGuild(guild) {
 }
 
 async function undeployFromGuild(guild) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
             if (!guild.id) {
                 guild = { name: "idConvertedGuild", id: guild };
@@ -66,7 +67,7 @@ async function undeployFromGuild(guild) {
             log.debug(
                 `deleting ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`
             );
-            const data = await rest.put(
+            const data = rest.put(
                 Routes.applicationGuildCommands(client.user.id, guild.id),
                 { body: [] }
             );

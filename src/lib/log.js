@@ -3,6 +3,7 @@ import * as util from "util";
 import fs from "fs";
 import fsextra from "fs-extra";
 import * as globals from "./globals.js";
+import process from "node:process"
 
 const config = globals.config;
 

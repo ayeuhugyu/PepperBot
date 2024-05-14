@@ -66,7 +66,7 @@ export default {
             `.././resources/data/guildConfigs/${guildId}.json`,
             JSON.stringify(config, null, 2)
         );
-        return guildCOnfigs[guildId];
+        return guildConfigs[guildId];
     },
     refresh: getAllGuildConfigs,
     async getGuildConfig(guildId) {

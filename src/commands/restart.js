@@ -1,6 +1,7 @@
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import * as globals from "../lib/globals.js";
+import process from "node:process"
 
 const config = globals.config;
 

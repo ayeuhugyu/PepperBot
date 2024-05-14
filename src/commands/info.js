@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
+import process from "node:process"
 
 const config = globals.config;
 

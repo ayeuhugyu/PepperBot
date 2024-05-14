@@ -2,6 +2,7 @@ import { CommandInteraction } from "discord.js";
 import * as log from "./log.js";
 import * as files from "./files.js";
 import * as globals from "./globals.js";
+import process from "node:process"
 
 const config = globals.config;
 

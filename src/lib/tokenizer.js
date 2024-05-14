@@ -1,7 +1,7 @@
 const NEWLINE_PLACEHOLDER = "§";
 const newlinesRegex = /\n\s*/g;
 
-const punctuation = `[](){}!?.,:;'"\/*&^%$_+-–—=<>@|~`.split("").join("\\");
+const punctuation = `[](){}!?.,:;'"/*&^%$_+-–—=<>@|~`.split("").join("\\");
 const ellipsis = "\\.{3}";
 
 const words = "[a-zA-Zа-яА-ЯёЁ]+";

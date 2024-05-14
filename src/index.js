@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { ShardingManager } from "discord.js";
 import * as log from "./lib/log.js";
+import process from "node:process"
 
 log.debug("starting pepperbot");
 

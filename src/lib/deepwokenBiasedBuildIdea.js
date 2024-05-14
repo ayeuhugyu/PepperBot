@@ -326,6 +326,7 @@ export function adjustWeightsForAttunements(weights, attunements) {
             case "Attunement-less":
                 newWeights.oaths.Silentheart += 0.25;
                 newWeights.weaponCategory.Attuned = 0;
+                break;
             case "Flamecharm":
                 newWeights.weaponCategory.Attuned += 0.5;
                 newWeights.weapons.Attuned["Ysley's Pyre Keeper"] += 0.5;
@@ -421,19 +422,17 @@ export function adjustWeightsForWeapon(weights, weapon, category) {
         if (weapon == "Jus Karita") {
             newWeights.armors["Justicar"] += 0.45;
         } else if (
-            weapon ==
-            ("Way of Navae" ||
-                "Coral Cestus" ||
-                "Drakemaw Gauntlets" ||
-                "Flamekeeper Cestus")
+            weapon == "Way of Navae" ||
+            weapon == "Coral Cestus" ||
+            weapon == "Drakemaw Gauntlets" ||
+            weapon == "Flamekeeper Cestus"
         ) {
             newWeights.armors["Navaen War Chief"] += 0.45;
         } else if (
-            weapon ==
-            ("Legion Kata" ||
-                "Coral Cestus" ||
-                "Drakemaw Gauntlets" ||
-                "Flamekeeper Cestus")
+            (weapon == "Legion Kata") ||
+            (weapon == "Coral Cestus") ||
+            (weapon == "Drakemaw Gauntlets") ||
+            (weapon == "Flamekeeper Cestus")
         ) {
             newWeights.armors["Legion Centurion"] += 0.45;
         } else if (weapon == "Light's Final Toll") {

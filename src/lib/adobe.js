@@ -1,3 +1,5 @@
+import process from "node:process"
+
 export function search({ query, limit, creatorId, quality }) {
     return new Promise((resolve, reject) => {
         let url = `https://stock.adobe.io/Rest/Media/1/Search/Files?locale=en_US&search_parameters[words]=${query}&search_parameters[filters][premium]=all`;

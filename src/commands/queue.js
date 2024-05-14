@@ -24,17 +24,15 @@ import * as log from "../lib/log.js";
 import { google } from "googleapis";
 const youtube = google.youtube("v3");
 import * as globals from "../lib/globals.js";
+import process from "node:process";
+import files from "../lib/files.js";
+import fs from "fs";
 
 const config = globals.config;
 
 let queues = {};
 let queueEmbeds = {};
 let queuePageBuilders = {};
-
-function isValidYouTubeUrl(url) {
-    const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
-    return pattern.test(url);
-}
 
 function convertISO8601ToHumanReadable(duration) {
     const match = duration.match(
@@ -56,25 +54,6 @@ function convertISO8601ToHumanReadable(duration) {
     return string + `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
 }
 
-async function isExistingVideo(url) {
-    try {
-        const videoId = await ytdl.getURLVideoID(url);
-        const response = await youtube.videos.list({
-            auth: process.env.YOUTUBE_API_KEY,
-            part: "snippet",
-            id: videoId,
-        });
-
-        let isExistingVideo;
-        if (response.data.items[0].snippet.title) {
-            isExistingVideo = true;
-        }
-        return isExistingVideo;
-    } catch (error) {
-        return false;
-    }
-}
-
 async function getDuration(url) {
     try {
         const videoId = await ytdl.getURLVideoID(url);
@@ -91,30 +70,9 @@ async function getDuration(url) {
     }
 }
 
-async function isAgeRestricted(url) {
-    try {
-        const videoId = await ytdl.getURLVideoID(url);
-        const response = await youtube.videos.list({
-            auth: process.env.YOUTUBE_API_KEY,
-            part: "contentDetails",
-            id: videoId,
-        });
-
-        let isAgeRestricted = false;
-        if (
-            response.data.items[0].contentDetails.contentRating.ytRating ===
-            "ytAgeRestricted"
-        ) {
-            isAgeRestricted = true;
-        }
-        return isAgeRestricted;
-    } catch (error) {
-        return true;
-    }
-}
-
 async function refresh(queue, interaction, args, row, sentMessage) {
     let text;
+    if (!sentMessage) return;
     const embed = default_embed();
     if (queuePageBuilders[interaction.channel.id]) {
         const builder = queuePageBuilders[interaction.channel.id];
@@ -182,22 +140,56 @@ async function refresh(queue, interaction, args, row, sentMessage) {
 }
 
 async function isUsableUrl(url) {
-    if (!(await isValidYouTubeUrl(url))) {
+    if (!url) {
+        return {
+            result: false,
+            issue: "no url supplied",
+        };
+    }
+    const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
+    const isValidYoutubeUrl = pattern.test(url);
+    if (!isValidYoutubeUrl) {
         return {
             result: false,
             issue: "the URL you supplied is not a valid youtube URL, please enter an actual youtube URL.",
         };
     }
-    if (!(await isExistingVideo(url))) {
+
+    let isExistingVideo;
+    let response;
+    try {
+        const videoId = await ytdl.getURLVideoID(url);
+        response = await youtube.videos.list({
+            auth: process.env.YOUTUBE_API_KEY,
+            part: "snippet",
+            id: videoId,
+        });
+    } catch {
+        isExistingVideo = false;
+    }
+    if (response.data.items[0].snippet.title) {
+        isExistingVideo = true;
+    }
+    if (!isExistingVideo) {
         return {
             result: false,
             issue: "that video does not appear to exist, please give me an actual video",
         };
     }
-    if (await isAgeRestricted(url)) {
+    try {
+        if (
+            response.data.items[0].contentDetails.contentRating.ytRating ===
+            "ytAgeRestricted"
+        ) {
+            return {
+                result: false,
+                issue: "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
+            };
+        }
+    } catch {
         return {
             result: false,
-            issue: "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
+            issue: "i was unable to determine if the video is age restricted or not, and i would rather avoid an error like this than play the video. find a different video.",
         };
     }
     return {
@@ -207,7 +199,17 @@ async function isUsableUrl(url) {
 }
 
 async function fixQueueSaveName(name) {
-    return name.replaceAll(" ", "_").replaceAll("/", "_").replaceAll("\\", "_").replaceAll(":", "_").replaceAll("*", "_").replaceAll("?", "_").replaceAll("\"", "_").replaceAll("<", "_").replaceAll(">", "_").replaceAll("|", "_");
+    return name
+        .replaceAll(" ", "_")
+        .replaceAll("/", "_")
+        .replaceAll("\\", "_")
+        .replaceAll(":", "_")
+        .replaceAll("*", "_")
+        .replaceAll("?", "_")
+        .replaceAll('"', "_")
+        .replaceAll("<", "_")
+        .replaceAll(">", "_")
+        .replaceAll("|", "_");
 }
 
 async function queue(queue, interaction, args, row, sentMessage) {
@@ -586,16 +588,23 @@ const save = new SubCommand(
     async function execute(message, args, isInteraction) {
         let queue = queues[message.guild.id];
         if (!queue) {
-            action.reply(message, "how tf am i gonna save nothing")
-            return
+            action.reply(message, "how tf am i gonna save nothing");
+            return;
         }
         if (queue.readableQueue.length == 0) {
-            action.reply(message, "how tf am i gonna save nothing")
-            return
+            action.reply(message, "how tf am i gonna save nothing");
+            return;
         }
         if (!args.get("name")) {
-            action.reply(message, "what tf am i supposed to save this as")
-            return
+            action.reply(message, "what tf am i supposed to save this as");
+            return;
+        }
+        if (args.get("name") == "ls") {
+            action.reply(
+                message,
+                "you can't save a list as ls cuz i use that bucko"
+            );
+            return;
         }
         queue.save(fixQueueSaveName(args.get("name")));
         action.reply(message, `saved queue as ${args.get("name")}`);
@@ -628,8 +637,30 @@ const load = new SubCommand(
             queues[message.guild.id] = queue;
         }
         if (!args.get("name")) {
-            action.reply(message, "what tf am i supposed to load")
-            return
+            action.reply(message, "what tf am i supposed to load");
+            return;
+        }
+        if (args.get("name") == "ls") {
+            const files = fs.readDirSync(`resources/data/queues/`);
+            let text = "";
+            for (let file = 0; file < files.length; file++) {
+                text += `${files[file]}\n`;
+                const files = fs.readdirSync(`resources/data/queues/`);
+                let text = "";
+                for (let file = 0; file < files.length; file++) {
+                    text += `${files[file].replace(".json", "")}\n`;
+                }
+                const file = await files.textToFile(text, "queues");
+                action.reply(message, {
+                    content: "here's a list of all the queues",
+                    files: [
+                        {
+                            name: "queues.txt",
+                            attachment: file,
+                        },
+                    ],
+                });
+            }
         }
         queue.load(fixQueueSaveName(args.get("name")));
         action.reply(message, `loaded queue ${args.get("name")}`);

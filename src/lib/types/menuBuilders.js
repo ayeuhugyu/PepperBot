@@ -31,7 +31,9 @@ export class AdvancedPagedMenuBuilder {
         this.pages = pages;
     }
     begin(sentMessage, duration, { actionRow, currentPage, pages }) {
+        if (!sentMessage) return;
         let embed = pages[currentPage];
+        
         const collector = sentMessage.createMessageComponentCollector({
             time: duration,
         });
@@ -70,7 +72,7 @@ export class AdvancedPagedMenuBuilder {
         if (menu && menu.collector) {
             try {
                 menu.collector.stop();
-            } catch (err) {}
+            } catch (e) {}
         }
     }
 }

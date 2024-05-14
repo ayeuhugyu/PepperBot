@@ -8,6 +8,7 @@ import { google } from "googleapis";
 import fsextra from "fs-extra";
 const youtube = google.youtube("v3");
 import * as globals from "../globals.js";
+import process from "node:process"
 
 const config = globals.config;
 
@@ -273,6 +274,7 @@ export class AudioPlayerQueueManager {
         return `resources/data/queues/${name}.json`
     }
     load(name) {
+        if (name.includes(".json")) name = name.replace(".json", "")
         const saveObject = JSON.parse(fs.readFileSync(`resources/data/queues/${name}.json`))
         this.queues = saveObject.queues;
         this.readableQueue = saveObject.readableQueue;

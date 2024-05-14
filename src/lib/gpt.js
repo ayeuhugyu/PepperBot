@@ -5,6 +5,7 @@ import * as log from "./log.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
 import * as globals from "./globals.js";
+import process from "node:process"
 
 const config = globals.config;
 
