@@ -826,7 +826,8 @@ const command = new Command(
         }
         refresh(queue, message, args, row, sentMessage);
         queue.emitter.on("update", onUpdate);
-        collector.on("end", async () => {
+        collector.on("end", () => {
+            if (!sentMessage) return;
             row.setComponents([]);
             action.editMessage(sentMessage, {
                 content:
