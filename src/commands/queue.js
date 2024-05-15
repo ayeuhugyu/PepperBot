@@ -25,8 +25,8 @@ import { google } from "googleapis";
 const youtube = google.youtube("v3");
 import * as globals from "../lib/globals.js";
 import process from "node:process";
-import files from "../lib/files.js";
 import fs from "fs";
+import * as files from "../lib/files.js";
 
 const config = globals.config;
 
@@ -161,7 +161,7 @@ async function isUsableUrl(url) {
         const videoId = await ytdl.getURLVideoID(url);
         response = await youtube.videos.list({
             auth: process.env.YOUTUBE_API_KEY,
-            part: "snippet",
+            part: "snippet,contentDetails",
             id: videoId,
         });
     } catch {
@@ -186,7 +186,8 @@ async function isUsableUrl(url) {
                 issue: "due to current library-related limitations, i am unable to play age restricted videos. try to find a non-age restricted reupload, and try again.",
             };
         }
-    } catch {
+    } catch (err) {
+        log.error(err);
         return {
             result: false,
             issue: "i was unable to determine if the video is age restricted or not, and i would rather avoid an error like this than play the video. find a different video.",
@@ -198,7 +199,7 @@ async function isUsableUrl(url) {
     };
 }
 
-async function fixQueueSaveName(name) {
+function fixQueueSaveName(name) {
     return name
         .replaceAll(" ", "_")
         .replaceAll("/", "_")
@@ -607,7 +608,10 @@ const save = new SubCommand(
             return;
         }
         queue.save(fixQueueSaveName(args.get("name")));
-        action.reply(message, `saved queue as ${args.get("name")}`);
+        action.reply(
+            message,
+            `saved queue as \`${fixQueueSaveName(args.get("name"))}\``
+        );
     }
 );
 
@@ -627,6 +631,7 @@ const load = new SubCommand(
         return args;
     },
     async function execute(message, args, isInteraction) {
+        const filesArr = fs.readdirSync(`resources/data/queues/`);
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -641,29 +646,34 @@ const load = new SubCommand(
             return;
         }
         if (args.get("name") == "ls") {
-            const files = fs.readDirSync(`resources/data/queues/`);
             let text = "";
-            for (let file = 0; file < files.length; file++) {
-                text += `${files[file]}\n`;
-                const files = fs.readdirSync(`resources/data/queues/`);
-                let text = "";
-                for (let file = 0; file < files.length; file++) {
-                    text += `${files[file].replace(".json", "")}\n`;
-                }
-                const file = await files.textToFile(text, "queues");
-                action.reply(message, {
-                    content: "here's a list of all the queues",
-                    files: [
-                        {
-                            name: "queues.txt",
-                            attachment: file,
-                        },
-                    ],
-                });
+            for (let file = 0; file < filesArr.length; file++) {
+                text += `${filesArr[file].replace(".json", "")}\n`;
             }
+            const file = await files.textToFile(text, "queues");
+            action.reply(message, {
+                content: "here's a list of all the queues",
+                files: [
+                    {
+                        name: "queues.txt",
+                        attachment: file,
+                    },
+                ],
+            });
+            return;
+        }
+        if (!filesArr.includes(`${fixQueueSaveName(args.get("name"))}.json`)) {
+            action.reply(
+                message,
+                "that shit aint real, use `p/queue load ls` to list available queues"
+            );
+            return;
         }
         queue.load(fixQueueSaveName(args.get("name")));
-        action.reply(message, `loaded queue ${args.get("name")}`);
+        action.reply(
+            message,
+            `loaded queue \`${fixQueueSaveName(args.get("name"))}\``
+        );
     }
 );
 

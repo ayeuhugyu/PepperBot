@@ -8,7 +8,7 @@ import { google } from "googleapis";
 import fsextra from "fs-extra";
 const youtube = google.youtube("v3");
 import * as globals from "../globals.js";
-import process from "node:process"
+import process from "node:process";
 
 const config = globals.config;
 
@@ -267,15 +267,20 @@ export class AudioPlayerQueueManager {
         const saveObject = {
             queues: this.queues,
             readableQueue: this.readableQueue,
-            currentIndex: this.currentIndex
-        }
-        fs.ensureFileSync(`resources/data/queues/${name}.json`);
-        fs.writeFileSync(`resources/data/queues/${name}.json`, JSON.stringify(saveObject))
-        return `resources/data/queues/${name}.json`
+            currentIndex: this.currentIndex,
+        };
+        fsextra.ensureFileSync(`resources/data/queues/${name}.json`);
+        fs.writeFileSync(
+            `resources/data/queues/${name}.json`,
+            JSON.stringify(saveObject, null, 2)
+        );
+        return `resources/data/queues/${name}.json`;
     }
     load(name) {
-        if (name.includes(".json")) name = name.replace(".json", "")
-        const saveObject = JSON.parse(fs.readFileSync(`resources/data/queues/${name}.json`))
+        if (name.includes(".json")) name = name.replace(".json", "");
+        const saveObject = JSON.parse(
+            fs.readFileSync(`resources/data/queues/${name}.json`)
+        );
         this.queues = saveObject.queues;
         this.readableQueue = saveObject.readableQueue;
         this.currentIndex = saveObject.currentIndex;

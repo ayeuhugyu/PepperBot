@@ -25,7 +25,7 @@ p/update queue saving and loading (thas about it)
 
 - removed an unnecessary import don't even know how it got there
 - added p/queue save and p/queue load; you can use p/queue load ls to list the saved queues
-- fixed "cannot read createMessageComponentCollector of undefined" fatal error from queues
+- fixed "cannot read createMessageComponentCollector of undefined" fatal error from queues (hopefully? takes too long to test for me to bother)
 - fixed various eslint-recommended errors (such as some typos)
 - cleaned up a function that checks if a url is valid, it now only makes 1 request to google's api instead of 3
 
