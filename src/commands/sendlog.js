@@ -34,14 +34,22 @@ const command = new Command(
     data,
     async function getArguments(message) {
         const commandLength = message.content.split(" ")[0].length - 1;
-        let content = message.content
-            .slice(config.generic.prefix.length + commandLength)
-            .replaceAll(" ", "");
-        if (!content.endsWith(".log")) {
-            content += ".log";
-        }
         const args = new Collection();
-        args.set("log", content);
+        args.set("log", message.content.split(" ")[1])
+        if (args.get("log")) {
+            args.set(
+                "amount",
+                message.content.slice(
+                    config.generic.prefix.length +
+                        commandLength +
+                        message.content.split(" ")[1].length +
+                        1
+                )
+            );
+        }
+        if (args.get("log") && !args.get("log").endsWith(".log")) {
+            args.set("log", `${args.get("log")}.log`);
+        }
         return args;
     },
     async function execute(message, args) {
@@ -56,14 +64,26 @@ const command = new Command(
                 );
                 return;
             }
-            action.reply(message, {
-                files: [
-                    {
-                        attachment: `${config.paths.logs}/${args.get("log")}`,
-                        name: args.get("log"),
-                    },
-                ],
-            });
+            if (args.get("amount")) {
+                action.reply(message, {
+                    files: [
+                        {
+                            attachment: `${config.paths.logs}/${args.get(
+                                "log"
+                            )}`,
+                            name: args.get("log"),
+                        },
+                    ],
+                });
+            } else {
+                const log = fs.readFileSync(
+                    `${config.paths.logs}/${args.get("log")}`,
+                    "utf8"
+                );
+                const logLines = log.split("\n");
+                const last10Lines = logLines.slice(-10).join("\n");
+                action.reply(message, last10Lines);
+            }
         } else {
             action.reply(message, {
                 content: "provide a log to send you baffoon!",

@@ -187,7 +187,7 @@ export default {
     async execute(message) {
         const DNI = getIsDisgraceful(message);
         if (DNI) return;
-        await Promise.all([
+        await Promise.allSettled([
             processDM(message),
             processDiabolicalEvent(message),
             processGPTResponse(message),

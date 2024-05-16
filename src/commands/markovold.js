@@ -56,7 +56,7 @@ const command = new Command(
                     Math.floor(Math.random() * markovChain[word].length)
                 ];
             word = newWord;
-            if (!word || !markovChain.hasOwnProperty(word))
+            if (!word || !(word in markovChain))
                 word = words[Math.floor(Math.random() * words.length)];
         }
         let results = result.split("\n");

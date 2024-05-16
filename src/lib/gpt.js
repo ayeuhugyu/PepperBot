@@ -196,7 +196,7 @@ export async function respond(message) {
     let conversation;
     const readableContent = await fixIncomingMessage(message);
 
-    if (conversations.hasOwnProperty(message.author.id)) {
+    if (message.author.id in conversations) {
         if (message.content.includes(`<@${config.generic.bot_id}>`)) {
             conversations[message.author.id] = await generateConversationData(
                 message.author.id

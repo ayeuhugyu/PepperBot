@@ -20,16 +20,16 @@ export const queueStates = {
 };
 
 function fetchTitleFromURL(url) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         let videoId;
         try {
-            videoId = await ytdl.getURLVideoID(url);
+            videoId = ytdl.getURLVideoID(url);
         } catch (err) {
             log.error(err);
             reject("error while fetching video title");
             return;
         }
-        const info = await youtube.videos.list({
+        const info = youtube.videos.list({
             auth: process.env.YOUTUBE_API_KEY,
             part: "snippet",
             id: videoId,
@@ -44,8 +44,8 @@ function fetchTitleFromURL(url) {
 
 async function download(url, queueManager) {
     try {
-        return new Promise(async (resolve, reject) => {
-            const title = await fetchTitleFromURL(url).catch((err) => {
+        return new Promise((resolve, reject) => {
+            const title = fetchTitleFromURL(url).catch((err) => {
                 if (err.statusCode === 410) {
                     action.sendMessage(
                         queueManager.messageChannel,
@@ -66,7 +66,7 @@ async function download(url, queueManager) {
                 reject();
                 return;
             }
-            const sounds = await fs.readdirSync("resources/ytdl_cache");
+            const sounds = fs.readdirSync("resources/ytdl_cache");
             const correctedFileName = title
                 .toLowerCase()
                 .replaceAll(" ", "_")
@@ -82,7 +82,7 @@ async function download(url, queueManager) {
                 .replaceAll("<", "_")
                 .replaceAll(">", "_");
 
-            let msg = await action.sendMessage(
+            let msg = action.sendMessage(
                 queueManager.messageChannel,
                 `checking for existence of \`${correctedFileName}.webm\`...`
             );
@@ -93,14 +93,14 @@ async function download(url, queueManager) {
                 );
                 resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
             } else {
-                await action.editMessage(
+                action.editMessage(
                     msg,
                     `downloading \`${correctedFileName}.webm\`...`
                 );
-                await fsextra.ensureFileSync(
+                fsextra.ensureFileSync(
                     `${config.paths.ytdl_cache}/${correctedFileName}.webm`
                 );
-                await ytdl(url, { filter: "audioonly" })
+                ytdl(url, { filter: "audioonly" })
                     .pipe(
                         fs.createWriteStream(
                             `${config.paths.ytdl_cache}/${correctedFileName}.webm`

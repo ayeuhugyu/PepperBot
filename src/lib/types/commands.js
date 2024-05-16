@@ -125,15 +125,19 @@ export class Command {
                                 subcommand.data.name === args.get("_SUBCOMMAND")
                         );
                         if (subcommand) {
-                            message.content = message.content
-                                .replace(args.get("_SUBCOMMAND"), "")
-                                .replace("  ", " ")
-                                .trim(); // it is intentional that i am using .replace instead of .replaceAll. don't change it.
-                            const subcommandArgs =
-                                await subcommand.getArguments(
+                            let subcommandArgs;
+                            if (fromInteraction) {
+                                subcommandArgs = args;
+                            } else {
+                                message.content = message.content
+                                    .replace(args.get("_SUBCOMMAND"), "")
+                                    .replace("  ", " ")
+                                    .trim(); // it is intentional that i am using .replace instead of .replaceAll. don't change it.
+                                subcommandArgs = await subcommand.getArguments(
                                     message,
                                     guildConfig
                                 );
+                            }
                             return await subcommand.execute(
                                 message,
                                 subcommandArgs,

@@ -50,8 +50,9 @@ const configureguild = new SubCommand(
             return;
         }
         for (const key in gconfig) {
+            let value
             if (!(key === "functions")) {
-                const value = gconfig[key];
+                value = gconfig[key];
                 const actionRow = new ActionRowBuilder();
                 const textInput = new TextInputBuilder()
                     .setPlaceholder(value)
@@ -75,7 +76,7 @@ const configureguild = new SubCommand(
             .setCustomId("open")
             .setLabel("Open Configuration Menu")
             .setStyle(ButtonStyle.Success);
-        buttonActionRow.addComponents(saveButton);
+        buttonActionRow.addComponents(openButton);
         action.reply(message, {
             content:
                 "discord doesn't currently support showing modals on messages, so please just click this button",

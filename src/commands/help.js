@@ -1,4 +1,3 @@
-import * as log from "../lib/log.js";
 import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
@@ -17,6 +16,7 @@ async function getCommands() {
     for (const file of commandFiles) {
         if (file !== "help.js") {
             const filePath = `./${file}`;
+            console.log(filePath)
             const command = await import(filePath);
             if (
                 command.default.data.aliases &&
@@ -102,7 +102,7 @@ const command = new Command(
                 commandString = args.get("command");
             }
 
-            if (commands.hasOwnProperty(args.get("command"))) {
+            if (args.get("command") in commands) {
                 const command = commands[args.get("command")];
                 const menu = new AdvancedPagedMenuBuilder();
                 const commandPage = default_embed();

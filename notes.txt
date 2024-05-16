@@ -17,27 +17,35 @@ if you've got anything you want me to add to the todo list, go ahead and ping me
 **announcements:**
 
 -------------------------------------------------------------------------------------------------------------
-commands to run for update:
+for update:
+
+requires testing:
+- commands still work in general (due to messageCreate change)
+- gpt can still detect lack of and prescence of conversations
+- subcommands can accept arguments from slash commands
+- queue can still download songs (download was changed to be mostly non-async)
+- REMEMBER TO UPDATE THE DEEPWOKEN NAMES (you'll have to ctrlcctrlv it from the codespace)
+
+commands:
 
 p/update queue saving and loading (thas about it)
 
 **general changes:**
 
-- removed an unnecessary import don't even know how it got there
-- added p/queue save and p/queue load; you can use p/queue load ls to list the saved queues
-- fixed "cannot read createMessageComponentCollector of undefined" fatal error from queues (hopefully? takes too long to test for me to bother)
-- fixed various eslint-recommended errors (such as some typos)
-- cleaned up a function that checks if a url is valid, it now only makes 1 request to google's api instead of 3
+- changed messageCreate's Promise.all to Promise.allSettled
+- changed some promise executors to be not async because eslint was yelling at me
+- removed any object.hasOwnProperty()'s because eslint was yelling at me
+- fixed subcommands executed from slash commands being unable to accept arguments
+- p/sendlog returns only recent logs (unless you tell it to return the whole file)
+- updated deepwoken name pool
+- fixed case where things that got a random deepwoken name would say undefined on rare occasion
 
 **shit on the todo list:**
 
 - add p/corrupt image support
 - redo the way replies are handled by the GPT script
 - AI image processing
-- have p/sendlog return only recent logs
-- fix p/queue add and remove not working with slash commands
 - fix p/queue resetting the page when refreshing
-- fix various undefined errors
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 -------------------------------------------------------------------------------------------------------------

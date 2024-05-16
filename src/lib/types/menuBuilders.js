@@ -72,7 +72,9 @@ export class AdvancedPagedMenuBuilder {
         if (menu && menu.collector) {
             try {
                 menu.collector.stop();
-            } catch (e) {}
+            } catch {
+                log.warn("Failed to stop collector");
+            }
         }
     }
 }
