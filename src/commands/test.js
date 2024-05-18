@@ -4,16 +4,6 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-function thisWillThrow() {
-    action.undefined();
-    action.undefined();
-    action.undefined();
-    action.undefined();
-    action.undefined();
-    action.undefined();
-    return action.undefined();
-}
-
 const data = new CommandData();
 data.setName("test");
 data.setDescription("generic testing command");
@@ -28,13 +18,7 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        thisWillThrow();
-        thisWillThrow();
-        thisWillThrow();
-        thisWillThrow();
-        thisWillThrow();
-        thisWillThrow();
-        thisWillThrow();
+        action.reply("glorb");
     }
 );
 
