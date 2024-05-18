@@ -35,7 +35,7 @@ const command = new Command(
     async function getArguments(message) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
-        args.set("log", message.content.split(" ")[1])
+        args.set("log", message.content.split(" ")[1]);
         if (args.get("log")) {
             args.set(
                 "amount",
@@ -82,7 +82,7 @@ const command = new Command(
                 );
                 const logLines = log.split("\n");
                 const last10Lines = logLines.slice(-10).join("\n");
-                action.reply(message, last10Lines);
+                action.reply(message, "```" + last10Lines + "```");
             }
         } else {
             action.reply(message, {

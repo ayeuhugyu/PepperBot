@@ -4,7 +4,7 @@ import util from "util";
 import prettyBytes from "pretty-bytes";
 import fs from "fs";
 import * as globals from "./lib/globals.js";
-import process from "node:process"
+import process from "node:process";
 
 const config = globals.config;
 
@@ -68,13 +68,34 @@ await init();
 
 const channel = await client.channels.fetch(config.lib.notification_channel);
 
+let quickErrors = 3;
+let lastErrorTime = undefined;
+
 process.on("uncaughtException", (err, origin) => {
+    lastErrorTime = performance.now();
     log.fatal(err);
     channel.send(
         `<@440163494529073152> uncaught exception: \n\`\`\`${util.inspect(
             err
         )}\`\`\``
     );
+    const currentTime = performance.now();
+    console.log(
+        lastErrorTime,
+        currentTime - lastErrorTime < 50,
+        quickErrors >= 5,
+        quickErrors
+    );
+    if (lastErrorTime && currentTime - lastErrorTime < 50 && quickErrors >= 5) {
+        log.fatal("EXCESSIVE ERRORS DETECTED, ESCAPING");
+        process.exit(1);
+    } else if (lastErrorTime && currentTime - lastErrorTime >= 50) {
+        lastErrorTime = currentTime;
+        quickErrors = 0;
+    } else {
+        lastErrorTime = currentTime;
+        quickErrors++;
+    }
 });
 
 process.on("exit", () => {

@@ -16,7 +16,6 @@ async function getCommands() {
     for (const file of commandFiles) {
         if (file !== "help.js") {
             const filePath = `./${file}`;
-            console.log(filePath)
             const command = await import(filePath);
             if (
                 command.default.data.aliases &&

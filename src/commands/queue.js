@@ -72,7 +72,14 @@ async function getDuration(url) {
 
 async function refresh(queue, interaction, args, row, sentMessage) {
     let text;
-    if (!sentMessage) return;
+    if (!sentMessage) {
+        log.warn("returned from refresh due to sentMessage");
+        return;
+    }
+    if (!interaction) {
+        log.warn("returned from refresh due to interaction");
+        return;
+    }
     const embed = default_embed();
     if (queuePageBuilders[interaction.channel.id]) {
         const builder = queuePageBuilders[interaction.channel.id];
@@ -112,11 +119,16 @@ async function refresh(queue, interaction, args, row, sentMessage) {
                 newEmbed.setDescription(chunks);
                 Menu.full.addPage(newEmbed);
             }); // while this does technically work, its not exactly optimized to say the least, as it creates a new paged menu every time the queue is refreshed, which happens A LOT. this is a temporary solution until i can figure out a better way to do this.
-
+            let components = [];
+            if (row && row.components.length > 0) {
+                components.push(row);
+            }
+            components.push(Menu.actionRow);
             sentMessage = await action.editMessage(sentMessage, {
                 embeds: [Menu.pages[Menu.currentPage]],
-                components: [row, Menu.actionRow],
+                components: components,
             });
+            if (!sentMessage) return;
             await Menu.full.begin(sentMessage, 1200_000, Menu);
             queuePageBuilders[sentMessage.channel.id] = Menu.full;
         } else {
@@ -132,6 +144,7 @@ async function refresh(queue, interaction, args, row, sentMessage) {
         if (!embed) return;
         embed.setTitle("Queue");
         embed.setDescription("queue is empty");
+        if (!sentMessage) return;
         action.editMessage(sentMessage, {
             embeds: [embed],
             components: [row],
@@ -213,7 +226,11 @@ function fixQueueSaveName(name) {
         .replaceAll("|", "_");
 }
 
-async function queue(queue, interaction, args, row, sentMessage) {
+async function queue(queue, interaction, args, embed, row, sentMessage) {
+    if (!interaction) {
+        log.warn("returned from add");
+        return;
+    }
     if (args.get("url")) {
         let input = args.get("url");
         if (input.startsWith("<")) {
@@ -232,6 +249,7 @@ async function queue(queue, interaction, args, row, sentMessage) {
             });
             return;
         }
+        console.log(input);
         await queue.add(input);
         action.reply(interaction, {
             content: "added to queue",
@@ -280,7 +298,12 @@ async function queue(queue, interaction, args, row, sentMessage) {
                 });
                 return;
             }
+            console.log(input);
             await queue.add(input);
+            if (!interaction) {
+                log.warn("returned from add due to interaction");
+                return;
+            }
             action.reply(interaction, {
                 content: "added to queue",
                 ephemeral: true,
@@ -291,6 +314,10 @@ async function queue(queue, interaction, args, row, sentMessage) {
 
 const functions = {
     play: async function (queue, interaction) {
+        if (!interaction) {
+            log.warn("returned from play");
+            return;
+        }
         if (queue.state === queueStates.playing) {
             queue.stop();
             if (interaction instanceof ButtonInteraction) {
@@ -332,6 +359,10 @@ const functions = {
         }
     },
     skip: async function (queue, interaction) {
+        if (!interaction) {
+            log.warn("returned from stop");
+            return;
+        }
         queue.next();
         if (interaction instanceof ButtonInteraction) {
             interaction.deferUpdate();
@@ -339,9 +370,13 @@ const functions = {
             interaction.reply({ content: "skipped", ephemeral: true });
         }
     },
-    clear: async function (queue, interaction, args, row, sentMessage) {
+    clear: async function (queue, interaction, args, embed, row, sentMessage) {
+        if (!interaction) {
+            log.warn("returned from clear");
+            return;
+        }
+        if (!sentMessage) return;
         queue.clear();
-        refresh(queue, interaction, args, row, sentMessage);
         if (interaction instanceof ButtonInteraction) {
             interaction.deferUpdate();
         } else {
@@ -349,7 +384,11 @@ const functions = {
         }
     },
     add: queue,
-    remove: async function (queue, interaction, args, row, sentMessage) {
+    remove: async function (queue, interaction, args, embed, row, sentMessage) {
+        if (!interaction) {
+            log.warn("returned from remove");
+            return;
+        }
         if (args.get("url")) {
             const input = args.get("url");
             let response = false;
@@ -796,6 +835,10 @@ const command = new Command(
             time: 1200_000,
         });
         collector.on("collect", async (interaction) => {
+            if (!interaction) {
+                log.warn("returned from collector");
+                return;
+            }
             if (functions[interaction.customId]) {
                 functions[interaction.customId](
                     queue,

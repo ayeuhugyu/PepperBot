@@ -20,16 +20,16 @@ export const queueStates = {
 };
 
 function fetchTitleFromURL(url) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let videoId;
         try {
-            videoId = ytdl.getURLVideoID(url);
+            videoId = await ytdl.getURLVideoID(url);
         } catch (err) {
             log.error(err);
             reject("error while fetching video title");
             return;
         }
-        const info = youtube.videos.list({
+        const info = await youtube.videos.list({
             auth: process.env.YOUTUBE_API_KEY,
             part: "snippet",
             id: videoId,
@@ -37,6 +37,7 @@ function fetchTitleFromURL(url) {
         try {
             resolve(info.data.items[0].snippet.title);
         } catch (err) {
+            log.error(err);
             reject("error while fetching video title");
         }
     });
@@ -44,8 +45,8 @@ function fetchTitleFromURL(url) {
 
 async function download(url, queueManager) {
     try {
-        return new Promise((resolve, reject) => {
-            const title = fetchTitleFromURL(url).catch((err) => {
+        return new Promise(async (resolve, reject) => {
+            const title = await fetchTitleFromURL(url).catch((err) => {
                 if (err.statusCode === 410) {
                     action.sendMessage(
                         queueManager.messageChannel,
@@ -82,25 +83,25 @@ async function download(url, queueManager) {
                 .replaceAll("<", "_")
                 .replaceAll(">", "_");
 
-            let msg = action.sendMessage(
+            let msg = await action.sendMessage(
                 queueManager.messageChannel,
                 `checking for existence of \`${correctedFileName}.webm\`...`
             );
             if (sounds.includes(`${correctedFileName}.webm`)) {
-                action.editMessage(
+                await action.editMessage(
                     msg,
                     `playing \`${correctedFileName}.webm\``
                 );
                 resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
             } else {
-                action.editMessage(
+                await action.editMessage(
                     msg,
                     `downloading \`${correctedFileName}.webm\`...`
                 );
                 fsextra.ensureFileSync(
                     `${config.paths.ytdl_cache}/${correctedFileName}.webm`
                 );
-                ytdl(url, { filter: "audioonly" })
+                await ytdl(url, { filter: "audioonly" })
                     .pipe(
                         fs.createWriteStream(
                             `${config.paths.ytdl_cache}/${correctedFileName}.webm`
@@ -222,6 +223,7 @@ export class AudioPlayerQueueManager {
                         `https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId}`
                     );
                 } catch (e) {
+                    log.error(e);
                     return;
                 }
             });
@@ -232,6 +234,7 @@ export class AudioPlayerQueueManager {
                 );
                 this.queues.push(queue);
             } catch (e) {
+                log.error(e);
                 return;
             }
         }

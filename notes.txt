@@ -20,11 +20,7 @@ if you've got anything you want me to add to the todo list, go ahead and ping me
 for update:
 
 requires testing:
-- commands still work in general (due to messageCreate change)
-- gpt can still detect lack of and prescence of conversations
-- subcommands can accept arguments from slash commands
 - queue can still download songs (download was changed to be mostly non-async)
-- REMEMBER TO UPDATE THE DEEPWOKEN NAMES (you'll have to ctrlcctrlv it from the codespace)
 
 commands:
 
@@ -38,7 +34,12 @@ p/update queue saving and loading (thas about it)
 - fixed subcommands executed from slash commands being unable to accept arguments
 - p/sendlog returns only recent logs (unless you tell it to return the whole file)
 - updated deepwoken name pool
-- fixed case where things that got a random deepwoken name would say undefined on rare occasion
+- fixed case where things that got a random deepwoken name could be undefined on rare occasion
+- added a few more checks to make sure that shit actually exists so hopefully it won't spam quite as much
+- added a few more checks to queue operations to hopefully avoid THAT from happening again
+- fixed some args being shifted on functions in p/queue clear, remove
+- fixed p/queue clear refreshing multiple times unnecessarily
+- added a failsafe where if a fatal error occurs many times in rapid succession it will just exit
 
 **shit on the todo list:**
 
@@ -46,6 +47,30 @@ p/update queue saving and loading (thas about it)
 - redo the way replies are handled by the GPT script
 - AI image processing
 - fix p/queue resetting the page when refreshing
+- fix random emoji reactions
+- maybe cleanup p/queue a little bit cuz what the fuck was that
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
+
+**announcements**
+
+okay im trying to figure out what caused... uh... that... last night
+my best guess
+is that it took more than 3 seconds to ackknowledge something due to a lagspike or something
+so some interaction was like "oh u didn't reply in time so we're gonna ignore all calls to it"
+and then because it didn't return a response it got in an infinite loop of trying to do something with an interaction that it wasn't getting returned
+but i mean thats just my theory because js sucks and the stack trace doesn't even tell me where its coming from
+i mean one of them told me the stack trace and i'm like 90% sure i fixed that one
+but the rest of them didn't
+
+if something like that ever happens again,
+please
+just have everyone leave the vc
+you could even just move to another vc
+because that will stop the queue
+i think
+i hope 
+i have no idea what happened 😭😭😭
+ill probably rewrite the queue again because of things
+specifically the command
 -------------------------------------------------------------------------------------------------------------

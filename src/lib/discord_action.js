@@ -2,7 +2,7 @@ import { CommandInteraction } from "discord.js";
 import * as log from "./log.js";
 import * as files from "./files.js";
 import * as globals from "./globals.js";
-import process from "node:process"
+import process from "node:process";
 
 const config = globals.config;
 
@@ -85,7 +85,8 @@ export async function reply(message, content) {
         log.warn("attempt to reply to a message that does not exist");
         return;
     }
-    if (!(typeof content === "string") && !content.ephemeral) channel.sendTyping();
+    if (!(typeof content === "string") && !content.ephemeral)
+        channel.sendTyping();
     let sent;
     try {
         const msg = await fixMsg(content);
@@ -113,6 +114,10 @@ export async function reply(message, content) {
 }
 
 export async function sendDM(user, content) {
+    if (!user) {
+        log.warn("attempt to dm a user that does not exist");
+        return;
+    }
     try {
         const msg = await user.send(await fixMsg(content)).catch((err) => {
             log.error(err);
@@ -125,6 +130,10 @@ export async function sendDM(user, content) {
 
 export async function deleteMessage(message) {
     if (message instanceof CommandInteraction) return;
+    if (!message) {
+        log.warn("attempt to delete a message that does not exist");
+        return;
+    }
     try {
         if (message.deletable) {
             if (!message) {
@@ -142,6 +151,10 @@ export async function deleteMessage(message) {
 }
 
 export async function editMessage(message, content) {
+    if (!message) {
+        log.warn("attempt to edit a message that does not exist");
+        return;
+    }
     try {
         const sent = await message
             .edit(await fixMsg(content))
