@@ -80,12 +80,6 @@ process.on("uncaughtException", (err, origin) => {
         )}\`\`\``
     );
     const currentTime = performance.now();
-    console.log(
-        lastErrorTime,
-        currentTime - lastErrorTime < 50,
-        quickErrors >= 5,
-        quickErrors
-    );
     if (lastErrorTime && currentTime - lastErrorTime < 50 && quickErrors >= 5) {
         log.fatal("EXCESSIVE ERRORS DETECTED, ESCAPING");
         process.exit(1);

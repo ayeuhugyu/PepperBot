@@ -17,13 +17,8 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-const deepwoken_names = await import(
-    "../../resources/data/deepwoken_names.json",
-    { assert: { type: "json" } }
-);
-const allWords = JSON.parse(
-    fs.readFileSync("resources/the_english_lexicon.json", "utf-8")
-);
+const deepwoken_names = globals.deepwoken_names
+const allWords = globals.allWords
 
 const namedata = new SubCommandData();
 namedata.setName("name");

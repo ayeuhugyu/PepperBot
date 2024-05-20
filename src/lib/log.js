@@ -2,10 +2,7 @@ import chalk from "chalk";
 import * as util from "util";
 import fs from "fs";
 import fsextra from "fs-extra";
-import * as globals from "./globals.js";
 import process from "node:process"
-
-const config = globals.config;
 
 const Level = {
     Debug: "Debug",
@@ -97,13 +94,4 @@ export function deleted(...message) {
 export function fatal(...message) {
     //action.notifyMe(...message); // TODO: fix this
     log(Level.Fatal, ...message);
-}
-
-export function audit(message, guildId) {
-    fsextra.ensureDirSync(`${config.paths.logs}/${guildId}`);
-    fsextra.ensureFileSync(`${config.paths.logs}/${guildId}/audit.log`);
-    fs.appendFileSync(
-        `${config.paths.logs}/${guildId}/audit.log`,
-        `${message}\n`
-    );
 }

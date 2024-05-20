@@ -23,7 +23,8 @@ REMEMBER TO GET emojis.json FROM CODESPACE
 
 requires testing:
 - random emoji reactions work
-- queue save / load works from slash commands and shows up in p/help
+- queue save / load works from slash commands (and at all) and shows up in p/help
+- check that p/queue add and p/queue remove still work
 
 commands:
 
@@ -33,6 +34,9 @@ p/update queue saving and loading (thas about it)
 
 - fixed random emoji reactions, increased chance
 - added slash command support for p/queue save and p/queue load
+- reduced the amount of parser errors from eslint (due to eslint's parser being outdated) to only 1 file
+- removed a thing that was reading the entire english dictionary on startup and changed it to be an import in my file that imports a shitload of jsons (for the NORMIES... decreases startup times)
+- removed unused 'audit' log level
 
 **shit on the todo list:**
 

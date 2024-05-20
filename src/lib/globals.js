@@ -1,3 +1,5 @@
+import * as log from "./log.js";
+const start = performance.now()
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
 });
@@ -35,3 +37,20 @@ const emojisNonDefault = import("../../resources/data/emojis.json", {
 if (!configNonDefault || !configNonDefault.default)
     throw new Error("emojis.json unable to be imported");
 export const emojis = emojisNonDefault.default;
+
+const deepwoken_namesnondefault = await import(
+    "../../resources/data/deepwoken_names.json",
+    { assert: { type: "json" } }
+);
+if (!configNonDefault || !configNonDefault.default)
+    throw new Error("deepwoken_names.json unable to be imported");
+export const deepwoken_names = deepwoken_namesnondefault.default;
+
+const allWordsNonDefault = await import(
+    "../../resources/the_english_lexicon.json",
+    { assert: { type: "json" } }
+);
+if (!configNonDefault || !configNonDefault.default)
+    throw new Error("the_english_lexicon.json unable to be imported");
+export const allWords = allWordsNonDefault.default;
+log.info(`loaded JSONs in ${Math.floor(performance.now() - start)}ms`);

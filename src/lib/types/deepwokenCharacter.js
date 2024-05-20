@@ -1,5 +1,6 @@
 import * as log from "../log.js";
 import fs from "node:fs";
+import * as globals from "../globals.js"
 
 export const races = {
     Capra: "Capra",
@@ -289,10 +290,7 @@ export class Character {
     }
 }
 
-const deepwoken_names = await import(
-    "../../../resources/data/deepwoken_names.json",
-    { assert: { type: "json" } }
-);
+const deepwoken_names = globals.deepwoken_names
 
 export function randomName(race) {
     const randomFirstName =
