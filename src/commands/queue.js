@@ -487,7 +487,9 @@ const add = new SubCommand(
     },
     async function execute(message, args, isInteraction) {
         if (isInteraction) args.set("isFromMessage", true);
-        if (args.get("index")) args.set("url", args.get("index"));
+        if (!args.get("url") && (args.get("index") || args.get("name"))) {
+            args.set("url", args.get("index") || args.get("name"));
+        }
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -517,7 +519,9 @@ const remove = new SubCommand(
         return args;
     },
     async function execute(message, args, isInteraction) {
-        if (args.get("index")) args.set("url", args.get("index"));
+        if (!args.get("index") && (args.get("name") || args.get("url"))) {
+            args.set("index", args.get("name") || args.get("url"));
+        }
         if (isInteraction) args.set("isFromMessage", true);
         let queue = queues[message.guild.id];
         if (!queue) {
@@ -635,6 +639,9 @@ const save = new SubCommand(
             action.reply(message, "how tf am i gonna save nothing");
             return;
         }
+        if (!args.get("name") && (args.get("index") || args.get("url"))) {
+            args.set("name", args.get("index") || args.get("url"));
+        }
         if (!args.get("name")) {
             action.reply(message, "what tf am i supposed to save this as");
             return;
@@ -679,6 +686,9 @@ const load = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        }
+        if (!args.get("name") && (args.get("index") || args.get("url"))) {
+            args.set("name", args.get("index") || args.get("url"));
         }
         if (!args.get("name")) {
             action.reply(message, "what tf am i supposed to load");
@@ -734,7 +744,9 @@ data.addStringOption((option) =>
             { name: "remove", value: "remove" },
             { name: "skip", value: "skip" },
             { name: "clear", value: "clear" },
-            { name: "play", value: "play" }
+            { name: "play", value: "play" },
+            { name: "save", value: "save" },
+            { name: "load", value: "load" }
         )
 );
 data.addStringOption((option) =>
@@ -749,6 +761,12 @@ data.addIntegerOption((option) =>
         .setDescription(
             "index to remove from the queue (if using remove method)"
         )
+        .setRequired(false)
+);
+data.addStringOption((option) =>
+    option
+        .setName("name")
+        .setDescription("name of the queue to save/load")
         .setRequired(false)
 );
 
@@ -783,7 +801,12 @@ const command = new Command(
             });
             queues[message.guild.id] = queue;
         }
-        if (args.get("operation") && args.get("operation") !== "view") {
+        if (
+            args.get("operation") &&
+            args.get("operation") !== "view" &&
+            args.get("operation") !== "save" &&
+            args.get("operation") !== "load"
+        ) {
             if (functions[args.get("operation")]) {
                 functions[args.get("operation")](queue, message, args);
                 return;

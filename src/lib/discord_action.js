@@ -40,7 +40,10 @@ export async function fixMsg(msg) {
         .replaceAll("@here", "##carrot")
         .replaceAll(process.env.DISCORD_TOKEN, "##pepper")
         .replaceAll(process.env.OPENAI_API_KEY, "##bellpepper")
-        .replaceAll(process.env.WEBHOOK_TOKEN, "##onion"); // this prevents the bot from pinging everyone, and from leaking sensitive information
+        .replaceAll(process.env.WEBHOOK_TOKEN, "##onion");
+        //.replaceAll(process.env.VISION_KEY, "##tomato") // uncomment when vision key is implemented
+        //.replaceAll(process.env.VISION_ENDPOINT, "##starfruit"); // this prevents the bot from pinging everyone, and from leaking sensitive information
+
     if (msg.content.length > 2000) {
         let path = await files.textToFile(msg.content, "overflowtext.txt");
         if (!msg.files) {

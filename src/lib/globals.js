@@ -29,4 +29,9 @@ if (!configNonDefault || !configNonDefault.default)
     throw new Error("diabolical_events.json unable to be imported");
 export const diabolical_events = diabolicalEventsNonDefault.default;
 
-// i honestly do not care that it still tries to export it if it fails to import, if it fails to import there's a more serious problem than that anyway
+const emojisNonDefault = import("../../resources/data/emojis.json", {
+    assert: { type: "json" },
+});
+if (!configNonDefault || !configNonDefault.default)
+    throw new Error("emojis.json unable to be imported");
+export const emojis = emojisNonDefault.default;

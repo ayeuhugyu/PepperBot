@@ -13,7 +13,7 @@ import * as gpt from "../lib/gpt.js";
 import * as action from "../lib/discord_action.js";
 import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
-import process from "node:process"
+import process from "node:process";
 
 const config = globals.config;
 const diabolical_events = globals.diabolical_events;
@@ -57,12 +57,14 @@ async function processDiabolicalEvent(message) {
         !message.content.startsWith(config.generic.prefix)
     ) {
         const random = Math.random() * 250;
-        if (random > 249) {
-            const random2 = Math.random() * 100;
-            if (random2 > 90) {
-                message.react();
-                return;
-            }
+        if (random < 10) { // ~4%
+            const emoji =
+                globals.emojis[
+                    Math.floor(Math.random() * globals.emojis.length)
+                ];
+            message.react(emoji);
+        }
+        if (random > 249) { // ~0.4%
             const event =
                 diabolical_events[
                     Math.floor(Math.random() * diabolical_events.length)
