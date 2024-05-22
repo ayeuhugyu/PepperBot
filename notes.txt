@@ -39,6 +39,7 @@ p/update sum minor shit
 - AI image processing
 - fix p/queue resetting the page when refreshing
 - maybe cleanup p/queue a little bit cuz what the fuck was that
+- add a p/embed save, load, setfootericon, setauthoricon, fix p/embed send saying "interaction failed" when used from slash commands
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 -------------------------------------------------------------------------------------------------------------
