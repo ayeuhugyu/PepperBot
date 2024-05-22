@@ -57,8 +57,8 @@ async function processDiabolicalEvent(message) {
         !message.content.startsWith(config.generic.prefix)
     ) {
         const random = Math.random() * 250;
-        if (random < 10) {
-            // ~4%
+        if (random < 5) {
+            // ~2%
             const emoji =
                 globals.emojis[
                     Math.floor(Math.random() * globals.emojis.length)
