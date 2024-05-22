@@ -1,5 +1,5 @@
 import * as log from "./log.js";
-const start = performance.now()
+const start = performance.now();
 const configNonDefault = await import("../../config.json", {
     assert: { type: "json" },
 });
@@ -31,7 +31,7 @@ if (!configNonDefault || !configNonDefault.default)
     throw new Error("diabolical_events.json unable to be imported");
 export const diabolical_events = diabolicalEventsNonDefault.default;
 
-const emojisNonDefault = import("../../resources/data/emojis.json", {
+const emojisNonDefault = await import("../../resources/data/emojis.json", {
     assert: { type: "json" },
 });
 if (!configNonDefault || !configNonDefault.default)
