@@ -495,7 +495,7 @@ const preview = new SubCommand(
         let totalLength = 0;
         for (const key in embed.data) {
             if (typeof embed.data[key] === "string") {
-                totalLength += embed[key].length;
+                totalLength += embed.data[key].length;
             }
         }
         if (embed.data.footer && embed.data.footer.text) {
@@ -555,7 +555,7 @@ const send = new SubCommand(
         let totalLength = 0;
         for (const key in embed.data) {
             if (typeof embed.data[key] === "string") {
-                totalLength += embed[key].length;
+                totalLength += embed.data[key].length;
             }
         }
         if (embed.data.footer && embed.data.footer.text) {
