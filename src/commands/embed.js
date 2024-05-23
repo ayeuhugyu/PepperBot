@@ -9,6 +9,8 @@ import { Collection, PermissionFlagsBits, EmbedBuilder } from "discord.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
+import fsExtra from "fs-extra/esm";
+import files from "../lib/files.js";
 
 const config = globals.config;
 
@@ -27,6 +29,109 @@ function isHexColor(hex) {
         !isNaN(Number("0x" + hex))
     );
 }
+
+const savedata = new SubCommandData();
+savedata.setName("save");
+savedata.setDescription("saves a list as the given name");
+savedata.setPermissions([]);
+savedata.setPermissionsReadable("");
+savedata.setWhitelist([]);
+savedata.setCanRunFromBot(true);
+const save = new SubCommand(
+    savedata,
+    async function getArguments(message) {
+        const args = new Collection();
+        args.set("content", message.content.split(" ")[1]);
+        return args;
+    },
+    async function execute(message, args, isInteraction) {
+        if (!args.get("content")) {
+            action.reply(message, "what tf am i supposed to save this as");
+            return;
+        }
+        if (args.get("content") == "ls") {
+            action.reply(
+                message,
+                "you can't save an embed as ls cuz i use that bucko"
+            );
+            return;
+        }
+        let embed = embeds[message.author.id];
+        if (!embed) {
+            action.reply(message, {
+                content: "you aint done shit",
+                ephemeral: true,
+            });
+            return;
+        }
+        const embedJSON = embed.toJSON();
+        fsExtra.ensureFileSync(
+            `resources/data/embeds/${args.get("content")}.json`
+        );
+        fs.writeFileSync(
+            `resources/data/embeds/${args.get("content")}.json`,
+            JSON.stringify(embedJSON)
+        );
+        action.reply(message, `saved embed as \`${args.get("content")}\``);
+    }
+);
+
+const loaddata = new SubCommandData();
+loaddata.setName("load");
+loaddata.setDescription("loads a list");
+loaddata.setPermissions([]);
+loaddata.setPermissionsReadable("");
+loaddata.setWhitelist([]);
+loaddata.setCanRunFromBot(true);
+const load = new SubCommand(
+    loaddata,
+    async function getArguments(message) {
+        const args = new Collection();
+        args.set("content", message.content.split(" ")[1]);
+        return args;
+    },
+    async function execute(message, args, isInteraction) {
+        if (!args.get("content")) {
+            action.reply(message, "what tf am i supposed to load");
+            return;
+        }
+        let savedEmbeds = fs.readdirSync(`resources/data/embeds/`);
+        if (args.get("content") == "ls") {
+            let text = savedEmbeds.join("\n");
+            const file = await files.textToFile(text, "embeds");
+            action.reply(message, {
+                content: "here's a list of all the embeds",
+                files: [
+                    {
+                        name: "embeds.txt",
+                        attachment: file,
+                    },
+                ],
+            });
+            return;
+        }
+        if (!savedEmbeds.includes(`${args.get("content")}.json`)) {
+            action.reply(
+                message,
+                "that shit aint real, use `p/embed load ls` to list available embeds"
+            );
+            return;
+        }
+        const embedObject = JSON.parse(
+            fs.readFileSync(`resources/data/embeds/${args.get("content")}`)
+        );
+        const embed = new EmbedBuilder();
+        embed.setTitle(embedObject.title);
+        embed.setDescription(embedObject.description);
+        embed.setAuthor(embedObject.author);
+        embed.setColor(embedObject.color);
+        embed.setFooter(embedObject.footer);
+        embed.setImage(embedObject.image);
+        embed.setThumbnail(embedObject.thumbnail);
+        embeds[message.author.id] = embed;
+        action.reply(message, `loaded embed \`${args.get("content")}\``);
+    }
+);
 
 const restartData = new CommandData();
 restartData.setName("restart");
@@ -586,6 +691,9 @@ const send = new SubCommand(
             });
             return;
         }
+        if (fromInteraction) {
+            action.reply(message, { content: "sent!", ephemeral: true });
+        }
         action.sendMessage(message.channel, { embeds: [embed] });
     }
 );
@@ -655,6 +763,8 @@ const command = new Command(
         setImage,
         setThumbnail,
         restart,
+        save,
+        load,
     ] // subcommands
 );
 

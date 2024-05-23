@@ -19,18 +19,19 @@ if you've got anything you want me to add to the todo list, go ahead and ping me
 -------------------------------------------------------------------------------------------------------------
 for update:
 
+to test:
+- does p/embed save / load work correctly
+
 commands:
 
-p/update sum minor shit
+p/update sum more minor shit
 
 **general changes:**
 
-- fixed random emoji reactions, increased chance
-- added slash command support for p/queue save and p/queue load
-- reduced the amount of parser errors from eslint (due to eslint's parser being outdated) to only 1 file
-- removed a thing that was reading the entire english dictionary on startup and changed it to be an import in my file that imports a shitload of jsons (for the NORMIES... decreases startup times)
-- removed unused 'audit' log level
-- added a p/embed command that allows you to format embeds. use p/help embed to find out how to use it
+- added a p/embed save / load, works similarly to p/queue save / load
+- p/git log now fetches before sending the log, meaning it will always be up to date
+- fixed p/embed send saying "interaction failed" when used from slash commands
+- updated README.md to include a turorial on how to create your own commands
 
 **shit on the todo list:**
 
@@ -39,8 +40,8 @@ p/update sum minor shit
 - AI image processing
 - fix p/queue resetting the page when refreshing
 - maybe cleanup p/queue a little bit cuz what the fuck was that
-- add a p/embed save, load, setfootericon, setauthoricon, fix p/embed send saying "interaction failed" when used from slash commands
-- have p/git log run `git fetch` every time to get the most recent stuff
+- add a p/embed setfootericon, setauthoricon, addfield, seturl
+- add a function that fixes p/queue/embed save/load filenames to be more "secure"
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 -------------------------------------------------------------------------------------------------------------

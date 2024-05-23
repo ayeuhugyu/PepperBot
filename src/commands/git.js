@@ -26,6 +26,8 @@ const graph = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction) {
+        const sent = await action.reply(message, { content: "fetching git data...", ephemeral: true});
+        await shell.exec(`git fetch`, { silent: true })
         const output = await shell.exec(
             `git log --graph --abbrev-commit --decorate --format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)" --all`,
             { silent: true }
