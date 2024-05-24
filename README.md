@@ -280,7 +280,7 @@ const command = new Command(
 )
 ```
 
-and thats pretty much everything you'll need to know about making commands
+and thats pretty much everything you'll need to know about making commands\
 oh one final thing, if possible keep your arguments in your getArguments function the same types as your slash command arguments.
 
 if you have any questions, join the discord server and ping @anti_pepperphobes
