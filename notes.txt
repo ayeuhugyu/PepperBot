@@ -41,7 +41,6 @@ p/update sum more minor shit
 - fix p/queue resetting the page when refreshing
 - maybe cleanup p/queue a little bit cuz what the fuck was that
 - add a p/embed setfootericon, setauthoricon, addfield, seturl
-- add a function that fixes p/queue/embed save/load filenames to be more "secure"
 
 if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
 -------------------------------------------------------------------------------------------------------------

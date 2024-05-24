@@ -10,7 +10,7 @@ import fs from "fs";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import fsExtra from "fs-extra/esm";
-import files from "../lib/files.js";
+import * as files from "../lib/files.js";
 
 const config = globals.config;
 
@@ -30,6 +30,20 @@ function isHexColor(hex) {
     );
 }
 
+function fixName(name) {
+    return name
+        .replaceAll(" ", "_")
+        .replaceAll("/", "_")
+        .replaceAll("\\", "_")
+        .replaceAll(":", "_")
+        .replaceAll("*", "_")
+        .replaceAll("?", "_")
+        .replaceAll('"', "_")
+        .replaceAll("<", "_")
+        .replaceAll(">", "_")
+        .replaceAll("|", "_");
+}
+
 const savedata = new SubCommandData();
 savedata.setName("save");
 savedata.setDescription("saves a list as the given name");
@@ -41,7 +55,14 @@ const save = new SubCommand(
     savedata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("content", message.content.split(" ")[1]);
+        const commandLength = message.content.split(" ")[0].length - 1;
+        let argument = message.content.slice(
+            config.generic.prefix.length + commandLength
+        );
+        if (argument) {
+            argument.trim();
+        }
+        args.set("content", fixName(argument));
         return args;
     },
     async function execute(message, args, isInteraction) {
@@ -70,7 +91,7 @@ const save = new SubCommand(
         );
         fs.writeFileSync(
             `resources/data/embeds/${args.get("content")}.json`,
-            JSON.stringify(embedJSON)
+            JSON.stringify(embedJSON, null, 4)
         );
         action.reply(message, `saved embed as \`${args.get("content")}\``);
     }
@@ -87,7 +108,14 @@ const load = new SubCommand(
     loaddata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("content", message.content.split(" ")[1]);
+        const commandLength = message.content.split(" ")[0].length - 1;
+        let argument = message.content.slice(
+            config.generic.prefix.length + commandLength
+        );
+        if (argument) {
+            argument.trim();
+        }
+        args.set("content", fixName(argument));
         return args;
     },
     async function execute(message, args, isInteraction) {
@@ -118,16 +146,30 @@ const load = new SubCommand(
             return;
         }
         const embedObject = JSON.parse(
-            fs.readFileSync(`resources/data/embeds/${args.get("content")}`)
+            fs.readFileSync(`resources/data/embeds/${args.get("content")}.json`)
         );
         const embed = new EmbedBuilder();
-        embed.setTitle(embedObject.title);
-        embed.setDescription(embedObject.description);
-        embed.setAuthor(embedObject.author);
-        embed.setColor(embedObject.color);
-        embed.setFooter(embedObject.footer);
-        embed.setImage(embedObject.image);
-        embed.setThumbnail(embedObject.thumbnail);
+        if (embedObject.title) {
+            embed.setTitle(embedObject.title);
+        }
+        if (embedObject.description) {
+            embed.setDescription(embedObject.description);
+        }
+        if (embedObject.author) {
+            embed.setAuthor(embedObject.author);
+        }
+        if (embedObject.color) {
+            embed.setColor(embedObject.color);
+        }
+        if (embedObject.footer) {
+            embed.setFooter(embedObject.footer);
+        }
+        if (embedObject.image && embedObject.image.url) {
+            embed.setImage(embedObject.image.url);
+        }
+        if (embedObject.thumbnail && embedObject.thumbnail.url) {
+            embed.setThumbnail(embedObject.thumbnail.url);
+        }
         embeds[message.author.id] = embed;
         action.reply(message, `loaded embed \`${args.get("content")}\``);
     }
