@@ -15,6 +15,25 @@ incase you're wondering why some of the code looks so weird, 90% of it is becaus
 
 if you would like more detailed update logs than the commit message, join the discord server
 
+# How to run
+1. download the repo
+2. download npm & node (or some other package manager / runtime if you know what you're doing)
+3. run `npm i` in your command line to install packages
+4. run `node setup.js` to create some missing files that are required to function
+5. obtain all of the following: 
+    - a discord bot token (from discord developer portal)
+    - a discord webhook token (i don't actually know how i obtained this, look it up)
+    - an openAI API key (from openai's developer portal)
+    - a youtube API key (from google developer console)
+    - and finally an adobe API key (from adobe developer portal)
+
+^ this step will probably cause you the most problems, feel free to join the discord and ping me if you have issues with this and i'll try to help you
+
+6. add all of them to the `.env` file created by the setup script, it should be self explanatory where to place them.
+7. run `node src/index.js` to run the bot
+
+unfortunately, at the time of writing this i am unable to provide links to where you can find anything on this list because my school district has decided to block EVERY SINGLE ONE OF THEM
+
 # Making Custom Commands
 
 if you would like to create custom commands for pepperbot, here's a tutorial and some tips:

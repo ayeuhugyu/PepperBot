@@ -1,7 +1,16 @@
 .env 
 node_modules/
-resources/
 logs/
 package-lock.json
 src.zip
 testUtils/
+
+resources/ytdl_cache
+resources/containers
+resources/gptdownloads
+resources/data/guildConfigs
+resources/data/queues
+resources/data/blacklist.json
+resources/data/persistent_data.json
+resources/data/statistics.json
+resources/data/reaction_roles.json

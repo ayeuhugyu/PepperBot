@@ -28,10 +28,9 @@ p/update sum more minor shit
 
 **general changes:**
 
-- added a p/embed save / load, works similarly to p/queue save / load
-- p/git log now fetches before sending the log, meaning it will always be up to date
-- fixed p/embed send saying "interaction failed" when used from slash commands
-- updated README.md to include a turorial on how to create your own commands
+- updated README.md to include a section detailing how to run, fixed some formatting errors in previous README update
+- committed some constant files
+- added a setup script to add files that aren't committed but are still required for function
 
 **shit on the todo list:**
 

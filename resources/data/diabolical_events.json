@@ -1,0 +1,50 @@
+[
+    {
+        "content": "It's time to go on a ***big berry adventure!***",
+        "files": [
+            {
+                "attachment": "resources/images/big_berry_adventure.png",
+                "name": "big_berry_adventure.png"
+            }
+        ]
+    },
+    {
+        "content": "It's glorious!",
+        "files": [
+            {
+                "attachment": "resources/images/egglord.png",
+                "name": "egglord.png"
+            }
+        ]
+    },
+    {
+        "content": "😍😍😍",
+        "files": [
+            {
+                "attachment": "resources/images/the_worst.mp4",
+                "name": "the_worst.mp4"
+            }
+        ]
+    },
+    {
+        "content": "If you don't LOVE Cerveza Cristal, you're not a real cuban! 🍾🍾",
+        "files": [
+            {
+                "attachment": "resources/images/cerveza_crystal.mp4",
+                "name": "cerveza_crystal.mp4"
+            }
+        ]
+    },
+    {
+        "content": "ur pookie",
+        "files": [
+            {
+                "attachment": "resources/images/him.gif",
+                "name": "him.gif"
+            }
+        ]
+    },
+    {
+        "content": "It's [time to feast!](https://tenor.com/view/robert-mueller-time-to-feast-gif-13779665)"
+    }
+]
