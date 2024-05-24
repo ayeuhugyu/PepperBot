@@ -11,14 +11,14 @@ if i'm being honest, i don't know what my goal was\
 i just wanted to make a thing\
 its literally all just whatever i could come up with to occupy my time
 
-incase you're wondering why some of the code looks so weird, 90% of it is because of me wanting to support both slash commands and message commands\
-\
+incase you're wondering why some of the code looks so weird, 90% of it is because of me wanting to support both slash commands and message commands
+
 if you would like more detailed update logs than the commit message, join the discord server
 
 # Making Custom Commands
 
-if you would like to create custom commands for pepperbot, here's a tutorial and some tips:\
-\
+if you would like to create custom commands for pepperbot, here's a tutorial and some tips:
+
 basic commands can be made fairly simply, here's a small template:
 
 ```js
@@ -52,7 +52,7 @@ const command = new Command(
 export default command;
 ```
 
-lets go over this\
+lets go over this
 
 ### Making CommandData Objects
 
@@ -64,8 +64,8 @@ the only real important differences are:
 - setNSFW has no effect on text commands
 - setNameLocalization(s) method has no effect on text commands
 
-here's some specifics about command data objects:\
-\
+here's some specifics about command data objects:
+
 **command names cannot include spaces and entirely lowercased**, if they don't follow both of these they will not be able to be executed.
 
 ```js
@@ -107,14 +107,14 @@ data.setWhitelist(["0"]); // nobody can use this command
 data.setWhitelist("440163494529073152", "01203910298309182"); // this will error
 ```
 
-canRunFromBot basically defines if a bot should be able to run the command, if this is false then if any user that user.bot == true tries to run it then it will not run. this is useful for preventing infinite loops\
+canRunFromBot basically defines if a bot should be able to run the command, if this is false then if any user that user.bot == true tries to run it then it will not run. this is useful for preventing infinite loops
 
 ```js
 data.canRunFromBot(false); // cannot run from bot users
 data.canRunFromBot(true); // can run from bot users
 ```
 
-setDMPermission basically defines if it should be able to be used in DM channels or not\
+setDMPermission basically defines if it should be able to be used in DM channels or not
 
 ```js
 data.setDMPermission(true); // can run in DM channels
@@ -182,7 +182,7 @@ async function getArguments(message) {
 
 this will give you two arguments, the first argument will be the first word, the second argument will be all text after that
 for example, if a user were to use "p/command firstargument then some more arguments"\
-`args.get("argument1")` would be "firstargument" and `args.get("argument2")` would be "then some more arguments"\
+`args.get("argument1")` would be "firstargument" and `args.get("argument2")` would be "then some more arguments"
 
 those two will probably be the most common ones you'll use, but if you need something specific feel free to mess around
 
@@ -235,7 +235,7 @@ to your command data
 for each subcommand you add, add a choice with the name and value as the subcommand's name.
 
 subcommands use their own getArguments functions, and the message passed to them has the argument of the subcommand removed from it. \
-as in, if someone does the command "p/command subcommand argument" then the subcommand would recieve a message reading "p/command argument"
+for example, if someone does the command "p/command subcommand argument" then the subcommand would recieve a message reading "p/command argument"
 
 also, in your getArguments function of your *main* command, you will need something that will set the argument "_SUBCOMMAND"
 here's the most commonly used one:
@@ -245,7 +245,6 @@ args.set(
     message.content.split(" ")[1].trim()
 );
 ```
-\
 this should be assumable, but if _SUBCOMMAND is undefined or otherwise falsy, then the main command's execute function will not be executed.
 likewise, if it is detected that one of the subcommands has _SUBCOMMAND as its name, then it will execute that. if none of them do, then it will execute the main command's execute function.
 
@@ -265,4 +264,4 @@ const command = new Command(
 and thats pretty much everything you'll need to know about making commands
 oh one final thing, if possible keep your arguments in your getArguments function the same types as your slash command arguments.
 
-if you have any questions, join the discord server and ping @anti_pepperphobes;
+if you have any questions, join the discord server and ping @anti_pepperphobes
