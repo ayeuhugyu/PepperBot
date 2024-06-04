@@ -14,3 +14,5 @@ resources/data/blacklist.json
 resources/data/persistent_data.json
 resources/data/statistics.json
 resources/data/reaction_roles.json
+resources/sounds
+resources/data/embeds
