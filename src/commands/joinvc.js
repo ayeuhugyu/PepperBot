@@ -48,17 +48,25 @@ const command = new Command(
                     )
                 );
             } else {
-                args = false;
+                const channel = message.guild.channels.cache.find(
+                    (channel) =>
+                        channel.name.toLowerCase().startsWith(message.content
+                            .slice(config.generic.prefix.length + commandLength)
+                            .trim().toLowerCase())
+                );
+                if (channel) {
+                    args.set("channel", channel);
+                } else {
+                    args = false;
+                }
             }
         }
         return args;
     },
     async function execute(message, args) {
-        if (args.get) {
-            if (args.get("channel")) {
-                if (args.get("channel").type != 2) {
-                    args = false;
-                }
+        if (args.get("channel")) {
+            if (args.get("channel").type != 2) {
+                args = false;
             }
         }
         if (typeof args == "boolean" || !args) {

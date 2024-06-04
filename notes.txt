@@ -12,7 +12,7 @@ p/update some stuff
 
 **shit on the todo list:**
 
-if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
+if you've got anything you want me to add to the todo list, go ahead and ask me and i'll consider it
 
 **announcements:**
 
@@ -20,26 +20,39 @@ if you've got anything you want me to add to the todo list, go ahead and ping me
 for update:
 
 to test:
-- does p/embed save / load work correctly
+- does the weird ass invalid form body shit still happen
+- check that p/random pepper still works
+- check that p/queue still works (refresh was changed)
+- check that p/random message works
+- REMOVE STATISTICS FROM SUBCOMMANDS
+- check that subcommands don't add to statistics
+- check that messages are correctly logged
+- check that p/joinvc works with channel names now
 
 commands:
 
-p/update sum more minor shit
+p/update been a lil bited
 
 **general changes:**
 
-- updated README.md to include a section detailing how to run, fixed some formatting errors in previous README update
-- committed some constant files
-- added a setup script to add files that aren't committed but are still required for function
+- hopefully fixed some errors from p/queue that did not affect anything other than clog my console
+- optimized p/random pepper
+- new p/random command: p/random message
+- removed statistics caused by subcommands
+- made p/help command list look significantly nicer, shouldn't take up an entire page of your screen anymore
+- fixed messages not being logged for use by p/markov and p/markovold correctly
+- removed misleading alias on p/soundboard "play" and instead gave it to p/playurl
+- p/joinvc now supports joining channels by name, meaning p/joinvc hellhole will actually work now.
 
 **shit on the todo list:**
 
+- change p/markov and p/markovold to simply read all messages from a channel rather than adding things to a permanent log and then reading said log
 - add p/corrupt image support
 - redo the way replies are handled by the GPT script
 - AI image processing
 - fix p/queue resetting the page when refreshing
-- maybe cleanup p/queue a little bit cuz what the fuck was that
-- add a p/embed setfootericon, setauthoricon, addfield, seturl
+- add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
+- remake p/reactionrole, the syntax is just uncomfortable to use
 
-if you've got anything you want me to add to the todo list, go ahead and ping me and i'll consider it
+if you've got anything you want me to add to the todo list, go ahead and ask me and i'll consider it
 -------------------------------------------------------------------------------------------------------------

@@ -123,7 +123,10 @@ async function refresh(queue, interaction, args, row, sentMessage) {
             if (row && row.components.length > 0) {
                 components.push(row);
             }
-            components.push(Menu.actionRow);
+            if (Menu.pages && Menu.pages.length > 0) {
+                components.push(Menu.actionRow);
+            }
+            if (components.length == 0) components = undefined;
             sentMessage = await action.editMessage(sentMessage, {
                 embeds: [Menu.pages[Menu.currentPage]],
                 components: components,
@@ -133,10 +136,15 @@ async function refresh(queue, interaction, args, row, sentMessage) {
             queuePageBuilders[sentMessage.channel.id] = Menu.full;
         } else {
             if (embed) {
+                let components = [];
+                if (row && row.components.length > 0) {
+                    components.push(row);
+                }
+                if (components.length == 0) components = undefined;
                 embed.setDescription(text);
                 action.editMessage(sentMessage, {
                     embeds: [embed],
-                    components: [row],
+                    components: components,
                 });
             }
         }

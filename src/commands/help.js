@@ -158,12 +158,12 @@ TYPE: ${command_option_types[option.type]}`;
             }
         } else {
             // reply with command list
-            //let text = "p/help [command] for more info\n\n";
             let text = "run p/help [command] for more info\n\n";
             embed.setTitle("Commands");
             const commandFiles = fs
                 .readdirSync("src/commands/")
                 .filter((file) => file.endsWith(".js"));
+            let commandsOnCurrentLine = 1;
             for (const file of commandFiles) {
                 const command = await import(`./${file}`);
                 let doNotAdd = false;
@@ -190,7 +190,12 @@ TYPE: ${command_option_types[option.type]}`;
                     }
                 }
                 if (!doNotAdd) {
-                    text += `p/${command.default.data.name}\n`;
+                    text += `p/${command.default.data.name}          `;
+                    if (commandsOnCurrentLine >= 4) {
+                        text += "\n\n";
+                        commandsOnCurrentLine = 0;
+                    }
+                    commandsOnCurrentLine++;
                 }
             }
             embed.setDescription(text);

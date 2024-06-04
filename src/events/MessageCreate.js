@@ -14,11 +14,19 @@ import * as action from "../lib/discord_action.js";
 import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
+import fsExtra from "fs-extra";
 
 const config = globals.config;
 const diabolical_events = globals.diabolical_events;
 
 const commands = commandsObject.commandExecutions;
+
+function logmessage(message) {
+    fsExtra.ensureFileSync("logs/messages.log")
+    if (!message.author.bot && !message.content.startsWith(config.generic.prefix)) {
+        fs.appendFileSync("logs/messages.log", message.content + "\n");
+    }
+}
 
 async function processDM(message) {
     if (message.channel.type === 1) {
@@ -197,5 +205,6 @@ export default {
             processGPTResponse(message),
             processCommand(message),
         ]);
+        logmessage(message)
     },
 };

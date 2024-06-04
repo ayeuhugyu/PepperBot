@@ -20,6 +20,36 @@ const config = globals.config;
 const deepwoken_names = globals.deepwoken_names
 const allWords = globals.allWords
 
+const rmessagedata = new SubCommandData();
+rmessagedata.setName("message");
+rmessagedata.setDescription("returns a random message from the channel it's used in");
+rmessagedata.setPermissions([]);
+rmessagedata.setPermissionsReadable("");
+rmessagedata.setWhitelist([]);
+rmessagedata.setCanRunFromBot(true);
+const rmessage = new SubCommand(
+    rmessagedata,
+    async function getArguments(message) {
+        return null;
+    },
+    async function execute(message, args, fromInteraction) {
+        const channel = message.channel
+        const messages = channel.messages
+        const messageCache = messages.cache
+        let acc = 0
+        let randomMessage = messageCache.random();
+        while (randomMessage.content.startsWith(config.generic.prefix) || randomMessage.author.bot) {
+            randomMessage = messageCache.random();
+            acc++
+            if (acc > 500) {
+                action.reply(message, "too many attempts to find a valid message, exiting. rerun the command and hope you get lucky")
+                return
+            }
+        }
+        action.reply(message, { content: randomMessage.content, files: randomMessage.attachments, })
+    }
+);
+
 const namedata = new SubCommandData();
 namedata.setName("name");
 namedata.setDescription("return a random deepwoken name");
@@ -140,6 +170,10 @@ const words = new SubCommand(
     }
 );
 
+const pepperfiles = fs
+.readdirSync(config.paths.peppers)
+.filter((file) => file.endsWith(".png") || file.endsWith(".jpg"));
+
 const pepperdata = new SubCommandData();
 pepperdata.setName("pepper");
 pepperdata.setDescription("return a random pepper");
@@ -153,12 +187,9 @@ const pepper = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction) {
-        const files = fs
-            .readdirSync(config.paths.peppers)
-            .filter((file) => file.endsWith(".png") || file.endsWith(".jpg"));
-        const maxRan = files.length;
+        const maxRan = pepperfiles.length;
         const randomnum = Math.floor(Math.random() * maxRan);
-        const file = files[randomnum];
+        const file = pepperfiles[randomnum];
         const embed = default_embed();
         embed.setImage(`attachment://${file}`);
         embed.setTitle("🌶🌶🌶 RANDOM PEPPER!!!!!!!! 🌶🌶🌶");
@@ -336,7 +367,7 @@ const command = new Command(
             )}\`, you baffoon!`
         );
     },
-    [buildidea, freshie, pepper, words, sound, name]
+    [buildidea, freshie, pepper, words, sound, name, rmessage]
 );
 
 export default command;
