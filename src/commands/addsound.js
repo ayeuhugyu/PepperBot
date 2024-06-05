@@ -5,17 +5,13 @@ import fs from "fs";
 import fsExtra from "fs-extra";
 import stream from "stream";
 import * as globals from "../lib/globals.js";
+import * as files from "../lib/files.js"
 
 const config = globals.config;
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {
-        const fixedFileName = filename
-            .toLowerCase()
-            .replaceAll(" ", "_")
-            .replaceAll("-", "_")
-            .replaceAll("/", "_")
-            .replaceAll("\\", "_");
+        const fixedFileName = files.fixFileName(filename);
         fsExtra.ensureFileSync(`${config.paths.soundboard}/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
@@ -49,7 +45,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["add"]);
+data.setAliases(["add", "as"]);
 data.addAttachmentOption((option) =>
     option.setName("sound").setDescription("the sound to add").setRequired(true)
 );

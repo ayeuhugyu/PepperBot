@@ -6,17 +6,13 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
 import * as globals from "../lib/globals.js";
+import * as files from "../lib/files.js"
 
 const config = globals.config;
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {
-        const fixedFileName = filename
-            .toLowerCase()
-            .replaceAll(" ", "_")
-            .replaceAll("-", "_")
-            .replaceAll("/", "_")
-            .replaceAll("\\", "_");
+        const fixedFileName = files.fixFileName(filename)
         fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
@@ -73,17 +69,12 @@ async function fixIncomingMessage(message) {
                     if (attachment.size <= config.gpt.max_file_size) {
                         await download(
                             attachment.url,
-                            attachment.id + "_" + attachment.name
+                            attachment.id + "_" + files.fixFileName(attachment.name)
                         );
                         const file = `./resources/gptdownloads/${
                             attachment.id +
                             "_" +
-                            attachment.name
-                                .toLowerCase()
-                                .replaceAll(" ", "_")
-                                .replaceAll("-", "_")
-                                .replaceAll("/", "_")
-                                .replaceAll("\\", "_")
+                            files.fixFileName(attachment.name)
                         }`;
                         attachedMessage += await fs.readFileSync(file, "utf-8");
                     } else {
@@ -108,6 +99,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
 data.setDMPermission(true);
+data.setAliases(["prompt", "gptprompt", "sp"]);
 data.addStringOption((option) =>
     option.setName("prompt").setDescription("what to prompt").setRequired(true)
 );

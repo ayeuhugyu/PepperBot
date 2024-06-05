@@ -15,6 +15,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([config.generic.global_whitelist]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
+data.setAliases(["clean", "clear", "cu"]);
 data.addStringOption((option) =>
     option.setName("what").setDescription("what to cleanup").setRequired(false)
 );

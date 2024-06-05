@@ -9,6 +9,7 @@ import fsextra from "fs-extra";
 const youtube = google.youtube("v3");
 import * as globals from "../globals.js";
 import process from "node:process";
+import * as files from "../files.js";
 
 const config = globals.config;
 
@@ -68,20 +69,7 @@ async function download(url, queueManager) {
                 return;
             }
             const sounds = fs.readdirSync("resources/ytdl_cache");
-            const correctedFileName = title
-                .toLowerCase()
-                .replaceAll(" ", "_")
-                .replaceAll("-", "_")
-                .replaceAll("/", "_")
-                .replaceAll("\\", "_")
-                .replaceAll(".", "_")
-                .replaceAll("|", "_")
-                .replaceAll('"', "_")
-                .replaceAll(":", "_")
-                .replaceAll("?", "_")
-                .replaceAll("*", "_")
-                .replaceAll("<", "_")
-                .replaceAll(">", "_");
+            const correctedFileName = files.fixFileName(title);
 
             let msg = await action.sendMessage(
                 queueManager.messageChannel,

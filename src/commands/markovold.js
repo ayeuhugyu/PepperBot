@@ -38,6 +38,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
 data.setDMPermission(true);
+data.setAliases(["triggerold", "markovchainold"]);
 const command = new Command(
     data,
     async function getArguments(message) {

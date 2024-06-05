@@ -85,6 +85,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
 data.setDMPermission(true);
+data.setAliases(["trigger", "markovchain"]);
 const command = new Command(
     data,
     async function getArguments(message) {

@@ -47,7 +47,7 @@ if (!configNonDefault || !configNonDefault.default)
 export const deepwoken_names = deepwoken_namesnondefault.default;
 
 const allWordsNonDefault = await import(
-    "../../resources/the_english_lexicon.json",
+    "../../resources/data/the_english_lexicon.json",
     { assert: { type: "json" } }
 );
 if (!configNonDefault || !configNonDefault.default)

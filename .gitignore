@@ -1,7 +1,6 @@
 .env 
 node_modules/
 logs/
-package-lock.json
 src.zip
 testUtils/
 
@@ -16,3 +15,4 @@ resources/data/statistics.json
 resources/data/reaction_roles.json
 resources/sounds
 resources/data/embeds
+resources/data/todos

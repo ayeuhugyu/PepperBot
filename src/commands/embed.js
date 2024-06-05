@@ -30,20 +30,6 @@ function isHexColor(hex) {
     );
 }
 
-function fixName(name) {
-    return name
-        .replaceAll(" ", "_")
-        .replaceAll("/", "_")
-        .replaceAll("\\", "_")
-        .replaceAll(":", "_")
-        .replaceAll("*", "_")
-        .replaceAll("?", "_")
-        .replaceAll('"', "_")
-        .replaceAll("<", "_")
-        .replaceAll(">", "_")
-        .replaceAll("|", "_");
-}
-
 const savedata = new SubCommandData();
 savedata.setName("save");
 savedata.setDescription("saves a list as the given name");
@@ -62,7 +48,7 @@ const save = new SubCommand(
         if (argument) {
             argument.trim();
         }
-        args.set("content", fixName(argument));
+        args.set("content", files.fixFileName(argument));
         return args;
     },
     async function execute(message, args, isInteraction) {
@@ -115,7 +101,7 @@ const load = new SubCommand(
         if (argument) {
             argument.trim();
         }
-        args.set("content", fixName(argument));
+        args.set("content", files.fixFileName(argument));
         return args;
     },
     async function execute(message, args, isInteraction) {

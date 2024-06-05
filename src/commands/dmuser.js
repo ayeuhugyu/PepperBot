@@ -14,7 +14,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
 data.setDMPermission(false);
-data.setAliases(["dm"]);
+data.setAliases(["dm", "send"]);
 data.addUserOption((option) =>
     option.setName("user").setDescription("who to dm").setRequired(true)
 );

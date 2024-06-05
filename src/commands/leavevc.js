@@ -15,7 +15,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["leave"]);
+data.setAliases(["leave", "leavecall", "fuckoff", "goaway"]);
 const command = new Command(
     data,
     async function getArguments(message) {

@@ -19,3 +19,23 @@ export async function textToFile(text, name) {
     await fs.writeFileSync(file, text);
     return file;
 }
+
+export function fixFileName(name) {
+    const correctedFileName = name
+        .toLowerCase()
+        .replaceAll(" ", "_")
+        .replaceAll("-", "_")
+        .replaceAll("/", "_")
+        .replaceAll("\\", "_")
+        .replaceAll(".", "_")
+        .replaceAll("|", "_")
+        .replaceAll('"', "_")
+        .replaceAll(":", "_")
+        .replaceAll("?", "_")
+        .replaceAll("*", "_")
+        .replaceAll("<", "_")
+        .replaceAll(">", "_")
+        .replaceAll(";", "_")
+        .replaceAll(",", "_")
+    return correctedFileName;
+}

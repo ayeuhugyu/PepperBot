@@ -37,7 +37,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["getsound"]);
+data.setAliases(["getsound", "retrieve", "rs", "gs"]);
 data.addStringOption((option) =>
     option
         .setName("sound")

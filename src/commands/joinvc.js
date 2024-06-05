@@ -15,7 +15,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["join"]);
+data.setAliases(["join", "joincall", "call", "vc"]);
 data.addChannelOption((option) =>
     option
         .setName("channel")

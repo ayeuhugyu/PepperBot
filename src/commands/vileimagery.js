@@ -20,6 +20,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
+data.setAliases(["vile", "vi"])
 data.addStringOption((option) =>
     option.setName("image").setRequired(false).setDescription("image to attach")
 );

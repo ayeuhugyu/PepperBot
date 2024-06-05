@@ -40,7 +40,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["playsound", "sound"]);
+data.setAliases(["playsound", "sound", "sb"]);
 data.addStringOption((option) =>
     option
         .setName("sound")

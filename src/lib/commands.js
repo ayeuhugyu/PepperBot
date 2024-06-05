@@ -14,6 +14,10 @@ async function getCommands() {
     for (const file of commandFiles) {
         const command = await import(`../commands/${file}`);
         try {
+            if (commands.find(cmd => command.default.data.name == cmd.data.name)) {
+                log.fatal(`command '${command.default.data.name}' is unable to be processed due to posessing a duplicate name as another command`);
+                continue;
+            }
             if (
                 command.default.data.aliases &&
                 command.default.data.aliases.length > 0

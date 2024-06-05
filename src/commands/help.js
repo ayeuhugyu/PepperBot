@@ -195,7 +195,6 @@ TYPE: ${command_option_types[option.type]}`;
                     }
                 }
                 if (!doNotAdd) {
-                    //text += `p/${command.default.data.name}​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​`; // there's a zero width space between each space here so that discord oesn't reduce the space between them
                     fieldsText[
                         currentField
                     ] += `p/${command.default.data.name}\n`;

@@ -12,7 +12,7 @@ data.setDescription("SpeechMemeify [PROXY]");
 data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
-data.setAliases(["cb", "sb", "speechbubble"]);
+data.setAliases(["cb", "sb", "speechbubble", "bubble"]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.addAttachmentOption((option) =>
