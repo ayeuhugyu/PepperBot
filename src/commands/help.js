@@ -159,11 +159,16 @@ TYPE: ${command_option_types[option.type]}`;
         } else {
             // reply with command list
             let text = "run p/help [command] for more info\n\n";
+            let fieldsText = {
+                [1]: "",
+                [2]: "",
+                [3]: "",
+            };
             embed.setTitle("Commands");
             const commandFiles = fs
                 .readdirSync("src/commands/")
                 .filter((file) => file.endsWith(".js"));
-            let commandsOnCurrentLine = 1;
+            let currentField = 1;
             for (const file of commandFiles) {
                 const command = await import(`./${file}`);
                 let doNotAdd = false;
@@ -190,15 +195,34 @@ TYPE: ${command_option_types[option.type]}`;
                     }
                 }
                 if (!doNotAdd) {
-                    text += `p/${command.default.data.name}          `;
-                    if (commandsOnCurrentLine >= 4) {
-                        text += "\n\n";
-                        commandsOnCurrentLine = 0;
+                    //text += `p/${command.default.data.name}​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​`; // there's a zero width space between each space here so that discord oesn't reduce the space between them
+                    fieldsText[
+                        currentField
+                    ] += `p/${command.default.data.name}\n`;
+                    if (currentField >= 3) {
+                        currentField = 0;
                     }
-                    commandsOnCurrentLine++;
+                    currentField++;
                 }
             }
             embed.setDescription(text);
+            embed.addFields(
+                {
+                    name: "​",
+                    value: fieldsText[1],
+                    inline: true,
+                },
+                {
+                    name: "​",
+                    value: fieldsText[2],
+                    inline: true,
+                },
+                {
+                    name: "​",
+                    value: fieldsText[3],
+                    inline: true,
+                }
+            );
             action.reply(message, {
                 embeds: [embed],
                 ephemeral: true,

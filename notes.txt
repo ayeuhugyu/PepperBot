@@ -38,11 +38,12 @@ p/update been a lil bited
 - hopefully fixed some errors from p/queue that did not affect anything other than clog my console
 - optimized p/random pepper
 - new p/random command: p/random message
-- removed statistics caused by subcommands
 - made p/help command list look significantly nicer, shouldn't take up an entire page of your screen anymore
 - fixed messages not being logged for use by p/markov and p/markovold correctly
 - removed misleading alias on p/soundboard "play" and instead gave it to p/playurl
 - p/joinvc now supports joining channels by name, meaning p/joinvc hellhole will actually work now.
+- fixed subcommands not registering themselves as subcommands. this also means subcommands are no longer logged to statistics, however i haven't removed them from the file because im lazy
+- hopefully fixed p/git log infinitely hanging or even having the ability to infinitely hang
 
 **shit on the todo list:**
 
@@ -53,6 +54,7 @@ p/update been a lil bited
 - fix p/queue resetting the page when refreshing
 - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 - remake p/reactionrole, the syntax is just uncomfortable to use
+- remove subcommand statistics
 
 if you've got anything you want me to add to the todo list, go ahead and ask me and i'll consider it
 -------------------------------------------------------------------------------------------------------------

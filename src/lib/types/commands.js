@@ -70,12 +70,10 @@ export class CommandData extends SlashCommandBuilder {
 }
 
 export class Command {
-    onFinishConstructing = () => {};
     constructor(data, getArguments, execute, subcommands) {
         this.data = data;
         this.getArguments = getArguments;
         this.subcommands = subcommands;
-        this.isSubCommand = false;
         this.execute = async (message, args, fromInteraction) => {
             if (!this.data.canRunFromBot) {
                 if (message.author.bot) {
@@ -154,12 +152,9 @@ export class Command {
                 );
             }
         };
-        this.onFinishConstructing();
     }
 }
 
 export class SubCommand extends Command {
-    onFinishConstructing = () => {
-        this.isSubCommand = true;
-    };
+    isSubCommand = true;
 }

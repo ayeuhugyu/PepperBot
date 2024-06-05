@@ -9,6 +9,7 @@ import * as globals from "../lib/globals.js";
 import { Collection } from "discord.js";
 import shell from "shelljs";
 import * as files from "../lib/files.js";
+import * as log from "../lib/log.js";
 
 const config = globals.config;
 
@@ -27,14 +28,29 @@ const graph = new SubCommand(
     },
     async function execute(message, args, fromInteraction) {
         const sent = await action.reply(message, {
-            content: "fetching git data...",
+            content:
+                "fetching git data... (this may take a while if this command hasn't been used in a while)",
             ephemeral: true,
         });
-        await shell.exec(`git fetch`, { silent: true });
+        const fetchout = await shell.exec(`sudo git fetch`, { silent: true });
+        if (fetchout.stderr) {
+            action.editMessage(sent, {
+                content: "error fetching git data, the error has been logged.",
+            });
+            log.error(fetchout.stderr);
+            return;
+        }
         const output = await shell.exec(
             `git log --graph --abbrev-commit --decorate --format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)" --all`,
             { silent: true }
         );
+        if (output.stderr) {
+            action.editMessage(sent, {
+                content: "error creating git log, the error has been logged.",
+            });
+            log.error(output.stderr);
+            return;
+        }
         const file = await files.textToFile(output.stdout, "gitlog");
         action.editMessage(sent, {
             content: "here's a log of commits to the pepperbot repository",

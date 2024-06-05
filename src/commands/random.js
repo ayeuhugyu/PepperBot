@@ -17,12 +17,14 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-const deepwoken_names = globals.deepwoken_names
-const allWords = globals.allWords
+const deepwoken_names = globals.deepwoken_names;
+const allWords = globals.allWords;
 
 const rmessagedata = new SubCommandData();
 rmessagedata.setName("message");
-rmessagedata.setDescription("returns a random message from the channel it's used in");
+rmessagedata.setDescription(
+    "returns a random message from the channel it's used in."
+);
 rmessagedata.setPermissions([]);
 rmessagedata.setPermissionsReadable("");
 rmessagedata.setWhitelist([]);
@@ -33,20 +35,31 @@ const rmessage = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction) {
-        const channel = message.channel
-        const messages = channel.messages
-        const messageCache = messages.cache
-        let acc = 0
+        const channel = message.channel;
+        const messages = channel.messages;
+        const messageCache = await messages.fetch({ limit: 100, cache: true });
+        let acc = 0;
         let randomMessage = messageCache.random();
-        while (randomMessage.content.startsWith(config.generic.prefix) || randomMessage.author.bot) {
+        while (
+            randomMessage.content.startsWith(config.generic.prefix) ||
+            randomMessage.content.startsWith("d/") ||
+            randomMessage.content.startsWith("p/") ||
+            randomMessage.author.bot
+        ) {
             randomMessage = messageCache.random();
-            acc++
+            acc++;
             if (acc > 500) {
-                action.reply(message, "too many attempts to find a valid message, exiting. rerun the command and hope you get lucky")
-                return
+                action.reply(
+                    message,
+                    "too many attempts to find a valid message, exiting. rerun the command and hope you get lucky"
+                );
+                return;
             }
         }
-        action.reply(message, { content: randomMessage.content, files: randomMessage.attachments, })
+        action.reply(message, {
+            content: randomMessage.content,
+            files: randomMessage.attachments,
+        });
     }
 );
 
@@ -171,8 +184,8 @@ const words = new SubCommand(
 );
 
 const pepperfiles = fs
-.readdirSync(config.paths.peppers)
-.filter((file) => file.endsWith(".png") || file.endsWith(".jpg"));
+    .readdirSync(config.paths.peppers)
+    .filter((file) => file.endsWith(".png") || file.endsWith(".jpg"));
 
 const pepperdata = new SubCommandData();
 pepperdata.setName("pepper");
