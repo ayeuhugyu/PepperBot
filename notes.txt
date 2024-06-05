@@ -22,6 +22,7 @@ for update:
 to test:
 p/todo (all of it)
 p/queue, p/playurl, p/embed save, p/setprompt (with files), p/addsound, all work
+p/random words still works
 
 commands:
 
