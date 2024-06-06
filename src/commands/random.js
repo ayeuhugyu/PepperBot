@@ -20,6 +20,28 @@ const config = globals.config;
 const deepwoken_names = globals.deepwoken_names;
 const allWords = globals.allWords;
 
+const nicknamedata = new SubCommandData();
+nicknamedata.setName("nickname");
+nicknamedata.setDescription("returns a random nickname for a user");
+nicknamedata.setPermissions([]);
+nicknamedata.setPermissionsReadable("");
+nicknamedata.setWhitelist([]);
+nicknamedata.setCanRunFromBot(true);
+const nickname = new SubCommand(
+    nicknamedata,
+    async function getArguments(message) {
+        return null;
+    },
+    async function execute(message, args, fromInteraction) {
+        const randomVerb = globals.verbs[Math.random() * globals.verbs.length];
+        const randomNoun = globals.nouns[Math.random() * globals.nouns.length];
+        action.reply(
+            message,
+            `${randomVerb} ${randomNoun}`
+        );
+    }
+);
+
 const rmessagedata = new SubCommandData();
 rmessagedata.setName("message");
 rmessagedata.setDescription(
@@ -327,7 +349,9 @@ data.addStringOption((option) =>
             { name: "words", value: "words" },
             { name: "pepper", value: "pepper" },
             { name: "freshie", value: "freshie" },
-            { name: "buildidea", value: "buildidea" }
+            { name: "buildidea", value: "buildidea" },
+            { name: "message", value: "message" },
+            { name: "nickname", value: "nickname" }
         )
 );
 data.addStringOption((option) =>
@@ -380,7 +404,7 @@ const command = new Command(
             )}\`, you baffoon!`
         );
     },
-    [buildidea, freshie, pepper, words, sound, name, rmessage]
+    [buildidea, freshie, pepper, words, sound, name, rmessage, nickname]
 );
 
 export default command;

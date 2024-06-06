@@ -236,6 +236,11 @@ export class AudioPlayerQueueManager {
         if (this.queues[index]) {
             this.queues.splice(index, 1);
             this.readableQueue.splice(index, 1);
+            if (index > this.currentIndex) {
+                this.currentIndex--;
+            } else {
+                this.currentIndex++;
+            }
             this.emitter.emit("update", this.readableQueue);
             return true;
         } else {

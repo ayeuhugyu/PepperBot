@@ -10,7 +10,7 @@ import fs from "fs";
 import fsextra from "fs-extra";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
-import * as files from "../lib/files.js"
+import * as files from "../lib/files.js";
 import default_embed from "../lib/default_embed.js";
 
 const config = globals.config;
@@ -19,39 +19,80 @@ class listValue {
     constructor(name, value, checked) {
         this.name = name;
         this.value = value;
-        this.completed = checked
+        this.completed = checked;
     }
 }
 
 function createListFiles(id, name) {
     fsextra.ensureDirSync(`resources/data/todos/${id}`);
-    fsextra.ensureFileSync(`resources/data/todos/${id}/${files.fixFileName(name)}.json`);
+    fsextra.ensureFileSync(
+        `resources/data/todos/${id}/${files.fixFileName(name)}.json`
+    );
 
-    fs.writeFileSync(`resources/data/todos/${id}/${files.fixFileName(name)}.json`, JSON.stringify([]));
+    fs.writeFileSync(
+        `resources/data/todos/${id}/${files.fixFileName(name)}.json`,
+        JSON.stringify([])
+    );
 
     return `resources/data/todos/${id}/${files.fixFileName(name)}.json`;
 }
 function ensureList(id, name) {
-    if (!fs.existsSync(`resources/data/todos/${id}/${files.fixFileName(name)}.json`)) {
-        return createListFiles(id, name)
+    if (
+        !fs.existsSync(
+            `resources/data/todos/${id}/${files.fixFileName(name)}.json`
+        )
+    ) {
+        return createListFiles(id, name);
     }
     return `resources/data/todos/${id}/${files.fixFileName(name)}.json`;
 }
 function readList(id, name) {
-    return JSON.parse(fs.readFileSync(`resources/data/todos/${id}/${files.fixFileName(name)}.json`));
+    return JSON.parse(
+        fs.readFileSync(
+            `resources/data/todos/${id}/${files.fixFileName(name)}.json`
+        )
+    );
 }
 function editList(id, name, key, value, checked) {
     const list = readList(id, name);
     list[key] = new listValue(key, value, checked);
-    fs.writeFileSync(`resources/data/todos/${id}/${files.fixFileName(name)}.json`, JSON.stringify(list, null, 4));
+    fs.writeFileSync(
+        `resources/data/todos/${id}/${files.fixFileName(name)}.json`,
+        JSON.stringify(list, null, 4)
+    );
 }
 function removeListItem(id, name, key) {
     const list = readList(id, name);
-    list.splice(key, 1)
-    fs.writeFileSync(`resources/data/todos/${id}/${files.fixFileName(name)}.json`, JSON.stringify(list, null, 4));
+    list.splice(key, 1);
+    fs.writeFileSync(
+        `resources/data/todos/${id}/${files.fixFileName(name)}.json`,
+        JSON.stringify(list, null, 4)
+    );
 }
 
-let whichListForUser = {}
+let whichListForUser = {};
+
+const whichData = new CommandData();
+whichData.setName("which");
+whichData.setDescription("displays which list you are currently editing");
+whichData.setPermissions([]);
+whichData.setPermissionsReadable("");
+whichData.setWhitelist([]);
+whichData.setCanRunFromBot(true);
+
+const which = new SubCommand(
+    whichData,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction) {
+        const whichList = whichListForUser[message.author.id] || "main";
+        action.reply(message, {
+            content: `currently editing list "${whichList}"`,
+            ephemeral: true,
+        });
+    }
+);
 
 const switchData = new CommandData();
 switchData.setName("switch");
@@ -88,9 +129,33 @@ const switchc = new SubCommand(
             });
             return;
         }
-        whichListForUser[message.author.id] = args.get("content")
-        ensureList(message.author.id, args.get("content"))
-        action.reply(message, { content: `switched to list ${args.get("content")}`, ephemeral: true });
+        if (args.get("content") === "ls") {
+            const fileList = files.generateLSText(
+                `resources/data/todos/${message.author.id}`
+            );
+            const file = files.textToFile(fileList, "todolists");
+            action.reply(message, {
+                files: [{ attachment: file, name: "todolists.txt" }],
+                ephemeral: true,
+            });
+            return;
+        }
+        const oldWhichList = whichListForUser[message.author.id] || "main";
+        const oldList = readList(message.author.id, oldWhichList);
+        const oldListLength = oldList.length;
+        let content = ""
+        if (oldListLength === 0) {
+            fs.unlinkSync(`resources/data/todos/${message.author.id}/${files.fixFileName(oldWhichList)}.json`)
+            content += `deleted old list "${oldWhichList}" as it contained no entries. `
+        }
+
+        whichListForUser[message.author.id] = args.get("content");
+        ensureList(message.author.id, args.get("content"));
+        content += `switched to list "${args.get("content")}"`
+        action.reply(message, {
+            content: content,
+            ephemeral: true,
+        });
     }
 );
 
@@ -129,11 +194,20 @@ const addTask = new SubCommand(
             });
             return;
         }
-        const whichList = whichListForUser[message.author.id] || "main"
+        const whichList = whichListForUser[message.author.id] || "main";
         const list = ensureList(message.author.id, whichList);
         const listLength = readList(message.author.id, whichList).length;
-        editList(message.author.id, whichList, listLength, args.get("content"), false);
-        action.reply(message, { content: `added ${args.get("content")} to list ${whichList}`, ephemeral: true });
+        editList(
+            message.author.id,
+            whichList,
+            listLength,
+            args.get("content"),
+            false
+        );
+        action.reply(message, {
+            content: `added ${args.get("content")} to list "${whichList}"`,
+            ephemeral: true,
+        });
     }
 );
 
@@ -172,7 +246,7 @@ const removeTask = new SubCommand(
             });
             return;
         }
-        const whichList = whichListForUser[message.author.id] || "main"
+        const whichList = whichListForUser[message.author.id] || "main";
         const list = ensureList(message.author.id, whichList);
         const listLength = readList(message.author.id, whichList).length;
         const taskIndex = parseInt(args.get("content"));
@@ -184,7 +258,10 @@ const removeTask = new SubCommand(
             return;
         }
         removeListItem(message.author.id, whichList, taskIndex - 1);
-        action.reply(message, { content: `removed task #${taskIndex} from list ${whichList}`, ephemeral: true });
+        action.reply(message, {
+            content: `removed task #${taskIndex} from list "${whichList}"`,
+            ephemeral: true,
+        });
     }
 );
 
@@ -218,12 +295,13 @@ const checkOffTask = new SubCommand(
     async function execute(message, args, fromInteraction) {
         if (!args.get("content")) {
             action.reply(message, {
-                content: "you need to supply an item to check off from the list",
+                content:
+                    "you need to supply an item to check off from the list",
                 ephemeral: true,
             });
             return;
         }
-        const whichList = whichListForUser[message.author.id] || "main"
+        const whichList = whichListForUser[message.author.id] || "main";
         const l = ensureList(message.author.id, whichList);
         const list = readList(message.author.id, whichList);
         const listLength = list.length;
@@ -235,18 +313,23 @@ const checkOffTask = new SubCommand(
             });
             return;
         }
-        let repl = `checked off task #${taskIndex} from list ${whichList}`
+        let repl = `checked off task #${taskIndex} from list "${whichList}"`;
         const task = list[taskIndex - 1];
-        let setTaskCompleted = true
+        let setTaskCompleted = true;
         if (task.completed) {
-            setTaskCompleted = false
-            repl = `unchecked task #${taskIndex} from list ${whichList}`
+            setTaskCompleted = false;
+            repl = `unchecked task #${taskIndex} from list "${whichList}"`;
         }
-        editList(message.author.id, whichList, taskIndex - 1, task.value, setTaskCompleted);
+        editList(
+            message.author.id,
+            whichList,
+            taskIndex - 1,
+            task.value,
+            setTaskCompleted
+        );
         action.reply(message, { content: repl, ephemeral: true });
     }
 );
-
 
 const data = new CommandData();
 data.setName("todo");
@@ -262,6 +345,12 @@ data.addStringOption((option) =>
         .setName("subcommand")
         .setDescription("the subcommand to use")
         .setRequired(false)
+        .addChoices(
+            { name: "add", value: "add" },
+            { name: "remove", value: "remove" },
+            { name: "check", value: "check" },
+            { name: "switch", value: "switch" }
+        )
 );
 data.addStringOption((option) =>
     option
@@ -294,23 +383,26 @@ const command = new Command(
         const whichList = whichListForUser[message.author.id] || "main";
         const l = ensureList(message.author.id, whichList);
         const list = readList(message.author.id, whichList);
-        const embed = default_embed()
-            .setTitle(`${message.author.username}'s ${whichList} list`)
-        
-        let text = ""
+        const embed = default_embed().setTitle(
+            `${message.author.username}'s "${whichList}"`
+        );
+
+        let text = "";
 
         list.forEach((item, index) => {
-            text += `${item.completed ? "✅" : ""}[${index + 1}] - ${item.value}\n`
+            text += `${item.completed ? "✅" : ""}[${index + 1}] - ${
+                item.value
+            }\n`;
         });
         if (!text) {
-            embed.setDescription("there are no items in this list")
+            embed.setDescription("there are no items in this list");
         } else {
-            embed.setDescription(text)
+            embed.setDescription(text);
         }
-        
+
         action.reply(message, { embeds: [embed], ephemeral: true });
     },
-    [addTask, removeTask, checkOffTask] // subcommands
+    [addTask, removeTask, checkOffTask, switchc, which] // subcommands
 );
 
 export default command;

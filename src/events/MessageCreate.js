@@ -23,7 +23,7 @@ const commands = commandsObject.commandExecutions;
 
 function logmessage(message) {
     fsExtra.ensureFileSync("logs/messages.log")
-    if (!message.author.bot && !message.content.startsWith(config.generic.prefix)) {
+    if (!message.author.bot && !message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())) {
         fs.appendFileSync("logs/messages.log", message.content + "\n");
     }
 }
@@ -31,7 +31,7 @@ function logmessage(message) {
 async function processDM(message) {
     if (message.channel.type === 1) {
         if (!message.author.bot) {
-            if (!message.content.startsWith(config.generic.prefix)) {
+            if (!message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())) {
                 const channel = await client.channels.cache.get(
                     config.events.dm_replication_channel
                 );
@@ -62,7 +62,7 @@ async function processDM(message) {
 async function processDiabolicalEvent(message) {
     if (
         !message.author.bot &&
-        !message.content.startsWith(config.generic.prefix)
+        !message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())
     ) {
         const random = Math.random() * 250;
         if (random < 5) {
@@ -108,7 +108,7 @@ async function processGPTResponse(message) {
 }
 
 async function processCommand(message) {
-    if (!message.content.startsWith(config.generic.prefix)) {
+    if (!message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())) {
         return;
     } // return if not a command
 

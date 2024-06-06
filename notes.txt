@@ -20,56 +20,36 @@ if you've got anything you want me to add to the todo list, go ahead and ask me 
 for update:
 
 to test:
-p/todo (all of it)
-p/queue, p/playurl, p/embed save, p/setprompt (with files), p/addsound, all work
-p/random words still works
+p/todo switch ls
+p/todo lists are removed if empty
+p/queue remove index changing works
+no longer case sensative prefix stuff
+p/help with subcommands
+p/todo which
+p/random nickname
 
 commands:
 
 **shit on the todo list:**
 
-- add a way to switch between p/todo lists
-- add p/corrupt image support
-- AI image processing
-- fix p/queue resetting the page when refreshing
-- add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
-- remake p/reactionrole, the syntax is just uncomfortable to use
-- remove subcommand statistics
+[1] - add p/corrupt image support
+[2] - ai image processing
+[3] - fix p/queue resetting the page when refreshing
+[4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
+[5] - remake p/reactionrole, the syntax is ust horrific
+[6] - remove subcommand statistics
 
-p/update been a lil bited
+p/update buncha bugfixes
 
 **general changes:**
 
-- made a new util function that fixes filenames for stuff like p/queue and p/playurl (previously it was the same function copy and pasted now its one function they import, as in no functionality has been changed)
-- p/addsound now uses this function
-- added MANY aliases: 
-    - p/addsound: "as", "add"
-    - p/blacklist: "bl"
-    - p/chatbubble: "cb", "speechbubble", "sb", "bubble"
-    - p/cleanup: "clean", "clear", "cu"
-    - p/corrupt: "fuckup"
-    - p/cquery: "christosquery", "csearch", "christossearch", "cq", "cs"
-    - p/dmuser: "dm", "send"
-    - p/explore: "servers"
-    - p/git: "github", "openpepper", "repo"
-    - p/help: "commands"
-    - p/joinvc: "join", "joincall", "call", "vc"
-    - p/leavevc: "leave", "leavecall", "fuckoff", "goaway"
-    - p/markov: "trigger", "markovchain"
-    - p/markovold: "triggerold", "markovchainold"
-    - p/playurl: "play", "pu", "purl"
-    - p/retrievesound: "getsound", "retrieve", "rs", "gs"
-    - p/sendlog: "log", "getlog"
-    - p/setprompt: "prompt", "gptprompt", "sp"
-    - p/soundboard: "playsound", "sound", "sb"
-    - p/statistics: "stats"
-    - p/vileimagery: "vile", "vi"
-- removed section in README detailing how to run, i realized that first it wouldn't have worked in the first place and second if i wanted to make it work, it would take a LOT more effort than it will be worth. 
-- removed setup.js file thtat was only useful for that how to run section
-- added a safeguard to prevent duplicate command names
-- new p/todo command allows you to create your own todo list for shit (ngl im gonna be the only person actually using this 😭)
-- moved the_english_lexicon.json into the resources/data folder
-- removed package-lock.json from .gitignore
-
-if you've got anything you want me to add to the todo list, go ahead and ask me and i'll consider it
+- prefix is no longer case sensative, meaning P/command will work instead of only p/command
+- added slash command choice for p/random message
+- fixed p/queue remove not updating current index (as in the index won't get offset from it)
+- p/todo switch ls can now be used to see a list of your lists
+- empty todo lists are now deleted so you can't create 190230912830921039821830192830 empty list files
+- adjusted some formatting for p/todo
+- added p/todo which, just tells you which list you're currently editing
+- added support for p/help with subcommands, meaning you can now do p/help command subcommand to get info about the subcommand
+- added p/random nickname, generates a string of a verb and then a noun.
 -------------------------------------------------------------------------------------------------------------

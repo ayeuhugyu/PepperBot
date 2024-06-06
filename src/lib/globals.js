@@ -53,4 +53,21 @@ const allWordsNonDefault = await import(
 if (!configNonDefault || !configNonDefault.default)
     throw new Error("the_english_lexicon.json unable to be imported");
 export const allWords = allWordsNonDefault.default;
+
+const nounsNonDefault = await import(
+    "../../resources/data/nouns.json",
+    { assert: { type: "json" } }
+);
+if (!configNonDefault || !configNonDefault.default)
+    throw new Error("nouns.json unable to be imported");
+export const nouns = nounsNonDefault.default;
+
+const verbsNonDefault = await import(
+    "../../resources/data/verbs.json",
+    { assert: { type: "json" } }
+);
+if (!configNonDefault || !configNonDefault.default)
+    throw new Error("verbs.json unable to be imported");
+export const verbs = verbsNonDefault.default;
+
 log.info(`loaded JSONs in ${Math.floor(performance.now() - start)}ms`);

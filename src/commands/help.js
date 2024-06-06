@@ -104,7 +104,60 @@ const command = new Command(
             if (args.get("command") in commands) {
                 const command = commands[args.get("command")];
                 const menu = new AdvancedPagedMenuBuilder();
-                const commandPage = default_embed();
+                const returnedargs = command.getArguments(`p/${args.get("command")}`)
+                if (returnedargs.get("_SUBCOMMAND")) { // REPLY WITH SUBCOMMAND INFO
+                    const subcommand = command.subcommands.find(
+                        (subcommand) =>
+                            subcommand.data.name === args.get("_SUBCOMMAND")
+                    );
+                    const commandPage = default_embed();
+                    commandPage.setTitle(`${command.name}/${subcommand.name}`);
+                    let text = `${subcommand.description}\n`;
+                    //if (subcommand.aliases && subcommand.aliases.length > 0) {
+                        //text += `ALIASES: ${subcommand.aliases.join(", ")}\n`;
+                    //}
+                    if (subcommand.permissions && subcommand.permissions.length > 0) {
+                        text += `PERMISSIONS: ${subcommand.permissionsReadable}\n`;
+                    }
+                    if (subcommand.whitelist && subcommand.whitelist.length > 0) {
+                        text += `WHITELIST: ${subcommand.whitelist.toString()}\n`;
+                    }
+                    text += `CAN RUN FROM BOT: ${subcommand.canRunFromBot}\n`;
+                    commandPage.setDescription(text);
+    
+                    if (subcommand.options && subcommand.options.length > 0) {
+                        menu.full.addPage(commandPage);
+                        subcommand.options.forEach((option) => {
+                            const optionPage = default_embed();
+                            optionPage.setTitle(option.name);
+                            let optionText = `
+${option.description}
+REQUIRED: ${option.required}
+TYPE: ${command_option_types[option.type]}`;
+                            if (option.choices && option.choices.length > 0) {
+                                optionText += `\nCHOICES: ${option.choices
+                                    .map((choice) => `${choice.value}`)
+                                    .join(", ")}`;
+                            }
+                            optionPage.setDescription(optionText);
+                            menu.full.addPage(optionPage);
+                        });
+                        const sentMessage = await action.reply(message, {
+                            embeds: [menu.pages[menu.currentPage]],
+                            components: [menu.actionRow],
+                            ephemeral: true,
+                        });
+                        menu.full.begin(sentMessage, 120_000, menu);
+                    } else {
+                        action.reply(message, {
+                            embeds: [commandPage],
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    return;
+                }
+                const commandPage = default_embed(); // REPLY WITH COMMAND INFO
                 commandPage.setTitle(command.name);
                 let text = `${command.description}\n`;
                 if (command.aliases && command.aliases.length > 0) {
