@@ -8,11 +8,14 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
+let commands = {};
+let commandExecutors = {};
+
 async function getCommands() {
     const commandFiles = fs
         .readdirSync(config.paths.commands)
         .filter((file) => file.endsWith(".js"));
-    let commands = {};
+
     for (const file of commandFiles) {
         if (file !== "help.js") {
             const filePath = `./${file}`;
@@ -26,14 +29,15 @@ async function getCommands() {
                 });
             }
             commands[command.default.data.name] = command.default.data;
+            commandExecutors[command.default.data.name] = command.default;
         }
     }
-    return commands;
+    return commands, commandExecutors;
 }
 
 //todo: convert this to the new commandsObject
 
-const commands = await getCommands();
+await getCommands();
 
 const command_option_types = {
     1: "sub command",
@@ -74,15 +78,18 @@ const command = new Command(
         let command = message.content
             .slice(config.generic.prefix.length + commandLength)
             .trim();
-        if (command.startsWith(config.generic.prefix)) {
-            command = command.slice(config.generic.prefix.length);
-        }
         args.set("command", command);
         return args;
     },
     async function execute(message, args) {
         let embed = default_embed();
         if (args.get("command")) {
+            if (await args.get("command").startsWith(config.generic.prefix)) {
+                await args.set(
+                    "command",
+                    args.get("command").slice(config.generic.prefix.length)
+                );
+            }
             // reply with command info
             let commandString = args.get("command");
             if (commandString.startsWith(config.generic.prefix)) {
@@ -100,34 +107,59 @@ const command = new Command(
                 });
                 commandString = args.get("command");
             }
-
-            if (args.get("command") in commands) {
-                const command = commands[args.get("command")];
+            const requestedCommand = commandString.split(" ")[0];
+            if (requestedCommand in commands) {
+                const command = commands[requestedCommand];
+                const fullcommand = commandExecutors[requestedCommand];
                 const menu = new AdvancedPagedMenuBuilder();
-                const returnedargs = command.getArguments(`p/${args.get("command")}`)
-                if (returnedargs.get("_SUBCOMMAND")) { // REPLY WITH SUBCOMMAND INFO
-                    const subcommand = command.subcommands.find(
+                const returnedargs = await fullcommand.getArguments({
+                    content: `p/${args.get("command")}`,
+                });
+                if (returnedargs.get("_SUBCOMMAND")) {
+                    // REPLY WITH SUBCOMMAND INFO
+                    const subcommand = fullcommand.subcommands.find(
                         (subcommand) =>
-                            subcommand.data.name === args.get("_SUBCOMMAND")
+                            subcommand.data.name ===
+                            returnedargs.get("_SUBCOMMAND")
                     );
+                    if (!subcommand) {
+                        action.reply(message, {
+                            content: `there's no subcommand '${returnedargs.get(
+                                "_SUBCOMMAND"
+                            )}' in p/${requestedCommand}!`,
+                            ephemeral: true,
+                        });
+                        return;
+                    }
                     const commandPage = default_embed();
-                    commandPage.setTitle(`${command.name}/${subcommand.name}`);
-                    let text = `${subcommand.description}\n`;
+                    commandPage.setTitle(
+                        `${command.name}/${subcommand.data.name}`
+                    );
+                    let text = `${subcommand.data.description}\n`;
                     //if (subcommand.aliases && subcommand.aliases.length > 0) {
-                        //text += `ALIASES: ${subcommand.aliases.join(", ")}\n`;
+                    //text += `ALIASES: ${subcommand.aliases.join(", ")}\n`;
                     //}
-                    if (subcommand.permissions && subcommand.permissions.length > 0) {
-                        text += `PERMISSIONS: ${subcommand.permissionsReadable}\n`;
+                    if (
+                        subcommand.data.permissions &&
+                        subcommand.data.permissions.length > 0
+                    ) {
+                        text += `PERMISSIONS: ${subcommand.data.permissionsReadable}\n`;
                     }
-                    if (subcommand.whitelist && subcommand.whitelist.length > 0) {
-                        text += `WHITELIST: ${subcommand.whitelist.toString()}\n`;
+                    if (
+                        subcommand.data.whitelist &&
+                        subcommand.data.whitelist.length > 0
+                    ) {
+                        text += `WHITELIST: ${subcommand.data.whitelist.toString()}\n`;
                     }
-                    text += `CAN RUN FROM BOT: ${subcommand.canRunFromBot}\n`;
+                    text += `CAN RUN FROM BOT: ${subcommand.data.canRunFromBot}\n`;
                     commandPage.setDescription(text);
-    
-                    if (subcommand.options && subcommand.options.length > 0) {
+
+                    if (
+                        subcommand.data.options &&
+                        subcommand.data.options.length > 0
+                    ) {
                         menu.full.addPage(commandPage);
-                        subcommand.options.forEach((option) => {
+                        subcommand.data.options.forEach((option) => {
                             const optionPage = default_embed();
                             optionPage.setTitle(option.name);
                             let optionText = `
@@ -204,7 +236,7 @@ TYPE: ${command_option_types[option.type]}`;
                 }
             } else {
                 action.reply(message, {
-                    content: "There's no such thing!",
+                    content: `there aint nothin called \`${requestedCommand}\``,
                     ephemeral: true,
                 });
                 return;

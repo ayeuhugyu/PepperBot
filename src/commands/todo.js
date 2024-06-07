@@ -130,10 +130,11 @@ const switchc = new SubCommand(
             return;
         }
         if (args.get("content") === "ls") {
-            const fileList = files.generateLSText(
+            const fileList = await files.generateLSText(
                 `resources/data/todos/${message.author.id}`
             );
-            const file = files.textToFile(fileList, "todolists");
+            console.log(fileList);
+            const file = await files.textToFile(fileList, "todolists");
             action.reply(message, {
                 files: [{ attachment: file, name: "todolists.txt" }],
                 ephemeral: true,
@@ -143,15 +144,19 @@ const switchc = new SubCommand(
         const oldWhichList = whichListForUser[message.author.id] || "main";
         const oldList = readList(message.author.id, oldWhichList);
         const oldListLength = oldList.length;
-        let content = ""
+        let content = "";
         if (oldListLength === 0) {
-            fs.unlinkSync(`resources/data/todos/${message.author.id}/${files.fixFileName(oldWhichList)}.json`)
-            content += `deleted old list "${oldWhichList}" as it contained no entries. `
+            fs.unlinkSync(
+                `resources/data/todos/${message.author.id}/${files.fixFileName(
+                    oldWhichList
+                )}.json`
+            );
+            content += `deleted old list "${oldWhichList}" as it contained no entries. `;
         }
 
         whichListForUser[message.author.id] = args.get("content");
         ensureList(message.author.id, args.get("content"));
-        content += `switched to list "${args.get("content")}"`
+        content += `switched to list "${args.get("content")}"`;
         action.reply(message, {
             content: content,
             ephemeral: true,

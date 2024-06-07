@@ -20,13 +20,6 @@ if you've got anything you want me to add to the todo list, go ahead and ask me 
 for update:
 
 to test:
-p/todo switch ls
-p/todo lists are removed if empty
-p/queue remove index changing works
-no longer case sensative prefix stuff
-p/help with subcommands
-p/todo which
-p/random nickname
 
 commands:
 
@@ -36,8 +29,7 @@ commands:
 [2] - ai image processing
 [3] - fix p/queue resetting the page when refreshing
 [4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
-[5] - remake p/reactionrole, the syntax is ust horrific
-[6] - remove subcommand statistics
+[5] - remake p/reactionrole, the syntax is just horrific
 
 p/update buncha bugfixes
 
@@ -51,5 +43,7 @@ p/update buncha bugfixes
 - adjusted some formatting for p/todo
 - added p/todo which, just tells you which list you're currently editing
 - added support for p/help with subcommands, meaning you can now do p/help command subcommand to get info about the subcommand
+- p/help now will accept command names that start with the prefix from slash commands (if you don't know what i mean by this ask me)
 - added p/random nickname, generates a string of a verb and then a noun.
+- removed subcommand statistics
 -------------------------------------------------------------------------------------------------------------

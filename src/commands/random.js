@@ -33,11 +33,13 @@ const nickname = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction) {
-        const randomVerb = globals.verbs[Math.random() * globals.verbs.length];
-        const randomNoun = globals.nouns[Math.random() * globals.nouns.length];
+        const randomVerb =
+            globals.verbs[Math.floor(Math.random() * globals.verbs.length)];
+        const randomNoun =
+            globals.nouns[Math.floor(Math.random() * globals.nouns.length)];
         action.reply(
             message,
-            `${randomVerb} ${randomNoun}`
+            `${randomVerb.toLowerCase()} ${randomNoun.toLowerCase()}`
         );
     }
 );
