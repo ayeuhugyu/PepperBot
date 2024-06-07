@@ -26,6 +26,7 @@ p/blacklist displays by default
 p/embed load ls and p/todo switch ls lists don't contain .json
 p/setprompt will reply with error if no prompt
 p/embed / p/todo subcommands still work
+p/todo remove tells value
 
 commands:
 
@@ -53,4 +54,5 @@ p/update buncha bugfixes
     - p/todo check: "uncheck", "complete", "uncomplete", "toggle", "finish", "unfinish"
 - p/blacklist now displays the blacklist by default
 - fixed p/embed and p/todo registering their subcommands as regular commands
+- p/todo remove now actually tells you what you removed
 -------------------------------------------------------------------------------------------------------------

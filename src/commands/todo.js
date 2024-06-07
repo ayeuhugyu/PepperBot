@@ -265,9 +265,10 @@ const removeTask = new SubCommand(
             });
             return;
         }
+        const task = readList(message.author.id, whichList)[taskIndex - 1];
         removeListItem(message.author.id, whichList, taskIndex - 1);
         action.reply(message, {
-            content: `removed task #${taskIndex} from list "${whichList}"`,
+            content: `removed task #${taskIndex} from list "${whichList}": "${task.value}"`,
             ephemeral: true,
         });
     }
