@@ -8,37 +8,6 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-let commands = {};
-let commandExecutors = {};
-
-async function getCommands() {
-    const commandFiles = fs
-        .readdirSync(config.paths.commands)
-        .filter((file) => file.endsWith(".js"));
-
-    for (const file of commandFiles) {
-        if (file !== "help.js") {
-            const filePath = `./${file}`;
-            const command = await import(filePath);
-            if (
-                command.default.data.aliases &&
-                command.default.data.aliases.length > 0
-            ) {
-                command.default.data.aliases.forEach((alias) => {
-                    commands[alias] = command.default.data;
-                });
-            }
-            commands[command.default.data.name] = command.default.data;
-            commandExecutors[command.default.data.name] = command.default;
-        }
-    }
-    return commands, commandExecutors;
-}
-
-//todo: convert this to the new commandsObject
-
-await getCommands();
-
 const command_option_types = {
     1: "sub command",
     2: "sub command group",
@@ -52,6 +21,131 @@ const command_option_types = {
     10: "number",
     11: "attachment",
 };
+
+async function listCommands(message) {
+    const embed = default_embed();
+    embed.setDescription("run p/help [command] for more info");
+    let fieldsText = {
+        [1]: "",
+        [2]: "",
+        [3]: "",
+    };
+    embed.setTitle("Commands");
+    const commandFiles = fs
+        .readdirSync("src/commands/")
+        .filter((file) => file.endsWith(".js"));
+    let currentField = 1;
+    for (const file of commandFiles) {
+        const command = await import(`./${file}`);
+        const commandDefault = command.default;
+        const commandData = commandDefault.data;
+
+        if (commandData.permissions && commandData.permissions.length > 0) {
+            let doNotAdd = false;
+            commandData.permissions.forEach((permission) => {
+                if (!message.member.permissions.has(permission)) {
+                    doNotAdd = true;
+                }
+            });
+            if (doNotAdd) {
+                continue; // i do it like this because continue cannot cross the forEach
+            }
+        }
+
+        if (commandData.whitelist && commandData.whitelist.length > 0) {
+            if (!commandData.whitelist.includes(message.author.id)) {
+                continue;
+            }
+        }
+        fieldsText[currentField] += `p/${commandData.name}\n`;
+        currentField = (currentField % 3) + 1;
+    }
+    embed.addFields(
+        {
+            name: "​",
+            value: fieldsText[1],
+            inline: true,
+        },
+        {
+            name: "​",
+            value: fieldsText[2],
+            inline: true,
+        },
+        {
+            name: "​",
+            value: fieldsText[3],
+            inline: true,
+        }
+    );
+    action.reply(message, {
+        embeds: [embed],
+        ephemeral: true,
+    });
+    return;
+}
+
+function optionToText(option) {
+    let optionText = `${option.description}
+REQUIRED: ${option.required}
+TYPE: ${command_option_types[option.type]}`;
+    if (option.choices && option.choices.length > 0) {
+        optionText += `\nCHOICES: ${option.choices
+            .map((choice) => `${choice.value}`)
+            .join(", ")}`;
+    }
+    return optionText;
+}
+
+async function infoAboutCommandWithOptions(message, command, currentEmbed) {
+    const menu = new AdvancedPagedMenuBuilder();
+    menu.full.addPage(currentEmbed);
+    for (const option of command.options) {
+        const optionEmbed = default_embed();
+        optionEmbed.setTitle(option.name);
+        optionEmbed.setDescription(optionToText(option));
+        menu.full.addPage(optionEmbed);
+    }
+    const sentMessage = await action.reply(message, {
+        embeds: [menu.pages[menu.currentPage]],
+        components: [menu.actionRow],
+        ephemeral: true,
+    });
+    if (!sentMessage) return;
+    return menu.full.begin(sentMessage, 120_000, menu);
+}
+
+async function infoAboutCommand(message, command, isSubCommand, parentCommandName) {
+    const originalCommand = command
+    command = originalCommand.data
+    const commandPage = default_embed();
+    let title = ''
+    if (isSubCommand) {
+        title = `${parentCommandName}/${command.name}`
+    } else {
+        title = command.name
+    }
+    commandPage.setTitle(title);
+    let text = `${command.description}\n`;
+    if (command.aliases && command.aliases.length > 0) {
+        text += `ALIASES: ${command.aliases.join(", ")}\n`;
+    }
+    if (command.permissions && command.permissions.length > 0) {
+        text += `PERMISSIONS: ${command.permissionsReadable}\n`;
+    }
+    if (command.whitelist && command.whitelist.length > 0) {
+        text += `WHITELIST: ${command.whitelist.toString()}\n`;
+    }
+    text += `CAN RUN FROM BOT: ${command.canRunFromBot}\n`;
+    commandPage.setDescription(text);
+    if (command.options && command.options.length > 0) {
+        return await infoAboutCommandWithOptions(message, command, commandPage);
+    } else {
+        return action.reply(message, {
+            embeds: [commandPage],
+            ephemeral: true,
+        });
+    }
+}
 
 const data = new CommandData();
 data.setName("help");
@@ -70,250 +164,69 @@ data.addStringOption((option) =>
         .setDescription("command to get info about")
         .setRequired(false)
 );
+data.addStringOption((option) => {
+    option.setName("subcmd").setDescription("subcommand to get info about");
+});
 const command = new Command(
     data,
     async function getArguments(message) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
-        let command = message.content
-            .slice(config.generic.prefix.length + commandLength)
-            .trim();
-        args.set("command", command);
+        args.set("command", message.content.split(" ")[1]);
+        if (args.get("command")) {
+            args.set(
+                "subcmd",
+                message.content.slice(
+                    config.generic.prefix.length +
+                        commandLength +
+                        message.content.split(" ")[1].length +
+                        1
+                )
+            );
+        }
         return args;
     },
     async function execute(message, args) {
-        let embed = default_embed();
-        if (args.get("command")) {
-            if (await args.get("command").startsWith(config.generic.prefix)) {
-                await args.set(
-                    "command",
-                    args.get("command").slice(config.generic.prefix.length)
-                );
-            }
-            // reply with command info
-            let commandString = args.get("command");
-            if (commandString.startsWith(config.generic.prefix)) {
-                args.set(
-                    "command",
-                    commandString.slice(config.generic.prefix.length)
-                ).catch((err) => {
-                    args._hoistedOptions.push({
-                        name: "command",
-                        type: 3,
-                        value: commandString.slice(
-                            config.generic.prefix.length
-                        ),
-                    });
-                });
-                commandString = args.get("command");
-            }
-            const requestedCommand = commandString.split(" ")[0];
-            if (requestedCommand in commands) {
-                const command = commands[requestedCommand];
-                const fullcommand = commandExecutors[requestedCommand];
-                const menu = new AdvancedPagedMenuBuilder();
-                const returnedargs = await fullcommand.getArguments({
-                    content: `p/${args.get("command")}`,
-                });
-                if (returnedargs.get("_SUBCOMMAND")) {
-                    // REPLY WITH SUBCOMMAND INFO
-                    const subcommand = fullcommand.subcommands.find(
-                        (subcommand) =>
-                            subcommand.data.name ===
-                            returnedargs.get("_SUBCOMMAND")
-                    );
-                    if (!subcommand) {
-                        action.reply(message, {
-                            content: `there's no subcommand '${returnedargs.get(
-                                "_SUBCOMMAND"
-                            )}' in p/${requestedCommand}!`,
-                            ephemeral: true,
-                        });
-                        return;
-                    }
-                    const commandPage = default_embed();
-                    commandPage.setTitle(
-                        `${command.name}/${subcommand.data.name}`
-                    );
-                    let text = `${subcommand.data.description}\n`;
-                    //if (subcommand.aliases && subcommand.aliases.length > 0) {
-                    //text += `ALIASES: ${subcommand.aliases.join(", ")}\n`;
-                    //}
-                    if (
-                        subcommand.data.permissions &&
-                        subcommand.data.permissions.length > 0
-                    ) {
-                        text += `PERMISSIONS: ${subcommand.data.permissionsReadable}\n`;
-                    }
-                    if (
-                        subcommand.data.whitelist &&
-                        subcommand.data.whitelist.length > 0
-                    ) {
-                        text += `WHITELIST: ${subcommand.data.whitelist.toString()}\n`;
-                    }
-                    text += `CAN RUN FROM BOT: ${subcommand.data.canRunFromBot}\n`;
-                    commandPage.setDescription(text);
-
-                    if (
-                        subcommand.data.options &&
-                        subcommand.data.options.length > 0
-                    ) {
-                        menu.full.addPage(commandPage);
-                        subcommand.data.options.forEach((option) => {
-                            const optionPage = default_embed();
-                            optionPage.setTitle(option.name);
-                            let optionText = `
-${option.description}
-REQUIRED: ${option.required}
-TYPE: ${command_option_types[option.type]}`;
-                            if (option.choices && option.choices.length > 0) {
-                                optionText += `\nCHOICES: ${option.choices
-                                    .map((choice) => `${choice.value}`)
-                                    .join(", ")}`;
-                            }
-                            optionPage.setDescription(optionText);
-                            menu.full.addPage(optionPage);
-                        });
-                        const sentMessage = await action.reply(message, {
-                            embeds: [menu.pages[menu.currentPage]],
-                            components: [menu.actionRow],
-                            ephemeral: true,
-                        });
-                        menu.full.begin(sentMessage, 120_000, menu);
-                    } else {
-                        action.reply(message, {
-                            embeds: [commandPage],
-                            ephemeral: true,
-                        });
-                        return;
-                    }
-                    return;
-                }
-                const commandPage = default_embed(); // REPLY WITH COMMAND INFO
-                commandPage.setTitle(command.name);
-                let text = `${command.description}\n`;
-                if (command.aliases && command.aliases.length > 0) {
-                    text += `ALIASES: ${command.aliases.join(", ")}\n`;
-                }
-                if (command.permissions && command.permissions.length > 0) {
-                    text += `PERMISSIONS: ${command.permissionsReadable}\n`;
-                }
-                if (command.whitelist && command.whitelist.length > 0) {
-                    text += `WHITELIST: ${command.whitelist.toString()}\n`;
-                }
-                text += `CAN RUN FROM BOT: ${command.canRunFromBot}\n`;
-                commandPage.setDescription(text);
-
-                if (command.options && command.options.length > 0) {
-                    menu.full.addPage(commandPage);
-                    command.options.forEach((option) => {
-                        const optionPage = default_embed();
-                        optionPage.setTitle(option.name);
-                        let optionText = `
-${option.description}
-REQUIRED: ${option.required}
-TYPE: ${command_option_types[option.type]}`;
-                        if (option.choices && option.choices.length > 0) {
-                            optionText += `\nCHOICES: ${option.choices
-                                .map((choice) => `${choice.value}`)
-                                .join(", ")}`;
-                        }
-                        optionPage.setDescription(optionText);
-                        menu.full.addPage(optionPage);
-                    });
-                    const sentMessage = await action.reply(message, {
-                        embeds: [menu.pages[menu.currentPage]],
-                        components: [menu.actionRow],
-                        ephemeral: true,
-                    });
-                    menu.full.begin(sentMessage, 120_000, menu);
-                } else {
-                    action.reply(message, {
-                        embeds: [commandPage],
-                        ephemeral: true,
-                    });
-                    return;
-                }
-            } else {
-                action.reply(message, {
-                    content: `there aint nothin called \`${requestedCommand}\``,
-                    ephemeral: true,
-                });
-                return;
-            }
-        } else {
-            // reply with command list
-            let text = "run p/help [command] for more info\n\n";
-            let fieldsText = {
-                [1]: "",
-                [2]: "",
-                [3]: "",
-            };
-            embed.setTitle("Commands");
-            const commandFiles = fs
-                .readdirSync("src/commands/")
-                .filter((file) => file.endsWith(".js"));
-            let currentField = 1;
-            for (const file of commandFiles) {
-                const command = await import(`./${file}`);
-                let doNotAdd = false;
-                if (
-                    command.default.data.permissions &&
-                    command.default.data.permissions.length > 0
-                ) {
-                    command.default.data.permissions.forEach((permission) => {
-                        if (!message.member.permissions.has(permission)) {
-                            doNotAdd = true;
-                        }
-                    });
-                }
-                if (
-                    command.default.data.whitelist &&
-                    command.default.data.whitelist.length > 0
-                ) {
-                    if (
-                        !command.default.data.whitelist.includes(
-                            message.author.id
-                        )
-                    ) {
-                        doNotAdd = true;
-                    }
-                }
-                if (!doNotAdd) {
-                    fieldsText[
-                        currentField
-                    ] += `p/${command.default.data.name}\n`;
-                    if (currentField >= 3) {
-                        currentField = 0;
-                    }
-                    currentField++;
-                }
-            }
-            embed.setDescription(text);
-            embed.addFields(
-                {
-                    name: "​",
-                    value: fieldsText[1],
-                    inline: true,
-                },
-                {
-                    name: "​",
-                    value: fieldsText[2],
-                    inline: true,
-                },
-                {
-                    name: "​",
-                    value: fieldsText[3],
-                    inline: true,
-                }
-            );
+        if (!args.get("command")) {
+            return await listCommands(message);
+        }
+        const requestedCommand = args
+            .get("command")
+            .startsWith(config.generic.prefix)
+            ? args.get("command").slice(config.generic.prefix.length)
+            : args.get("command");
+        const commands = await import("../lib/commands.js");
+        const command = commands.default.commands.get(requestedCommand);
+        if (!command) {
             action.reply(message, {
-                embeds: [embed],
+                content: "there's no such thing!",
                 ephemeral: true,
             });
             return;
-            //embed.setDescription(text);
         }
+        if (!args.get("subcmd")) {
+            return await infoAboutCommand(message, command);
+        }
+        const requestedSubCommand = args.get("subcmd");
+        const subCommands = command.subCommands; // subCommands is an array
+        if (!subCommands || subCommands.length === 0) {
+            action.reply(message, {
+                content: "there's no such thing!",
+                ephemeral: true,
+            });
+            return;
+        }
+        const subCommand = subCommands.find(
+            (subCommand) => subCommand.data.name === requestedSubCommand
+        );
+        if (!subCommand) {
+            action.reply(message, {
+                content: "there's no such thing!",
+                ephemeral: true,
+            });
+            return;
+        }
+        return await infoAboutCommand(message, subCommand, true, command.data.name);
     }
 );
 

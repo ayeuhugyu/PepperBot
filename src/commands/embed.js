@@ -111,7 +111,7 @@ const load = new SubCommand(
         }
         let savedEmbeds = fs.readdirSync(`resources/data/embeds/`);
         if (args.get("content") == "ls") {
-            let text = savedEmbeds.join("\n");
+            let text = files.generateLSText(`resources/data/embeds/`, true)
             const file = await files.textToFile(text, "embeds");
             action.reply(message, {
                 content: "here's a list of all the embeds",
@@ -161,7 +161,7 @@ const load = new SubCommand(
     }
 );
 
-const restartData = new CommandData();
+const restartData = new SubCommandData();
 restartData.setName("restart");
 restartData.setDescription("restarts the creation of your embed");
 restartData.setPermissions([]);
@@ -199,7 +199,7 @@ const restart = new SubCommand(
     }
 );
 
-const setImageData = new CommandData();
+const setImageData = new SubCommandData();
 setImageData.setName("setimage");
 setImageData.setDescription("sets the image of the embed");
 setImageData.setPermissions([]);
@@ -257,7 +257,7 @@ const setImage = new SubCommand(
     }
 );
 
-const setThumbnailData = new CommandData();
+const setThumbnailData = new SubCommandData();
 setThumbnailData.setName("setthumbnail");
 setThumbnailData.setDescription("sets the thumbnail of the embed");
 setThumbnailData.setPermissions([]);
@@ -315,7 +315,7 @@ const setThumbnail = new SubCommand(
     }
 );
 
-const setAuthorData = new CommandData();
+const setAuthorData = new SubCommandData();
 setAuthorData.setName("setauthor");
 setAuthorData.setDescription("sets the author of the embed");
 setAuthorData.setPermissions([]);
@@ -372,7 +372,7 @@ const setAuthor = new SubCommand(
     }
 );
 
-const setFooterData = new CommandData();
+const setFooterData = new SubCommandData();
 setFooterData.setName("setfooter");
 setFooterData.setDescription("sets the footer of the embed");
 setFooterData.setPermissions([]);
@@ -429,7 +429,7 @@ const setFooter = new SubCommand(
     }
 );
 
-const setColorData = new CommandData();
+const setColorData = new SubCommandData();
 setColorData.setName("setcolor");
 setColorData.setDescription("sets the color of the embed (THIS IS IN HEX)");
 setColorData.setPermissions([]);
@@ -489,7 +489,7 @@ const setColor = new SubCommand(
     }
 );
 
-const setDescriptionData = new CommandData();
+const setDescriptionData = new SubCommandData();
 setDescriptionData.setName("setdescription");
 setDescriptionData.setDescription("sets the description of the embed");
 setDescriptionData.setPermissions([]);
@@ -546,7 +546,7 @@ const setDescription = new SubCommand(
     }
 );
 
-const setTitleData = new CommandData();
+const setTitleData = new SubCommandData();
 setTitleData.setName("settitle");
 setTitleData.setDescription("sets the title of the embed");
 setTitleData.setPermissions([]);
@@ -603,7 +603,7 @@ const setTitle = new SubCommand(
     }
 );
 
-const previewData = new CommandData();
+const previewData = new SubCommandData();
 previewData.setName("preview");
 previewData.setDescription("previews your current embed");
 previewData.setPermissions([]);
@@ -663,7 +663,7 @@ const preview = new SubCommand(
     }
 );
 
-const sendData = new CommandData();
+const sendData = new SubCommandData();
 sendData.setName("send");
 sendData.setDescription("sends your current embed in the channel you're in");
 sendData.setPermissions([]);
@@ -743,13 +743,13 @@ data.addStringOption((option) =>
         .setChoices(
             { name: "send", value: "send" },
             { name: "preview", value: "preview" },
-            { name: "setTitle", value: "setTitle" },
-            { name: "setDescription", value: "setDescription" },
-            { name: "setColor", value: "setColor" },
-            { name: "setAuthor", value: "setAuthor" },
-            { name: "setFooter", value: "setFooter" },
-            { name: "setImage", value: "setImage" },
-            { name: "setThumbnail", value: "setThumbnail" },
+            { name: "settitle", value: "settitle" },
+            { name: "setdescription", value: "setdescription" },
+            { name: "setcolor", value: "setcolor" },
+            { name: "setauthor", value: "setauthor" },
+            { name: "setfooter", value: "setfooter" },
+            { name: "setimage", value: "setimage" },
+            { name: "setthumbnail", value: "setthumbnail" },
             { name: "restart", value: "restart" }
         )
 );

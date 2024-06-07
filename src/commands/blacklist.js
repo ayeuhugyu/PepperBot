@@ -197,10 +197,14 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        action.reply(message, {
-            content: "please provide a valid subcommand",
-            ephemeral: true,
-        });
+        if (args.get("_SUBCOMMAND")) {
+            action.reply(message, {
+                content: "please provide a valid subcommand",
+                ephemeral: true,
+            });
+            return;
+        }
+        view.execute(message, args, fromInteraction);
     },
     [add, remove, view] // subcommands
 );

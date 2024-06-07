@@ -24,6 +24,13 @@ export class SubCommandData extends SlashCommandSubcommandBuilder {
         this.canRunFromBot = canRunFromBot;
         return this;
     }
+    setAliases(aliases) {
+        this.aliases = aliases;
+        if (!this.name) {
+            this.setName(aliases[0]);
+        }
+        return this;
+    }
     toSubCommandBuilder() {
         let subcommandBuilder = this;
         if (subcommandBuilder.whitelist) {
@@ -120,7 +127,7 @@ export class Command {
                     if (args.get("_SUBCOMMAND")) {
                         const subcommand = this.subcommands.find(
                             (subcommand) =>
-                                subcommand.data.name === args.get("_SUBCOMMAND")
+                                subcommand.data.name === args.get("_SUBCOMMAND") || subcommand.data.aliases.includes(args.get("_SUBCOMMAND"))
                         );
                         if (subcommand) {
                             let subcommandArgs;

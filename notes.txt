@@ -20,6 +20,12 @@ if you've got anything you want me to add to the todo list, go ahead and ask me 
 for update:
 
 to test:
+p/help
+subcommand aliases work
+p/blacklist displays by default
+p/embed load ls and p/todo switch ls lists don't contain .json
+p/setprompt will reply with error if no prompt
+p/embed / p/todo subcommands still work
 
 commands:
 
@@ -30,20 +36,21 @@ commands:
 [3] - fix p/queue resetting the page when refreshing
 [4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 [5] - remake p/reactionrole, the syntax is just horrific
+[6] - p/todo buttons, p/todo page refresh (similar to queue)
 
 p/update buncha bugfixes
 
 **general changes:**
 
-- prefix is no longer case sensative, meaning P/command will work instead of only p/command
-- added slash command choice for p/random message
-- fixed p/queue remove not updating current index (as in the index won't get offset from it)
-- p/todo switch ls can now be used to see a list of your lists
-- empty todo lists are now deleted so you can't create 190230912830921039821830192830 empty list files
-- adjusted some formatting for p/todo
-- added p/todo which, just tells you which list you're currently editing
-- added support for p/help with subcommands, meaning you can now do p/help command subcommand to get info about the subcommand
-- p/help now will accept command names that start with the prefix from slash commands (if you don't know what i mean by this ask me)
-- added p/random nickname, generates a string of a verb and then a noun.
-- removed subcommand statistics
+- fixed filenames in p/embed load ls and p/todo switch ls having the file extension (despite trying to load that not being valid)
+- decapitalized p/embed subcommand choices
+- fixed p/setprompt always adding two newlines to the end of your message
+- rewrote p/help entirely, it was genuinely horrific to debug. functionality should not be different.
+- subcommands now support aliases
+- added the following subcommand aliases:
+    - p/todo which: "current"
+    - p/todo switch: "change"
+    - p/todo check: "uncheck", "complete", "uncomplete", "toggle", "finish", "unfinish"
+- p/blacklist now displays the blacklist by default
+- fixed p/embed and p/todo registering their subcommands as regular commands
 -------------------------------------------------------------------------------------------------------------

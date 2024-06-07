@@ -72,13 +72,14 @@ function removeListItem(id, name, key) {
 
 let whichListForUser = {};
 
-const whichData = new CommandData();
+const whichData = new SubCommandData();
 whichData.setName("which");
 whichData.setDescription("displays which list you are currently editing");
 whichData.setPermissions([]);
 whichData.setPermissionsReadable("");
 whichData.setWhitelist([]);
 whichData.setCanRunFromBot(true);
+whichData.setAliases(["current"])
 
 const which = new SubCommand(
     whichData,
@@ -94,13 +95,14 @@ const which = new SubCommand(
     }
 );
 
-const switchData = new CommandData();
+const switchData = new SubCommandData();
 switchData.setName("switch");
 switchData.setDescription("switches your current list to another list");
 switchData.setPermissions([]);
 switchData.setPermissionsReadable("");
 switchData.setWhitelist([]);
 switchData.setCanRunFromBot(true);
+switchData.setAliases(["change"])
 switchData.addStringOption((option) =>
     option
         .setName("content")
@@ -131,7 +133,8 @@ const switchc = new SubCommand(
         }
         if (args.get("content") === "ls") {
             const fileList = await files.generateLSText(
-                `resources/data/todos/${message.author.id}`
+                `resources/data/todos/${message.author.id}`,
+                true
             );
             console.log(fileList);
             const file = await files.textToFile(fileList, "todolists");
@@ -164,7 +167,7 @@ const switchc = new SubCommand(
     }
 );
 
-const addTaskData = new CommandData();
+const addTaskData = new SubCommandData();
 addTaskData.setName("add");
 addTaskData.setDescription("adds a task to your todo list");
 addTaskData.setPermissions([]);
@@ -216,7 +219,7 @@ const addTask = new SubCommand(
     }
 );
 
-const removeTaskData = new CommandData();
+const removeTaskData = new SubCommandData();
 removeTaskData.setName("remove");
 removeTaskData.setDescription("removes a task from your todo list");
 removeTaskData.setPermissions([]);
@@ -270,13 +273,14 @@ const removeTask = new SubCommand(
     }
 );
 
-const checkOffTaskData = new CommandData();
+const checkOffTaskData = new SubCommandData();
 checkOffTaskData.setName("check");
 checkOffTaskData.setDescription("checks off a task from your todo list");
 checkOffTaskData.setPermissions([]);
 checkOffTaskData.setPermissionsReadable("");
 checkOffTaskData.setWhitelist([]);
 checkOffTaskData.setCanRunFromBot(true);
+checkOffTaskData.setAliases(["uncheck", "complete", "uncomplete", "toggle", "finish", "unfinish"])
 checkOffTaskData.addStringOption((option) =>
     option
         .setName("content")
