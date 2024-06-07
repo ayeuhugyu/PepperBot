@@ -111,7 +111,11 @@ const load = new SubCommand(
         }
         let savedEmbeds = fs.readdirSync(`resources/data/embeds/`);
         if (args.get("content") == "ls") {
-            let text = files.generateLSText(`resources/data/embeds/`, true)
+            let text = await files.generateLSText(
+                `resources/data/embeds/`,
+                true
+            );
+            text = text.replace(/\.[^.]+$/, "");
             const file = await files.textToFile(text, "embeds");
             action.reply(message, {
                 content: "here's a list of all the embeds",

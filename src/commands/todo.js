@@ -79,7 +79,7 @@ whichData.setPermissions([]);
 whichData.setPermissionsReadable("");
 whichData.setWhitelist([]);
 whichData.setCanRunFromBot(true);
-whichData.setAliases(["current"])
+whichData.setAliases(["current"]);
 
 const which = new SubCommand(
     whichData,
@@ -102,7 +102,7 @@ switchData.setPermissions([]);
 switchData.setPermissionsReadable("");
 switchData.setWhitelist([]);
 switchData.setCanRunFromBot(true);
-switchData.setAliases(["change"])
+switchData.setAliases(["change"]);
 switchData.addStringOption((option) =>
     option
         .setName("content")
@@ -136,8 +136,11 @@ const switchc = new SubCommand(
                 `resources/data/todos/${message.author.id}`,
                 true
             );
-            console.log(fileList);
-            const file = await files.textToFile(fileList, "todolists");
+            const fileListWithoutExtensions = fileList.replace(/\.[^.]+$/, "");
+            const file = await files.textToFile(
+                fileListWithoutExtensions,
+                "todolists"
+            );
             action.reply(message, {
                 files: [{ attachment: file, name: "todolists.txt" }],
                 ephemeral: true,
@@ -281,7 +284,14 @@ checkOffTaskData.setPermissions([]);
 checkOffTaskData.setPermissionsReadable("");
 checkOffTaskData.setWhitelist([]);
 checkOffTaskData.setCanRunFromBot(true);
-checkOffTaskData.setAliases(["uncheck", "complete", "uncomplete", "toggle", "finish", "unfinish"])
+checkOffTaskData.setAliases([
+    "uncheck",
+    "complete",
+    "uncomplete",
+    "toggle",
+    "finish",
+    "unfinish",
+]);
 checkOffTaskData.addStringOption((option) =>
     option
         .setName("content")
@@ -400,9 +410,9 @@ const command = new Command(
         let text = "";
 
         list.forEach((item, index) => {
-            text += `${item.completed ? "✅" : ""}[${index + 1}] - ${
+            text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${
                 item.value
-            }\n`;
+            }${item.completed ? "~~" : ""}\n`;
         });
         if (!text) {
             embed.setDescription("there are no items in this list");

@@ -20,13 +20,6 @@ if you've got anything you want me to add to the todo list, go ahead and ask me 
 for update:
 
 to test:
-p/help
-subcommand aliases work
-p/blacklist displays by default
-p/embed load ls and p/todo switch ls lists don't contain .json
-p/setprompt will reply with error if no prompt
-p/embed / p/todo subcommands still work
-p/todo remove tells value
 
 commands:
 
@@ -39,7 +32,7 @@ commands:
 [5] - remake p/reactionrole, the syntax is just horrific
 [6] - p/todo buttons, p/todo page refresh (similar to queue)
 
-p/update buncha bugfixes
+p/update buncha qol stuff basically
 
 **general changes:**
 
@@ -47,12 +40,16 @@ p/update buncha bugfixes
 - decapitalized p/embed subcommand choices
 - fixed p/setprompt always adding two newlines to the end of your message
 - rewrote p/help entirely, it was genuinely horrific to debug. functionality should not be different.
+- fixed p/help being unable to give help for certain commands
+- p/help now shows the command the option pertains to on the options ui
 - subcommands now support aliases
 - added the following subcommand aliases:
     - p/todo which: "current"
     - p/todo switch: "change"
     - p/todo check: "uncheck", "complete", "uncomplete", "toggle", "finish", "unfinish"
+- completed todo list tasks are now strikethroughed
 - p/blacklist now displays the blacklist by default
 - fixed p/embed and p/todo registering their subcommands as regular commands
 - p/todo remove now actually tells you what you removed
+- fixed p/queue subcommands not registering their arguments
 -------------------------------------------------------------------------------------------------------------

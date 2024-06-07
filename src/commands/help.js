@@ -96,12 +96,24 @@ TYPE: ${command_option_types[option.type]}`;
     return optionText;
 }
 
-async function infoAboutCommandWithOptions(message, command, currentEmbed) {
+async function infoAboutCommandWithOptions(
+    message,
+    command,
+    currentEmbed,
+    isSubCommand,
+    parentCommandName
+) {
     const menu = new AdvancedPagedMenuBuilder();
     menu.full.addPage(currentEmbed);
     for (const option of command.options) {
+        let titleText = ``;
+        if (isSubCommand) {
+            titleText = `p/${parentCommandName} ${command.name}: ${option.name}`;
+        } else {
+            titleText = `p/${command.name}: ${option.name}`;
+        }
         const optionEmbed = default_embed();
-        optionEmbed.setTitle(option.name);
+        optionEmbed.setTitle(titleText);
         optionEmbed.setDescription(optionToText(option));
         menu.full.addPage(optionEmbed);
     }
@@ -114,15 +126,20 @@ async function infoAboutCommandWithOptions(message, command, currentEmbed) {
     return menu.full.begin(sentMessage, 120_000, menu);
 }
 
-async function infoAboutCommand(message, command, isSubCommand, parentCommandName) {
-    const originalCommand = command
-    command = originalCommand.data
+async function infoAboutCommand(
+    message,
+    command,
+    isSubCommand,
+    parentCommandName
+) {
+    const originalCommand = command;
+    command = originalCommand.data;
     const commandPage = default_embed();
-    let title = ''
+    let title = "";
     if (isSubCommand) {
-        title = `${parentCommandName}/${command.name}`
+        title = `p/${parentCommandName} ${command.name}`;
     } else {
-        title = command.name
+        title = "p/" + command.name;
     }
     commandPage.setTitle(title);
     let text = `${command.description}\n`;
@@ -138,7 +155,13 @@ async function infoAboutCommand(message, command, isSubCommand, parentCommandNam
     text += `CAN RUN FROM BOT: ${command.canRunFromBot}\n`;
     commandPage.setDescription(text);
     if (command.options && command.options.length > 0) {
-        return await infoAboutCommandWithOptions(message, command, commandPage);
+        return await infoAboutCommandWithOptions(
+            message,
+            command,
+            commandPage,
+            isSubCommand,
+            parentCommandName
+        );
     } else {
         return action.reply(message, {
             embeds: [commandPage],
@@ -164,9 +187,12 @@ data.addStringOption((option) =>
         .setDescription("command to get info about")
         .setRequired(false)
 );
-data.addStringOption((option) => {
-    option.setName("subcmd").setDescription("subcommand to get info about");
-});
+data.addStringOption((option) =>
+    option
+        .setName("subcmd")
+        .setDescription("subcommand to get info about")
+        .setRequired(false)
+);
 const command = new Command(
     data,
     async function getArguments(message) {
@@ -199,7 +225,7 @@ const command = new Command(
         const command = commands.default.commands.get(requestedCommand);
         if (!command) {
             action.reply(message, {
-                content: "there's no such thing!",
+                content: `there's no command named ${requestedCommand}`,
                 ephemeral: true,
             });
             return;
@@ -208,10 +234,10 @@ const command = new Command(
             return await infoAboutCommand(message, command);
         }
         const requestedSubCommand = args.get("subcmd");
-        const subCommands = command.subCommands; // subCommands is an array
+        const subCommands = command.subcommands; // subCommands is an array
         if (!subCommands || subCommands.length === 0) {
             action.reply(message, {
-                content: "there's no such thing!",
+                content: `there's no subcommands for p/${command.data.name}`,
                 ephemeral: true,
             });
             return;
@@ -221,12 +247,17 @@ const command = new Command(
         );
         if (!subCommand) {
             action.reply(message, {
-                content: "there's no such thing!",
+                content: `there's no subcommand named  "${requestedSubCommand}" for p/${command.data.name}`,
                 ephemeral: true,
             });
             return;
         }
-        return await infoAboutCommand(message, subCommand, true, command.data.name);
+        return await infoAboutCommand(
+            message,
+            subCommand,
+            true,
+            command.data.name
+        );
     }
 );
 

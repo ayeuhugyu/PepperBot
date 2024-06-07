@@ -126,8 +126,23 @@ export class Command {
                 ) {
                     if (args.get("_SUBCOMMAND")) {
                         const subcommand = this.subcommands.find(
-                            (subcommand) =>
-                                subcommand.data.name === args.get("_SUBCOMMAND") || subcommand.data.aliases.includes(args.get("_SUBCOMMAND"))
+                            (subcommand) => {
+                                if (
+                                    subcommand.data.name ===
+                                    args.get("_SUBCOMMAND")
+                                ) {
+                                    return true;
+                                }
+                                if (
+                                    subcommand.data.aliases &&
+                                    subcommand.data.aliases.includes(
+                                        args.get("_SUBCOMMAND")
+                                    )
+                                ) {
+                                    return true;
+                                }
+                                return false;
+                            }
                         );
                         if (subcommand) {
                             let subcommandArgs;

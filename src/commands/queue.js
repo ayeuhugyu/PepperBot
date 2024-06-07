@@ -485,6 +485,12 @@ adddata.setPermissions([]);
 adddata.setPermissionsReadable("");
 adddata.setWhitelist([]);
 adddata.setCanRunFromBot(true);
+adddata.addStringOption((option) =>
+    option
+        .setName("url")
+        .setDescription("url of the song to add to the queue")
+        .setRequired(false)
+);
 const add = new SubCommand(
     adddata,
     async function getArguments(message) {
@@ -518,6 +524,12 @@ removedata.setPermissions([]);
 removedata.setPermissionsReadable("");
 removedata.setWhitelist([]);
 removedata.setCanRunFromBot(true);
+removedata.addStringOption((option) =>
+    option
+        .setName("index")
+        .setDescription("index of the song to remove from the queue")
+        .setRequired(false)
+);
 const remove = new SubCommand(
     removedata,
     async function getArguments(message) {
@@ -629,6 +641,12 @@ savedata.setPermissions([]);
 savedata.setPermissionsReadable("");
 savedata.setWhitelist([]);
 savedata.setCanRunFromBot(true);
+savedata.addStringOption((option) =>
+    option
+        .setName("name")
+        .setDescription("what to save the queue as")
+        .setRequired(false)
+);
 const save = new SubCommand(
     savedata,
     async function getArguments(message) {
@@ -676,6 +694,12 @@ loaddata.setPermissions([]);
 loaddata.setPermissionsReadable("");
 loaddata.setWhitelist([]);
 loaddata.setCanRunFromBot(true);
+loaddata.addStringOption((option) =>
+    option
+        .setName("name")
+        .setDescription("which queue to load")
+        .setRequired(false)
+);
 const load = new SubCommand(
     loaddata,
     async function getArguments(message) {
