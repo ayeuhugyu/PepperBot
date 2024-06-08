@@ -5,7 +5,17 @@ import {
     SubCommand,
     SubCommandData,
 } from "../lib/types/commands.js";
-import { Collection, PermissionFlagsBits } from "discord.js";
+import {
+    Collection,
+    PermissionFlagsBits,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ComponentType,
+    ButtonStyle,
+    ModalBuilder,
+    TextInputBuilder,
+    TextInputStyle,
+} from "discord.js";
 import fs from "fs";
 import fsextra from "fs-extra";
 import * as log from "../lib/log.js";
@@ -69,8 +79,59 @@ function removeListItem(id, name, key) {
         JSON.stringify(list, null, 4)
     );
 }
-
+let latestEmbeds = {};
 let whichListForUser = {};
+const buttons = {
+    add: new ButtonBuilder()
+        .setCustomId("add")
+        .setLabel("📥 Add")
+        .setStyle(ButtonStyle.Success),
+    remove: new ButtonBuilder()
+        .setCustomId("remove")
+        .setLabel("❌ Remove")
+        .setStyle(ButtonStyle.Danger),
+    check: new ButtonBuilder()
+        .setCustomId("check")
+        .setLabel("✅ Check")
+        .setStyle(ButtonStyle.Primary),
+    switch: new ButtonBuilder()
+        .setCustomId("switch")
+        .setLabel("🔄 Switch")
+        .setStyle(ButtonStyle.Secondary),
+};
+const ActionRow = new ActionRowBuilder().addComponents(
+    buttons.add,
+    buttons.remove,
+    buttons.check,
+    buttons.switch
+);
+
+function refresh(authorId) {
+    const message = latestEmbeds[authorId].message;
+    if (!message) return;
+    const whichList = whichListForUser[authorId] || "main";
+    const l = ensureList(authorId, whichList);
+    const list = readList(authorId, whichList);
+    const embed = default_embed().setTitle(
+        `${message.author.username}'s "${whichList}"`
+    );
+    let text = "";
+
+    list.forEach((item, index) => {
+        text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${
+            item.completed ? "~~" : ""
+        }\n`;
+    });
+    if (!text) {
+        embed.setDescription("there are no items in this list");
+    } else {
+        embed.setDescription(text);
+    }
+    message.edit({
+        embeds: [embed],
+        components: [ActionRow],
+    });
+}
 
 const whichData = new SubCommandData();
 whichData.setName("which");
@@ -123,7 +184,7 @@ const switchc = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a list to switch to",
@@ -151,7 +212,7 @@ const switchc = new SubCommand(
         const oldList = readList(message.author.id, oldWhichList);
         const oldListLength = oldList.length;
         let content = "";
-        if (oldListLength === 0) {
+        if (oldListLength === 0 && oldWhichList !== "main") {
             fs.unlinkSync(
                 `resources/data/todos/${message.author.id}/${files.fixFileName(
                     oldWhichList
@@ -162,6 +223,7 @@ const switchc = new SubCommand(
 
         whichListForUser[message.author.id] = args.get("content");
         ensureList(message.author.id, args.get("content"));
+        refresh(message.author.id);
         content += `switched to list "${args.get("content")}"`;
         action.reply(message, {
             content: content,
@@ -197,7 +259,7 @@ const addTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an item to add to the list",
@@ -215,6 +277,11 @@ const addTask = new SubCommand(
             args.get("content"),
             false
         );
+        refresh(message.author.id);
+        if (isButton) {
+            message.deferUpdate();
+            return;
+        }
         action.reply(message, {
             content: `added ${args.get("content")} to list "${whichList}"`,
             ephemeral: true,
@@ -229,7 +296,7 @@ removeTaskData.setPermissions([]);
 removeTaskData.setPermissionsReadable("");
 removeTaskData.setWhitelist([]);
 removeTaskData.setCanRunFromBot(true);
-removeTaskData.addStringOption((option) =>
+removeTaskData.addIntegerOption((option) =>
     option
         .setName("content")
         .setDescription("index of the item to remove from your list")
@@ -249,7 +316,7 @@ const removeTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an item to remove from the list",
@@ -270,6 +337,11 @@ const removeTask = new SubCommand(
         }
         const task = readList(message.author.id, whichList)[taskIndex - 1];
         removeListItem(message.author.id, whichList, taskIndex - 1);
+        refresh(message.author.id);
+        if (isButton) {
+            message.deferUpdate();
+            return;
+        }
         action.reply(message, {
             content: `removed task #${taskIndex} from list "${whichList}": "${task.value}"`,
             ephemeral: true,
@@ -312,7 +384,7 @@ const checkOffTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content:
@@ -347,9 +419,134 @@ const checkOffTask = new SubCommand(
             task.value,
             setTaskCompleted
         );
+        refresh(message.author.id);
+        if (isButton) {
+            message.deferUpdate();
+            return;
+        }
         action.reply(message, { content: repl, ephemeral: true });
     }
 );
+
+const buttonFunctions = {
+    add: async function (interaction) {
+        const modal = new ModalBuilder();
+        modal.setTitle("Add Task");
+        modal.setCustomId("add");
+        const task = new TextInputBuilder()
+            .setPlaceholder("enter the task you want to add")
+            .setLabel("Task")
+            .setStyle(TextInputStyle.Short)
+            .setCustomId("task");
+        const actionRow = new ActionRowBuilder().addComponents(task);
+        modal.addComponents(actionRow);
+
+        interaction.showModal(modal);
+        const filter = (interaction) => interaction.customId === "add";
+        interaction
+            .awaitModalSubmit({ filter, time: 360_000 })
+            .then(async (interaction) => {
+                const input = interaction.fields.getTextInputValue("task");
+                const args = new Collection();
+                args.set("content", input);
+                interaction.author = interaction.user;
+                await addTask.execute(interaction, args, true, true);
+            })
+            .catch(log.error);
+    },
+    remove: async function (interaction) {
+        const modal = new ModalBuilder();
+        modal.setTitle("Remove Task");
+        modal.setCustomId("remove");
+        const task = new TextInputBuilder()
+            .setPlaceholder("enter the index of the task you want to remove")
+            .setLabel("Task")
+            .setStyle(TextInputStyle.Short)
+            .setCustomId("task");
+        const actionRow = new ActionRowBuilder().addComponents(task);
+        modal.addComponents(actionRow);
+
+        interaction.showModal(modal);
+        const filter = (interaction) => interaction.customId === "remove";
+        interaction
+            .awaitModalSubmit({ filter, time: 360_000 })
+            .then(async (interaction) => {
+                const input = interaction.fields.getTextInputValue("task");
+                const args = new Collection();
+                args.set("content", input);
+                interaction.author = interaction.user;
+                await removeTask.execute(interaction, args, true, true);
+            })
+            .catch(log.error);
+    },
+    check: async function (interaction) {
+        const modal = new ModalBuilder();
+        modal.setTitle("Check Task");
+        modal.setCustomId("check");
+        const task = new TextInputBuilder()
+            .setPlaceholder(
+                "enter the index of the task you want to check off/on"
+            )
+            .setLabel("Task")
+            .setStyle(TextInputStyle.Short)
+            .setCustomId("task");
+        const actionRow = new ActionRowBuilder().addComponents(task);
+        modal.addComponents(actionRow);
+
+        interaction.showModal(modal);
+        const filter = (interaction) => interaction.customId === "check";
+        interaction
+            .awaitModalSubmit({ filter, time: 360_000 })
+            .then(async (interaction) => {
+                const input = interaction.fields.getTextInputValue("task");
+                const args = new Collection();
+                args.set("content", input);
+                interaction.author = interaction.user;
+                await checkOffTask.execute(interaction, args, true, true);
+            })
+            .catch(log.error);
+    },
+    switch: async function (interaction) {
+        const modal = new ModalBuilder();
+        modal.setTitle("Switch Lists");
+        modal.setCustomId("switch");
+        const task = new TextInputBuilder()
+            .setPlaceholder(
+                "enter the name of the list you would like to switch to"
+            )
+            .setLabel("Task")
+            .setStyle(TextInputStyle.Short)
+            .setCustomId("task");
+        const actionRow = new ActionRowBuilder().addComponents(task);
+        modal.addComponents(actionRow);
+
+        interaction.showModal(modal);
+        const filter = (interaction) => interaction.customId === "switch";
+        interaction
+            .awaitModalSubmit({ filter, time: 360_000 })
+            .then(async (interaction) => {
+                const input = interaction.fields.getTextInputValue("task");
+                const args = new Collection();
+                args.set("content", input);
+                interaction.author = interaction.user;
+                await switchc.execute(interaction, args, true, true);
+            })
+            .catch(log.error);
+    },
+};
+
+function onComponentCollect(interaction) {
+    if (!interaction.isButton()) return;
+    const button = interaction.customId;
+    if (button in buttonFunctions) {
+        return buttonFunctions[button](interaction);
+    } else {
+        return action.reply(interaction, {
+            content: "how tf did you press an invalid button 😭😭",
+            ephemeral: true,
+        });
+    }
+}
 
 const data = new CommandData();
 data.setName("todo");
@@ -420,7 +617,28 @@ const command = new Command(
             embed.setDescription(text);
         }
 
-        action.reply(message, { embeds: [embed], ephemeral: true });
+        const sent = await action.reply(message, {
+            embeds: [embed],
+            components: [ActionRow],
+            ephemeral: true,
+        });
+        sent.createMessageComponentCollector({
+            ComponentType: ComponentType.Button,
+            time: 360_000,
+            filter: (interaction) => interaction.user.id === message.author.id,
+        })
+            .on("collect", onComponentCollect)
+            .on("end", () => {
+                if (latestEmbeds[message.author.id]) {
+                    latestEmbeds[message.author.id].message = null;
+                }
+                action.editMessage(sent, {
+                    content:
+                        "to avoid memory leaks, this collector has been stopped. run the command again to get these buttons back. ",
+                    components: [],
+                });
+            });
+        latestEmbeds[message.author.id] = { message: sent, embed: embed };
     },
     [addTask, removeTask, checkOffTask, switchc, which] // subcommands
 );

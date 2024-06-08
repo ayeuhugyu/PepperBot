@@ -6,7 +6,7 @@ import fs from "fs";
 import path from "path";
 import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
-import process from "node:process"
+import process from "node:process";
 
 const config = globals.config;
 
@@ -56,7 +56,9 @@ const command = new Command(
     async function execute(message, args, isInteraction) {
         const memory = process.memoryUsage();
 
-        let guilds = await message.client.shard.fetchClientValues("guilds.cache.size");
+        let guilds = await message.client.shard.fetchClientValues(
+            "guilds.cache.size"
+        );
         const persistent_data = JSON.parse(
             fs.readFileSync(config.paths.persistent_data_file, "utf-8")
         );
@@ -67,6 +69,7 @@ const command = new Command(
                 {
                     name: "version",
                     value: `${persistent_data.version}`,
+                    inline: true,
                 },
                 {
                     name: "servers",
@@ -74,12 +77,14 @@ const command = new Command(
                         (acc, guildCount) => acc + guildCount,
                         0
                     )}`,
+                    inline: true,
                 },
                 {
                     name: "system info",
                     value: `${process.platform} ${process.arch}`,
+                    inline: true,
                 },
-                { name: "node version", value: process.version },
+                { name: "node version", value: process.version, inline: true },
                 {
                     name: "memory usage",
                     value: `${prettyBytes(
@@ -87,30 +92,36 @@ const command = new Command(
                     )} memory usage, ${prettyBytes(
                         memory.heapUsed
                     )} / ${prettyBytes(memory.heapTotal)} heap usage`,
+                    inline: true,
                 },
                 {
                     name: "uptime",
                     value: `${await convertMilisecondsToReadable(
                         message.client.uptime
                     )}`,
+                    inline: true,
                 },
                 {
                     name: "current shard id",
                     value: `${message.guild.shardId}`,
+                    inline: true,
                 },
                 {
                     name: "total running shards",
                     value: `${guilds.length}`,
+                    inline: true,
                 },
                 {
                     name: "wasted space",
                     value: prettyBytes(
                         await dirSize("./resources/ytdl_cache/")
                     ),
+                    inline: true,
                 },
                 {
                     name: "latency",
                     value: `${message.client.ws.ping}ms`,
+                    inline: true,
                 }
             );
         if (isInteraction) {

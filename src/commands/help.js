@@ -242,8 +242,12 @@ const command = new Command(
             });
             return;
         }
+
         const subCommand = subCommands.find(
-            (subCommand) => subCommand.data.name === requestedSubCommand
+            (subCommand) =>
+                subCommand.data.name === requestedSubCommand ||
+                (subCommand.data.aliases &&
+                    subCommand.data.aliases.includes(requestedSubCommand))
         );
         if (!subCommand) {
             action.reply(message, {

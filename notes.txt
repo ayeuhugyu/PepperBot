@@ -29,27 +29,17 @@ commands:
 [2] - ai image processing
 [3] - fix p/queue resetting the page when refreshing
 [4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
-[5] - remake p/reactionrole, the syntax is just horrific
-[6] - p/todo buttons, p/todo page refresh (similar to queue)
+[5] - remake p/reactionrole, the syntax is ust horrific
 
-p/update buncha qol stuff basically
+p/update buncha p/todo stuff
 
 **general changes:**
 
-- fixed filenames in p/embed load ls and p/todo switch ls having the file extension (despite trying to load that not being valid)
-- decapitalized p/embed subcommand choices
-- fixed p/setprompt always adding two newlines to the end of your message
-- rewrote p/help entirely, it was genuinely horrific to debug. functionality should not be different.
-- fixed p/help being unable to give help for certain commands
-- p/help now shows the command the option pertains to on the options ui
-- subcommands now support aliases
-- added the following subcommand aliases:
-    - p/todo which: "current"
-    - p/todo switch: "change"
-    - p/todo check: "uncheck", "complete", "uncomplete", "toggle", "finish", "unfinish"
-- completed todo list tasks are now strikethroughed
-- p/blacklist now displays the blacklist by default
-- fixed p/embed and p/todo registering their subcommands as regular commands
-- p/todo remove now actually tells you what you removed
-- fixed p/queue subcommands not registering their arguments
+- p/help for subcommands now supports subcommand aliases
+- removed a thing clogging my output from adding to queues using buttons
+- p/todo no longer deletes the list "main" (this was causing errors that i was too lazy to fix)
+- fixed p/todo remove's option showing as a string option instead of an integer
+- p/todo embed now refreshes when changes are made to your todo list, as in you dont have to make it resend the embed to see your changes
+- p/todo now has buttons on the embed to control it
+- p/info's fields are now inline, as in it looks MUCH nicer and doesn't take up a bunch of your screen
 -------------------------------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@ import { Collection } from "discord.js";
 import { google } from "googleapis";
 const youtube = google.youtube("v3");
 import * as globals from "../lib/globals.js";
-import process from "node:process"
+import process from "node:process";
 import * as files from "../lib/files.js";
 
 const config = globals.config;
@@ -46,7 +46,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["play", "pu", "purl"])
+data.setAliases(["play", "pu", "purl"]);
 data.addStringOption((option) =>
     option
         .setName("sound")
@@ -118,7 +118,9 @@ const command = new Command(
                     const sounds = await fs.readdirSync(
                         config.paths.ytdl_cache
                     );
-                    const correctedFileName = files.fixFileName(info.videoDetails.title);
+                    const correctedFileName = files.fixFileName(
+                        info.videoDetails.title
+                    );
                     if (sounds.includes(`${correctedFileName}.webm`)) {
                         action.reply(
                             message,

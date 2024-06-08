@@ -306,7 +306,6 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
                 });
                 return;
             }
-            console.log(input);
             await queue.add(input);
             if (!interaction) {
                 log.warn("returned from add due to interaction");
