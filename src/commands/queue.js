@@ -382,7 +382,6 @@ const functions = {
             log.warn("returned from clear");
             return;
         }
-        if (!sentMessage) return;
         queue.clear();
         if (interaction instanceof ButtonInteraction) {
             interaction.deferUpdate();
@@ -476,6 +475,45 @@ const functions = {
             .catch(log.error);
     },
 };
+
+const shuffledata = new SubCommandData();
+shuffledata.setName("shuffle");
+shuffledata.setDescription("randomizes the queue");
+shuffledata.setPermissions([]);
+shuffledata.setPermissionsReadable("");
+shuffledata.setWhitelist([]);
+shuffledata.setCanRunFromBot(true);
+shuffledata.setAliases(["randomize"]);
+const shuffle = new SubCommand(
+    shuffledata,
+    async function getArguments(message) {
+        return undefined;
+    },
+    async function execute(message, args, isInteraction) {
+        if (isInteraction) args.set("isFromMessage", true);
+        if (!args.get("url") && (args.get("index") || args.get("name"))) {
+            args.set("url", args.get("index") || args.get("name"));
+        }
+        let queue = queues[message.guild.id];
+        if (!queue) {
+            queue = new AudioPlayerQueueManager({
+                guild: message.guild.id,
+                player: await voice.createAudioPlayer(message.guild.id),
+                messageChannel: message.channel,
+            });
+            queues[message.guild.id] = queue;
+        }
+        if (queue.queues.length < 2) {
+            action.reply(message, {
+                content: "queue must have at least 2 songs to shuffle",
+                ephemeral: true,
+            });
+            return;
+        }
+        queue.shuffle();
+        action.reply(message, { content: "shuffled queue", ephemeral: true });
+    }
+);
 
 const adddata = new SubCommandData();
 adddata.setName("add");
@@ -777,7 +815,8 @@ data.addStringOption((option) =>
             { name: "clear", value: "clear" },
             { name: "play", value: "play" },
             { name: "save", value: "save" },
-            { name: "load", value: "load" }
+            { name: "load", value: "load" },
+            { name: "shuffle", value: "shuffle" }
         )
 );
 data.addStringOption((option) =>
@@ -933,7 +972,7 @@ const command = new Command(
             });
         });
     },
-    [add, remove, clear, skip, play, save, load]
+    [add, remove, clear, skip, play, save, load, shuffle]
 );
 
 export default command;

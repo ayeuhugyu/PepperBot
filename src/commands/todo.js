@@ -259,7 +259,7 @@ const addTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction, isButton) {
+    async function execute(message, args, fromInteraction, gconfig, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an item to add to the list",
@@ -316,7 +316,7 @@ const removeTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction, isButton) {
+    async function execute(message, args, fromInteraction, gconfig, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an item to remove from the list",
@@ -384,7 +384,7 @@ const checkOffTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction, isButton) {
+    async function execute(message, args, fromInteraction, gConfig, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content:
@@ -450,7 +450,7 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await addTask.execute(interaction, args, true, true);
+                await addTask.execute(interaction, args, true, undefined, true);
             })
             .catch(log.error);
     },
@@ -475,7 +475,7 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await removeTask.execute(interaction, args, true, true);
+                await removeTask.execute(interaction, args, true, undefined, true);
             })
             .catch(log.error);
     },
@@ -502,7 +502,7 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await checkOffTask.execute(interaction, args, true, true);
+                await checkOffTask.execute(interaction, args, true, undefined, true);
             })
             .catch(log.error);
     },
@@ -529,7 +529,7 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await switchc.execute(interaction, args, true, true);
+                await switchc.execute(interaction, args, true, undefined, true);
             })
             .catch(log.error);
     },

@@ -20,6 +20,9 @@ if you've got anything you want me to add to the todo list, go ahead and ask me 
 for update:
 
 to test:
+p/queue shuffle
+p/todo add/remove/switch from messages
+p/queue clear from messages
 
 commands:
 
@@ -31,15 +34,11 @@ commands:
 [4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 [5] - remake p/reactionrole, the syntax is ust horrific
 
-p/update buncha p/todo stuff
+p/update smore random stuff
 
 **general changes:**
 
-- p/help for subcommands now supports subcommand aliases
-- removed a thing clogging my output from adding to queues using buttons
-- p/todo no longer deletes the list "main" (this was causing errors that i was too lazy to fix)
-- fixed p/todo remove's option showing as a string option instead of an integer
-- p/todo embed now refreshes when changes are made to your todo list, as in you dont have to make it resend the embed to see your changes
-- p/todo now has buttons on the embed to control it
-- p/info's fields are now inline, as in it looks MUCH nicer and doesn't take up a bunch of your screen
+- p/queue shuffle (self explanatory)
+- fixed p/todo trying to deferUpdate messages
+- hopefully fixed p/queue clear from messages?
 -------------------------------------------------------------------------------------------------------------
