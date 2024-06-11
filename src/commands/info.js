@@ -80,12 +80,6 @@ const command = new Command(
                     inline: true,
                 },
                 {
-                    name: "system info",
-                    value: `${process.platform} ${process.arch}`,
-                    inline: true,
-                },
-                { name: "node version", value: process.version, inline: true },
-                {
                     name: "memory usage",
                     value: `${prettyBytes(
                         memory.rss
@@ -122,7 +116,13 @@ const command = new Command(
                     name: "latency",
                     value: `${message.client.ws.ping}ms`,
                     inline: true,
-                }
+                },
+                {
+                    name: "system info",
+                    value: `${process.platform} ${process.arch}`,
+                    inline: true,
+                },
+                { name: "node version", value: process.version, inline: true }
             );
         if (isInteraction) {
             action.reply(message, {

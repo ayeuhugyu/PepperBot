@@ -15,6 +15,23 @@ import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
 import fsExtra from "fs-extra";
+import cheerio from "cheerio";
+
+async function fetchTitle(url) {
+    try {
+        // Fetch the HTML of the page
+        const response = await fetch(url);
+        const body = await response.text();
+        // Load the HTML string into cheerio
+        const $ = cheerio.load(body);
+        // Extract the title
+        const title = $("title").text();
+        return title;
+    } catch (error) {
+        console.error(`Could not fetch title for ${url}:`, error.message);
+        return null;
+    }
+}
 
 const config = globals.config;
 const diabolical_events = globals.diabolical_events;
@@ -178,15 +195,31 @@ async function processCommand(message) {
     log.info(logmsg);
 }
 
-function getIsDisgraceful(message) {
+async function getIsDisgraceful(message) {
     if (message.guild && message.guild.id == "1112819622505365556") {
         if (message.channel && message.channel.id == "1171660137946157146") {
             if (
                 message.member.id !== "440163494529073152" &&
                 message.member.id !== message.client.user.id
             ) {
-                action.sendDM(message.author, { content: "Disgraceful." });
-                action.deleteMessage(message);
+                await action.sendDM(message.author, { content: "Disgraceful." });
+                await action.deleteMessage(message);
+                return true;
+            }
+        }
+    }
+    const medalTvRegex = /https:\/\/medal\.tv[^\s]+/g;
+    const medalTvUrls = message.content.match(medalTvRegex);
+    if (medalTvUrls && medalTvUrls.length > 0) {
+        if (medalTvUrls.length > 5) return false; // it takes a little bit to fetch the titles, so someone could just spam medal links in a message and it would make the bot hang for a long time
+        for (const url of medalTvUrls) {
+            const title = await fetchTitle(url);
+            if (!title) return false;
+            if (title.toLowerCase().trim().startsWith("untitled")) {
+                action.sendMessage(message.channel, {
+                    content: `<@${message.author.id}> TITLE YOUR FUCKING CLIPS YOU FUCKTARD`,
+                });
+                action.deleteMessage(message)
                 return true;
             }
         }
@@ -197,7 +230,7 @@ function getIsDisgraceful(message) {
 export default {
     name: Events.MessageCreate,
     async execute(message) {
-        const DNI = getIsDisgraceful(message);
+        const DNI = await getIsDisgraceful(message);
         if (DNI) return;
         await Promise.allSettled([
             processDM(message),

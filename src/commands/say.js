@@ -28,6 +28,7 @@ const command = new Command(
                 .slice(config.generic.prefix.length + commandLength)
                 .trim()
         );
+        args.set("attachments", message.attachments)
         return args;
     },
     async function execute(message, args, fromInteraction) {
@@ -44,6 +45,17 @@ const command = new Command(
             return;
         }
         if (args.get("message")) {
+            const obj = {}
+            if (args.get("message")) {
+                obj.content = args.get("message")
+            }
+            if (args.get("attachments")) {
+                const realAttachments = []
+                args.get("attachments").forEach((attachment) => {
+                    realAttachments.push(attachment);
+                });
+                obj.files = realAttachments.url // this is most likely gonna be broken somehow
+            }
             action.sendMessage(message.channel, args.get("message"));
             if (fromInteraction) {
                 console.log("from interaction");

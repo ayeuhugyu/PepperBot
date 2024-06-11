@@ -1,32 +1,15 @@
--------------------------------------------------------------------------------------------------------------
-
-template:
-
-p/update some stuff
-
-**new stuff:**
-
-**general changes:**
-
-**specific command changes: **
-
-**shit on the todo list:**
-
-if you've got anything you want me to add to the todo list, go ahead and ask me and i'll consider it
-
-**announcements:**
-
--------------------------------------------------------------------------------------------------------------
 for update:
 
 to test:
 p/queue shuffle
 p/todo add/remove/switch from messages
 p/queue clear from messages
+p/say with attachments
+p/statistics
 
-commands:
+REMEMBER TO INSTALL CHEERIO ON PI AND COMP
 
-**shit on the todo list:**
+shit on the todo list:
 
 [1] - add p/corrupt image support
 [2] - ai image processing
@@ -34,11 +17,19 @@ commands:
 [4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 [5] - remake p/reactionrole, the syntax is ust horrific
 
-p/update smore random stuff
+p/update split the categories so the NORMIES!!! know what is actually useful to them
 
-**general changes:**
+**actual content:**
 
 - p/queue shuffle (self explanatory)
+- p/say will now send your attachments too
+- moved around some stuff in p/info so it should hopefully look a little nicer
+- p/statistics is now split amongst 3 fields similarly to p/help, so it should look a lot nicer
+- pepperbot will now be extremely angry if you don't title your medal clips. he will also not accept commands that contain untitled medal clips. so title your fucking medal clips.
+
+**fixes/optimizations:**
+
+- removed an unnecessary part of the editMessage function that would realistically never actually be useful
 - fixed p/todo trying to deferUpdate messages
 - hopefully fixed p/queue clear from messages?
--------------------------------------------------------------------------------------------------------------
+- removed a lot of unnecessary shit in notes.txt

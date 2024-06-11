@@ -163,9 +163,6 @@ export async function editMessage(message, content) {
             .edit(await fixMsg(content))
             .catch(async (err) => {
                 log.error(err);
-                await message.editReply(await fixMsg(content)).catch((err) => {
-                    log.error(err);
-                });
             });
         return sent;
     } catch (err) {
