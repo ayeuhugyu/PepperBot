@@ -38,15 +38,17 @@ export default {
     },
     async toEmbed() {
         const embed = await default_embed().setTitle("Statistics");
-        let text = `GPT messages: ${statistics["GPT Messages"]}\ncommand usage:\n\n`;
+        let text = `GPT messages: ${statistics["GPT Messages"]}\ncommand usage:`;
         let fieldsText = {
             [1]: "",
             [2]: "",
             [3]: "",
         };
         let currentField = 1;
-        for (const stat of statistics["Command Usage"]) {
-            fieldsText[currentField] += `p/${stat}: ${statistics["Command Usage"][stat]}\n`;
+        for (const stat in statistics["Command Usage"]) {
+            fieldsText[
+                currentField
+            ] += `${stat}: ${statistics["Command Usage"][stat]}\n`;
             currentField = (currentField % 3) + 1;
         }
         embed.addFields(

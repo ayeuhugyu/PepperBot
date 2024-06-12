@@ -1,7 +1,7 @@
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
-import { Collection } from "discord.js";
-import fs from "fs";
+import { Collection, AttachmentBuilder } from "discord.js";
+import fs, { readlink } from "fs";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -28,7 +28,7 @@ const command = new Command(
                 .slice(config.generic.prefix.length + commandLength)
                 .trim()
         );
-        args.set("attachments", message.attachments)
+        //args.set("attachments", message.attachments);
         return args;
     },
     async function execute(message, args, fromInteraction) {
@@ -44,18 +44,24 @@ const command = new Command(
             action.reply(message, `bro really thought 😂😂😂`);
             return;
         }
-        if (args.get("message")) {
-            const obj = {}
+        if (args.get("message") || args.get("attachments")) {
+            const obj = {};
             if (args.get("message")) {
-                obj.content = args.get("message")
+                obj.content = args.get("message");
             }
             if (args.get("attachments")) {
-                const realAttachments = []
+                console.log(args.get("attachments"));
+                const realAttachments = [];
                 args.get("attachments").forEach((attachment) => {
-                    realAttachments.push(attachment);
+                    const att = new AttachmentBuilder(attachment.url);
+                    att.setName(attachment.name);
+                    realAttachments.push(att);
                 });
-                obj.files = realAttachments.url // this is most likely gonna be broken somehow
+
+                // Assign the processed attachments to obj.files
+                obj.files = realAttachments; // THIS IS CURRENTLY DISABLED DUE TO BROKEN FUNCTIONALITY
             }
+            console.log(obj);
             action.sendMessage(message.channel, args.get("message"));
             if (fromInteraction) {
                 console.log("from interaction");

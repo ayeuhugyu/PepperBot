@@ -283,19 +283,14 @@ export class AudioPlayerQueueManager {
     shuffle() {
         let arr1 = this.queues;
         let arr2 = this.readableQueue;
-        const oldIndex = this.currentIndex;
-        if (arr1.length !== arr2.length) {
-            throw new Error('Arrays must be of the same length');
-        }
+        const currentItem = arr1[this.currentIndex];
         let n = arr1.length;
         for (let i = n - 1; i > 0; i--) {
-            // Generate a random index between 0 and i
             let j = Math.floor(Math.random() * (i + 1));
-            // Swap elements in both arrays at indices i and j
             [arr1[i], arr1[j]] = [arr1[j], arr1[i]];
             [arr2[i], arr2[j]] = [arr2[j], arr2[i]];
         }
-        this.currentIndex = arr1.indexOf(this.queues[oldIndex]);
+        this.currentIndex = arr1.indexOf(currentItem);
         this.queues = arr1;
         this.readableQueue = arr2;
         this.emitter.emit("update", this.readableQueue);
