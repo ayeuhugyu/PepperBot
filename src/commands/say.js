@@ -50,19 +50,22 @@ const command = new Command(
                 obj.content = args.get("message");
             }
             if (args.get("attachments")) {
-                console.log(args.get("attachments"));
                 const realAttachments = [];
                 args.get("attachments").forEach((attachment) => {
-                    const att = new AttachmentBuilder(attachment.url);
-                    att.setName(attachment.name);
+                    if (attachment.size > 20 * 1024 * 1024) {
+                        return; // due to the way discordjs works, it downloads the image to a buffer and then reuploads it. i have no fking clue why it does this, but there's no way around it, so instead im just going to limit the file size
+                    }
+                    const att = {
+                        attachment: attachment.url,
+                        name: attachment.name,
+                    };
                     realAttachments.push(att);
                 });
 
                 // Assign the processed attachments to obj.files
                 obj.files = realAttachments; // THIS IS CURRENTLY DISABLED DUE TO BROKEN FUNCTIONALITY
             }
-            console.log(obj);
-            action.sendMessage(message.channel, args.get("message"));
+            action.sendMessage(message.channel, obj); // THIS FOR SOME FUCKING REASON GETS EXECUTED MULTIPLE TIMES AND I HAVE NO IDEA HOW TO FIX IT????
             if (fromInteraction) {
                 console.log("from interaction");
                 action.reply(message, {
