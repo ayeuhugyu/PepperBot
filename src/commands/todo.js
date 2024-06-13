@@ -107,7 +107,9 @@ const ActionRow = new ActionRowBuilder().addComponents(
 );
 
 function refresh(authorId) {
-    const message = latestEmbeds[authorId].message;
+    const latestEmbed = latestEmbeds[authorId];
+    if (!latestEmbed) return;
+    const message = latestEmbed.message;
     if (!message) return;
     const whichList = whichListForUser[authorId] || "main";
     const l = ensureList(authorId, whichList);
@@ -475,7 +477,13 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await removeTask.execute(interaction, args, true, undefined, true);
+                await removeTask.execute(
+                    interaction,
+                    args,
+                    true,
+                    undefined,
+                    true
+                );
             })
             .catch(log.error);
     },
@@ -502,7 +510,13 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await checkOffTask.execute(interaction, args, true, undefined, true);
+                await checkOffTask.execute(
+                    interaction,
+                    args,
+                    true,
+                    undefined,
+                    true
+                );
             })
             .catch(log.error);
     },

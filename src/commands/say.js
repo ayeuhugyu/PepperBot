@@ -1,7 +1,7 @@
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
-import { Collection } from "discord.js";
-import fs from "fs";
+import { Collection, AttachmentBuilder } from "discord.js";
+import fs, { readlink } from "fs";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -28,7 +28,7 @@ const command = new Command(
                 .slice(config.generic.prefix.length + commandLength)
                 .trim()
         );
-        args.set("attachments", message.attachments)
+        //args.set("attachments", message.attachments);
         return args;
     },
     async function execute(message, args, fromInteraction) {
@@ -44,19 +44,28 @@ const command = new Command(
             action.reply(message, `bro really thought 😂😂😂`);
             return;
         }
-        if (args.get("message")) {
-            const obj = {}
+        if (args.get("message") || args.get("attachments")) {
+            const obj = {};
             if (args.get("message")) {
-                obj.content = args.get("message")
+                obj.content = args.get("message");
             }
             if (args.get("attachments")) {
-                const realAttachments = []
+                const realAttachments = [];
                 args.get("attachments").forEach((attachment) => {
-                    realAttachments.push(attachment);
+                    if (attachment.size > 20 * 1024 * 1024) {
+                        return; // due to the way discordjs works, it downloads the image to a buffer and then reuploads it. i have no fking clue why it does this, but there's no way around it, so instead im just going to limit the file size
+                    }
+                    const att = {
+                        attachment: attachment.url,
+                        name: attachment.name,
+                    };
+                    realAttachments.push(att);
                 });
-                obj.files = realAttachments.url // this is most likely gonna be broken somehow
+
+                // Assign the processed attachments to obj.files
+                obj.files = realAttachments; // THIS IS CURRENTLY DISABLED DUE TO BROKEN FUNCTIONALITY
             }
-            action.sendMessage(message.channel, args.get("message"));
+            action.sendMessage(message.channel, obj); // THIS FOR SOME FUCKING REASON GETS EXECUTED MULTIPLE TIMES AND I HAVE NO IDEA HOW TO FIX IT????
             if (fromInteraction) {
                 console.log("from interaction");
                 action.reply(message, {

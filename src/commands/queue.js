@@ -490,10 +490,6 @@ const shuffle = new SubCommand(
         return undefined;
     },
     async function execute(message, args, isInteraction) {
-        if (isInteraction) args.set("isFromMessage", true);
-        if (!args.get("url") && (args.get("index") || args.get("name"))) {
-            args.set("url", args.get("index") || args.get("name"));
-        }
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -687,8 +683,15 @@ savedata.addStringOption((option) =>
 const save = new SubCommand(
     savedata,
     async function getArguments(message) {
+        const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
-        args.set("name", message.content.split(" ")[1]);
+        let argument = message.content.slice(
+            config.generic.prefix.length + commandLength
+        );
+        if (argument) {
+            argument.trim();
+        } // this is necessary because if there are no arguments supplied argument will be equal to undefined and trim() will not be a function and thus will error
+        args.set("name", argument);
         args.set("isFromMessage", true);
         return args;
     },

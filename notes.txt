@@ -16,7 +16,11 @@ p/update
 
 **actual content:**
 
-
+- p/queue shuffle (self explanatory)
+- p/say will now send your attachments too
+- moved around some stuff in p/info so it should hopefully look a little nicer
+- p/statistics is now split amongst 3 fields similarly to p/help, so it should look a lot nicer
+- pepperbot will now be extremely angry if you don't title your medal clips. he will also not accept commands that contain untitled medal clips. so title your fucking medal clips.
 
 **fixes/optimizations:**
 
