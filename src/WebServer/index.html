@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>PepperSite</title>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+    </head>
+    <body>
+        <div
+            class="accent"
+            style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 5px;
+                height: 100vh;
+            "
+        ></div>
+        <div
+            class="accent"
+            style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 5px;
+            "
+        ></div>
+        <div
+            class="accent"
+            style="
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 5px;
+                height: 100vh;
+            "
+        ></div>
+        <div
+            class="accent"
+            style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100vw;
+                height: 5px;
+            "
+        ></div>
+        <div class="sidebar">
+            <h2 class="sidebarTitle">Navigation</h2>
+            <a class="sidebarButton" href="/index.html">Home</a>
+            <br>
+            <a class="sidebarButton" href="/about.html">About</a>
+            <br>
+            <a class="sidebarButton" href="/contact.html">Contact</a>
+        </div>
+
+        <p id="fileContents" style="position: absolute"></p>
+        <script>
+            fetch("/read-statistics-file")
+                .then((response) => response.text())
+                .then((data) => {
+                    const jsonData = JSON.parse(data);
+                    document.getElementById("fileContents").innerHTML =
+                        JSON.stringify(jsonData, null, 4)
+                            .replaceAll("\n", "<br>")
+                            .replaceAll(" ", "&nbsp;");
+                })
+                .catch((error) => console.error("Error:", error));
+
+            let sidebarIsOpen = true;
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "k") {
+                    sidebarIsOpen = !sidebarIsOpen;
+
+                    document.querySelectorAll(".sidebar").forEach((element) => {
+                        // Remove any previously applied animation class
+                        element.classList.remove("slideOpen", "slideClose");
+                        // Force reflow to ensure the class removal is processed
+                        void element.offsetWidth;
+
+                        // Determine and add the correct animation class
+                        if (sidebarIsOpen) {
+                            element.style.animation = "slideOpen 0.5s forwards";
+                        } else {
+                            element.style.animation =
+                                "slideClose 0.5s forwards";
+                        }
+                    });
+                }
+            });
+        </script>
+        <h1 id="mainTitle">ginkl</h1>
+    </body>
+</html>

@@ -38,5 +38,8 @@
     },
     "gpt": {
         "max_file_size": 25000000
+    },
+    "WebServer": {
+        "port": 53134
     }
 }
