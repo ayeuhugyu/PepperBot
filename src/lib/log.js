@@ -66,7 +66,7 @@ function log(level, ...message) {
         `././logs/${level.toLowerCase()}.log`,
         `${formattedDate} ${level.toUpperCase()} ${formatted
             .split("\n")
-            .join(`\n${formattedDate} ${level.toUpperCase()}`)}\n`
+            .join(`\n${formattedDate} ${level.toUpperCase()} `)}\n`
     );
 }
 
