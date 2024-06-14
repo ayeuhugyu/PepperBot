@@ -104,16 +104,79 @@
                 });
             </script>
         </div>
-        <pre id="fileContents" style="position: absolute"></pre>
-        <h1 id="mainTitle">Statistics</h1>
+        <div class="logFileContentContainer">
+            <pre class="logFileContent" id="error"></pre>
+            <pre class="logFileContent" id="warn"></pre>
+            <pre class="logFileContent" id="info"></pre>
+            <pre class="logFileContent" id="debug"></pre>
+        </div>
+        <h1 id="mainTitle">Logs</h1>
 
         <script>
-            fetch("/read-statistics")
+            fetch("/read-logs")
                 .then((response) => response.text())
                 .then((data) => {
                     const jsonData = JSON.parse(data);
-                    document.getElementById("fileContents").innerHTML =
-                        JSON.stringify(jsonData, null, 4);
+                    document.getElementById("error").innerHTML = jsonData.errors
+                        .split("\n")
+                        .map((error) => {
+                            const errorMessage = error.substring(
+                                0,
+                                error.indexOf("ERROR")
+                            );
+                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
+                            return error.replace(errorMessage, errorSpan);
+                        })
+                        .join("\n")
+                        .replaceAll(
+                            /ERROR/g,
+                            '<span style="color: #d67b51">ERROR</span>'
+                        );
+                    document.getElementById("warn").innerHTML = jsonData.warns
+                        .split("\n")
+                        .map((error) => {
+                            const errorMessage = error.substring(
+                                0,
+                                error.indexOf("WARN")
+                            );
+                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
+                            return error.replace(errorMessage, errorSpan);
+                        })
+                        .join("\n")
+                        .replaceAll(
+                            /WARN/g,
+                            '<span style="color: #dfc623">WARN</span>'
+                        );
+                    document.getElementById("info").innerHTML = jsonData.info
+                        .split("\n")
+                        .map((error) => {
+                            const errorMessage = error.substring(
+                                0,
+                                error.indexOf("INFO")
+                            );
+                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
+                            return error.replace(errorMessage, errorSpan);
+                        })
+                        .join("\n")
+                        .replaceAll(
+                            /INFO/g,
+                            '<span style="color: #acdee4">INFO</span>'
+                        );
+                    document.getElementById("debug").innerHTML = jsonData.debug
+                        .split("\n")
+                        .map((error) => {
+                            const errorMessage = error.substring(
+                                0,
+                                error.indexOf("DEBUG")
+                            );
+                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
+                            return error.replace(errorMessage, errorSpan);
+                        })
+                        .join("\n")
+                        .replaceAll(
+                            /DEBUG/g,
+                            '<span style="color: #b4bfcf">DEBUG</span>'
+                        );
                 })
                 .catch((error) => console.error("Error:", error));
         </script>

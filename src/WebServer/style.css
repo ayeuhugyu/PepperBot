@@ -30,6 +30,7 @@ html {
     width: 200px;
     height: 100%;
     background-color: #1E1E2E;
+    z-index: 1000;
 }
 .sidebarDivider {
     background-color: #13131d;
@@ -54,6 +55,59 @@ html {
     display: block;
     width: 100%;
     height: 100%;
+}
+.logFileContentContainer {
+    position: absolute;
+    top: 3%;
+    left: 0;
+    width: 100%;
+    height: 97%;
+    display: flex;
+    flex-direction: row;
+}
+.logFileContent {
+    position: absolute;
+    max-height: calc(100% - 20px);
+    overflow-y: auto;
+    width: 25%;
+    border: 1px solid #cca1db;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.logFileContent::-webkit-scrollbar-track {
+    background: #2a1d3e; /* Track background color */
+    color: #50555c
+}
+
+/* Styling the scrollbar thumb */
+.logFileContent::-webkit-scrollbar-thumb {
+    background: #a38ac8; /* Thumb background color */
+}
+
+/* Styling the scrollbar thumb on hover */
+.logFileContent::-webkit-scrollbar-thumb:hover {
+    background: #000000; /* Thumb background color on hover */
+}
+
+/* Styling the scrollbar itself */
+.logFileContent::-webkit-scrollbar {
+    width: 5px; /* Width of the vertical scrollbar */
+    height: 5px; /* Height of the horizontal scrollbar */
+}
+#error {
+    right: 75%;
+}
+
+#warn {
+    right: 50%;
+}
+
+#info {
+    right: 25%;
+}
+
+#debug {
+    right: 0%;
 }
 
 @keyframes slideOpen {
