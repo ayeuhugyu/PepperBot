@@ -1,13 +1,15 @@
 :root {
-    font-family: monospace
+    font-family: monospace;
 }
 body {
-    background-color: #2B262F;
+    background-color: #181519;
     margin: 0;
     padding: 0;
-}
-body, p, h1, h2, h3, h4, h5, h6, span, a, li {
     color: white;
+}
+html {
+    border: 5px solid #7800ab;
+    height: calc(100% - 10px);
 }
 #mainTitle {
     text-align: center;
@@ -24,19 +26,34 @@ body, p, h1, h2, h3, h4, h5, h6, span, a, li {
 .sidebar {
     position: fixed;
     top: 0;
-    right: -160px;
-    width: 120px;
+    right: -200px;
+    width: 200px;
     height: 100%;
-    background-color: #313244;
-    padding: 20px;
+    background-color: #1E1E2E;
+}
+.sidebarDivider {
+    background-color: #13131d;
+    border-color: #13131d;
+    height: 5px;
+    width: 100%;
 }
 .sidebarTitle {
     text-align: center;
     margin-bottom: 20px;
-    text-decoration: underline;
 }
 .sidebarButton {
-    text-align: center;
+    text-align: left;
+    line-height: 10px;
+    width: 200%;
+    height: 8px;
+    padding: 10px;
+    background-color: #1E1E2E;
+    cursor: pointer;
+}
+.sidebarButtonText {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 @keyframes slideOpen {

@@ -2,8 +2,8 @@
 <html>
     <head>
         <title>Pepper Site</title>
-        <link rel="stylesheet" type="text/css" href="style.css" />
-        <link rel="icon" type="image/x-icon" href="./images/favicon.ico" />
+        <link rel="stylesheet" type="text/css" href="../style.css" />
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="Embed Title" property="og:title" />
         <meta content="Site Description" property="og:description" />
         <meta
@@ -97,8 +97,18 @@
                 });
             </script>
         </div>
+        <pre id="fileContents" style="position: absolute"></pre>
+        <h1 id="mainTitle">Statistics</h1>
 
-        <h1 id="mainTitle">ginkl</h1>
-        <h2>press k or ELSE!!!</h2>
+        <script>
+            fetch("/read-statistics")
+                .then((response) => response.text())
+                .then((data) => {
+                    const jsonData = JSON.parse(data);
+                    document.getElementById("fileContents").innerHTML =
+                        JSON.stringify(jsonData, null, 4);
+                })
+                .catch((error) => console.error("Error:", error));
+        </script>
     </body>
 </html>
