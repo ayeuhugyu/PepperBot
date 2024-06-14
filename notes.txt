@@ -19,3 +19,4 @@ p/update
 **fixes/optimizations:**
 
 - fixed multiline logging looking weird as hell in the files for it
+- hypothetically alternate shards should be able to send the "it's pepper time 🌶" message

@@ -111,18 +111,17 @@
                 });
             </script>
         </div>
-        <pre id="fileContents" style="position: absolute"></pre>
-        <h1 id="mainTitle">Statistics</h1>
 
-        <script>
-            fetch("/read-statistics")
-                .then((response) => response.text())
-                .then((data) => {
-                    const jsonData = JSON.parse(data);
-                    document.getElementById("fileContents").innerHTML =
-                        JSON.stringify(jsonData, null, 4);
-                })
-                .catch((error) => console.error("Error:", error));
-        </script>
+        <h1 id="mainTitle">Credits</h1>
+        <pre id="credits" style="position: absolute; top:75px; left:75px;">
+p/chatbubble functionality - reidlab
+giving us amazing emojis to fk around with, including this website's icon - Christos Georghiou
+json full of all english words - <a class="creditsanchor" href="https://github.com/dwyl/english-words/blob/master/words_dictionary.json">dwyl</a>
+json full of all english nouns/verbs - <a class="creditsanchor" href="https://github.com/dariusk/corpora/tree/master/data/words">dariusk</a>
+json full of all unicode emojis - <a class="creditsanchor" href="https://github.com/amurani/unicode-emoji-list/blob/master/full-emoji-list.json">amurani</a>
+code i can steal - various stackoverflow posts
+coding basically half my stuff - github copilot
+help with the hellish discord api - djs community
+</pre>
     </body>
 </html>

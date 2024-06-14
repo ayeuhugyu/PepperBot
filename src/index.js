@@ -44,7 +44,7 @@ app.get("/", (request, response) => {
 
 app.listen(config.WebServer.port, "0.0.0.0", () =>
     log.info(
-        `app listening at http://localhost:${config.WebServer.port} (@home network = http://192.168.4.31:${config.WebServer.port})`
+        `app listening at http://localhost:${config.WebServer.port}`
     )
 );
 

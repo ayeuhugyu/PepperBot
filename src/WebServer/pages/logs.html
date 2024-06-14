@@ -44,6 +44,13 @@
             >
                 Logs
             </div>
+            <div
+                class="sidebarButton"
+                id="/pages/credits.html"
+                onclick="redirectTo(this.id)"
+            >
+                Credits
+            </div>
             <script>
                 document.addEventListener("keydown", (event) => {
                     if (event.key === "k") {
@@ -104,14 +111,29 @@
                 });
             </script>
         </div>
+        <h1 id="mainTitle">Logs</h1>
         <div class="logFileContentContainer">
             <pre class="logFileContent" id="error"></pre>
             <pre class="logFileContent" id="warn"></pre>
             <pre class="logFileContent" id="info"></pre>
             <pre class="logFileContent" id="debug"></pre>
         </div>
-        <h1 id="mainTitle">Logs</h1>
+        <script>
+            window.onload = function () {
+                const mainTitle = document.getElementById("mainTitle");
+                const logFileContentContainer = document.querySelector(
+                    ".logFileContentContainer"
+                );
 
+                if (mainTitle && logFileContentContainer) {
+                    const mainTitleBottom =
+                        mainTitle.offsetTop + mainTitle.offsetHeight;
+                    logFileContentContainer.style.top = `${mainTitleBottom}px`;
+                    const maxHeight = window.innerHeight - mainTitleBottom;
+                    logFileContentContainer.style.height = `${maxHeight}px`;
+                }
+            };
+        </script>
         <script>
             fetch("/read-logs")
                 .then((response) => response.text())
@@ -177,6 +199,10 @@
                             /DEBUG/g,
                             '<span style="color: #b4bfcf">DEBUG</span>'
                         );
+                    let preElements = document.querySelectorAll("pre");
+                    preElements.forEach(function (pre) {
+                        pre.scrollTop = pre.scrollHeight;
+                    });
                 })
                 .catch((error) => console.error("Error:", error));
         </script>

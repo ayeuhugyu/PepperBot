@@ -45,13 +45,27 @@ for (const file of eventFiles) {
 
 client.on(Events.ClientReady, async () => {
     log.info("bot online");
-    const channel = await client.channels.cache.get(
-        config.generic.generic_info_channel
-    );
+    let channel = await client.channels.cache.get("1148814162273763418");
     if (channel) {
-        channel.send("its pepper time 🌶");
+        channel.send(`its pepper time 🌶`);
     } else {
-        log.error("no channel");
+        let channels = await client.shard.fetchClientValues(
+            "channels.cache"
+        );
+        const shards = channels.size;
+        for (const shardChannels of channels) {
+            for (const shardChannel of shardChannels) {
+                if (shardChannel.id == "1148814162273763418") {
+                    channel = shardChannel;
+                    break;
+                }
+            }
+        }
+        if (!channel) {
+            log.error("failed to find pepper channel");
+        } else {
+            channel.send(`its pepper time 🌶 ${client.shard.ids[0]}/${shards}`);
+        }
     }
 
     log.info("bot ready to serve");

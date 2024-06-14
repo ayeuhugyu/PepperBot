@@ -59,8 +59,8 @@ html {
 .logFileContentContainer {
     position: absolute;
     top: 3%;
-    left: 0;
-    width: 100%;
+    left: 5px;
+    width: calc(100% - 10px);
     height: 97%;
     display: flex;
     flex-direction: row;
@@ -108,6 +108,26 @@ html {
 
 #debug {
     right: 0%;
+}
+
+a {
+    color: #dda2ff;
+    text-decoration: none;
+}
+
+
+a:visited {
+    color: #dda2ff;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #be53fd;
+    text-decoration: underline;
+}
+
+a:active {
+    color: #ebc9ff;
 }
 
 @keyframes slideOpen {
