@@ -10,8 +10,10 @@ import path from "node:path";
 import { stat } from "fs/promises";
 
 const app = express();
+const startedAt = Date.now();
+const date = new Date(startedAt);
+const humanReadableDate = date.toLocaleString();
 const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
-const webRootPath = "./src/WebServer";
 
 const dirSize = async (directory) => {
     let files = fs.readdirSync(directory);
@@ -43,9 +45,7 @@ app.get("/", (request, response) => {
 });
 
 app.listen(config.WebServer.port, "0.0.0.0", () =>
-    log.info(
-        `app listening at http://localhost:${config.WebServer.port}`
-    )
+    log.info(`app listening at http://localhost:${config.WebServer.port}`)
 );
 
 app.use((err, req, res, next) => {
@@ -72,6 +72,8 @@ app.get("/read-statistics", (req, res) => {
                     await dirSize("./resources/ytdl_cache/")
                 ),
                 system: `${process.platform} ${process.arch}`,
+                startedAt: humanReadableDate,
+                startedAtTimestamp: startedAt,
                 usage: JSON.parse(data),
             };
             res.send(object);
@@ -85,10 +87,12 @@ app.get("/read-logs", (req, res) => {
     const warns = fs.readFileSync("./logs/warn.log", "utf8");
     const info = fs.readFileSync("./logs/info.log", "utf8");
     const dbg = fs.readFileSync("./logs/debug.log", "utf8");
+    const ftl = fs.readFileSync("./logs/fatal.log", "utf8");
     object.errors = errors;
     object.warns = warns;
     object.info = info;
     object.debug = dbg;
+    object.fatal = ftl;
     res.send(object);
 });
 
