@@ -2,7 +2,7 @@ import chalk from "chalk";
 import * as util from "util";
 import fs from "fs";
 import fsextra from "fs-extra";
-import process from "node:process"
+import process from "node:process";
 
 const Level = {
     Debug: "Debug",
@@ -59,14 +59,14 @@ function log(level, ...message) {
     process.stdout.write(
         `${chalk.grey(formattedDate)} ${prefix}${formatted
             .split("\n")
-            .join("\n" + `${chalk.grey(formattedDate)} ${prefix}`)}\n`
+            .join(`\n${chalk.grey(formattedDate)} ${prefix}`)}\n`
     );
     fsextra.ensureFileSync(`././logs/${level.toLowerCase()}.log`);
     fs.appendFileSync(
         `././logs/${level.toLowerCase()}.log`,
         `${formattedDate} ${level.toUpperCase()} ${formatted
             .split("\n")
-            .join("\n" + prefix)}\n`
+            .join(`\n${formattedDate} ${level.toUpperCase()}`)}\n`
     );
 }
 
@@ -83,7 +83,6 @@ export function warn(...message) {
 }
 
 export function error(...message) {
-    //action.notifyMe(...message); // TODO: fix this
     log(Level.Err, ...message);
 }
 
@@ -92,6 +91,5 @@ export function deleted(...message) {
 }
 
 export function fatal(...message) {
-    //action.notifyMe(...message); // TODO: fix this
     log(Level.Fatal, ...message);
 }
