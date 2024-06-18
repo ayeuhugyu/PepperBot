@@ -124,7 +124,7 @@ export class Command {
                     this.subcommands.length > 0 &&
                     !this.isSubCommand
                 ) {
-                    if (args.get("_SUBCOMMAND")) {
+                    if (args && args.get("_SUBCOMMAND")) {
                         const subcommand = this.subcommands.find(
                             (subcommand) => {
                                 if (
