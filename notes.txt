@@ -14,9 +14,9 @@ p/update
 
 **actual content:**
 
-- PEPPERBOT. WEBSITE.
+- updated website since last thing (logs)
+- PEPPERBOT. STATUS.
 
 **fixes/optimizations:**
 
-- fixed multiline logging looking weird as hell in the files for it
-- hypothetically alternate shards should be able to send the "it's pepper time 🌶" message
+- fixed p/embed: subcommand missing choices for save / load

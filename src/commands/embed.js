@@ -754,7 +754,9 @@ data.addStringOption((option) =>
             { name: "setfooter", value: "setfooter" },
             { name: "setimage", value: "setimage" },
             { name: "setthumbnail", value: "setthumbnail" },
-            { name: "restart", value: "restart" }
+            { name: "restart", value: "restart" },
+            { name: "save", value: "save" },
+            { name: "load", value: "load" }
         )
 );
 data.addStringOption((option) =>

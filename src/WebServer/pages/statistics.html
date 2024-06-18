@@ -20,6 +20,12 @@
                 function redirectTo(url) {
                     window.location.href = `${url}?sidebarIsOpen=${sidebarIsOpen}`;
                 }
+                function openInNewTab(url) {
+                    let win = window.open(
+                        `${url}?sidebarIsOpen=${sidebarIsOpen}`,
+                        "_blank"
+                    );
+                }
             </script>
             <h2 class="sidebarTitle">NAVIGATION</h2>
             <div class="sidebarDivider"></div>
@@ -27,6 +33,7 @@
                 class="sidebarButton"
                 id="/index.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Home
             </div>
@@ -34,6 +41,7 @@
                 class="sidebarButton"
                 id="/pages/statistics.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Statistics
             </div>
@@ -41,6 +49,7 @@
                 class="sidebarButton"
                 id="/pages/logs.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Logs
             </div>
@@ -48,6 +57,7 @@
                 class="sidebarButton"
                 id="/pages/credits.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Credits
             </div>

@@ -49,9 +49,7 @@ client.on(Events.ClientReady, async () => {
     if (channel) {
         channel.send(`its pepper time 🌶`);
     } else {
-        let channels = await client.shard.fetchClientValues(
-            "channels.cache"
-        );
+        let channels = await client.shard.fetchClientValues("channels.cache");
         const shards = channels.size;
         for (const shardChannels of channels) {
             for (const shardChannel of shardChannels) {

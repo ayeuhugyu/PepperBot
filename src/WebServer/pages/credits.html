@@ -20,6 +20,12 @@
                 function redirectTo(url) {
                     window.location.href = `${url}?sidebarIsOpen=${sidebarIsOpen}`;
                 }
+                function openInNewTab(url) {
+                    let win = window.open(
+                        `${url}?sidebarIsOpen=${sidebarIsOpen}`,
+                        "_blank"
+                    );
+                }
             </script>
             <h2 class="sidebarTitle">NAVIGATION</h2>
             <div class="sidebarDivider"></div>
@@ -27,6 +33,7 @@
                 class="sidebarButton"
                 id="/index.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Home
             </div>
@@ -34,6 +41,7 @@
                 class="sidebarButton"
                 id="/pages/statistics.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Statistics
             </div>
@@ -41,6 +49,7 @@
                 class="sidebarButton"
                 id="/pages/logs.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Logs
             </div>
@@ -48,6 +57,7 @@
                 class="sidebarButton"
                 id="/pages/credits.html"
                 onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
             >
                 Credits
             </div>
@@ -113,15 +123,15 @@
         </div>
 
         <h1 id="mainTitle">Credits</h1>
-        <pre id="credits" style="position: absolute; top:75px; left:75px;">
-p/chatbubble functionality - reidlab
-giving us amazing emojis to fk around with, including this website's icon - Christos Georghiou
+        <pre id="credits" style="position: absolute; top: 75px; left: 75px">
+p/chatbubble functionality - @reidlab
+giving us amazing emojis to fk around with, including this website's icon - <a class="creditsanchor" href="https://stock.adobe.com/uk/search?creator_id=53815&filters%5Bcontent_type%3Aphoto%5D=1&filters%5Bcontent_type%3Aillustration%5D=1&filters%5Bcontent_type%3Azip_vector%5D=1&filters%5Bcontent_type%3Avideo%5D=1&filters%5Bcontent_type%3Atemplate%5D=1&filters%5Bcontent_type%3A3d%5D=1&filters%5Bcontent_type%3Aaudio%5D=0&filters%5Bfetch_excluded_assets%5D=1&filters%5Bcontent_type%3Aimage%5D=1&filters%5Binclude_stock_enterprise%5D=0&filters%5Bis_editorial%5D=0&order=relevance&safe_search=1&search_page=1&search_type=usertyped&acp=&get_facets=0">Christos Georghiou</a>
 json full of all english words - <a class="creditsanchor" href="https://github.com/dwyl/english-words/blob/master/words_dictionary.json">dwyl</a>
 json full of all english nouns/verbs - <a class="creditsanchor" href="https://github.com/dariusk/corpora/tree/master/data/words">dariusk</a>
 json full of all unicode emojis - <a class="creditsanchor" href="https://github.com/amurani/unicode-emoji-list/blob/master/full-emoji-list.json">amurani</a>
 code i can steal - various stackoverflow posts
 coding basically half my stuff - github copilot
-help with the hellish discord api - djs community
+help with the hellish discord api - <a class="creditsanchor" href="https://discord.com/invite/djs">djs community</a>
 </pre>
     </body>
 </html>
