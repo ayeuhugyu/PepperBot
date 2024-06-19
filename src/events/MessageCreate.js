@@ -119,7 +119,12 @@ async function processDiabolicalEvent(message) {
 
 async function processGPTResponse(message) {
     if (message.mentions) {
-        if (message.mentions.has(client.user)) {
+        if (
+            message.mentions.has(client.user) &&
+            !message.content
+                .toLowerCase()
+                .startsWith(config.generic.prefix.toLowerCase())
+        ) {
             if (!message.author.bot) {
                 let completion = await gpt.respond(message).catch((err) => {
                     log.error(err);

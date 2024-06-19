@@ -36,7 +36,8 @@ p/update
     - when adobestock searches are made
 - i increased the amount of stuff it logged because often it was difficult to debug stuff because i didn't really know much of what was happening
 - removed MANY uses of the config, it was nearly useless.
+- using a command you aren't whitelisted for or don't have the permissions for now makes pepperbot make fun of you
 
 **fixes/optimizations:**
 
-
+- fixed p/eval whitelist being broken and allowing everyone to use it

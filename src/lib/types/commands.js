@@ -4,6 +4,8 @@ import fs from "fs";
 import guildConfigs from "../guildConfigs.js";
 import statistics from "../statistics.js";
 import * as globals from "../globals.js";
+import * as gpt from "../gpt.js";
+import * as log from "../log.js";
 
 const config = globals.config;
 
@@ -91,22 +93,70 @@ export class Command {
             if (this.data.permissions && this.data.permissions.length > 0) {
                 for (let permission of this.data.permissions) {
                     if (!message.member.permissions.has(permission)) {
-                        action.reply(message, {
-                            content:
-                                "the fact bro REALLY thought he actually had the permission to run this command??? baffoon 😂😂😂",
-                            ephemeral: true,
-                        });
+                        if (!message.author.bot) {
+                            message.content +=
+                                "**This user tried to use a command they don't have the permissions to use. Make fun of this user!**";
+                            let completion = await gpt
+                                .respond(message)
+                                .catch((err) => {
+                                    log.error(err);
+                                });
+                            if (completion) {
+                                log.info(
+                                    `gpt response succssful for ${message.author.id}`
+                                );
+                                action.reply(
+                                    message,
+                                    completion.choices[0].message.content
+                                );
+                            } else {
+                                action.reply(
+                                    message,
+                                    "the fact bro REALLY thought he actually had the permission to run this command??? baffoon 😂😂😂"
+                                );
+                            }
+                        } else {
+                            action.reply(message, {
+                                content:
+                                    "the fact bro REALLY thought he actually had the permission to run this command??? baffoon 😂😂😂",
+                                ephemeral: true,
+                            });
+                        }
                         return;
                     }
                 }
             }
             if (this.data.whitelist && this.data.whitelist.length > 0) {
                 if (!this.data.whitelist.includes(message.author.id)) {
-                    action.reply(message, {
-                        content:
-                            "the fact bro REALLY thought he was WHITELISTED for this command??? baffoon 😂😂😂",
-                        ephemeral: true,
-                    });
+                    if (!message.author.bot) {
+                        message.content +=
+                            "**This user tried to use a command they weren't whitelisted to use. Make fun of this user!**";
+                        let completion = await gpt
+                            .respond(message)
+                            .catch((err) => {
+                                log.error(err);
+                            });
+                        if (completion) {
+                            log.info(
+                                `gpt response succssful for ${message.author.id}`
+                            );
+                            action.reply(
+                                message,
+                                completion.choices[0].message.content
+                            );
+                        } else {
+                            action.reply(
+                                message,
+                                "the fact bro REALLY thought he was whitelisted for this command??? baffoon 😂😂😂"
+                            );
+                        }
+                    } else {
+                        action.reply(message, {
+                            content:
+                                "the fact bro REALLY thought he was whitelisted for this command??? baffoon 😂😂😂",
+                            ephemeral: true,
+                        });
+                    }
                     return;
                 }
             }
