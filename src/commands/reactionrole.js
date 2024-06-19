@@ -63,12 +63,12 @@ const remove = new SubCommand(
         }
 
         let reaction_roles = JSON.parse(
-            fs.readFileSync(config.paths.reaction_roles_file)
+            fs.readFileSync("resources/data/reaction_roles.json")
         );
         delete reaction_roles[args.get("messageid").id];
         action.deleteMessage(args.get("messageid"));
         fs.writeFileSync(
-            config.paths.reaction_roles_file,
+            "resources/data/reaction_roles.json",
             JSON.stringify(reaction_roles, null, 2)
         );
         action.reply(
@@ -224,14 +224,14 @@ const create = new SubCommand(
             }
         });
         let reaction_roles = JSON.parse(
-            fs.readFileSync(config.paths.reaction_roles_file)
+            fs.readFileSync("resources/data/reaction_roles.json")
         );
         reaction_roles[rrMessage.id] = {
             role: args.get("role").id,
             emoji: args.get("emoji"),
         };
         fs.writeFileSync(
-            config.paths.reaction_roles_file,
+            "resources/data/reaction_roles.json",
             JSON.stringify(reaction_roles, null, 2)
         );
     }

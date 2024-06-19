@@ -59,7 +59,7 @@ const command = new Command(
     },
     async function execute(message, args) {
         if (args.get("sound")) {
-            const sounds = await fs.readdirSync(config.paths.soundboard);
+            const sounds = await fs.readdirSync("resources/sounds");
             const sound = await autocorrect(args.get("sound"));
             let file;
             for (const value of Object.values(sound)) {
@@ -74,7 +74,7 @@ const command = new Command(
                 );
                 action.editMessage(msg, {
                     content: "here ya go",
-                    files: [`${config.paths.soundboard}/${file}`],
+                    files: [`resources/sounds/${file}`],
                     ephemeral: true,
                 });
             } else {

@@ -1,45 +1,5 @@
 {
     "generic": {
-        "prefix": "d/",
-        "global_whitelist": "440163494529073152",
-        "bot_id": "1209297323029565470",
-        "generic_info_channel": "1148814162273763418"
-    },
-    "paths": {
-        "events": "src/events",
-        "commands": "src/commands",
-        "logs": "logs",
-        "vile_imagery": "resources/vileimagery",
-        "peppers": "resources/the_peppers",
-        "soundboard": "resources/sounds",
-        "containers": "resources/containers",
-        "gptdownloads": "resources/gptdownloads",
-        "blacklist_file": "resources/data/blacklist.json",
-        "persistent_data_file": "resources/data/persistent_data.json",
-        "reaction_roles_file": "resources/data/reaction_roles.json", 
-        "ytdl_cache": "resources/ytdl_cache"
-    },
-    "commands": {
-        "randomwords_max": 100,
-        "markov_max_words": 25,
-        "announcement_channel": "1171660137946157146",
-        "announcement_role": "1210034891018993755"
-    },
-    "events": {
-        "log_deleted_messages": true,
-        "dm_replication_channel": "1148814162273763418"
-    },
-    "classes": {
-        "voice_info_channel": "1148814162273763418"
-    },
-    "lib": {
-        "default_embed_icon_url": "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
-        "notification_channel": "1148814162273763418"
-    },
-    "gpt": {
-        "max_file_size": 25000000
-    },
-    "WebServer": {
-        "port": 53134
+        "prefix": "d/"
     }
 }

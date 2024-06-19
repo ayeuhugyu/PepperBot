@@ -16,8 +16,8 @@ const date = new Date(startedAt);
 const humanReadableDate = date.toLocaleString();
 const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
 
-function fullRestart() {
-    log.warn("fullreset called, killing host");
+function kill() {
+    log.warn("kill called, killing host");
     process.exit();
 }
 
@@ -39,7 +39,7 @@ const dirSize = async (directory) => {
 };
 
 const persistent_data = JSON.parse(
-    fs.readFileSync(config.paths.persistent_data_file, "utf-8")
+    fs.readFileSync("resources/data/persistent_data.json", "utf-8")
 );
 const rootPath = "./src/WebServer";
 
@@ -52,10 +52,8 @@ app.get("/", (request, response) => {
 
 setTimeout(() => {
     try {
-        app.listen(config.WebServer.port, "0.0.0.0", () =>
-            log.info(
-                `app listening at http://localhost:${config.WebServer.port}`
-            )
+        app.listen(53134, "0.0.0.0", () =>
+            log.info(`site listening at http://localhost:53134`)
         );
     } catch (err) {
         log.fatal(`unable to listen to port: ${err}`);
@@ -126,8 +124,8 @@ manager
     .then((shards) => {
         shards.forEach((shard) => {
             shard.on("message", (message) => {
-                if (message == "fullrestart") {
-                    fullRestart();
+                if (message == "kill") {
+                    kill();
                 }
                 return message._result;
             });

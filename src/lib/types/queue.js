@@ -87,12 +87,12 @@ async function download(url, queueManager) {
                     `downloading \`${correctedFileName}.webm\`...`
                 );
                 fsextra.ensureFileSync(
-                    `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                    `resources/ytdl_cache/${correctedFileName}.webm`
                 );
                 await ytdl(url, { filter: "audioonly" })
                     .pipe(
                         fs.createWriteStream(
-                            `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                            `resources/ytdl_cache/${correctedFileName}.webm`
                         )
                     )
                     .on("finish", async () => {
@@ -101,7 +101,7 @@ async function download(url, queueManager) {
                             `playing \`${correctedFileName}.webm\``
                         );
                         resolve(
-                            `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                            `resources/ytdl_cache/${correctedFileName}.webm`
                         );
                     })
                     .on("error", (err) => {
@@ -113,7 +113,7 @@ async function download(url, queueManager) {
                             );
                         }
                         fs.unlinkSync(
-                            `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                            `resources/ytdl_cache/${correctedFileName}.webm`
                         );
                         reject();
                     });

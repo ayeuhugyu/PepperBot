@@ -1,7 +1,10 @@
 import fs, { stat } from "fs";
 import default_embed from "./default_embed.js";
+import * as log from "./log.js";
 
-const statistics = JSON.parse(
+const start = performance.now();
+
+const statistics = await JSON.parse(
     fs.readFileSync(`resources/data/statistics.json`, "utf-8")
 );
 
@@ -72,3 +75,5 @@ export default {
         return embed;
     },
 };
+
+log.info(`cached statistics in ${(performance.now() - start).toFixed(3)}ms`);

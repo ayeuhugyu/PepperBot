@@ -5,10 +5,7 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-const messages = await fs.readFileSync(
-    `${config.paths.logs}/messages.log`,
-    "utf-8"
-);
+const messages = await fs.readFileSync(`logs/messages.log`, "utf-8");
 
 function markovChainGenerator(text) {
     const textArr = text.split(" ");

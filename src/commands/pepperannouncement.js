@@ -38,11 +38,9 @@ const command = new Command(
                 .setTitle(`IMPORTANT PEPPERBOT ANNOUNCEMENT`)
                 .setDescription(args.get("message"));
             const sent = await action.sendMessage(
-                message.client.channels.cache.get(
-                    config.commands.announcement_channel
-                ),
+                message.client.channels.cache.get("1171660137946157146"),
                 {
-                    content: `<@&${config.commands.announcement_role}> PepperBot Announcement! 🌶`,
+                    content: `<@&1210034891018993755> PepperBot Announcement! 🌶`,
                     embeds: [embed],
                 }
             );

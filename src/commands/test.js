@@ -18,7 +18,7 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        action.reply("glorb");
+        action.reply(message, "glorb");
     }
 );
 

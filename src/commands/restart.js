@@ -36,8 +36,8 @@ const command = new Command(
     },
     async function execute(message, args) {
         if (args.get("hostProcess")) {
-            await action.reply(message, "restarting host process");
-            process.send("fullrestart");
+            await action.reply(message, "killing host process");
+            process.send("kill");
             return;
         }
         await action.reply(message, "Bye Bye! 🌶");

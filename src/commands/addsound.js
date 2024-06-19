@@ -5,17 +5,15 @@ import fs from "fs";
 import fsExtra from "fs-extra";
 import stream from "stream";
 import * as globals from "../lib/globals.js";
-import * as files from "../lib/files.js"
-
-const config = globals.config;
+import * as files from "../lib/files.js";
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {
         const fixedFileName = files.fixFileName(filename);
-        fsExtra.ensureFileSync(`${config.paths.soundboard}/${fixedFileName}`);
+        fsExtra.ensureFileSync(`resources/sounds/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
-                `${config.paths.soundboard}/${fixedFileName}`
+                `resources/sounds/${fixedFileName}`
             );
             stream.Readable.fromWeb(res.body).pipe(ws);
             ws.on("finish", () => resolve(true));
@@ -69,7 +67,7 @@ const command = new Command(
                 filename.endsWith(".mp4") ||
                 filename.endsWith(".flac")
             ) {
-                const files = fs.readdirSync(config.paths.soundboard);
+                const files = fs.readdirSync("resources/sounds");
                 const fileCorrected = fixName(filename);
                 if (files.includes(fileCorrected)) {
                     action.reply(message, "sound already exists");

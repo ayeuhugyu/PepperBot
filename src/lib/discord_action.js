@@ -40,9 +40,11 @@ export async function fixMsg(msg) {
         .replaceAll("@here", "##carrot")
         .replaceAll(process.env.DISCORD_TOKEN, "##pepper")
         .replaceAll(process.env.OPENAI_API_KEY, "##bellpepper")
-        .replaceAll(process.env.WEBHOOK_TOKEN, "##onion");
-        //.replaceAll(process.env.VISION_KEY, "##tomato") // uncomment when vision key is implemented
-        //.replaceAll(process.env.VISION_ENDPOINT, "##starfruit"); // this prevents the bot from pinging everyone, and from leaking sensitive information
+        .replaceAll(process.env.WEBHOOK_TOKEN, "##onion")
+        .replaceAll(process.env.YOUTUBE_API_KEY, "##cucumber")
+        .replaceAll(process.env.ADOBE_API_KEY, "##kiwi");
+    //.replaceAll(process.env.VISION_KEY, "##tomato") // uncomment when vision key is implemented
+    //.replaceAll(process.env.VISION_ENDPOINT, "##starfruit"); // this prevents the bot from pinging everyone, and from leaking sensitive information
 
     if (msg.content.length > 2000) {
         let path = await files.textToFile(msg.content, "overflowtext.txt");
@@ -69,6 +71,11 @@ export async function fixMsg(msg) {
 export async function sendMessage(channel, content) {
     try {
         channel.sendTyping();
+        log.info(
+            `sending message to ${channel.id} with content: ${
+                (await fixMsg(content)).content
+            }`
+        );
         const sent = await channel.send(await fixMsg(content)).catch((err) => {
             log.error(err);
         });
@@ -91,6 +98,9 @@ export async function reply(message, content) {
     if (!(typeof content === "string") && !content.ephemeral)
         channel.sendTyping();
     let sent;
+    log.info(
+        `replying to ${message.id} with: ${(await fixMsg(content)).content}`
+    );
     try {
         const msg = await fixMsg(content);
         if (message.replied) {
@@ -122,6 +132,11 @@ export async function sendDM(user, content) {
         return;
     }
     try {
+        log.info(
+            `sending dm to ${user.id} with content: ${
+                (await fixMsg(content)).content
+            }`
+        );
         const msg = await user.send(await fixMsg(content)).catch((err) => {
             log.error(err);
         });
@@ -139,7 +154,9 @@ export async function deleteMessage(message) {
     }
     try {
         if (message.deletable) {
+            log.info(`deleting message: ${message.id}`);
             if (!message) {
+                log.warn(`message was already deleted`);
                 return;
             }
             await message.delete().catch((err) => {
@@ -159,6 +176,11 @@ export async function editMessage(message, content) {
         return;
     }
     try {
+        log.info(
+            `editing message: ${message.id} with content: ${
+                (await fixMsg(content)).content
+            }`
+        );
         const sent = await message
             .edit(await fixMsg(content))
             .catch(async (err) => {

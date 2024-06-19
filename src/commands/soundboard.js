@@ -66,9 +66,7 @@ const command = new Command(
         if (args.get("sound")) {
             // special cases
             if (args.get("sound") == "ls") {
-                let sounds = await textfiles.generateLSText(
-                    config.paths.soundboard
-                );
+                let sounds = await textfiles.generateLSText("resources/sounds");
                 let soundLsFile = await textfiles.textToFile(sounds, "sounds");
                 action.reply(message, { files: [soundLsFile] });
                 return;
@@ -101,12 +99,12 @@ const command = new Command(
                 action.reply(message, "stopped");
                 return;
             }
-            const sounds = await fs.readdirSync(config.paths.soundboard);
+            const sounds = await fs.readdirSync("resources/sounds");
             const sound = await autocorrect(args.get("sound"));
             for (const value of Object.values(sound)) {
                 if (sounds.includes(value)) {
                     const resource = await voice.createAudioResource(
-                        `${config.paths.soundboard}/${value}`
+                        `resources/sounds/${value}`
                     );
                     voice.playResource(resource, audioPlayer);
                     action.reply(message, {

@@ -14,15 +14,17 @@ import process from "node:process";
 import * as voice from "../lib/voice.js";
 import * as gpt from "../lib/gpt.js";
 import * as adobe from "../lib/adobe.js";
+import shell from "shelljs";
+import util from "node:util";
 
 const config = globals.config;
 
 const data = new CommandData();
 data.setName("eval");
 data.setDescription("evaluates the provided code");
-data.setPermissions(["440163494529073152"]);
+data.setPermissions([]);
 data.setPermissionsReadable("");
-data.setWhitelist([]);
+data.setWhitelist(["440163494529073152"]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.setAliases();

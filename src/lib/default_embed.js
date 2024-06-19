@@ -8,17 +8,17 @@ export default function () {
     const embed = new EmbedBuilder();
     embed.setColor(0xff0000);
     embed.setThumbnail(
-        config.lib.default_embed_icon_url
+        "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png"
     );
     embed.setFooter({
         text: "Bot made by and hosted by anti_pepperphobes",
         iconURL:
-            config.lib.default_embed_icon_url,
+            "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
     });
     embed.setAuthor({
         name: "PepperBot",
         iconURL:
-            config.lib.default_embed_icon_url,
+            "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
     });
     return embed;
 }

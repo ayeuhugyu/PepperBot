@@ -5,7 +5,7 @@ import * as log from "./log.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
 import * as globals from "./globals.js";
-import process from "node:process"
+import process from "node:process";
 
 const config = globals.config;
 
@@ -132,7 +132,8 @@ async function fixIncomingMessage(message) {
     if (message.attachments.size > 0) {
         for (let attachment of message.attachments.values()) {
             if (await isTextFile(attachment.name)) {
-                if (attachment.size <= config.gpt.max_file_size) {
+                if (attachment.size <= "25000000") {
+                    log.info("gpt: downloading file");
                     await download(
                         attachment.url,
                         attachment.id + "_" + attachment.name
@@ -149,10 +150,12 @@ async function fixIncomingMessage(message) {
                     }`;
                     attachedMessage += await fs.readFileSync(file, "utf-8");
                 } else {
+                    log.warn("gpt: file too large");
                     attachedMessage +=
                         "The user you are speaking with attached a file that exceeded the maximum file size of 25 megabytes. This message is not created by the user.";
                 }
             } else {
+                log.warn("gpt: invalid file extension");
                 attachedMessage +=
                     "The user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs. This message is not created by the user.";
             }
@@ -181,7 +184,7 @@ async function addReference(message, conversation) {
             const reference = await message.channel.messages.fetch(
                 message.reference.messageId
             );
-            if (reference.author.id == config.generic.bot_id) {
+            if (reference.author.id == "1209297323029565470") {
                 await conversation.addMessage("assistant", reference.content);
                 return;
             } else {
@@ -197,7 +200,7 @@ export async function respond(message) {
     const readableContent = await fixIncomingMessage(message);
 
     if (message.author.id in conversations) {
-        if (message.content.includes(`<@${config.generic.bot_id}>`)) {
+        if (message.content.includes(`<@1209297323029565470>`)) {
             conversations[message.author.id] = await generateConversationData(
                 message.author.id
             );

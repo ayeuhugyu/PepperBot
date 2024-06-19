@@ -6,13 +6,13 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
 import * as globals from "../lib/globals.js";
-import * as files from "../lib/files.js"
+import * as files from "../lib/files.js";
 
 const config = globals.config;
 
 async function download(url, filename) {
     return new Promise((resolve, reject) => {
-        const fixedFileName = files.fixFileName(filename)
+        const fixedFileName = files.fixFileName(filename);
         fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
@@ -61,22 +61,28 @@ function isTextFile(filename) {
 }
 
 async function fixIncomingMessage(message) {
-    let attachedMessage = ""; 
+    let attachedMessage = "";
     if (message.attachments) {
         if (message.attachments.size > 0) {
             for (let attachment of message.attachments.values()) {
                 if (await isTextFile(attachment.name)) {
-                    if (attachment.size <= config.gpt.max_file_size) {
+                    if (attachment.size <= 25000000) {
+                        // 25 megabytes
                         await download(
                             attachment.url,
-                            attachment.id + "_" + files.fixFileName(attachment.name)
+                            attachment.id +
+                                "_" +
+                                files.fixFileName(attachment.name)
                         );
                         const file = `./resources/gptdownloads/${
                             attachment.id +
                             "_" +
                             files.fixFileName(attachment.name)
                         }`;
-                        attachedMessage += `\n\n${await fs.readFileSync(file, "utf-8")}`
+                        attachedMessage += `\n\n${await fs.readFileSync(
+                            file,
+                            "utf-8"
+                        )}`;
                     } else {
                         attachedMessage +=
                             "\n\nThe user you are speaking with attached a file that exceeded the maximum file size of 25 megabytes. This message is not created by the user.";

@@ -14,13 +14,29 @@ p/update
 
 **actual content:**
 
-- updated website since last time i said anything (logs)
-- pepperbot may or may not have status now? idk it won't show up for me
-- p/eval command (lmao you thought i wouldn't do it (i see actual use for me for it now))
-- p/restart can now restart the host process (meaning i can make changes to index.js and then actually use said changes)
+- MUCH more things are logged now, heres a full list:
+    - beginning of command execution
+    - invalid commands
+    - gpt responses
+    - diabolical events
+    - dms
+    - every instance of a message being sent, replies, channel.send, dms, editing
+    - messages deleted by the bot (when they are deleted)
+    - time taken to load guild configurations
+    - time taken to load commands
+    - time taken to load statistics
+    - when bot joins voice channel 
+    - when bot leaves voice channel 
+    - when audio resources are created 
+    - when audio players are created 
+    - when audio players are retrieved successfully
+    - when audio players are told to play a resource, pause, change volume, resume, stop, or destroyed
+    - when gpt attempts to download an invalid file
+    - when gpt downloads a file
+    - when adobestock searches are made
+- i increased the amount of stuff it logged because often it was difficult to debug stuff because i didn't really know much of what was happening
+- removed MANY uses of the config, it was nearly useless.
 
 **fixes/optimizations:**
 
-- fixed p/embed: subcommand missing choices for save / load
-- fixed errors caused by undefined arguments
-- im using nodemon instead of node now, basically it restarts itself amd probably some other stuff idk
+

@@ -12,7 +12,7 @@ export async function generateLSText(path, truncateFileExtensions) {
     }
     if (truncateFileExtensions) {
         const lines = text.split("\n");
-        const truncatedLines = lines.map(line => {
+        const truncatedLines = lines.map((line) => {
             const lastDotIndex = line.lastIndexOf(".");
             if (lastDotIndex !== -1) {
                 return line.slice(0, lastDotIndex);
@@ -25,8 +25,8 @@ export async function generateLSText(path, truncateFileExtensions) {
 }
 
 export async function textToFile(text, name) {
-    fsextra.ensureFileSync(`${config.paths.containers}/${name}.txt`);
-    const file = `${config.paths.containers}/${name}.txt`;
+    fsextra.ensureFileSync(`resources/containers/${name}.txt`);
+    const file = `resources/containers/${name}.txt`;
     await fs.writeFileSync(file, text);
     return file;
 }
@@ -47,6 +47,6 @@ export function fixFileName(name) {
         .replaceAll("<", "_")
         .replaceAll(">", "_")
         .replaceAll(";", "_")
-        .replaceAll(",", "_")
+        .replaceAll(",", "_");
     return correctedFileName;
 }

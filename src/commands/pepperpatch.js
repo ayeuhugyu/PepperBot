@@ -41,9 +41,7 @@ const command = new Command(
                 .setTitle(`SMALL UPDATE/PATCH ${persistent_data.version}`)
                 .setDescription(args.get("message"));
             const sent = await action.sendMessage(
-                message.client.channels.cache.get(
-                    config.commands.announcement_channel
-                ),
+                message.client.channels.cache.get("1171660137946157146"),
                 {
                     embeds: [embed],
                 }

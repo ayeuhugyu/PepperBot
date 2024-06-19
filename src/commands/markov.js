@@ -74,7 +74,7 @@ export function generate({ source, start = null, wordsCount = 100 } = {}) {
 }
 
 const text = await fs
-    .readFileSync(`${config.paths.logs}/messages.log`, "utf-8")
+    .readFileSync(`logs/messages.log`, "utf-8")
     .replaceAll("\n", " \n");
 
 const data = new CommandData();
@@ -92,7 +92,7 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        const wordsCount = random(1, config.commands.markov_max_words);
+        const wordsCount = random(1, 25); // this number is the max words
         const msg = await generate({ source: text, wordsCount: wordsCount });
         if (msg.replaceAll(" ", "") === "") {
             let newText = await generate({

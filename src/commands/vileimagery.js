@@ -9,7 +9,7 @@ import * as globals from "../lib/globals.js";
 const config = globals.config;
 
 const files = fs
-    .readdirSync(config.paths.vile_imagery)
+    .readdirSync("resources/vileimagery")
     .filter((file) => file.endsWith(".png"));
 
 const data = new CommandData();
@@ -20,7 +20,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["vile", "vi"])
+data.setAliases(["vile", "vi"]);
 data.addStringOption((option) =>
     option.setName("image").setRequired(false).setDescription("image to attach")
 );
@@ -46,7 +46,7 @@ const command = new Command(
             const proposedfilename = args.get("image");
             if (proposedfilename.replaceAll(" ", "") == "ls") {
                 const lsText = await textfiles.generateLSText(
-                    `${config.paths.vile_imagery}`
+                    `resources/vileimagery`
                 );
                 const lsFile = await textfiles.textToFile(
                     lsText,
@@ -82,7 +82,7 @@ const command = new Command(
                     .get(message.reference.channelId)
                     .messages.cache.get(message.reference.messageId);
                 action.reply(reference, {
-                    files: [`${config.paths.vile_imagery}/${file}`],
+                    files: [`resources/vileimagery/${file}`],
                 });
                 if (!fromInteraction) action.deleteMessage(message);
                 return;
@@ -91,7 +91,7 @@ const command = new Command(
             embed.setImage(`attachment://${file}`);
             action.reply(message, {
                 embeds: [embed],
-                files: [`${config.paths.vile_imagery}/${file}`],
+                files: [`resources/vileimagery/${file}`],
             });
         } else if (args.get("image")) {
             const maxRan = files.length;
@@ -109,7 +109,7 @@ const command = new Command(
             embed.setImage(`attachment://${file}`);
             action.reply(message, {
                 embeds: [embed],
-                files: [`${config.paths.vile_imagery}/${file}`],
+                files: [`resources/vileimagery/${file}`],
             });
         }
         if (!args.get("image")) {
@@ -121,7 +121,7 @@ const command = new Command(
                     .get(message.reference.channelId)
                     .messages.cache.get(message.reference.messageId);
                 action.reply(reference, {
-                    files: [`${config.paths.vile_imagery}/${file}`],
+                    files: [`resources/vileimagery/${file}`],
                 });
                 if (!fromInteraction) action.deleteMessage(message);
                 return;
@@ -130,7 +130,7 @@ const command = new Command(
             embed.setImage(`attachment://${file}`);
             action.reply(message, {
                 embeds: [embed],
-                files: [`${config.paths.vile_imagery}/${file}`],
+                files: [`resources/vileimagery/${file}`],
             });
         }
     }

@@ -60,7 +60,7 @@ const command = new Command(
             "guilds.cache.size"
         );
         const persistent_data = JSON.parse(
-            fs.readFileSync(config.paths.persistent_data_file, "utf-8")
+            fs.readFileSync("resources/data/persistent_data.json", "utf-8")
         );
 
         const embed = default_embed()

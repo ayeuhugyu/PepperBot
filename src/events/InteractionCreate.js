@@ -34,7 +34,10 @@ async function chatInputCommand(interaction) {
             return undefined;
         }
     };
-    let blackliststring = fs.readFileSync(config.paths.blacklist_file, "utf-8");
+    let blackliststring = fs.readFileSync(
+        "resources/data/blacklist.json",
+        "utf-8"
+    );
     let blacklists = JSON.parse(blackliststring);
     if (blacklists.includes(interaction.author.id)) {
         interaction.reply(`blacklisted lmfao`);
@@ -43,9 +46,12 @@ async function chatInputCommand(interaction) {
     const command = interaction.commandName;
 
     if (!commands.has(command)) {
-        action.reply(`invalid command: ${command}, baffoon!`);
+        action.reply(
+            `hey there hackerman, stop tryna send invalid interactions.`
+        );
         return;
     }
+    log.info(`command requested by ${interaction.user.id}: p/${command}`);
     const commandFn = commands.get(command);
     await commandFn(interaction, interaction.options, true).catch((err) => {
         log.error(err);

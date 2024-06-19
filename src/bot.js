@@ -17,6 +17,7 @@ export const client = new Client({
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildPresences,
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
@@ -66,9 +67,7 @@ client.on(Events.ClientReady, async () => {
         }
     }
 
-    client.user.setPresence({
-        activities: [{ name: "to the pepper whispers.", type: "LISTENING" }],
-    });
+    client.user.setActivity("pepper whisperers.", { type: 2 });
     log.info("edited presence");
 
     log.info("bot ready to serve");
@@ -83,7 +82,7 @@ client.on(Events.ClientReady, async () => {
 
 await init();
 
-const channel = await client.channels.fetch(config.lib.notification_channel);
+const channel = await client.channels.fetch("1148814162273763418");
 
 let quickErrors = 3;
 let lastErrorTime = undefined;

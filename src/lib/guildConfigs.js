@@ -2,6 +2,8 @@ import * as log from "./log.js";
 import fs from "fs";
 import fsextra from "fs-extra";
 
+const start = performance.now();
+
 let guildConfigs = {};
 async function getAllGuildConfigs() {
     const guildFiles = fs
@@ -14,8 +16,10 @@ async function getAllGuildConfigs() {
         guildConfigs[config.guildId] = config;
     }
 }
-getAllGuildConfigs();
-log.debug("guild configurations cached");
+await getAllGuildConfigs();
+log.info(
+    `guild configurations cached in ${(performance.now() - start).toFixed(3)}ms`
+);
 
 const defaultGuildConfig = {
     guildId: "discord.guild.id",

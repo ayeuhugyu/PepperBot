@@ -35,9 +35,7 @@ const command = new Command(
         if (args.get("message")) {
             const embed = default_embed().setDescription(args.get("message"));
             const sent = await action.sendMessage(
-                message.client.channels.cache.get(
-                    config.commands.announcement_channel
-                ),
+                message.client.channels.cache.get("1171660137946157146"),
                 {
                     embeds: [embed],
                 }

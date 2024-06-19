@@ -37,11 +37,11 @@ const command = new Command(
     async function execute(message, args) {
         if (args.get("version")) {
             let persistent_data = JSON.parse(
-                fs.readFileSync(config.paths.persistent_data_file, "utf-8")
+                fs.readFileSync("resources/data/persistent_data.json", "utf-8")
             );
             persistent_data.version = args.get("version");
             await fs.writeFileSync(
-                config.paths.persistent_data_file,
+                "resources/data/persistent_data.json",
                 JSON.stringify(persistent_data, null, 2)
             );
             action.reply(

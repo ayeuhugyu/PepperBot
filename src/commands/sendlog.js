@@ -56,7 +56,7 @@ const command = new Command(
     async function execute(message, args) {
         if (args.get("log")) {
             const logs = fs
-                .readdirSync(`${config.paths.logs}`)
+                .readdirSync(`logs`)
                 .filter((file) => file.endsWith(".log"));
             if (!logs.includes(args.get("log"))) {
                 action.reply(
@@ -69,18 +69,13 @@ const command = new Command(
                 action.reply(message, {
                     files: [
                         {
-                            attachment: `${config.paths.logs}/${args.get(
-                                "log"
-                            )}`,
+                            attachment: `logs/${args.get("log")}`,
                             name: args.get("log"),
                         },
                     ],
                 });
             } else {
-                const log = fs.readFileSync(
-                    `${config.paths.logs}/${args.get("log")}`,
-                    "utf8"
-                );
+                const log = fs.readFileSync(`logs/${args.get("log")}`, "utf8");
                 const logLines = log.split("\n");
                 const last10Lines = logLines.slice(-10).join("\n");
                 action.reply(message, "```" + last10Lines + "```");

@@ -115,9 +115,7 @@ const command = new Command(
                             }
                         });
                     if (!info) return;
-                    const sounds = await fs.readdirSync(
-                        config.paths.ytdl_cache
-                    );
+                    const sounds = await fs.readdirSync("resources/ytdl_cache");
                     const correctedFileName = files.fixFileName(
                         info.videoDetails.title
                     );
@@ -127,7 +125,7 @@ const command = new Command(
                             `playing \`${correctedFileName}.webm\``
                         );
                         const resource = await voice.createAudioResource(
-                            `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                            `resources/ytdl_cache/${correctedFileName}.webm`
                         );
                         audioPlayer.play(resource);
                         return;
@@ -143,12 +141,12 @@ const command = new Command(
                         `downloading \`${correctedFileName}.webm\`...`
                     );
                     fsextra.ensureFileSync(
-                        `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                        `resources/ytdl_cache/${correctedFileName}.webm`
                     );
                     await ytdl(args.get("sound"), { filter: "audioonly" })
                         .pipe(
                             fs.createWriteStream(
-                                `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                                `resources/ytdl_cache/${correctedFileName}.webm`
                             )
                         )
                         .on("finish", async () => {
@@ -157,7 +155,7 @@ const command = new Command(
                                 `playing \`${correctedFileName}.webm\``
                             );
                             const resource = await voice.createAudioResource(
-                                `${config.paths.ytdl_cache}/${correctedFileName}.webm`
+                                `resources/ytdl_cache/${correctedFileName}.webm`
                             );
                             audioPlayer.play(resource);
                         });

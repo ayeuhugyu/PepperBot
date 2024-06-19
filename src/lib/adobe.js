@@ -1,7 +1,9 @@
-import process from "node:process"
+import process from "node:process";
+import * as log from "./log.js";
 
 export function search({ query, limit, creatorId, quality }) {
     return new Promise((resolve, reject) => {
+        if (!query) reject("no query provided");
         let url = `https://stock.adobe.io/Rest/Media/1/Search/Files?locale=en_US&search_parameters[words]=${query}&search_parameters[filters][premium]=all`;
         if (limit) url += `&search_parameters[limit]=${limit}`;
         if (creatorId) url += `&search_parameters[creator_id]=${creatorId}`;
@@ -12,6 +14,12 @@ export function search({ query, limit, creatorId, quality }) {
                 "x-product": "myTestApp1.0",
             },
         });
+        log.info(
+            `searched adobe stock for ${query} ` +
+                (creatorId ? `by creator ${creatorId}` : "") +
+                (limit ? ` with limit ${limit}` : "") +
+                (quality ? ` with quality ${quality}` : ``)
+        );
         resolve(result);
     });
 }

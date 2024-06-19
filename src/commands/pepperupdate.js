@@ -40,11 +40,9 @@ const command = new Command(
                 .setTitle(`VERSION ${persistent_data.version}`)
                 .setDescription(args.get("message"));
             const sent = await action.sendMessage(
-                message.client.channels.cache.get(
-                    config.commands.announcement_channel
-                ),
+                message.client.channels.cache.get("1171660137946157146"),
                 {
-                    content: `<@&${config.commands.announcement_role}> PepperBot Update! 🌶`,
+                    content: `<@&1210034891018993755> PepperBot Update! 🌶`,
                     embeds: [embed],
                 }
             );

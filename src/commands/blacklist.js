@@ -27,7 +27,7 @@ const view = new SubCommand(
     },
     async function execute(message, args, fromInteraction) {
         let filestring = await fs.readFileSync(
-            config.paths.blacklist_file,
+            "resources/data/blacklist.json",
             "utf-8"
         );
         let blacklists = await JSON.parse(filestring);
@@ -56,7 +56,7 @@ removedata.setName("remove");
 removedata.setDescription("remove a user from the blacklist");
 removedata.setPermissions([]);
 removedata.setPermissionsReadable("");
-removedata.setWhitelist([config.generic.global_whitelist]);
+removedata.setWhitelist(["440163494529073152"]);
 removedata.setCanRunFromBot(true);
 removedata.addStringOption((option) =>
     option
@@ -79,12 +79,14 @@ const remove = new SubCommand(
     },
     async function execute(message, args, fromInteraction) {
         if (args.get("user")) {
-            let filestring = await fs.readFileSync(config.paths.blacklist_file);
+            let filestring = await fs.readFileSync(
+                "resources/data/blacklist.json"
+            );
             let blacklists = await JSON.parse(filestring);
             if (blacklists.includes(args.get("user"))) {
                 blacklists.splice(blacklists.indexOf(args.get("user")), 1);
                 await fs.writeFileSync(
-                    config.paths.blacklist_file,
+                    "resources/data/blacklist.json",
                     JSON.stringify(blacklists)
                 );
                 action.reply(message, {
@@ -115,7 +117,7 @@ adddata.setName("add");
 adddata.setDescription("add to the blacklist");
 adddata.setPermissions([]);
 adddata.setPermissionsReadable("");
-adddata.setWhitelist([config.generic.global_whitelist]);
+adddata.setWhitelist(["440163494529073152"]);
 adddata.setCanRunFromBot(true);
 adddata.addStringOption((option) =>
     option.setName("user").setDescription("who to blacklist").setRequired(true)
@@ -146,7 +148,7 @@ const add = new SubCommand(
             let blacklists = await JSON.parse(filestring);
             blacklists.push(args.get("user"));
             await fs.writeFileSync(
-                config.paths.blacklist_file,
+                "resources/data/blacklist.json",
                 JSON.stringify(blacklists)
             );
             await action.reply(message, {

@@ -39,8 +39,13 @@ const diabolical_events = globals.diabolical_events;
 const commands = commandsObject.commandExecutions;
 
 function logmessage(message) {
-    fsExtra.ensureFileSync("logs/messages.log")
-    if (!message.author.bot && !message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())) {
+    fsExtra.ensureFileSync("logs/messages.log");
+    if (
+        !message.author.bot &&
+        !message.content
+            .toLowerCase()
+            .startsWith(config.generic.prefix.toLowerCase())
+    ) {
         fs.appendFileSync("logs/messages.log", message.content + "\n");
     }
 }
@@ -48,9 +53,13 @@ function logmessage(message) {
 async function processDM(message) {
     if (message.channel.type === 1) {
         if (!message.author.bot) {
-            if (!message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())) {
+            if (
+                !message.content
+                    .toLowerCase()
+                    .startsWith(config.generic.prefix.toLowerCase())
+            ) {
                 const channel = await client.channels.cache.get(
-                    config.events.dm_replication_channel
+                    "1148814162273763418"
                 );
                 const webhooks = await channel.fetchWebhooks();
                 let webhook = await webhooks.find(
@@ -67,6 +76,9 @@ async function processDM(message) {
                         token: process.env.WEBHOOK_TOKEN,
                     });
                 }
+                log.info(
+                    `dm received from ${message.author.id} with: ${message.content}`
+                );
                 webhook
                     .send(await action.fixMsg(message.content))
                     .catch((err) => {
@@ -79,11 +91,14 @@ async function processDM(message) {
 async function processDiabolicalEvent(message) {
     if (
         !message.author.bot &&
-        !message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())
+        !message.content
+            .toLowerCase()
+            .startsWith(config.generic.prefix.toLowerCase())
     ) {
         const random = Math.random() * 250;
         if (random < 5) {
             // ~2%
+            log.info(`diabolical emoji event triggered on ${message.id}`);
             const emoji =
                 globals.emojis[
                     Math.floor(Math.random() * globals.emojis.length)
@@ -92,6 +107,7 @@ async function processDiabolicalEvent(message) {
         }
         if (random > 249) {
             // ~0.4%
+            log.info(`diabolical event triggered on ${message.id}`);
             const event =
                 diabolical_events[
                     Math.floor(Math.random() * diabolical_events.length)
@@ -109,6 +125,7 @@ async function processGPTResponse(message) {
                     log.error(err);
                 });
                 if (completion) {
+                    log.info(`gpt response succssful for ${message.author.id}`);
                     action.reply(
                         message,
                         completion.choices[0].message.content
@@ -125,7 +142,11 @@ async function processGPTResponse(message) {
 }
 
 async function processCommand(message) {
-    if (!message.content.toLowerCase().startsWith(config.generic.prefix.toLowerCase())) {
+    if (
+        !message.content
+            .toLowerCase()
+            .startsWith(config.generic.prefix.toLowerCase())
+    ) {
         return;
     } // return if not a command
 
@@ -156,7 +177,10 @@ async function processCommand(message) {
     };
     message.awaitModalSubmit = async function () {};
 
-    let blackliststring = fs.readFileSync(config.paths.blacklist_file, "utf-8");
+    let blackliststring = fs.readFileSync(
+        "resources/data/blacklist.json",
+        "utf-8"
+    );
     let blacklists = await JSON.parse(blackliststring);
     if (blacklists.includes(message.author.id)) {
         action.reply(message, `blacklisted lmfao`);
@@ -174,13 +198,13 @@ async function processCommand(message) {
     } // return if command == '' (probably caused by entering just the prefix)
     if (!commands.get(command)) {
         action.reply(message, `invalid command: ${command}, baffoon!`);
+        log.info(`invalid command by ${message.author.id}: p/${command}`);
         return;
     }
+    log.info(`command requested by ${message.author.id}: p/${command}`);
     const commandFn = commands.get(command);
-    await commandFn(message, undefined, false).catch((err) => {
-        log.error(err);
-    });
-    let logmsg = `command received: ${command} from: ${message.author.username} (${message.author}) `;
+    await commandFn(message, undefined, false).catch((err) => log.error);
+    let logmsg = `command executed: ${command} from: ${message.author.username} (${message.author}) `;
     if (message.channel) {
         if (message.channel.type === 1) {
             logmsg += `in DM `;
@@ -202,7 +226,9 @@ async function getIsDisgraceful(message) {
                 message.member.id !== "440163494529073152" &&
                 message.member.id !== message.client.user.id
             ) {
-                await action.sendDM(message.author, { content: "Disgraceful." });
+                await action.sendDM(message.author, {
+                    content: "Disgraceful.",
+                });
                 await action.deleteMessage(message);
                 return true;
             }
@@ -219,7 +245,7 @@ async function getIsDisgraceful(message) {
                 action.sendMessage(message.channel, {
                     content: `<@${message.author.id}> TITLE YOUR FUCKING CLIPS YOU FUCKTARD`,
                 });
-                action.deleteMessage(message)
+                action.deleteMessage(message);
                 return true;
             }
         }
@@ -238,6 +264,6 @@ export default {
             processGPTResponse(message),
             processCommand(message),
         ]);
-        logmessage(message)
+        logmessage(message);
     },
 };

@@ -151,10 +151,10 @@ const sound = new SubCommand(
         }
         const audioPlayer = await voice.createAudioPlayer();
         connection.subscribe(audioPlayer);
-        const sounds = await fs.readdirSync(config.paths.soundboard);
+        const sounds = await fs.readdirSync("resources/sounds");
         let randomValue = Math.floor(Math.random() * sounds.length);
         const resource = await voice.createAudioResource(
-            `${config.paths.soundboard}/${sounds[randomValue]}`
+            `resources/sounds/${sounds[randomValue]}`
         );
         voice.playResource(resource, audioPlayer);
         action.reply(message, `playing \`${sounds[randomValue]}\``);
@@ -187,8 +187,8 @@ const words = new SubCommand(
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        if (args.get("amount") > config.commands.randomwords_max) {
-            args.set("amount", config.commands.randomwords_max);
+        if (args.get("amount") > 100) {
+            args.set("amount", 100);
         }
         if (args.get("amount") < 1) {
             args.set("amount", 1);
@@ -208,7 +208,7 @@ const words = new SubCommand(
 );
 
 const pepperfiles = fs
-    .readdirSync(config.paths.peppers)
+    .readdirSync("resources/the_peppers")
     .filter((file) => file.endsWith(".png") || file.endsWith(".jpg"));
 
 const pepperdata = new SubCommandData();
@@ -233,7 +233,7 @@ const pepper = new SubCommand(
 
         action.reply(message, {
             embeds: [embed],
-            files: [`${config.paths.peppers}/${file}`],
+            files: [`resources/the_peppers/${file}`],
             ephemeral: true,
         });
     }

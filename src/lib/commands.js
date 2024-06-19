@@ -2,6 +2,8 @@ import { Collection } from "discord.js";
 import fs from "fs";
 import * as log from "./log.js";
 
+const start = performance.now();
+
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
 const commandExecutions = new Collection();
@@ -14,8 +16,14 @@ async function getCommands() {
     for (const file of commandFiles) {
         const command = await import(`../commands/${file}`);
         try {
-            if (commands.find(cmd => command.default.data.name == cmd.data.name)) {
-                log.fatal(`command '${command.default.data.name}' is unable to be processed due to posessing a duplicate name as another command`);
+            if (
+                commands.find(
+                    (cmd) => command.default.data.name == cmd.data.name
+                )
+            ) {
+                log.fatal(
+                    `command '${command.default.data.name}' is unable to be processed due to posessing a duplicate name as another command`
+                );
                 continue;
             }
             if (
@@ -44,7 +52,7 @@ async function getCommands() {
 }
 
 await getCommands();
-log.debug("cached commands");
+log.info(`cached commands in ${(performance.now() - start).toFixed(3)}ms`);
 
 export default {
     commands: commands,
