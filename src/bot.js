@@ -66,6 +66,11 @@ client.on(Events.ClientReady, async () => {
         }
     }
 
+    client.user.setPresence({
+        activities: [{ name: "to the pepper whispers.", type: "LISTENING" }],
+    });
+    log.info("edited presence");
+
     log.info("bot ready to serve");
     log.debug(`running on ${process.platform} ${process.arch}`);
     const memory = process.memoryUsage();

@@ -14,9 +14,11 @@ p/update
 
 **actual content:**
 
-- updated website since last thing (logs)
-- PEPPERBOT. STATUS.
+- updated website since last time i said anything (logs)
+- pepperbot may or may not have status now? idk it won't show up for me
+- p/eval command (lmao you thought i wouldn't do it (i see actual use for me for it now))
 
 **fixes/optimizations:**
 
 - fixed p/embed: subcommand missing choices for save / load
+- fixed errors caused by undefined arguments

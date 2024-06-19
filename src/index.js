@@ -8,12 +8,18 @@ import fs from "fs";
 import prettyBytes from "pretty-bytes";
 import path from "node:path";
 import { stat } from "fs/promises";
+import { spawn } from "node:child_process";
 
 const app = express();
 const startedAt = Date.now();
 const date = new Date(startedAt);
 const humanReadableDate = date.toLocaleString();
 const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
+
+function fullRestart() {
+    log.warn("fullreset called, killing host");
+    process.exit();
+}
 
 const dirSize = async (directory) => {
     let files = fs.readdirSync(directory);
@@ -44,9 +50,17 @@ app.get("/", (request, response) => {
     return response.sendFile(`${rootPath}/index.html`, { root: rootPath });
 });
 
-app.listen(config.WebServer.port, "0.0.0.0", () =>
-    log.info(`app listening at http://localhost:${config.WebServer.port}`)
-);
+setTimeout(() => {
+    try {
+        app.listen(config.WebServer.port, "0.0.0.0", () =>
+            log.info(
+                `app listening at http://localhost:${config.WebServer.port}`
+            )
+        );
+    } catch (err) {
+        log.fatal(`unable to listen to port: ${err}`);
+    }
+}, 2000); // this is needed because if i restart this process it will error because the port hasn't been cleared yet
 
 app.use((err, req, res, next) => {
     log.error(err.stack);
@@ -112,9 +126,9 @@ manager
     .then((shards) => {
         shards.forEach((shard) => {
             shard.on("message", (message) => {
-                //log.info(
-                //`Shard[${shard.id}] : ${message._eval} : ${message._result}`
-                //);
+                if (message == "fullrestart") {
+                    fullRestart();
+                }
                 return message._result;
             });
         });
