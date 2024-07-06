@@ -30,7 +30,7 @@ nicknamedata.setCanRunFromBot(true);
 const nickname = new SubCommand(
     nicknamedata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
     async function execute(message, args, fromInteraction) {
         const randomVerb =
@@ -56,7 +56,7 @@ rmessagedata.setCanRunFromBot(true);
 const rmessage = new SubCommand(
     rmessagedata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
     async function execute(message, args, fromInteraction) {
         const channel = message.channel;
@@ -82,7 +82,6 @@ const rmessage = new SubCommand(
         }
         action.reply(message, {
             content: randomMessage.content,
-            files: randomMessage.attachments,
         });
     }
 );
@@ -97,20 +96,16 @@ namedata.setCanRunFromBot(true);
 const name = new SubCommand(
     namedata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
     async function execute(message, args, fromInteraction) {
         const randomFirstName =
-            deepwoken_names.default.firstNames[
-                Math.floor(
-                    Math.random() * deepwoken_names.default.firstNames.length
-                )
+            deepwoken_names.firstNames[
+                Math.floor(Math.random() * deepwoken_names.firstNames.length)
             ];
         const randomLastName =
-            deepwoken_names.default.lastNames[
-                Math.floor(
-                    Math.random() * deepwoken_names.default.lastNames.length
-                )
+            deepwoken_names.lastNames[
+                Math.floor(Math.random() * deepwoken_names.lastNames.length)
             ];
         if (message)
             action.reply(message, randomFirstName + " " + randomLastName);
@@ -128,7 +123,7 @@ sounddata.setCanRunFromBot(true);
 const sound = new SubCommand(
     sounddata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
     async function execute(message, args, fromInteraction) {
         let connection = await voice.getVoiceConnection(message.guild.id);
@@ -221,7 +216,7 @@ pepperdata.setCanRunFromBot(true);
 const pepper = new SubCommand(
     pepperdata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
     async function execute(message, args, fromInteraction) {
         const maxRan = pepperfiles.length;
@@ -249,7 +244,7 @@ freshiedata.setCanRunFromBot(true);
 const freshie = new SubCommand(
     freshiedata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
     async function execute(message, args, fromInteraction) {
         const freshie = createRandomFreshie();

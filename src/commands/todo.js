@@ -106,16 +106,22 @@ const ActionRow = new ActionRowBuilder().addComponents(
     buttons.switch
 );
 
-function refresh(authorId) {
+function refresh(authorId, fromInteraction) {
     const latestEmbed = latestEmbeds[authorId];
     if (!latestEmbed) return;
-    const message = latestEmbed.message;
+    let message = latestEmbed.message;
+    if (!message) {
+        message = latestEmbed.executedMessage;
+    }
     if (!message) return;
+    if (latestEmbed.isInteraction) {
+        message = message.interaction;
+    }
     const whichList = whichListForUser[authorId] || "main";
     const l = ensureList(authorId, whichList);
     const list = readList(authorId, whichList);
     const embed = default_embed().setTitle(
-        `${message.author.username}'s "${whichList}"`
+        `${latestEmbed.executedMessage.author.username}'s "${whichList}"`
     );
     let text = "";
 
@@ -129,7 +135,14 @@ function refresh(authorId) {
     } else {
         embed.setDescription(text);
     }
-    message.edit({
+    if (latestEmbed.isInteraction) {
+        action.editInteractionReply(latestEmbed.executedMessage, {
+            embeds: [embed],
+            components: [ActionRow],
+        });
+        return;
+    }
+    action.editMessage(message, {
         embeds: [embed],
         components: [ActionRow],
     });
@@ -570,7 +583,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
 data.setDMPermission(true);
-data.setAliases();
+data.setAliases(["list"]);
 data.addStringOption((option) =>
     option
         .setName("subcommand")
@@ -652,7 +665,15 @@ const command = new Command(
                     components: [],
                 });
             });
-        latestEmbeds[message.author.id] = { message: sent, embed: embed };
+        if (fromInteraction) {
+            message.author = message.user;
+        }
+        latestEmbeds[message.author.id] = {
+            message: sent,
+            embed: embed,
+            executedMessage: message,
+            isInteraction: fromInteraction,
+        };
     },
     [addTask, removeTask, checkOffTask, switchc, which] // subcommands
 );

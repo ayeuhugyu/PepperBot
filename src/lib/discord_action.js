@@ -191,3 +191,25 @@ export async function editMessage(message, content) {
         log.error(err);
     }
 }
+
+export async function editInteractionReply(interaction, content) {
+    if (!interaction) {
+        log.warn("attempt to edit a message that does not exist");
+        return;
+    }
+    try {
+        log.info(
+            `editing message: ${interaction.id} with content: ${
+                (await fixMsg(content)).content
+            }`
+        );
+        const sent = await interaction
+            .editReply(await fixMsg(content))
+            .catch(async (err) => {
+                log.error(err);
+            });
+        return sent;
+    } catch (err) {
+        log.error(err);
+    }
+}

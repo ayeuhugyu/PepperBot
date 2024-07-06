@@ -11,6 +11,7 @@ import fs from "fs";
 import { client } from "../bot.js";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
+import guildConfigs from "../lib/guildConfigs.js";
 
 const config = globals.config;
 
@@ -49,6 +50,12 @@ const command = new Command(
     async function execute(message, args) {
         const embed = await default_embed();
         let guilds = await client.shard.fetchClientValues("guilds.cache");
+        let hiddenGuilds = Object.entries(guildConfigs.guildConfigs)
+            .filter(
+                ([guildId, guildConfig]) => guildConfig.exploreVisible === false
+            )
+            .map(([guildId, guildConfig]) => guildId);
+
         if (!args.get("server")) {
             // display servers list
             let guildList = "";
@@ -56,18 +63,32 @@ const command = new Command(
             guilds.forEach((guildsCache) => {
                 guildSize += guildsCache.length;
                 guildsCache.forEach((guild) => {
-                    if (guild.id.toString() !== "1213676235243388989") {
+                    if (!hiddenGuilds.includes(guild.id)) {
                         guildList += `${guild.name} - ${guild.id}\n`;
                     }
                 });
             });
-            embed.setTitle(guildSize + " Servers");
+            embed.setTitle(
+                `${guildSize} servers ${
+                    hiddenGuilds.length > 0
+                        ? `(${hiddenGuilds.length} hidden)`
+                        : ""
+                }`
+            );
             embed.setDescription(guildList);
             action.reply(message, { embeds: [embed], ephemeral: true });
             return;
         }
         if (args.get("server")) {
             // display server info
+            if (hiddenGuilds.includes(args.get("server"))) {
+                action.reply(message, {
+                    content:
+                        "this server is hidden, so i can't display info for it",
+                    ephemeral: true,
+                });
+                return;
+            }
             let guild = message.client.guilds.cache.get(args.get("server"));
             if (!guild) {
                 guilds.forEach((guildsCache) => {

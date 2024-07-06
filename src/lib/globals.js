@@ -68,4 +68,4 @@ if (!verbsNonDefault || !verbsNonDefault.default)
     throw new Error("verbs.json unable to be imported");
 export const verbs = verbsNonDefault.default;
 
-log.info(`loaded JSONs in ${(performance.now() - start).toFixed(3)}ms`);
+log.info(`loaded global JSONs in ${(performance.now() - start).toFixed(3)}ms`);

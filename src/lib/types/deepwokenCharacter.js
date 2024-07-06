@@ -1,6 +1,6 @@
 import * as log from "../log.js";
 import fs from "node:fs";
-import * as globals from "../globals.js"
+import * as globals from "../globals.js";
 
 export const races = {
     Capra: "Capra",
@@ -290,16 +290,14 @@ export class Character {
     }
 }
 
-const deepwoken_names = globals.deepwoken_names
+const deepwoken_names = globals.deepwoken_names;
 
 export function randomName(race) {
     const randomFirstName =
-        deepwoken_names.default.firstNames[
-            Math.floor(
-                Math.random() * deepwoken_names.default.firstNames.length
-            )
+        deepwoken_names.firstNames[
+            Math.floor(Math.random() * deepwoken_names.firstNames.length)
         ];
-    const lastNames = deepwoken_names.default.lastNamesForRace[race];
+    const lastNames = deepwoken_names.lastNamesForRace[race];
     const randomLastName =
         lastNames[Math.floor(Math.random() * lastNames.length)];
     return randomFirstName + " " + randomLastName;

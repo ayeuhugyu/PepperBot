@@ -105,6 +105,19 @@ async function processDiabolicalEvent(message) {
                 ];
             message.react(emoji);
         }
+        if (random > 246.5 && random < 249) {
+            // ~1%
+            log.info(`diabolical thread event triggered on ${message.id}`);
+            message
+                .startThread({
+                    name: "Threaded! 🧵",
+                    autoArchiveDuration: 60,
+                    reason: "It's quite diabolical.",
+                })
+                .then((thread) => {
+                    thread.send("You've just been threaded! 🧵");
+                });
+        }
         if (random > 249) {
             // ~0.4%
             log.info(`diabolical event triggered on ${message.id}`);
@@ -123,7 +136,8 @@ async function processGPTResponse(message) {
             message.mentions.has(client.user) &&
             !message.content
                 .toLowerCase()
-                .startsWith(config.generic.prefix.toLowerCase())
+                .startsWith(config.generic.prefix.toLowerCase()) &&
+            !message.mentions.everyone
         ) {
             if (!message.author.bot) {
                 let completion = await gpt.respond(message).catch((err) => {
@@ -229,7 +243,9 @@ async function getIsDisgraceful(message) {
         if (message.channel && message.channel.id == "1171660137946157146") {
             if (
                 message.member.id !== "440163494529073152" &&
-                message.member.id !== message.client.user.id
+                message.member.id !== message.client.user.id &&
+                message.member.id !== "1209297323029565470" &&
+                message.member.id !== "1148796261793800303"
             ) {
                 await action.sendDM(message.author, {
                     content: "Disgraceful.",

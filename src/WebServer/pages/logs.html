@@ -145,70 +145,55 @@
             };
         </script>
         <script>
+            function processLogs(containerId, logs, keyword, color) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = ""; // Clear existing content
+                logs.split("\n").forEach((log) => {
+                    const keywordIndex = log.indexOf(keyword);
+                    if (keywordIndex === -1) {
+                        // If the keyword is not found, display the log as is.
+                        const lineElement = document.createElement("div");
+                        lineElement.innerText = log;
+                        container.appendChild(lineElement);
+                    } else {
+                        // If the keyword is found, split and display accordingly.
+                        const beforeKeyword = log.substring(0, keywordIndex);
+                        const afterKeyword = log.substring(
+                            keywordIndex + keyword.length
+                        );
+
+                        const lineElement = document.createElement("div");
+
+                        // Part before the keyword
+                        const beforeSpan = document.createElement("span");
+                        beforeSpan.style.color = "#7d848e";
+                        beforeSpan.innerText = beforeKeyword;
+                        lineElement.appendChild(beforeSpan);
+
+                        // Keyword part
+                        const keywordSpan = document.createElement("span");
+                        keywordSpan.innerHTML = `<span style="color: ${color}">${keyword}</span>`;
+                        lineElement.appendChild(keywordSpan);
+
+                        // Part after the keyword
+                        const afterSpan = document.createElement("span");
+                        afterSpan.innerText = afterKeyword;
+                        lineElement.appendChild(afterSpan);
+
+                        container.appendChild(lineElement);
+                    }
+                });
+            }
             fetch("/read-logs")
                 .then((response) => response.text())
                 .then((data) => {
                     const jsonData = JSON.parse(data);
-                    document.getElementById("error").innerHTML = jsonData.errors
-                        .split("\n")
-                        .map((error) => {
-                            const errorMessage = error.substring(
-                                0,
-                                error.indexOf("ERROR")
-                            );
-                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
-                            return error.replace(errorMessage, errorSpan);
-                        })
-                        .join("\n")
-                        .replaceAll(
-                            /ERROR/g,
-                            '<span style="color: #d67b51">ERROR</span>'
-                        );
-                    document.getElementById("warn").innerHTML = jsonData.warns
-                        .split("\n")
-                        .map((error) => {
-                            const errorMessage = error.substring(
-                                0,
-                                error.indexOf("WARN")
-                            );
-                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
-                            return error.replace(errorMessage, errorSpan);
-                        })
-                        .join("\n")
-                        .replaceAll(
-                            /WARN/g,
-                            '<span style="color: #dfc623">WARN</span>'
-                        );
-                    document.getElementById("info").innerHTML = jsonData.info
-                        .split("\n")
-                        .map((error) => {
-                            const errorMessage = error.substring(
-                                0,
-                                error.indexOf("INFO")
-                            );
-                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
-                            return error.replace(errorMessage, errorSpan);
-                        })
-                        .join("\n")
-                        .replaceAll(
-                            /INFO/g,
-                            '<span style="color: #acdee4">INFO</span>'
-                        );
-                    document.getElementById("debug").innerHTML = jsonData.debug
-                        .split("\n")
-                        .map((error) => {
-                            const errorMessage = error.substring(
-                                0,
-                                error.indexOf("DEBUG")
-                            );
-                            const errorSpan = `<span style="color: #7d848e">${errorMessage}</span>`;
-                            return error.replace(errorMessage, errorSpan);
-                        })
-                        .join("\n")
-                        .replaceAll(
-                            /DEBUG/g,
-                            '<span style="color: #b4bfcf">DEBUG</span>'
-                        );
+                    const errorContainer = document.getElementById("error");
+                    errorContainer.innerHTML = ""; // Clear existing content
+                    processLogs("error", jsonData.errors, "ERROR", "#d67b51");
+                    processLogs("warn", jsonData.warns, "WARN", "#dfc623");
+                    processLogs("info", jsonData.info, "INFO", "#acdee4");
+                    processLogs("debug", jsonData.debug, "DEBUG", "#b4bfcf");
                     let preElements = document.querySelectorAll("pre");
                     preElements.forEach(function (pre) {
                         pre.scrollTop = pre.scrollHeight;

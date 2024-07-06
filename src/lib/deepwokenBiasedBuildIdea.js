@@ -97,6 +97,7 @@ export const weapons = {
         "Crypt Blade": 0,
         "Ignition Deepcrusher": 0,
         "Ysley's Pyre Keeper": 0,
+        Deepspindle: 0,
     },
 };
 const weaponCategoryWeights = {
@@ -118,7 +119,7 @@ export const attunedWeapons = {
     Thundercall: ["Hero Blade of Lightning", "Stormseye"],
     Frostdraw: ["Hero Blade of Frost", "Gran Sudaruska"],
     Galebreathe: ["Hero Blade of Wind", "Curved Blade of the Winds"],
-    Shadowcast: ["Hero Blade of Shadow", "Crypt Blade"],
+    Shadowcast: ["Hero Blade of Shadow", "Crypt Blade", "Deepspindle"],
     Ironsing: ["Ignition Deepcrusher"],
 };
 export const oaths = {
@@ -156,8 +157,9 @@ export const armors = {
     "Prophet's Cloak": 0.15,
     "Royal Etrean Guard": 0,
     "Summer Dragoon": 0,
-    "Windrunner Robes": 0.15,
+    "Windrunner Robes": 0.1,
     "Ferryman's Coat": 0.05,
+    "Darkened Bastion": 0.1,
 };
 export const attunements = {
     "Attunement-less": 0.65,
@@ -358,6 +360,7 @@ export function adjustWeightsForAttunements(weights, attunements) {
                 newWeights.weaponCategory.Attuned += 0.5;
                 newWeights.weapons.Attuned["Hero Blade of Shadow"] += 0.5;
                 newWeights.weapons.Attuned["Crypt Blade"] += 0.5;
+                newWeights.weapons.Attuned["Deepspindle"] += 0.5;
                 newWeights.oaths.Contractor += 0.15;
                 newWeights.focuses.Zoning += 0.15;
                 break;
@@ -429,10 +432,10 @@ export function adjustWeightsForWeapon(weights, weapon, category) {
         ) {
             newWeights.armors["Navaen War Chief"] += 0.45;
         } else if (
-            (weapon == "Legion Kata") ||
-            (weapon == "Coral Cestus") ||
-            (weapon == "Drakemaw Gauntlets") ||
-            (weapon == "Flamekeeper Cestus")
+            weapon == "Legion Kata" ||
+            weapon == "Coral Cestus" ||
+            weapon == "Drakemaw Gauntlets" ||
+            weapon == "Flamekeeper Cestus"
         ) {
             newWeights.armors["Legion Centurion"] += 0.45;
         } else if (weapon == "Light's Final Toll") {
@@ -584,6 +587,11 @@ export function fixAttunementLacking(weapon, attunements, oath) {
             }
             break;
         case "Crypt Blade":
+            if (!attunements.includes("Shadowcast")) {
+                attunements.push("Shadowcast");
+            }
+            break;
+        case "Deepspindle":
             if (!attunements.includes("Shadowcast")) {
                 attunements.push("Shadowcast");
             }

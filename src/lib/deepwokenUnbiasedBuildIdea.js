@@ -48,6 +48,7 @@ export const weapons = [
     "Crypt Blade",
     "Ignition Deepcrusher",
     "Ysley's Pyre Keeper",
+    "Deepspindle",
 ];
 export const oaths = [
     "Arcwarder",
@@ -85,6 +86,7 @@ export const armors = [
     "Summer Dragoon",
     "Windrunner Robes",
     "Ferryman's Coat",
+    "Darkened Bastion",
 ];
 export const attunements = [
     "Attunement-less",
