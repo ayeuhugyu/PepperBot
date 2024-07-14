@@ -25,9 +25,9 @@ export async function generateLSText(path, truncateFileExtensions) {
 }
 
 export async function textToFile(text, name) {
-    fsextra.ensureFileSync(`resources/containers/${name}.txt`);
+    await fsextra.ensureFile(`resources/containers/${name}.txt`, () => {});
     const file = `resources/containers/${name}.txt`;
-    await fs.writeFileSync(file, text);
+    await fs.writeFile(file, text, () => {});
     return file;
 }
 

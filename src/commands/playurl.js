@@ -2,7 +2,7 @@ import * as action from "../lib/discord_action.js";
 import fs from "fs";
 import fsextra from "fs-extra";
 import * as voice from "../lib/voice.js";
-import ytdl from "ytdl-core";
+import ytdl from "@distube/ytdl-core";
 import * as log from "../lib/log.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
@@ -119,16 +119,27 @@ const command = new Command(
                     const correctedFileName = files.fixFileName(
                         info.videoDetails.title
                     );
+                    let redownload = false;
                     if (sounds.includes(`${correctedFileName}.webm`)) {
-                        action.reply(
-                            message,
-                            `playing \`${correctedFileName}.webm\``
-                        );
-                        const resource = await voice.createAudioResource(
-                            `resources/ytdl_cache/${correctedFileName}.webm`
-                        );
-                        audioPlayer.play(resource);
-                        return;
+                        const filePath = `resources/ytdl_cache/${correctedFileName}.webm`;
+                        const stats = fs.statSync(filePath);
+                        const fileSizeInBytes = stats.size;
+
+                        if (fileSizeInBytes < 1) {
+                            fs.unlinkSync(filePath);
+                            redownload = true;
+                        }
+                        if (!redownload) {
+                            action.reply(
+                                message,
+                                `playing \`${correctedFileName}.webm\``
+                            );
+                            const resource = await voice.createAudioResource(
+                                `resources/ytdl_cache/${correctedFileName}.webm`
+                            );
+                            audioPlayer.play(resource);
+                            return;
+                        }
                     }
                     if (info.lengthSeconds > 60 * 120) {
                         action.reply(
@@ -136,10 +147,18 @@ const command = new Command(
                         );
                         return;
                     }
-                    let msg = await action.reply(
-                        message,
-                        `downloading \`${correctedFileName}.webm\`...`
-                    );
+                    let msg;
+                    if (redownload) {
+                        msg = await action.reply(
+                            message,
+                            `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`
+                        );
+                    } else {
+                        msg = await action.reply(
+                            message,
+                            `downloading \`${correctedFileName}.webm\`...`
+                        );
+                    }
                     fsextra.ensureFileSync(
                         `resources/ytdl_cache/${correctedFileName}.webm`
                     );

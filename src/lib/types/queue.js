@@ -1,6 +1,6 @@
 import * as log from "../log.js";
 import * as voice from "../voice.js";
-import ytdl from "ytdl-core";
+import ytdl from "@distube/ytdl-core";
 import fs from "node:fs";
 import Events from "node:events";
 import * as action from "../discord_action.js";
@@ -75,49 +75,65 @@ async function download(url, queueManager) {
                 queueManager.messageChannel,
                 `checking for existence of \`${correctedFileName}.webm\`...`
             );
+            let redownload = false;
             if (sounds.includes(`${correctedFileName}.webm`)) {
+                const filePath = `resources/ytdl_cache/${correctedFileName}.webm`;
+                const stats = fs.statSync(filePath);
+                const fileSizeInBytes = stats.size;
+
+                if (fileSizeInBytes < 1) {
+                    fs.unlinkSync(filePath);
+                    redownload = true;
+                }
+                if (!redownload) {
+                    await action.editMessage(
+                        msg,
+                        `playing \`${correctedFileName}.webm\``
+                    );
+                    resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
+                }
+                return;
+            }
+            if (redownload) {
                 await action.editMessage(
                     msg,
-                    `playing \`${correctedFileName}.webm\``
+                    `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`
                 );
-                resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
             } else {
                 await action.editMessage(
                     msg,
                     `downloading \`${correctedFileName}.webm\`...`
                 );
-                fsextra.ensureFileSync(
-                    `resources/ytdl_cache/${correctedFileName}.webm`
-                );
-                await ytdl(url, { filter: "audioonly" })
-                    .pipe(
-                        fs.createWriteStream(
-                            `resources/ytdl_cache/${correctedFileName}.webm`
-                        )
-                    )
-                    .on("finish", async () => {
-                        action.editMessage(
-                            msg,
-                            `playing \`${correctedFileName}.webm\``
-                        );
-                        resolve(
-                            `resources/ytdl_cache/${correctedFileName}.webm`
-                        );
-                    })
-                    .on("error", (err) => {
-                        log.error(err);
-                        if (err.statusCode === 410) {
-                            action.sendMessage(
-                                queueManager.messageChannel,
-                                'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
-                            );
-                        }
-                        fs.unlinkSync(
-                            `resources/ytdl_cache/${correctedFileName}.webm`
-                        );
-                        reject();
-                    });
             }
+            fsextra.ensureFileSync(
+                `resources/ytdl_cache/${correctedFileName}.webm`
+            );
+            await ytdl(url, { filter: "audioonly" })
+                .pipe(
+                    fs.createWriteStream(
+                        `resources/ytdl_cache/${correctedFileName}.webm`
+                    )
+                )
+                .on("finish", async () => {
+                    action.editMessage(
+                        msg,
+                        `playing \`${correctedFileName}.webm\``
+                    );
+                    resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
+                })
+                .on("error", (err) => {
+                    log.error(err);
+                    if (err.statusCode === 410) {
+                        action.sendMessage(
+                            queueManager.messageChannel,
+                            'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
+                        );
+                    }
+                    fs.unlinkSync(
+                        `resources/ytdl_cache/${correctedFileName}.webm`
+                    );
+                    reject();
+                });
         });
     } catch (err) {
         log.error(err);

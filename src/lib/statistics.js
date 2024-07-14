@@ -19,9 +19,10 @@ export default {
                 statistics["Command Usage"][stat] = 0;
             }
             statistics["Command Usage"][stat] += amount;
-            fs.writeFileSync(
+            fs.writeFile(
                 `resources/data/statistics.json`,
-                JSON.stringify(statistics, null, 2)
+                JSON.stringify(statistics, null, 2),
+                () => {}
             );
             resolve();
         });
@@ -32,9 +33,10 @@ export default {
                 statistics["GPT Messages"] = 0;
             }
             statistics["GPT Messages"] += amount;
-            fs.writeFileSync(
+            fs.writeFile(
                 `resources/data/statistics.json`,
-                JSON.stringify(statistics, null, 2)
+                JSON.stringify(statistics, null, 2),
+                () => {}
             );
             resolve();
         });

@@ -4,14 +4,10 @@
         <title>Pepper Site</title>
         <link rel="stylesheet" type="text/css" href="../style.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
-        <meta content="Embed Title" property="og:title" />
-        <meta content="Site Description" property="og:description" />
-        <meta
-            content="https://embed.com/this-is-the-site-url"
-            property="og:url"
-        />
-        <meta content="https://embed.com/embedimage.png" property="og:image" />
-        <meta content="#43B581" data-react-helmet="true" name="theme-color" />
+        <meta content="ze peppersite" property="og:title" />
+        <meta content="ye" property="og:description" />
+        <meta content="http://199.58.97.155" property="og:url" />
+        <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
     </head>
     <body>
         <div class="sidebar">
@@ -60,6 +56,14 @@
                 onauxclick="openInNewTab(this.id)"
             >
                 Credits
+            </div>
+            <div
+                class="sidebarButton"
+                id="/pages/shame.html"
+                onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
+            >
+                Shame
             </div>
             <script>
                 document.addEventListener("keydown", (event) => {
@@ -122,11 +126,20 @@
             </script>
         </div>
         <h1 id="mainTitle">Logs</h1>
+
+        <div class="dropdown-wrapper">
+            <select class="logLevelDropdown">
+                <option class="logLevelDropdownOption" value="-">-</option>
+                <option value="INFO">INFO</option>
+                <option value="DEBUG">DEBUG</option>
+                <option value="WARN">WARN</option>
+                <option value="ERROR">ERROR</option>
+                <option value="FATAL">FATAL</option>
+            </select>
+        </div>
+
         <div class="logFileContentContainer">
-            <pre class="logFileContent" id="error"></pre>
-            <pre class="logFileContent" id="warn"></pre>
-            <pre class="logFileContent" id="info"></pre>
-            <pre class="logFileContent" id="debug"></pre>
+            <pre class="logFileContent" , id="logFileContent"></pre>
         </div>
         <script>
             window.onload = function () {
@@ -184,22 +197,59 @@
                     }
                 });
             }
-            fetch("/read-logs")
-                .then((response) => response.text())
-                .then((data) => {
-                    const jsonData = JSON.parse(data);
-                    const errorContainer = document.getElementById("error");
-                    errorContainer.innerHTML = ""; // Clear existing content
-                    processLogs("error", jsonData.errors, "ERROR", "#d67b51");
-                    processLogs("warn", jsonData.warns, "WARN", "#dfc623");
-                    processLogs("info", jsonData.info, "INFO", "#acdee4");
-                    processLogs("debug", jsonData.debug, "DEBUG", "#b4bfcf");
-                    let preElements = document.querySelectorAll("pre");
-                    preElements.forEach(function (pre) {
-                        pre.scrollTop = pre.scrollHeight;
-                    });
-                })
-                .catch((error) => console.error("Error:", error));
+            const logLevelDropdown =
+                document.querySelector(".logLevelDropdown");
+            const container = document.querySelector("#logFileContent");
+            container.innerText =
+                "select a log file to view from the dropdown above";
+            logLevelDropdown.addEventListener("change", () => {
+                const selectedLevel = logLevelDropdown.value;
+                if (selectedLevel === "-") {
+                    container.innerHTML = ""; // Clear existing content
+                    container.innerText =
+                        "select a log file to view from the dropdown above";
+                    return;
+                }
+                container.innerHTML = ""; // Clear existing content
+                container.innerText = `reading ${selectedLevel.toLowerCase()}.log...`;
+                fetch(`/read-log?level=${selectedLevel.toLowerCase()}`)
+                    .then((response) => response.text())
+                    .then((data) => {
+                        const container =
+                            document.querySelector("#logFileContent");
+                        console.log(container);
+                        container.innerHTML = ""; // Clear existing content
+                        processLogs(
+                            "logFileContent",
+                            data,
+                            selectedLevel.toUpperCase(),
+                            getColor(selectedLevel)
+                        );
+                        let preElements = document.querySelectorAll("pre");
+                        preElements.forEach(function (pre) {
+                            pre.scrollTop = pre.scrollHeight;
+                        });
+                    })
+                    .catch((error) => console.error("Error:", error));
+            });
+            document.body.appendChild(logLevelDropdown);
+
+            function getColor(level) {
+                switch (level) {
+                    case "ERROR":
+                        return "#d67b51";
+                    case "WARN":
+                        return "#dfc623";
+                    case "INFO":
+                        return "#acdee4";
+                    case "DEBUG":
+                        return "#b4bfcf";
+                    case "FATAL":
+                        return "#ff0000";
+                    default:
+                        return "#ffffff";
+                }
+            }
         </script>
     </body>
 </html>

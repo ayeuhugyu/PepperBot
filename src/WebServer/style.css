@@ -11,6 +11,38 @@ html {
     border: 5px solid #7800ab;
     height: calc(100% - 10px);
 }
+select {
+    background-color: #1E1E2E;
+    color: white;
+    border: 1px solid #cca1db;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+    cursor: pointer;
+}
+select:focus {
+    outline: none; /* Optionally remove the default focus outline */
+}
+option {
+    background-color: #1E1E2E;
+    color: white;
+    cursor: pointer;
+}
+option:hover {
+    background-color: #2a1d3e;
+    cursor: pointer;
+}
+option:focus {
+    background-color: #2a1d3e;
+    cursor: pointer;
+}
+
+.logLevelDropdown {
+    position: absolute;
+    top: 15px;
+    left: 25%;
+}
+
 #mainTitle {
     text-align: center;
     text-decoration: underline;
@@ -69,7 +101,8 @@ html {
     position: absolute;
     max-height: calc(100% - 20px);
     overflow-y: auto;
-    width: 25%;
+    width: 100%;
+    height: 100%;
     border: 1px solid #cca1db;
     padding: 10px;
     box-sizing: border-box;
@@ -94,6 +127,16 @@ html {
     width: 5px; /* Width of the vertical scrollbar */
     height: 5px; /* Height of the horizontal scrollbar */
 }
+
+#chartContainer {
+    position: absolute;
+    width: calc(100% - 5px);
+}
+#statsContainer {
+    position: absolute;
+    width: calc(100% - 5px);
+}
+
 #error {
     right: 75%;
 }

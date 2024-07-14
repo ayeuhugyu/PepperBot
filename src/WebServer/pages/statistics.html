@@ -4,14 +4,10 @@
         <title>Pepper Site</title>
         <link rel="stylesheet" type="text/css" href="../style.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
-        <meta content="Embed Title" property="og:title" />
-        <meta content="Site Description" property="og:description" />
-        <meta
-            content="https://embed.com/this-is-the-site-url"
-            property="og:url"
-        />
-        <meta content="https://embed.com/embedimage.png" property="og:image" />
-        <meta content="#43B581" data-react-helmet="true" name="theme-color" />
+        <meta content="ze peppersite" property="og:title" />
+        <meta content="ye" property="og:description" />
+        <meta content="http://199.58.97.155" property="og:url" />
+        <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
     </head>
     <body>
         <div class="sidebar">
@@ -60,6 +56,14 @@
                 onauxclick="openInNewTab(this.id)"
             >
                 Credits
+            </div>
+            <div
+                class="sidebarButton"
+                id="/pages/shame.html"
+                onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
+            >
+                Shame
             </div>
             <script>
                 document.addEventListener("keydown", (event) => {
@@ -123,14 +127,102 @@
         </div>
         <pre id="fileContents" style="position: absolute"></pre>
         <h1 id="mainTitle">Statistics</h1>
+        <div id="chartContainer"></div>
+        <div id="statsContainer"></div>
+        <script>
+            window.onload = function () {
+                const mainTitle = document.getElementById("mainTitle");
+                const chartContainer =
+                    document.getElementById("chartContainer");
+                const statsContainer =
+                    document.getElementById("statsContainer");
 
+                if (mainTitle && chartContainer && statsContainer) {
+                    const mainTitleBottom =
+                        mainTitle.offsetTop + mainTitle.offsetHeight;
+                    chartContainer.style.top = `${mainTitleBottom + 5}px`;
+                    const maxHeight = window.innerHeight - mainTitleBottom;
+                    chartContainer.style.height = `0px`;
+                    chartContainer.style.position = "absolute";
+                    statsContainer.style.position = "absolute";
+                    statsContainer.style.bottom = "5px";
+                }
+            };
+        </script>
         <script>
             fetch("/read-statistics")
                 .then((response) => response.text())
                 .then((data) => {
                     const jsonData = JSON.parse(data);
-                    document.getElementById("fileContents").innerHTML =
-                        JSON.stringify(jsonData, null, 4);
+                    const usageArray = Object.entries(
+                        jsonData.usage["Command Usage"]
+                    );
+                    usageArray.sort((a, b) => b[1] - a[1]);
+
+                    const chartContainer =
+                        document.getElementById("chartContainer");
+                    const totalUsage = usageArray.reduce(
+                        (total, [command, count]) => total + count,
+                        0
+                    );
+                    usageArray.forEach(([command, count]) => {
+                        const bar = document.createElement("div");
+                        bar.classList.add("bar");
+                        const highestCount = usageArray[0][1];
+                        const roundedHighestCount =
+                            Math.ceil(highestCount / 50) * 50;
+                        console.log(roundedHighestCount);
+                        bar.style.width = `${
+                            (count / roundedHighestCount) * 100
+                        }%`;
+                        bar.textContent = `${command}: ${count} (${(
+                            (count / totalUsage) *
+                            100
+                        ).toFixed(2)}%)`;
+                        bar.style.backgroundColor = "#cca1db"; // Replace with desired background color
+                        bar.style.whiteSpace = "nowrap";
+                        bar.style.paddingLeft = "10px";
+                        bar.style.paddingBottom = "2px";
+                        bar.style.paddingTop = "2px";
+                        bar.style.outline = "1px solid black";
+                        chartContainer.appendChild(bar);
+                    });
+                    function formatTime(seconds) {
+                        const hours = Math.floor(seconds / 3600);
+                        const minutes = Math.floor((seconds % 3600) / 60);
+                        const remainingSeconds = seconds % 60;
+                        return `${padZero(hours)}:${padZero(minutes)}:${padZero(
+                            remainingSeconds
+                        )}`;
+                    }
+
+                    function padZero(number) {
+                        return number.toString().padStart(2, "0");
+                    }
+                    const statsContainer =
+                        document.getElementById("statsContainer");
+                    const stats = document.createElement("pre");
+                    stats.textContent = `
+                    version: ${jsonData.version}
+                    uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() - jsonData.startedAtTimestamp) / 1000
+                        )
+                    )}
+                    started at: ${jsonData.startedAt}
+                    system: ${jsonData.system}
+                    memory usage: ${jsonData.mem}
+                    wasted space: ${jsonData.wasted_space}
+                    total GPT messages: ${jsonData.usage["GPT Messages"]}
+                    total commands used: ${totalUsage}
+                    total running shards: ${jsonData.shardCount}
+                    `;
+                    statsContainer.appendChild(stats);
+
+                    document.body.appendChild(chartContainer);
+
+                    //document.getElementById("fileContents").innerHTML =
+                    //JSON.stringify(jsonData, null, 4);
                 })
                 .catch((error) => console.error("Error:", error));
         </script>

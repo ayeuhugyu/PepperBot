@@ -21,7 +21,11 @@ function getGuildConfig(guildId) {
 
 function writeGuildConfig(guildId) {
     const path = `resources/data/guildConfigs/${guildId}.json`;
-    fs.writeFileSync(path, JSON.stringify(guildConfigs[guildId], null, 4));
+    fs.writeFile(
+        path,
+        JSON.stringify(guildConfigs[guildId], null, 4),
+        () => {}
+    );
     return guildConfigs[guildId];
 }
 
@@ -48,10 +52,10 @@ function updateGuildConfig(guildId) {
         }
     }
     const path = `resources/data/guildConfigs/${guildId}.json`;
-    fs.writeFileSync(path, JSON.stringify(gconfig, null, 4));
+    fs.writeFile(path, JSON.stringify(gconfig, null, 4), () => {});
     if (missingKeys.length > 0 || extraKeys.length > 0) {
         log.info(
-            `updated guild config for ${guildId}; ${missingKeys.length} missing keys, ${extraKeys.length} extra keys`
+            `updating guild config for ${guildId}; ${missingKeys.length} missing keys, ${extraKeys.length} extra keys`
         );
     }
 }

@@ -150,12 +150,10 @@ async function fixIncomingMessage(message) {
                     }`;
                     attachedMessage += await fs.readFileSync(file, "utf-8");
                 } else {
-                    log.warn("gpt: file too large");
                     attachedMessage +=
                         "The user you are speaking with attached a file that exceeded the maximum file size of 25 megabytes. This message is not created by the user.";
                 }
             } else {
-                log.warn("gpt: invalid file extension");
                 attachedMessage +=
                     "The user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs. This message is not created by the user.";
             }
