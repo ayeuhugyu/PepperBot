@@ -8,6 +8,9 @@ import process from "node:process";
 
 const config = globals.config;
 
+log.info("update start timestamp for shard");
+process.send({ action: "setStartedAt" });
+
 export const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,

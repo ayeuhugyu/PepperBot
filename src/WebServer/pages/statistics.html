@@ -212,12 +212,6 @@
                     const stats = document.createElement("pre");
                     stats.textContent = `
                     version: ${jsonData.version}
-                    uptime: ${formatTime(
-                        Math.floor(
-                            (Date.now() - jsonData.startedAtTimestamp) / 1000
-                        )
-                    )}
-                    started at: ${jsonData.startedAt}
                     system: ${jsonData.system}
                     memory usage: ${jsonData.mem}
                     wasted space: ${jsonData.wasted_space}
@@ -225,6 +219,32 @@
                     total commands used: ${totalUsage}
                     total running shards: ${jsonData.shardCount}
                     total request count: ${jsonData.requestCount}
+
+                    site started at: ${jsonData.starts.site.startedAt}
+                    bot started at: ${jsonData.starts.bot.startedAt}
+                    shard started at: ${jsonData.starts.shard.startedAt}
+                    site uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() -
+                                jsonData.starts.site.startedAtTimestamp) /
+                                1000
+                        )
+                    )}
+                    bot uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() -
+                                jsonData.starts.bot.startedAtTimestamp) /
+                                1000
+                        )
+                    )}
+                    shard uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() -
+                                jsonData.starts.shard.startedAtTimestamp) /
+                                1000
+                        )
+                    )}
+
                     `;
                     statsContainer.appendChild(stats);
 

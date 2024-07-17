@@ -42,11 +42,17 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 
+const starts = {};
+
 const app = express();
-const startedAt = Date.now();
-const date = new Date(startedAt);
-const humanReadableDate = date.toLocaleString();
-const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
+const siteStartedAt = Date.now();
+const startedAtDate = new Date(siteStartedAt);
+const humanReadableDate = startedAtDate.toLocaleString();
+
+starts.site = {
+    startedAt: humanReadableDate,
+    startedAtTimestamp: siteStartedAt,
+};
 
 function kill() {
     log.info("kill called, killing site host");
@@ -149,8 +155,20 @@ app.get("/read-statistics", (req, res) => {
                     await dirSize("./resources/ytdl_cache/")
                 ),
                 system: `${process.platform} ${process.arch}`,
-                startedAt: humanReadableDate,
-                startedAtTimestamp: startedAt,
+                starts: {
+                    site: {
+                        startedAt: humanReadableDate,
+                        startedAtTimestamp: siteStartedAt,
+                    },
+                    bot: {
+                        startedAt: starts.bot.startedAt,
+                        startedAtTimestamp: starts.bot.startedAtTimestamp,
+                    },
+                    shard: {
+                        startedAt: starts.shard.startedAt,
+                        startedAtTimestamp: starts.shard.startedAtTimestamp,
+                    },
+                },
                 usage: JSON.parse(data),
                 shardCount: shardCount,
                 requestCount: requestCount,
@@ -161,8 +179,11 @@ app.get("/read-statistics", (req, res) => {
 });
 
 app.get("/test", (req, res) => {
-    res.send("test recieved");
+    res.send(`${req.ip} test recieved`);
 });
+
+const ipv4regex =
+    /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g;
 
 app.get("/read-log", (req, res) => {
     const logType = req.query.level;
@@ -175,6 +196,20 @@ app.get("/read-log", (req, res) => {
         const logContent = fs.readFileSync(logPath, "utf8");
         if (pretty) {
             return res.send(logContent.replace(/\n/g, "<br>"));
+        }
+        if (logType == "access") {
+            const matches = logContent.match(ipv4regex);
+            if (matches) {
+                const truncatedLogContent = logContent.replace(
+                    ipv4regex,
+                    (match) => {
+                        const parts = match.split(".");
+                        return `${parts[0]}.${parts[1].slice(0, 1)}...`;
+                    }
+                );
+                res.send(truncatedLogContent);
+                return;
+            }
         }
         res.send(logContent);
     } catch (err) {
@@ -211,6 +246,12 @@ process.on("message", (message) => {
     }
     if (message.action === "kill") {
         kill();
+        return;
+    }
+    if (message.action === "updateStartedAt") {
+        starts.bot = message.bot;
+        starts.shard = message.shard;
+        log.info("updated started at times");
         return;
     }
 });

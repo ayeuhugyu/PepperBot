@@ -12,6 +12,15 @@ const manager = new ShardingManager("src/bot.js", {
     totalShards: "auto",
 });
 
+const botStartedAt = Date.now();
+const startedAtDate = new Date(botStartedAt);
+const humanReadableDate = startedAtDate.toLocaleString();
+let shardStartedAt = botStartedAt;
+let shardStartedAtDate = startedAtDate;
+let shardHumanReadableDate = humanReadableDate;
+
+function handleSiteRequests(message) {}
+
 let site;
 function forkSite() {
     if (site) {
@@ -19,6 +28,20 @@ function forkSite() {
     }
     log.info("forking site.js");
     site = fork("src/site.js");
+    site.on("message", (message) => {
+        return handleSiteRequests(message);
+    });
+    site.send({
+        action: "updateStartedAt",
+        bot: {
+            startedAt: humanReadableDate,
+            startedAtTimestamp: botStartedAt,
+        },
+        shard: {
+            startedAt: shardHumanReadableDate,
+            startedAtTimestamp: shardStartedAt,
+        },
+    });
 }
 forkSite();
 
@@ -41,6 +64,23 @@ manager
             shard.on("message", (message) => {
                 if (message.action && message.action == "restartSite") {
                     forkSite();
+                }
+                if (message.action && message.action == "setStartedAt") {
+                    shardStartedAt = Date.now();
+                    shardStartedAtDate = new Date(shardStartedAt);
+                    shardHumanReadableDate =
+                        shardStartedAtDate.toLocaleString();
+                    site.send({
+                        action: "updateStartedAt",
+                        bot: {
+                            startedAt: humanReadableDate,
+                            startedAtTimestamp: botStartedAt,
+                        },
+                        shard: {
+                            startedAt: shardHumanReadableDate,
+                            startedAtTimestamp: shardStartedAt,
+                        },
+                    });
                 }
                 return message._result;
             });
