@@ -59,6 +59,14 @@
             </div>
             <div
                 class="sidebarButton"
+                id="/pages/contact.html"
+                onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
+            >
+                Contact
+            </div>
+            <div
+                class="sidebarButton"
                 id="/pages/shame.html"
                 onclick="redirectTo(this.id)"
                 onauxclick="openInNewTab(this.id)"
@@ -130,6 +138,7 @@
         <div class="dropdown-wrapper">
             <select class="logLevelDropdown">
                 <option class="logLevelDropdownOption" value="-">-</option>
+                <option value="ACCESS">ACCESS</option>
                 <option value="INFO">INFO</option>
                 <option value="DEBUG">DEBUG</option>
                 <option value="WARN">WARN</option>
@@ -246,6 +255,8 @@
                         return "#b4bfcf";
                     case "FATAL":
                         return "#ff0000";
+                    case "ACCESS":
+                        return "#ccffcc";
                     default:
                         return "#ffffff";
                 }

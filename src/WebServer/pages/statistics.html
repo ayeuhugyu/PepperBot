@@ -59,6 +59,14 @@
             </div>
             <div
                 class="sidebarButton"
+                id="/pages/contact.html"
+                onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
+            >
+                Contact
+            </div>
+            <div
+                class="sidebarButton"
                 id="/pages/shame.html"
                 onclick="redirectTo(this.id)"
                 onauxclick="openInNewTab(this.id)"
@@ -216,6 +224,7 @@
                     total GPT messages: ${jsonData.usage["GPT Messages"]}
                     total commands used: ${totalUsage}
                     total running shards: ${jsonData.shardCount}
+                    total request count: ${jsonData.requestCount}
                     `;
                     statsContainer.appendChild(stats);
 

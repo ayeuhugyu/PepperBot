@@ -14,27 +14,7 @@ p/update
 
 **actual content:**
 
-- added editInteractionReply function to discord action
-- added 'list' as an alias to p/todo
-- log dates now always have leading zeros
-- 🧵
-- updated deepwoken name pool
-- updated deepwoken weapon / outfit / oath pool
-- added celtor names (because yes seriously celtors just plain did not exist in my names file)
-- p/random name last names now includes dev/exclusive race last names
+- p/cquery embed now displays number of results
 
 **fixes/optimizations:**
 
-- fixed p/todo refresher not cleaning text of things like @ everyone and @ here
-- fixed p/todo changing username in title of list embed to be the bot's username after refreshing
-- fixed p/explore counting more guilds than are showing
-- fixed p/explore generating invites to hidden servers
-- fixed p/random message
-- fixed p/random freshie
-- fixed p/random name
-- fixed chyrsid also having every canor last name
-- fixed gpt responding to @ everyone or @ here pings
-- fixed html injection through logs (probably)
-- entirely rewrote the guild configs system because the previous wip version was absolutely horrendously bad
-- entirely rewrote the wip p/configure command because the previous one was going to be hellish to use, still haven't finished it yet so it is Not Available To The Public:tm:
-- fixed dev pepperbot deleting messages from pepperbot in the pepper channel and vice versa

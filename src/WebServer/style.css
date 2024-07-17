@@ -49,6 +49,7 @@ option:focus {
     position: absolute;
     top: 0%;
     left: 50%;
+    transform: translateX(-50%);
 }
 .accent {
     color: #7800ab;
@@ -135,6 +136,8 @@ option:focus {
 #statsContainer {
     position: absolute;
     width: calc(100% - 5px);
+    left: 60%;
+    top: 40%;
 }
 
 #error {

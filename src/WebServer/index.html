@@ -59,6 +59,14 @@
             </div>
             <div
                 class="sidebarButton"
+                id="/pages/contact.html"
+                onclick="redirectTo(this.id)"
+                onauxclick="openInNewTab(this.id)"
+            >
+                Contact
+            </div>
+            <div
+                class="sidebarButton"
                 id="/pages/shame.html"
                 onclick="redirectTo(this.id)"
                 onauxclick="openInNewTab(this.id)"
@@ -128,11 +136,16 @@
 
         <h1 id="mainTitle">ze peppersite</h1>
         <h2>hello</h2>
-        <p>welcome to my lil segmentation fault of the internet</p>
-        <p>press k to see the actually useful stuff</p>
-        <p>
-            please note if you exceed the rate limit i will log your ip and i
-            will be investigating
-        </p>
+        <pre>
+welcome to my lil segmentation fault of the internet
+
+press k to see the actually useful stuff
+
+please note that by visiting this webpage you agree that your ip address WILL be findable somehow via this webpage, however this isn't much to worry about. 
+every website has your ip address, and even knowing someones ip address will only really be able to get you an extremely innaccurate general location. 
+if you're really worried, <a id="creditsanchor" href="/pages/contact.html">contact me</a> and i'll remove it.
+
+oh and by the way web crawlers and scanners of the internet, hi! you can politely fuck off now.
+        </pre>
     </body>
 </html>

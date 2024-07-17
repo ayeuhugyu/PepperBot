@@ -47,13 +47,14 @@ const command = new Command(
             query: args.get("query"),
             creatorId: 53815,
             quality: 240,
+            limit: 100,
         });
 
         const cleanResult = await adobe.cleanupSearchResults(result);
         if (cleanResult.length === 1) {
             const file = cleanResult[0];
             const embed = default_embed()
-                .setTitle(file.title)
+                .setTitle(`[1/1] - ${file.title}`)
                 .setImage(file.url)
                 .setURL(file.pageUrl);
             action.reply(message, {
@@ -62,9 +63,10 @@ const command = new Command(
             });
         } else if (cleanResult.length > 1) {
             const menu = new AdvancedPagedMenuBuilder();
+            const totalResults = cleanResult.length;
             cleanResult.forEach((file, index) => {
                 const embed = default_embed()
-                    .setTitle(`[${index + 1}] - ${file.title}`)
+                    .setTitle(`[${index + 1}/${totalResults}] - ${file.title}`)
                     .setImage(file.url)
                     .setURL(file.pageUrl);
                 menu.full.addPage(embed);
