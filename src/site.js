@@ -124,10 +124,19 @@ app.use((req, res, next) => {
     next();
 });
 app.use(express.static(rootPath));
+app.use(express.static(path.join(rootPath, "pages")));
 app.use((err, req, res, next) => {
     log.error(err.stack);
     res.status(500).send("problem? yeah :/");
 });
+
+const pages = fs.readdirSync(`${rootPath}/pages`);
+for (const page of pages) {
+    const pageName = page.split(".")[0];
+    app.get(`/${pageName}`, (req, res) => {
+        res.sendFile(`pages/${page}`, { root: rootPath });
+    });
+}
 
 app.get("/", (request, response) => {
     logAccess(request);
@@ -216,6 +225,10 @@ app.get("/read-log", (req, res) => {
         log.error(err);
         return res.status(500).send("error reading log");
     }
+});
+
+app.use("/cgi-bin", (req, res, next) => {
+    res.redirect("http://plaskinino.horse");
 });
 
 app.all("*", (req, res) => {
