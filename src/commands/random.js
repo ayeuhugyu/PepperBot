@@ -20,6 +20,35 @@ const config = globals.config;
 const deepwoken_names = globals.deepwoken_names;
 const allWords = globals.allWords;
 
+const jakdata = new SubCommandData();
+jakdata.setName("jak");
+jakdata.setDescription("return a random jak");
+jakdata.setPermissions([]);
+jakdata.setPermissionsReadable("");
+jakdata.setWhitelist([]);
+jakdata.setCanRunFromBot(true);
+const jak = new SubCommand(
+    jakdata,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction) {
+        //todo: redirect this to p/jak rand instead of a copy of it
+        const alljaks = fs.readdirSync("resources/images/jaks");
+        if (alljaks.length === 0) {
+            action.reply(
+                message,
+                "there are currently no jaks, please wait for there to be some"
+            );
+            return;
+        }
+        const randomJak = alljaks[Math.floor(Math.random() * alljaks.length)];
+        action.reply(message, {
+            files: [`resources/images/jaks/${randomJak}`],
+        });
+    }
+);
+
 const nicknamedata = new SubCommandData();
 nicknamedata.setName("nickname");
 nicknamedata.setDescription("returns a random nickname for a user");
@@ -401,7 +430,7 @@ const command = new Command(
             )}\`, you baffoon!`
         );
     },
-    [buildidea, freshie, pepper, words, sound, name, rmessage, nickname]
+    [buildidea, freshie, pepper, words, sound, name, rmessage, nickname, jak]
 );
 
 export default command;

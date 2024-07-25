@@ -22,9 +22,9 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        if (voice.getVoiceConnection(message.guild.id)) {
-            const connection = await voice.getVoiceConnection(message.guild.id);
-            voice.destroyVoiceConnection(connection).catch((e) => {
+        const connection = await voice.getVoiceConnection(message.guild.id);
+        if (connection) {
+            voice.leaveVoiceChannel(connection).catch((e) => {
                 log.error(e);
             });
             action.reply(message, {

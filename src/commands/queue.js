@@ -102,17 +102,21 @@ async function refresh(queue, interaction, args, row, sentMessage) {
         }
         let title = "Queue";
         if (queue.state == "playing") {
-            title += ` | Now Playing Song ${queue.currentIndex + 1}`;
+            title += ` | Now Playing Song ${queue.currentIndex + 1}/${
+                queue.readableQueue.length
+            }`;
             const duration = await getDuration(
                 queue.queues[queue.currentIndex]
             );
             if (duration) {
                 title += ` | Duration: ${duration}`;
             }
+        } else {
+            title += ` | ${queue.readableQueue.length} items`;
         }
         embed.setTitle(title);
         if (chunks.length > 1 && queue.readableQueue.length > 15) {
-            const Menu = new AdvancedPagedMenuBuilder();
+            const Menu = new AdvancedPagedMenuBuilder(queue.currentEmbedPage);
             chunks.forEach((chunks, index) => {
                 const newEmbed = default_embed();
                 newEmbed.setTitle(title);
@@ -127,8 +131,9 @@ async function refresh(queue, interaction, args, row, sentMessage) {
                 components.push(Menu.actionRow);
             }
             if (components.length == 0) components = undefined;
+            const currentPage = queue.currentEmbedPage || Menu.currentPage;
             sentMessage = await action.editMessage(sentMessage, {
-                embeds: [Menu.pages[Menu.currentPage]],
+                embeds: [Menu.pages[currentPage]],
                 components: components,
             });
             if (!sentMessage) return;
@@ -150,7 +155,7 @@ async function refresh(queue, interaction, args, row, sentMessage) {
         }
     } else {
         if (!embed) return;
-        embed.setTitle("Queue");
+        embed.setTitle("Queue - 0 items");
         embed.setDescription("queue is empty");
         if (!sentMessage) return;
         action.editMessage(sentMessage, {
@@ -257,7 +262,6 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
             });
             return;
         }
-        console.log(input);
         await queue.add(input);
         action.reply(interaction, {
             content: "added to queue",
@@ -930,6 +934,7 @@ const command = new Command(
         const collector = sentMessage.createMessageComponentCollector({
             time: 1200_000,
         });
+        queue.currentEmbedPage = 0;
         collector.on("collect", async (interaction) => {
             if (!interaction) {
                 log.warn("returned from collector");
@@ -944,15 +949,18 @@ const command = new Command(
                     row,
                     sentMessage
                 );
-            } else if (
-                !interaction.customId === "next" &&
-                !interaction.customId === "previous"
-            ) {
-                action.reply(interaction, {
-                    content:
-                        "how the hell did you manage to press an invalid button what the hell 😭😭😭",
-                    ephemeral: true,
-                });
+            } else {
+                if (interaction.customId === "previous") {
+                    queue.currentEmbedPage--;
+                } else if (interaction.customId === "next") {
+                    queue.currentEmbedPage++;
+                } else {
+                    action.reply(interaction, {
+                        content:
+                            "how the hell did you manage to press an invalid button what the hell 😭😭😭",
+                        ephemeral: true,
+                    });
+                }
             }
         });
 

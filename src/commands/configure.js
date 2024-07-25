@@ -114,7 +114,7 @@ const command = new Command(
                     components: [],
                 });
             })
-            .catch(console.error);
+            .catch(log.error);
     },
     []
 );

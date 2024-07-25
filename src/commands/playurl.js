@@ -74,10 +74,11 @@ const command = new Command(
             if (!connection) {
                 // join vc by default
                 if (!message.member.voice.channel) {
-                    action.reply(
-                        message,
-                        "you're not in a voice channel, and im not already in one. baffoon."
-                    );
+                    action.reply(message, {
+                        ephemeral: true,
+                        content:
+                            "you're not in a voice channel, and im not already in one. baffoon.",
+                    });
                 }
                 connection = await voice.joinVoiceChannel(
                     message.member.voice.channel
@@ -100,16 +101,21 @@ const command = new Command(
                         .getInfo(args.get("sound"))
                         .catch((err) => {
                             if (err.statusCode === 410) {
-                                action.reply(
-                                    message,
-                                    'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
-                                );
+                                action.reply(message, {
+                                    ephemeral: true,
+                                    content:
+                                        'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.',
+                                });
                                 return;
                             } else {
-                                action.reply(
-                                    message,
-                                    "error while downloading url, see logs for more info"
-                                );
+                                action.reply(message, {
+                                    ephemeral: true,
+                                    content: {
+                                        ephemeral: true,
+                                        content:
+                                            "error while downloading url, see logs for more info",
+                                    },
+                                });
                                 log.error(err);
                                 return;
                             }
@@ -142,22 +148,24 @@ const command = new Command(
                         }
                     }
                     if (info.lengthSeconds > 60 * 120) {
-                        action.reply(
-                            "sound is too long, max length is 120 minutes. this is to prevent abuse."
-                        );
+                        action.reply({
+                            ephemeral: true,
+                            content:
+                                "sound is too long, max length is 120 minutes. this is to prevent abuse.",
+                        });
                         return;
                     }
                     let msg;
                     if (redownload) {
-                        msg = await action.reply(
-                            message,
-                            `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`
-                        );
+                        msg = await action.reply(message, {
+                            ephemeral: true,
+                            content: `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`,
+                        });
                     } else {
-                        msg = await action.reply(
-                            message,
-                            `downloading \`${correctedFileName}.webm\`...`
-                        );
+                        msg = await action.reply(message, {
+                            ephemeral: true,
+                            content: `downloading \`${correctedFileName}.webm\`...`,
+                        });
                     }
                     fsextra.ensureFileSync(
                         `resources/ytdl_cache/${correctedFileName}.webm`
@@ -169,30 +177,32 @@ const command = new Command(
                             )
                         )
                         .on("finish", async () => {
-                            action.editMessage(
-                                msg,
-                                `playing \`${correctedFileName}.webm\``
-                            );
+                            action.editMessage(msg, {
+                                ephemeral: true,
+                                content: `playing \`${correctedFileName}.webm\``,
+                            });
                             const resource = await voice.createAudioResource(
                                 `resources/ytdl_cache/${correctedFileName}.webm`
                             );
                             audioPlayer.play(resource);
                         });
                 } catch (err) {
-                    action.reply(
-                        message,
-                        "error while downloading url, see logs for more info"
-                    );
+                    action.reply(message, {
+                        ephemeral: true,
+                        content:
+                            "error while downloading url, see logs for more info",
+                    });
                     log.error(err);
                 }
             } else {
-                action.reply(
-                    message,
-                    "url not supported, currently only youtube is supported. others are more complicated to implement, and will be added soon."
-                );
+                action.reply(message, {
+                    ephemeral: true,
+                    content:
+                        "url not supported, currently only youtube is supported. others are more complicated to implement, and will be added soon.",
+                });
             }
         } else {
-            action.reply(message, "provide a sound to play you baffoon!");
+            action.reply(message, "provide a url to play you baffoon!");
         }
     }
 );

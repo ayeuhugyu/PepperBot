@@ -2,10 +2,10 @@ import { ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
 import * as log from "../log.js";
 
 export class AdvancedPagedMenuBuilder {
-    constructor() {
+    constructor(startPage) {
         this.pages = [];
         let pages = this.pages;
-        let currentPage = 0;
+        let currentPage = startPage || 0;
         let actionRow = new ActionRowBuilder();
         let previousButton = new ButtonBuilder()
             .setCustomId("previous")
@@ -33,7 +33,7 @@ export class AdvancedPagedMenuBuilder {
     begin(sentMessage, duration, { actionRow, currentPage, pages }) {
         if (!sentMessage) return;
         let embed = pages[currentPage];
-        
+
         const collector = sentMessage.createMessageComponentCollector({
             time: duration,
         });

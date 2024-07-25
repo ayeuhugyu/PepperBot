@@ -1,9 +1,18 @@
 import * as voice from "@discordjs/voice";
 import * as log from "./log.js";
+import fs from "fs";
 
 const players = {};
 
 export async function joinVoiceChannel(channel) {
+    if (!channel || !channel.type) {
+        log.warn(`attempted to join nil or untyped voice channel`);
+        return;
+    }
+    if (channel.type !== 2 && channel.type !== 13) {
+        log.warn(`attempted to join non-voice channel`);
+        return;
+    }
     let connection = await voice.joinVoiceChannel({
         channelId: channel.id,
         guildId: channel.guild.id,
@@ -13,15 +22,35 @@ export async function joinVoiceChannel(channel) {
         await connection.subscribe(players[channel.guild.id]);
     }
     log.info(`created voice connection to channel ${channel.id}`);
+    if (channel.type === 13) {
+        channel.guild.members.cache
+            .find(
+                (member) =>
+                    member.id === "1209297323029565470" ||
+                    member.id === "1148796261793800303"
+            )
+            .voice.setSuppressed(false);
+        log.info(`forced speaker in stage channel ${channel.id}`);
+    }
     return connection;
 }
 
 export async function leaveVoiceChannel(connection) {
-    connection.destroy();
+    if (!connection) {
+        log.warn(`attempted to leave nil voice connection`);
+        return;
+    }
     log.info(`destroyed voice connection ${connection.channelId}`);
+    connection.destroy();
 }
 
 export async function createAudioResource(path) {
+    if (!fs.existsSync(path)) {
+        log.warn(
+            `attempted to create audio resource for non-existent file ${path}`
+        );
+        return;
+    }
     const resource = await voice.createAudioResource(path, {
         inlineVolume: true,
     });
@@ -69,6 +98,5 @@ export async function setVolume(player, volume) {
 }
 
 export async function destroyVoiceConnection(connection) {
-    connection.destroy();
-    log.info(`destroyed voice connection for guild ${connection.guildId}`);
+    return leaveVoiceChannel(connection);
 }

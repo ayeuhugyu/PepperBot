@@ -67,7 +67,6 @@ const command = new Command(
             }
             action.sendMessage(message.channel, obj); // THIS FOR SOME FUCKING REASON GETS EXECUTED MULTIPLE TIMES AND I HAVE NO IDEA HOW TO FIX IT????
             if (fromInteraction) {
-                console.log("from interaction");
                 action.reply(message, {
                     content: "the deed is done.",
                     ephemeral: true,

@@ -151,7 +151,7 @@ app.get("/read-statistics", (req, res) => {
         "utf8",
         async (err, data) => {
             if (err) {
-                console.error(err);
+                log.error(err);
                 return res.status(500).send("Error reading file");
             }
             const memory = process.memoryUsage();

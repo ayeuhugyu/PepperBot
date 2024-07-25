@@ -29,8 +29,6 @@ const command = new Command(
         let args = new Collection();
         if (message.mentions.channels.first()) {
             args.set("channel", message.mentions.channels.first());
-        } else if (message.member.voice.channel) {
-            args.set("channel", message.member.voice.channel);
         } else {
             if (
                 message.guild.channels.cache.get(
@@ -48,33 +46,48 @@ const command = new Command(
                     )
                 );
             } else {
-                const channel = message.guild.channels.cache.find(
-                    (channel) =>
-                        channel.name.toLowerCase().startsWith(message.content
+                const channel = message.guild.channels.cache.find((channel) =>
+                    channel.name.toLowerCase().startsWith(
+                        message.content
                             .slice(config.generic.prefix.length + commandLength)
-                            .trim().toLowerCase())
+                            .trim()
+                            .toLowerCase()
+                    )
                 );
                 if (channel) {
                     args.set("channel", channel);
-                } else {
-                    args = false;
                 }
             }
+        }
+        if (
+            !args.get("channel") ||
+            !args.get("channel").type ||
+            (args.get("channel").type &&
+                args.get("channel").type != 2 &&
+                args.get("channel").type != 13)
+        ) {
+            args.set("channel", message.member.voice.channel);
+        }
+        if (!args.get("channel")) {
+            args = false;
         }
         return args;
     },
     async function execute(message, args) {
-        if (args.get("channel")) {
-            if (args.get("channel").type != 2) {
-                args = false;
-            }
-        }
         if (typeof args == "boolean" || !args) {
             action.reply(message, {
                 content: "channel does not exist, or is not a voice channel",
                 ephemeral: true,
             });
             return;
+        }
+        if (args.get("channel")) {
+            if (
+                args.get("channel").type != 2 &&
+                args.get("channel").type != 13
+            ) {
+                args = false;
+            }
         }
         if (!args.get("channel")) {
             args._hoistedOptions.push({

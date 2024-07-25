@@ -32,21 +32,23 @@ export async function textToFile(text, name) {
 }
 
 export function fixFileName(name) {
-    const correctedFileName = name
-        .toLowerCase()
-        .replaceAll(" ", "_")
-        .replaceAll("-", "_")
-        .replaceAll("/", "_")
-        .replaceAll("\\", "_")
-        .replaceAll(".", "_")
-        .replaceAll("|", "_")
-        .replaceAll('"', "_")
-        .replaceAll(":", "_")
-        .replaceAll("?", "_")
-        .replaceAll("*", "_")
-        .replaceAll("<", "_")
-        .replaceAll(">", "_")
-        .replaceAll(";", "_")
-        .replaceAll(",", "_");
+    const fileNameWithoutExtension = name.slice(0, name.lastIndexOf("."));
+    const correctedFileName =
+        fileNameWithoutExtension
+            .toLowerCase()
+            .replaceAll(" ", "_")
+            .replaceAll("-", "_")
+            .replaceAll("/", "_")
+            .replaceAll("\\", "_")
+            .replaceAll(".", "_")
+            .replaceAll("|", "_")
+            .replaceAll('"', "_")
+            .replaceAll(":", "_")
+            .replaceAll("?", "_")
+            .replaceAll("*", "_")
+            .replaceAll("<", "_")
+            .replaceAll(">", "_")
+            .replaceAll(";", "_")
+            .replaceAll(",", "_") + name.slice(name.lastIndexOf("."));
     return correctedFileName;
 }

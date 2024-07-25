@@ -7,8 +7,9 @@ import process from "node:process";
 const config = globals.config;
 
 export async function fixMsg(msg) {
-    const ogMsg = msg;
-    if (typeof msg === "string") {
+    let ogMsg = msg;
+    msg = { ...msg };
+    if (typeof ogMsg === "string") {
         msg = { content: ogMsg };
     }
     if (msg && !msg.content) {
@@ -47,10 +48,11 @@ export async function fixMsg(msg) {
     //.replaceAll(process.env.VISION_ENDPOINT, "##starfruit"); // this prevents the bot from pinging everyone, and from leaking sensitive information
 
     if (msg.content.length > 2000) {
-        let path = await files.textToFile(msg.content, "overflowtext.txt");
+        let path = await files.textToFile(msg.content, "overflowtext");
         if (!msg.files) {
             msg.files = [];
         }
+
         msg = {
             content:
                 "message exceeded 2000 characters, defaulting to file attachment",

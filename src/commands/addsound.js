@@ -22,19 +22,6 @@ async function download(url, filename) {
     });
 }
 
-function fixName(name) {
-    const namenoextention = name.split(".")[0];
-    if (namenoextention == "ls" || namenoextention == "stop") {
-        return namenoextention + "_sound";
-    }
-    return name
-        .toLowerCase()
-        .replaceAll(" ", "_")
-        .replaceAll("-", "_")
-        .replaceAll("/", "_")
-        .replaceAll("\\", "_");
-}
-
 const data = new CommandData();
 data.setName("addsound");
 data.setDescription("add a sound to the soundboard");
@@ -67,9 +54,9 @@ const command = new Command(
                 filename.endsWith(".mp4") ||
                 filename.endsWith(".flac")
             ) {
-                const files = fs.readdirSync("resources/sounds");
-                const fileCorrected = fixName(filename);
-                if (files.includes(fileCorrected)) {
+                const allsounds = fs.readdirSync("resources/sounds");
+                const fileCorrected = files.fixFileName(filename);
+                if (allsounds.includes(fileCorrected)) {
                     action.reply(message, "sound already exists");
                     return;
                 }

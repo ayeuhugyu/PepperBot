@@ -10,11 +10,32 @@ shit on the todo list:
 [4] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 [5] - remake p/reactionrole, the syntax is ust horrific
 
-p/update 
+p/update too many bugfixes
 
 **actual content:**
 
 - p/cquery embed now displays number of results
+- p/queue embed now dispalys total queue size
+- p/joinvc into stage channels now automatically makes the bot a speaker
+- you are now informed if the command you are running errors
+- p/jak (p/jak add is whitelisted to me and <@726861364848492596>, so get to work pal!)
 
 **fixes/optimizations:**
 
+- fixed p/joinvc not identifying stage channels as voice channels
+- fixed destroy voice channel log for guild saying guild is undefined
+- added MANY more checks to voice functions
+- p/leavevc no longer retrieves voice connection an exponentially increasing amount of times
+- joinvc priority has been changed and will now prioritize choosing the channel you ask for rather than the channel that you are in
+- fixed p/playurl replies not being ephemeral
+- fixed overflow text being attached twice
+- fixed overflow file being named overflowtext.txt.txt
+- fixed fixmsg always making non-object messages an empty message
+- fixed p/joinvc erroring if no voice channel is supplied
+- fixed errors originating inside of execute functions not being logged
+- fixed errors originating inside of getArguments functions not being logged
+- fixed files.fixFileName also replacing file extensions with _s
+- p/addsound now uses standard fixFileName function rather than its own
+- replaced every console.error with log.error
+- removed many unnecessary console.logs
+- finally fixed p/queue resetting the page when refreshing

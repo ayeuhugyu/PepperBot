@@ -28,7 +28,7 @@ async function fetchTitle(url) {
         const title = $("title").text();
         return title;
     } catch (error) {
-        console.error(`Could not fetch title for ${url}:`, error.message);
+        log.error(`Could not fetch title for ${url}:`, error.message);
         return null;
     }
 }

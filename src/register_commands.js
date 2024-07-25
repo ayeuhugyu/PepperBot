@@ -2,7 +2,7 @@ import { REST, Routes } from "discord.js";
 import { client } from "./bot.js";
 import * as log from "./lib/log.js";
 import fs from "fs";
-import process from "node:process"
+import process from "node:process";
 
 BigInt.prototype.toJSON = function () {
     return this.toString();
@@ -23,7 +23,7 @@ async function getCommands() {
                 }
             })
             .catch((err) => {
-                console.error(err);
+                log.error(err);
             });
     }
     return commands;
@@ -146,7 +146,7 @@ async function unregister(g) {
 
         return;
     } catch (error) {
-        console.error(error);
+        log.error(error);
     }
 }
 export { register, unregister };

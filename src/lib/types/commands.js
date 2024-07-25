@@ -79,7 +79,7 @@ export class CommandData extends SlashCommandBuilder {
 }
 
 export class Command {
-    constructor(data, getArguments, execute, subcommands) {
+    constructor(data, getArguments, exc, subcommands) {
         this.data = data;
         this.getArguments = getArguments;
         this.subcommands = subcommands;
@@ -167,7 +167,23 @@ export class Command {
                     message.guild.id
                 );
                 if (!args) {
-                    args = await this.getArguments(message, guildConfig);
+                    let errorReply = false;
+                    args = await this.getArguments(message, guildConfig).catch(
+                        (err) => {
+                            log.error(err);
+                            errorReply = true;
+                        }
+                    );
+                    if (errorReply) {
+                        action.reply(
+                            message,
+                            "an error occurred while getting arguments for this command, the error has been logged."
+                        );
+                        return;
+                    }
+                    log.debug(
+                        `finished getting arguments for p/${this.data.name}`
+                    );
                 }
                 if (
                     this.subcommands &&
@@ -216,12 +232,24 @@ export class Command {
                         }
                     }
                 }
-                return await execute(
+                let errorReply = false;
+                const commandresult = await exc(
                     message,
                     args,
                     fromInteraction,
                     guildConfig
-                );
+                ).catch((err) => {
+                    log.error(err);
+                    errorReply = true;
+                });
+                if (errorReply) {
+                    action.reply(
+                        message,
+                        "an error occurred while executing this command, the error has been logged."
+                    );
+                    return;
+                }
+                return commandresult;
             }
         };
     }
