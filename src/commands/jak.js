@@ -176,20 +176,20 @@ addData.setPermissionsReadable("");
 addData.setWhitelist(["440163494529073152", "726861364848492596"]);
 addData.setCanRunFromBot(true);
 addData.addAttachmentOption((option) =>
-    option.setName("jak").setDescription("the jak to add").setRequired(true)
+    option.setName("jakfile").setDescription("the jak to add").setRequired(true)
 );
 
 const add = new SubCommand(
     addData,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("jak", message.attachments.first());
+        args.set("jakfile", message.attachments.first());
 
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        if (args.get("jak")) {
-            const filename = args.get("jak").name;
+        if (args.get("jakfile")) {
+            const filename = args.get("jakfile").name;
             if (
                 filename.endsWith(".png") ||
                 filename.endsWith(".jpg") ||
@@ -206,7 +206,7 @@ const add = new SubCommand(
                     message,
                     `downloading \`${fileCorrected}\`...`
                 );
-                await download(args.get("jak").url, fileCorrected);
+                await download(args.get("jakfile").url, fileCorrected);
                 msg.edit(`downloaded \`${fileCorrected}\``);
             } else {
                 action.reply(message, {
@@ -234,6 +234,31 @@ data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.setAliases(["jaks"]);
+data.addStringOption((option) =>
+    option
+        .setName("subcommand")
+        .setDescription("the subcommand to run")
+        .setRequired(false)
+        .addChoices(
+            { name: "add", value: "add" },
+            { name: "get", value: "get" },
+            { name: "list", value: "list" },
+            { name: "random", value: "random" }
+        )
+);
+data.addStringOption((option) =>
+    option
+        .setName("jak")
+        .setDescription("the jak to get (exclusive to get subcommand)")
+        .setRequired(false)
+);
+data.addAttachmentOption((option) =>
+    option
+        .setName("jakfile")
+        .setDescription("the jak to add (exclusive to add subcommand)")
+        .setRequired(false)
+);
+
 const command = new Command(
     data,
     async function getArguments(message) {
