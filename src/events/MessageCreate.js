@@ -98,25 +98,29 @@ async function processDiabolicalEvent(message) {
         const random = Math.random() * 250;
         if (random < 5) {
             // ~2%
-            log.info(`diabolical emoji event triggered on ${message.id}`);
-            const emoji =
-                globals.emojis[
-                    Math.floor(Math.random() * globals.emojis.length)
-                ];
+            const emojiIndex = Math.floor(
+                Math.random() * globals.emojis.length
+            );
+            log.info(
+                `diabolical emoji event triggered on ${message.id} with: ${globals.emojis[emojiIndex]} at index: ${emojiIndex}`
+            );
+            const emoji = globals.emojis[emojiIndex];
             message.react(emoji);
         }
         if (random > 246.5 && random < 249) {
             // ~1%
             log.info(`diabolical thread event triggered on ${message.id}`);
-            message
-                .startThread({
-                    name: "Threaded! 🧵",
-                    autoArchiveDuration: 60,
-                    reason: "It's quite diabolical.",
-                })
-                .then((thread) => {
-                    thread.send("You've just been threaded! 🧵");
-                });
+            if (message.startThread) {
+                message
+                    .startThread({
+                        name: "Threaded! 🧵",
+                        autoArchiveDuration: 60,
+                        reason: "It's quite diabolical.",
+                    })
+                    .then((thread) => {
+                        thread.send("You've just been threaded! 🧵");
+                    });
+            }
         }
         if (random > 249) {
             // ~0.4%
@@ -242,6 +246,7 @@ async function getIsDisgraceful(message) {
     if (message.guild && message.guild.id == "1112819622505365556") {
         if (message.channel && message.channel.id == "1171660137946157146") {
             if (
+                message.member &&
                 message.member.id !== "440163494529073152" &&
                 message.member.id !== message.client.user.id &&
                 message.member.id !== "1209297323029565470" &&
@@ -253,8 +258,16 @@ async function getIsDisgraceful(message) {
                 await action.deleteMessage(message);
                 return true;
             }
+            if (!message.member) {
+                await action.sendDM(message.author, {
+                    content: "Disgraceful.",
+                });
+                await action.deleteMessage(message);
+                return true;
+            }
         }
     }
+
     const medalTvRegex = /https:\/\/medal\.tv[^\s]+/g;
     const medalTvUrls = message.content.match(medalTvRegex);
     if (medalTvUrls && medalTvUrls.length > 0) {

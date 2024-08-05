@@ -101,8 +101,10 @@ const command = new Command(
             }
             const sounds = await fs.readdirSync("resources/sounds");
             const sound = await autocorrect(args.get("sound"));
+            let hasPlayed = false;
             for (const value of Object.values(sound)) {
-                if (sounds.includes(value)) {
+                if (sounds.includes(value) && !hasPlayed) {
+                    hasPlayed = true;
                     const resource = await voice.createAudioResource(
                         `resources/sounds/${value}`
                     );
@@ -111,9 +113,14 @@ const command = new Command(
                         content: `playing \`${value}\``,
                         ephemeral: true,
                     });
-
-                    return;
+                    break;
                 }
+            }
+            if (!hasPlayed) {
+                action.reply(message, {
+                    content: "sound not found",
+                    ephemeral: true,
+                });
             }
         } else {
             action.reply(message, {

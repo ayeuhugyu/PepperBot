@@ -4,8 +4,10 @@ import { Collection } from "discord.js";
 import fs from "fs";
 import * as globals from "../lib/globals.js";
 import pepperupdate from "./pepperupdate.js";
+import pepperpatch from "./pepperpatch.js";
 import setversion from "./setversion.js";
 import deploycommands from "./deploycommands.js";
+import fsextra from "fs-extra";
 
 const config = globals.config;
 
@@ -51,6 +53,23 @@ const command = new Command(
                 deployCommandsArgs,
                 isInteraction
             );
+            const writeFileMessage = await action.reply(
+                message,
+                "verifying file..."
+            );
+            fsextra.ensureFileSync(
+                `resources/data/updates/${parseInt(version) + 1}.txt`
+            );
+            action.editMessage(writeFileMessage, "writing file...");
+            fs.writeFileSync(
+                `resources/data/updates/${parseInt(version) + 1}.txt`,
+                args.get("message")
+            );
+            action.editMessage(writeFileMessage, "file written");
+            if (args.get("patch")) {
+                await pepperpatch.execute(message, args, isInteraction);
+                return;
+            }
             await pepperupdate.execute(message, args, isInteraction);
         } else {
             action.reply(message, "provide an update log you baffoon!");

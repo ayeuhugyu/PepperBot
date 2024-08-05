@@ -36,14 +36,20 @@ function autocorrect(message) {
     let corrections = {
         regular: message,
         spaced: message.replaceAll(" ", "_"),
-        spacedmp3: message.replaceAll(" ", "_") + ".png",
-        mp3: message + ".png",
-        spacedogg: message.replaceAll(" ", "_") + ".jpg",
-        ogg: message + ".jpg",
-        spacedwav: message.replaceAll(" ", "_") + ".jpeg",
-        wav: message + ".jpeg",
-        spacedwebm: message.replaceAll(" ", "_") + ".gif",
-        webm: message + ".gif",
+        spacedpng: message.replaceAll(" ", "_") + ".png",
+        png: message + ".png",
+        spacedjpg: message.replaceAll(" ", "_") + ".jpg",
+        jpg: message + ".jpg",
+        spacedjpeg: message.replaceAll(" ", "_") + ".jpeg",
+        jpeg: message + ".jpeg",
+        spacedgif: message.replaceAll(" ", "_") + ".gif",
+        gif: message + ".gif",
+        spacedmp4: message.replaceAll(" ", "_") + ".mp4",
+        mp4: message + ".mp4",
+        spacedwebm: message.replaceAll(" ", "_") + ".webm",
+        webm: message + ".webm",
+        spacedmov: message.replaceAll(" ", "_") + ".mov",
+        mov: message + ".mov",
     };
     return corrections;
 }
@@ -116,7 +122,7 @@ getData.setPermissions([]);
 getData.setPermissionsReadable("");
 getData.setWhitelist([]);
 getData.setCanRunFromBot(true);
-getData.addAttachmentOption((option) =>
+getData.addStringOption((option) =>
     option.setName("jak").setDescription("the jak to get").setRequired(true)
 );
 
@@ -131,11 +137,14 @@ const get = new SubCommand(
                 .slice(config.generic.prefix.length + commandLength)
                 .trim()
         );
-
         return args;
     },
     async function execute(message, args, fromInteraction) {
         if (args.get("jak")) {
+            if (args.get("jak") === "ls") {
+                list.execute(message, null, fromInteraction);
+                return;
+            }
             const filename = files.fixFileName(args.get("jak"));
             const alljaks = fs.readdirSync("resources/images/jaks");
             if (alljaks.length === 0) {
@@ -173,7 +182,11 @@ addData.setName("add");
 addData.setDescription("add a jak");
 addData.setPermissions([]);
 addData.setPermissionsReadable("");
-addData.setWhitelist(["440163494529073152", "726861364848492596"]);
+addData.setWhitelist([
+    "440163494529073152",
+    "726861364848492596",
+    "436321340304392222",
+]);
 addData.setCanRunFromBot(true);
 addData.addAttachmentOption((option) =>
     option.setName("jakfile").setDescription("the jak to add").setRequired(true)
@@ -189,33 +202,54 @@ const add = new SubCommand(
     },
     async function execute(message, args, fromInteraction) {
         if (args.get("jakfile")) {
-            const filename = args.get("jakfile").name;
-            if (
-                filename.endsWith(".png") ||
-                filename.endsWith(".jpg") ||
-                filename.endsWith(".jpeg") ||
-                filename.endsWith(".gif")
-            ) {
-                const alljaks = fs.readdirSync("resources/images/jaks");
-                const fileCorrected = files.fixFileName(filename);
-                if (alljaks.includes(fileCorrected)) {
-                    action.reply(message, "jak with this name already exists");
+            const attachments = message.attachments;
+            attachments.forEach(async (attachment) => {
+                const filename = attachment.name;
+                if (
+                    filename.endsWith(".png") ||
+                    filename.endsWith(".jpg") ||
+                    filename.endsWith(".jpeg") ||
+                    filename.endsWith(".gif") ||
+                    filename.endsWith(".mp4") ||
+                    filename.endsWith(".webm") ||
+                    filename.endsWith(".mov")
+                ) {
+                    const alljaks = fs.readdirSync("resources/images/jaks");
+                    const fileCorrected = files.fixFileName(filename);
+                    if (alljaks.includes(fileCorrected)) {
+                        action.reply(
+                            message,
+                            "jak with this name already exists"
+                        );
+                        return;
+                    }
+
+                    const extensionIndex = fileCorrected.lastIndexOf(".");
+                    if (extensionIndex !== -1) {
+                        let fileNameNoExtension = fileCorrected.substring(
+                            0,
+                            extensionIndex
+                        );
+                        if (fileNameNoExtension === "ls") {
+                            action.reply(message, "`ls` is a reserved name.");
+                            return;
+                        }
+                    }
+                    let msg = await action.reply(
+                        message,
+                        `downloading \`${fileCorrected}\`...`
+                    );
+                    await download(attachment.url, fileCorrected);
+                    msg.edit(`downloaded \`${fileCorrected}\``);
+                } else {
+                    action.reply(message, {
+                        content:
+                            "invalid format, only `png`, `jpg`, `jpeg`, `gif`, `mp4`, `webm`, and `mov` are supported",
+                        ephemeral: true,
+                    });
                     return;
                 }
-                let msg = await action.reply(
-                    message,
-                    `downloading \`${fileCorrected}\`...`
-                );
-                await download(args.get("jakfile").url, fileCorrected);
-                msg.edit(`downloaded \`${fileCorrected}\``);
-            } else {
-                action.reply(message, {
-                    content:
-                        "invalid format, only `png`, `jpg`, `jpeg`, and `gif` are supported",
-                    ephemeral: true,
-                });
-                return;
-            }
+            });
         } else {
             action.reply(message, {
                 content: "provide a jak to add you baffoon!",
@@ -224,7 +258,6 @@ const add = new SubCommand(
         }
     }
 );
-
 const data = new CommandData();
 data.setName("jak");
 data.setDescription("various jak related commands");

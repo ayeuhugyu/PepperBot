@@ -47,16 +47,20 @@ function fetchTitleFromURL(url) {
 async function download(url, queueManager) {
     try {
         return new Promise(async (resolve, reject) => {
+            let sentMSG = await action.sendMessage(
+                queueManager.messageChannel,
+                `retrieving video data...`
+            );
             const title = await fetchTitleFromURL(url).catch((err) => {
                 if (err.statusCode === 410) {
-                    action.sendMessage(
-                        queueManager.messageChannel,
+                    action.editMessage(
+                        sentMSG,
                         'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
                     );
                     return;
                 } else {
-                    action.sendMessage(
-                        queueManager.messageChannel,
+                    action.editMessage(
+                        sentMSG,
                         "error while downloading url, see logs for more info"
                     );
                     log.error(err);
@@ -71,8 +75,8 @@ async function download(url, queueManager) {
             const sounds = fs.readdirSync("resources/ytdl_cache");
             const correctedFileName = files.fixFileName(title);
 
-            let msg = await action.sendMessage(
-                queueManager.messageChannel,
+            sentMSG = await action.editMessage(
+                sentMSG,
                 `checking for existence of \`${correctedFileName}.webm\`...`
             );
             let redownload = false;
@@ -87,7 +91,7 @@ async function download(url, queueManager) {
                 }
                 if (!redownload) {
                     await action.editMessage(
-                        msg,
+                        sentMSG,
                         `playing \`${correctedFileName}.webm\``
                     );
                     resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
@@ -96,12 +100,12 @@ async function download(url, queueManager) {
             }
             if (redownload) {
                 await action.editMessage(
-                    msg,
+                    sentMSG,
                     `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`
                 );
             } else {
                 await action.editMessage(
-                    msg,
+                    sentMSG,
                     `downloading \`${correctedFileName}.webm\`...`
                 );
             }
@@ -116,7 +120,7 @@ async function download(url, queueManager) {
                 )
                 .on("finish", async () => {
                     action.editMessage(
-                        msg,
+                        sentMSG,
                         `playing \`${correctedFileName}.webm\``
                     );
                     resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
@@ -124,9 +128,14 @@ async function download(url, queueManager) {
                 .on("error", (err) => {
                     log.error(err);
                     if (err.statusCode === 410) {
-                        action.sendMessage(
-                            queueManager.messageChannel,
+                        action.editMessage(
+                            sentMSG,
                             'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
+                        );
+                    } else {
+                        action.editMessage(
+                            sentMSG,
+                            "error while downloading url, see logs for more info"
                         );
                     }
                     fs.unlinkSync(

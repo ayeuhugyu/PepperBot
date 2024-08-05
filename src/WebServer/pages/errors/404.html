@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Pepper Site</title>
-        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="./images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
         <meta content="ye" property="og:description" />
@@ -11,99 +11,47 @@
     </head>
     <body>
         <div class="sidebar">
-            <script>
-                let sidebarIsOpen = false;
+            <script id="definesidebarfunctions">
+                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
                 function redirectTo(url) {
-                    window.location.href = `${url}?sidebarIsOpen=${sidebarIsOpen}`;
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    window.location.href = url;
                 }
                 function openInNewTab(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
                     let win = window.open(
-                        `${url}?sidebarIsOpen=${sidebarIsOpen}`,
+                        url,
                         "_blank"
                     );
                 }
             </script>
             <h2 class="sidebarTitle">NAVIGATION</h2>
             <div class="sidebarDivider"></div>
-            <div
-                class="sidebarButton"
-                id="/"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Home
-            </div>
-            <div
-                class="sidebarButton"
-                id="/statistics"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Statistics
-            </div>
-            <div
-                class="sidebarButton"
-                id="/logs"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Logs
-            </div>
-            <div
-                class="sidebarButton"
-                id="/credits"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Credits
-            </div>
-            <div
-                class="sidebarButton"
-                id="/contact"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Contact
-            </div>
-            <div
-                class="sidebarButton"
-                id="/shame"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Shame
-            </div>
-            <div
-                class="sidebarButton"
-                id="/coolsites"
-                onclick="redirectTo(this.id)"
-                onauxclick="openInNewTab(this.id)"
-            >
-                Cool Sites
-            </div>
-            <script>
+            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
+            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
+            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
+            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
+            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
+            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
+            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+            <script id="sidebarmain">
+                function toggleSidebar() {
+                    document.querySelectorAll(".sidebar").forEach((element) => {
+                        void element.offsetWidth;
+
+                        if (sidebarIsOpen) {
+                            element.style.animation = "slideOpen 0.5s forwards";
+                        } else {
+                            element.style.animation =
+                                "slideClose 0.5s forwards";
+                        }
+                    });
+                    sidebarIsOpen = !sidebarIsOpen;
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                }
                 document.addEventListener("keydown", (event) => {
                     if (event.key === "k") {
-                        document
-                            .querySelectorAll(".sidebar")
-                            .forEach((element) => {
-                                void element.offsetWidth;
-
-                                if (sidebarIsOpen) {
-                                    element.style.animation =
-                                        "slideOpen 0.5s forwards";
-                                } else {
-                                    element.style.animation =
-                                        "slideClose 0.5s forwards";
-                                }
-                            });
-                        sidebarIsOpen = !sidebarIsOpen;
-                        const currentUrl = new URL(window.location);
-                        currentUrl.searchParams.set(
-                            "sidebarIsOpen",
-                            sidebarIsOpen
-                        );
-                        window.history.pushState({}, "", currentUrl);
+                        toggleSidebar();
                     }
                 });
                 document
@@ -126,10 +74,7 @@
                         });
                     });
                 document.addEventListener("DOMContentLoaded", function () {
-                    const urlParams = new URLSearchParams(
-                        window.location.search
-                    );
-                    sidebarIsOpen = urlParams.get("sidebarIsOpen") === "true";
+                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
                     if (sidebarIsOpen) {
                         document
                             .querySelectorAll(".sidebar")
@@ -142,6 +87,95 @@
             </script>
         </div>
 
-        <h1 id="mainTitle">404 - Not Found</h1>
+        <div class="container" id="maintitle" style="left: 50%; top: 10%; transform: translateX(-50%) translateY(-50%)">
+            <div class="sectionoutline" style="justify-content: center; align-items: center; text-align: center;">
+                <h2 class="sectionTitle">404 - not found</h2>
+            </div>
+        </div>
+        <div id="rightcontainer" class="container" style="right: 15%; top: 20%; transform: rotate(10deg)">
+            <div class="container" id="shouldthisexist" style="position: relative; padding-bottom: 15px">
+                <div class="sectionoutline">
+                    <div class="sectioncontent" style="max-width: 600px">
+                        <h2 class="sectionTitle">Should this exist?</h2>
+                        <p>very good question! probablyyy not</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="leftcontainer" class="container" style="left: 15%; top: 40%; transform: rotate(-10deg)">
+            <div class="container" id="willthisexist" style="position: relative; padding-bottom: 15px">
+                <div class="sectionoutline">
+                    <div class="sectioncontent" style="max-width: 600px">
+                        <h2 class="sectionTitle">Will this exist?</h2>
+                        <p>again, very good question! and also again, nahhhh probably not</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="rightcontainer2" class="container" style="right: 15%; top: 60%; transform: rotate(5deg)">
+            <div class="container" id="canimakeitexist" style="position: relative; padding-bottom: 15px">
+                <div class="sectionoutline">
+                    <div class="sectioncontent" style="max-width: 600px">
+                        <h2 class="sectionTitle">Can I make it exist?</h2>
+                        <p>well if you know what you're doing, feel free! its source is on <a href="https://github.com/ayeuhugyu/PepperBot/tree/main/src/WebServer" target="_blank">my github</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script id="mobiledisplay">
+            function enableMobileMode() {
+                const shouldthisexist = document.getElementById("shouldthisexist");
+                const willthisexist = document.getElementById("willthisexist");
+                const canimakeitexist = document.getElementById("canimakeitexist");
+                shouldthisexist.style.display = "none";
+                willthisexist.style.display = "none";
+                canimakeitexist.style.display = "none";
+            }
+            function disableMobileMode() {
+                const shouldthisexist = document.getElementById("shouldthisexist");
+                const willthisexist = document.getElementById("willthisexist");
+                const canimakeitexist = document.getElementById("canimakeitexist");
+                shouldthisexist.style.display = "block";
+                willthisexist.style.display = "block";
+                canimakeitexist.style.display = "block";
+            }
+            let mobileMode = sessionStorage.getItem("mobileMode") === "true";
+            function toggleMobileMode() {
+                if (mobileMode) {
+                    disableMobileMode();
+                } else {
+                    enableMobileMode();
+                }
+                mobileMode = !mobileMode;
+                sessionStorage.setItem("mobileMode", mobileMode);
+            }
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                if (!mobileMode) {
+                    toggleMobileMode();
+                }
+            }
+            function checkMobileMode() {
+                if (window.matchMedia("(max-width: 768px)").matches) {
+                    if (!mobileMode) {
+                        toggleMobileMode();
+                    }
+                } else {
+                    if (mobileMode) {
+                        toggleMobileMode();
+                    }
+                }
+            }
+            const mobileModeOverrideBeforeCheck = sessionStorage.getItem("mobileMode") === "true";
+
+            // Initial check
+            checkMobileMode();
+            if (mobileModeOverrideBeforeCheck) {
+                enableMobileMode();
+                mobileMode = true
+            }
+
+            // Add event listener for screen size changes
+            window.addEventListener("resize", checkMobileMode);
+        </script>
     </body>
 </html>

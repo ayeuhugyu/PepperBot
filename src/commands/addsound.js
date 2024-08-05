@@ -44,36 +44,39 @@ const command = new Command(
     },
     async function execute(message, args) {
         if (args.get("sound")) {
-            const filename = args.get("sound").name;
-            if (
-                filename.endsWith(".mp3") ||
-                filename.endsWith(".wav") ||
-                filename.endsWith(".ogg") ||
-                filename.endsWith(".webm") ||
-                filename.endsWith(".m4a") ||
-                filename.endsWith(".mp4") ||
-                filename.endsWith(".flac")
-            ) {
-                const allsounds = fs.readdirSync("resources/sounds");
-                const fileCorrected = files.fixFileName(filename);
-                if (allsounds.includes(fileCorrected)) {
-                    action.reply(message, "sound already exists");
+            const attachments = message.attachments;
+            attachments.forEach(async (attachment) => {
+                const filename = attachment.name;
+                if (
+                    filename.endsWith(".mp3") ||
+                    filename.endsWith(".wav") ||
+                    filename.endsWith(".ogg") ||
+                    filename.endsWith(".webm") ||
+                    filename.endsWith(".m4a") ||
+                    filename.endsWith(".mp4") ||
+                    filename.endsWith(".flac")
+                ) {
+                    const allsounds = fs.readdirSync("resources/sounds");
+                    const fileCorrected = files.fixFileName(filename);
+                    if (allsounds.includes(fileCorrected)) {
+                        action.reply(message, "sound already exists");
+                        return;
+                    }
+                    let msg = await action.reply(
+                        message,
+                        `downloading \`${fileCorrected}\`...`
+                    );
+                    await download(attachment.url, fileCorrected);
+                    msg.edit(`downloaded \`${fileCorrected}\``);
+                } else {
+                    action.reply(message, {
+                        content:
+                            "invalid format, only `mp3`, `wav`, `ogg`, `webm`, `m4a`, `mp4`, and `flac` are supported",
+                        ephemeral: true,
+                    });
                     return;
                 }
-                let msg = await action.reply(
-                    message,
-                    `downloading \`${fileCorrected}\`...`
-                );
-                await download(args.get("sound").url, fileCorrected);
-                msg.edit(`downloaded \`${fileCorrected}\``);
-            } else {
-                action.reply(message, {
-                    content:
-                        "invalid format, only `mp3`, `wav`, `ogg`, `webm`, `m4a`, `mp4`, and `flac` are supported",
-                    ephemeral: true,
-                });
-                return;
-            }
+            });
         } else {
             action.reply(message, {
                 content: "provide a sound to add you baffoon!",

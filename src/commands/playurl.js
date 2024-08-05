@@ -79,6 +79,7 @@ const command = new Command(
                         content:
                             "you're not in a voice channel, and im not already in one. baffoon.",
                     });
+                    return;
                 }
                 connection = await voice.joinVoiceChannel(
                     message.member.voice.channel
@@ -89,8 +90,12 @@ const command = new Command(
             if (isValidYouTubeUrl(args.get("sound"))) {
                 // youtube behavior
                 try {
+                    let sentMSG = await action.reply(message, {
+                        content: "retrieving video data...",
+                        ephemeral: true,
+                    });
                     if (!(await isExistingVideo(args.get("sound")))) {
-                        action.reply(message, {
+                        action.editMessage(sentMSG, {
                             content:
                                 "that video does not appear to exist, please give me an actual video",
                             ephemeral: true,
@@ -101,14 +106,14 @@ const command = new Command(
                         .getInfo(args.get("sound"))
                         .catch((err) => {
                             if (err.statusCode === 410) {
-                                action.reply(message, {
+                                action.editMessage(sentMSG, {
                                     ephemeral: true,
                                     content:
                                         'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.',
                                 });
                                 return;
                             } else {
-                                action.reply(message, {
+                                action.editMessage(sentMSG, {
                                     ephemeral: true,
                                     content: {
                                         ephemeral: true,
@@ -136,8 +141,8 @@ const command = new Command(
                             redownload = true;
                         }
                         if (!redownload) {
-                            action.reply(
-                                message,
+                            action.editMessage(
+                                sentMSG,
                                 `playing \`${correctedFileName}.webm\``
                             );
                             const resource = await voice.createAudioResource(
@@ -148,21 +153,20 @@ const command = new Command(
                         }
                     }
                     if (info.lengthSeconds > 60 * 120) {
-                        action.reply({
+                        action.editMessage(sentMSG, {
                             ephemeral: true,
                             content:
                                 "sound is too long, max length is 120 minutes. this is to prevent abuse.",
                         });
                         return;
                     }
-                    let msg;
                     if (redownload) {
-                        msg = await action.reply(message, {
+                        await action.editMessage(sentMSG, {
                             ephemeral: true,
                             content: `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`,
                         });
                     } else {
-                        msg = await action.reply(message, {
+                        await action.editMessage(sentMSG, {
                             ephemeral: true,
                             content: `downloading \`${correctedFileName}.webm\`...`,
                         });
@@ -177,7 +181,7 @@ const command = new Command(
                             )
                         )
                         .on("finish", async () => {
-                            action.editMessage(msg, {
+                            action.editMessage(sentMSG, {
                                 ephemeral: true,
                                 content: `playing \`${correctedFileName}.webm\``,
                             });

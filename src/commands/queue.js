@@ -333,6 +333,8 @@ const functions = {
             queue.stop();
             if (interaction instanceof ButtonInteraction) {
                 interaction.deferUpdate();
+            } else {
+                action.reply(interaction, "stopped");
             }
         } else if (queue.state === (queueStates.idle || queueStates.paused)) {
             if (queue.queues.length == 0) {
@@ -366,6 +368,8 @@ const functions = {
             queue.play(queue.currentIndex);
             if (interaction instanceof ButtonInteraction) {
                 interaction.deferUpdate();
+            } else {
+                action.reply(interaction, "resuming from last index");
             }
         }
     },
@@ -502,6 +506,8 @@ const shuffle = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         if (queue.queues.length < 2) {
             action.reply(message, {
@@ -549,6 +555,8 @@ const add = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         functions.add(queue, message, args);
     }
@@ -588,6 +596,8 @@ const remove = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         functions.remove(queue, message, args);
     }
@@ -614,6 +624,8 @@ const clear = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         functions.clear(queue, message);
     }
@@ -640,6 +652,8 @@ const skip = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         functions.skip(queue, message);
     }
@@ -666,6 +680,8 @@ const play = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         functions.play(queue, message);
     }
@@ -762,6 +778,8 @@ const load = new SubCommand(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         if (!args.get("name") && (args.get("index") || args.get("url"))) {
             args.set("name", args.get("index") || args.get("url"));
@@ -877,6 +895,8 @@ const command = new Command(
                 messageChannel: message.channel,
             });
             queues[message.guild.id] = queue;
+        } else {
+            queue.messageChannel = message.channel;
         }
         if (
             args.get("operation") &&

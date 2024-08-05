@@ -76,9 +76,6 @@ const dirSize = async (directory) => {
     );
 };
 
-const persistent_data = JSON.parse(
-    fs.readFileSync("resources/data/persistent_data.json", "utf-8")
-);
 const rootPath = "./src/WebServer";
 
 async function logAccess(req) {
@@ -155,8 +152,10 @@ app.get("/read-statistics", (req, res) => {
                 return res.status(500).send("Error reading file");
             }
             const memory = process.memoryUsage();
+            const updates = fs.readdirSync("./resources/data/updates");
+            const latestUpdate = updates.length + 1;
             const object = {
-                version: persistent_data.version,
+                version: latestUpdate,
                 mem: `${prettyBytes(memory.rss)} memory usage, ${prettyBytes(
                     memory.heapUsed
                 )} / ${prettyBytes(memory.heapTotal)} heap usage`,
@@ -224,6 +223,45 @@ app.get("/read-log", (req, res) => {
     } catch (err) {
         log.error(err);
         return res.status(500).send("error reading log");
+    }
+});
+
+app.get("/read-update", (req, res) => {
+    const logType = req.query.version;
+    const pretty = req.query.pretty;
+    const logPath = `./resources/data/updates/${logType}.txt`;
+    try {
+        if (!fs.existsSync(logPath)) {
+            return res.status(404).send(`update "${logType}" not found`);
+        }
+        const logContent = fs.readFileSync(logPath, "utf8");
+        if (pretty) {
+            return res.send(logContent.replace(/\n/g, "<br>"));
+        }
+        res.send(logContent);
+    } catch (err) {
+        log.error(err);
+        return res.status(500).send("error reading update");
+    }
+});
+
+app.get("/get-latest-update", (req, res) => {
+    const updates = fs.readdirSync("./resources/data/updates");
+    const latestUpdate = updates.length;
+    res.send(String(latestUpdate));
+});
+
+app.get("/read-todo", (req, res) => {
+    const path = `./resources/data/todos/440163494529073152/pepperbot_dev.json`;
+    try {
+        if (!fs.existsSync(path)) {
+            return res.status(404).send(`todo not found`);
+        }
+        const logContent = fs.readFileSync(path, "utf8");
+        res.send(logContent);
+    } catch (err) {
+        log.error(err);
+        return res.status(500).send("error reading todo");
     }
 });
 

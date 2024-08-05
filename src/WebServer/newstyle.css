@@ -1,0 +1,179 @@
+:root {
+    font-family: monospace; /* todo: change font to "hack" */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    word-wrap: break-word;
+}
+body {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('images/backgrounds/1920x1080.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-blend-mode: darken;
+    min-height: 100vh;
+    color: white;
+    word-wrap: break-word;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -200px;
+    width: 200px;
+    height: 100%;
+    background-color: #1E1E2E;
+    z-index: 1000;
+}
+.sidebarDivider {
+    background-color: #13131d;
+    border-color: #13131d;
+    height: 5px;
+    width: 100%;
+}
+.sidebarTitle {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.sidebarButton {
+    text-align: left;
+    line-height: 10px;
+    width: 200%;
+    height: 8px;
+    padding: 10px;
+    background-color: #1E1E2E;
+    cursor: pointer;
+}
+.sidebarButtonText {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes slideOpen {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes slideClose {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+}
+
+/* Containers */
+
+.container {
+    position: fixed;
+    word-wrap: break-word;
+}
+
+#mobiledisplay {
+    width: fit-content;
+    height: 100%;
+    padding: 15px;
+    position: fixed;
+    z-index: -1;
+    overflow: auto;
+    word-wrap: break-word;
+    position: fixed;
+    top: 0;
+    left: calc(50% - 300px);
+}
+
+.sectionoutline {
+    border: 3px solid #cca1db;
+    border-radius: 10px;
+    display: flex;
+    width: 100%;
+    padding-left: 2.5px;
+    padding-right: 2.5px;
+    background-color: rgba(0, 0, 0, 0.35);
+    word-wrap: break-word;
+}
+
+/* Text */
+
+a {
+    color: #dda2ff;
+    text-decoration: none;
+}
+a:visited {
+    color: #dda2ff;
+    text-decoration: none;
+}
+a:hover {
+    color: #be53fd;
+    text-decoration: underline;
+}
+a:active {
+    color: #ebc9ff;
+}
+input {
+    background-color: #1E1E2E;
+    color: white;
+    border: 1px solid #cca1db;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+}
+button {
+    background-color: #1E1E2E;
+    color: white;
+    border: 1px solid #cca1db;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+    cursor: pointer;
+}
+pre {
+    display: block; /* Ensure the pre element is a block-level element */
+    margin-top: 0; /* Remove any default margin that might push it down */
+    word-wrap: break-word;
+}
+
+.outlined {
+    border: 1px solid #cca1db;
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+.sectionTitle {
+    text-decoration: underline;
+    display: block; /* Ensure the title is a block-level element */
+    text-align: center;
+}
+.sectioncontent {
+    text-align: left;
+    width: 100%;
+    padding: 5px;
+    word-wrap: break-word;
+}
+
+/* Scrollbars and stuff */
+
+::-webkit-scrollbar-thumb:hover {
+    background: #000000;
+}
+::-webkit-scrollbar-track {
+    background: #2a1d3e;
+    color: #50555c;
+}
+::-webkit-scrollbar-thumb {
+    background: #a38ac8;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #000000;
+}
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #a38ac8 #2a1d3e;
+}
