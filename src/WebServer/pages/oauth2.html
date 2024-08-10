@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pepper Site</title>
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
+        <link rel="icon" type="image/x-icon" href="./images/favicon.ico" />
+        <meta content="ze peppersite" property="og:title" />
+        <meta content="ye" property="og:description" />
+        <meta content="http://199.58.97.155" property="og:url" />
+        <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
+    </head>
+    <body>
+        <div class="sidebar">
+            <script id="definesidebarfunctions">
+                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
+                function redirectTo(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    window.location.href = url;
+                }
+                function openInNewTab(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    let win = window.open(
+                        url,
+                        "_blank"
+                    );
+                }
+            </script>
+            <h2 class="sidebarTitle">NAVIGATION</h2>
+            <div class="sidebarDivider"></div>
+            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
+            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
+            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
+            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
+            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
+            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
+            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+            <script id="sidebarmain">
+                function toggleSidebar() {
+                    document.querySelectorAll(".sidebar").forEach((element) => {
+                        void element.offsetWidth;
+
+                        if (sidebarIsOpen) {
+                            element.style.animation = "slideOpen 0.5s forwards";
+                        } else {
+                            element.style.animation =
+                                "slideClose 0.5s forwards";
+                        }
+                    });
+                    sidebarIsOpen = !sidebarIsOpen;
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                }
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "k") {
+                        toggleSidebar();
+                    }
+                });
+                document
+                    .querySelectorAll(".sidebarButton")
+                    .forEach((button) => {
+                        button.style.transition = "transform 0.25s ease-in-out";
+                        button.addEventListener("mouseover", () => {
+                            button.style.backgroundColor = "#13131d";
+                            button.style.transform = "translateX(-100px)";
+                        });
+                        button.addEventListener("mouseout", () => {
+                            button.style.backgroundColor = "#1E1E2E";
+                            button.style.transform = "translateX(0px)";
+                        });
+                        button.addEventListener("mousedown", () => {
+                            button.style.backgroundColor = "#616187";
+                        });
+                        button.addEventListener("mouseup", () => {
+                            button.style.backgroundColor = "#616187";
+                        });
+                    });
+                document.addEventListener("DOMContentLoaded", function () {
+                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
+                    if (sidebarIsOpen) {
+                        document
+                            .querySelectorAll(".sidebar")
+                            .forEach((element) => {
+                                element.style.animation =
+                                    "slideClose 0s forwards";
+                            });
+                    }
+                });
+            </script>
+        </div>
+        <div id="info">Hoi!</div>
+        <a id="login" style="display: none;" href="https://discord.com/oauth2/authorize?client_id=1209297323029565470&permissions=8&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A53134%2Foauth2&integration_type=0&scope=identify+applications.commands.permissions.update+applications.commands+bot+guilds+guilds.members.read+messages.read">Identify Yourself</a>
+        <script>
+        window.onload = () => {
+            const fragment = new URLSearchParams(window.location.hash.slice(1));
+            const [accessToken, tokenType] = [fragment.get('access_token'), fragment.get('token_type')];
+
+            if (!accessToken) {
+			return (document.getElementById('login').style.display = 'block');
+		}
+
+		fetch('https://discord.com/api/users/@me', {
+			headers: {
+				authorization: `${tokenType} ${accessToken}`,
+			},
+		})
+			.then(result => result.json())
+			.then(response => {
+				const { username, discriminator } = response;
+				document.getElementById('info').innerText += ` ${username}#${discriminator}`;
+			})
+			.catch(console.error);
+            };
+    </script>
+    </body>
+</html>

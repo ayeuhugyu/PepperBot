@@ -285,6 +285,7 @@ setTimeout(() => {
         app.listen(53134, "0.0.0.0", () =>
             log.info(`site listening at http://localhost:53134`)
         );
+        process.send({ action: "ready" });
     } catch (err) {
         log.fatal(`unable to listen to port: ${err}`);
     }
@@ -305,4 +306,8 @@ process.on("message", (message) => {
         log.info("updated started at times");
         return;
     }
+});
+
+process.on("uncaughtException", (err) => {
+    throw new Error(err);
 });

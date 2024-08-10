@@ -264,6 +264,9 @@ export class AudioPlayerQueueManager {
             if (index > this.currentIndex) {
                 this.currentIndex++;
             }
+            if (index <= this.currentIndex) {
+                this.currentIndex--;
+            }
             this.emitter.emit("update", this.readableQueue);
             return true;
         } else {

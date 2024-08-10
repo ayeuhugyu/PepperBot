@@ -33,6 +33,9 @@ export class SubCommandData extends SlashCommandSubcommandBuilder {
         }
         return this;
     }
+    setInvalidInputTypes(inputTypes) {
+        this.invalidInputTypes = inputTypes;
+    }
     toSubCommandBuilder() {
         let subcommandBuilder = this;
         if (subcommandBuilder.whitelist) {
@@ -75,6 +78,9 @@ export class CommandData extends SlashCommandBuilder {
             this.setName(aliases[0]);
         }
         return this;
+    }
+    setInvalidInputTypes(inputTypes) {
+        this.invalidInputTypes = inputTypes;
     }
 }
 
@@ -158,6 +164,15 @@ export class Command {
                         });
                     }
                     return;
+                }
+            }
+            if (this.invalidInputTypes) {
+                const inputType = `${fromInteraction ? "interaction" : "text"}`;
+                if (this.invalidInputTypes.includes(inputType)) {
+                    action.reply(message, {
+                        content: `input type \`${inputType}\` is marked as invalid for this command`,
+                        ephemeral: true,
+                    });
                 }
             }
             if (!shouldNotRun) {

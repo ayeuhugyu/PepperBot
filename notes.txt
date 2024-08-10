@@ -1,3 +1,27 @@
+todo:
+
+[1] - add p/corrupt image support
+[2] - ai image processing
+[3] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
+[4] - remake p/reactionrole, the syntax is ust horrific
+[5] - status displays currently playing song for guild
+[6] - fix p/queue (and future stuff) editing the message twice when collector stops
+[7] - p/todo pages if list length > 15
+[8] - make logs page only display 1 log and you switch between them and it only requests one at a time and only the bottom 200 or so lines
+[9] - peppersite statistics on most visited pages
+[10] - using p/queue while p/playurl is playing converts it to a queue system
+[11] - somehow fix p/queue only retrieving 50 playlist items despite the limit being set to 150 (its probably google's thing i likely can't do anything about it)
+[12] - peppersite resources viewer
+[13] - p/jak viewer
+[14] - p/addsound and p/jak add arguments for filename
+[15] - update/patch logger appends on subUpdates
+[16] - queue direct file support
+[17] - limit filenames of p/addsound, p/jak add, p/queue, etc. to 200 characters
+[18] - reminder / scheduling capabilities
+[19] - actually finish p/configure
+[20] - increase p/chatbubble sharp module pixel limit
+[21] - subcommand aliases from normal commands
+
 for update:
 
 to test:
@@ -8,17 +32,13 @@ p/update too many bugfixes
 
 **actual content:**
 
-**fixes/optimizations:**
+**fixes/optimizations/small stuff:**
 
-- random emoji reaction logs now include which emoji / index in emoji file
-- disgraceful message checker now returns true for memberless messages
-- removed redundant code in read-update requests to truncate ip addresses if loglevel == access
-- generateLStxt function now has arguments to re-add file extensions
-- queue messageChannel is now refreshed when running the command
-- p/queue now replies to p/queue add
-- p/soundboard now replies and informs you if your sound does not exist
-- fixed p/soundboard creating multiple audio resources / playing multiple sounds if there were 2 or more sounds with the same name (but not file extension)
-- p/playurl now responds with a message while retrieving video data from google
-- fixed p/playurl erroring upon finding a sound that exceeds maximum length (due to missing message argument)
-- fixed p/playurl not returning if member is not in a vc
-- fixed You've just been threaded! proccing on messages that can't be threaded
+- added aliases "resume", "continue" to p/queue play
+- removed aliases "add", "as" from p/addsound as they didn't make much sense
+- added alias "addsounds" to p/addsound as it can now add multiple
+- p/queue now subtracts from current index when removed index <= current index (yes i know that means that if you remove the one its currently on it says its playing the previous one but i don't care at least itll play what would actually be the next song)
+- p/chatbubble now has a "processing" message to avoid discord timing out slash commands
+- p/chatbubble now responds with an error message if fetching / putting the image through sharp throws an error
+- a guild config is now created upon the bot joining a server if an existing one cannot be found
+- there are now options in the command buider to disable certain input types (slash command only / text command only)

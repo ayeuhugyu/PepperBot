@@ -202,7 +202,7 @@ const add = new SubCommand(
     },
     async function execute(message, args, fromInteraction) {
         if (args.get("jakfile")) {
-            const attachments = message.attachments;
+            const attachments = message.attachments || [args.get("jakfile")];
             attachments.forEach(async (attachment) => {
                 const filename = attachment.name;
                 if (

@@ -1,25 +1,55 @@
-import dotenv from "dotenv";
-dotenv.config();
-import { ShardingManager } from "discord.js";
-import * as log from "./lib/log.js";
 import process from "node:process";
 import { fork } from "child_process";
+import * as log from "./lib/log.js";
 
-log.debug("starting pepperbot");
-
-const manager = new ShardingManager("src/bot.js", {
-    token: process.env.DISCORD_TOKEN,
-    totalShards: "auto",
-});
-
-const botStartedAt = Date.now();
-const startedAtDate = new Date(botStartedAt);
-const humanReadableDate = startedAtDate.toLocaleString();
-let shardStartedAt = botStartedAt;
-let shardStartedAtDate = startedAtDate;
-let shardHumanReadableDate = humanReadableDate;
+log.info("forking processes..");
 
 function handleSiteRequests(message) {}
+function handleSharderRequests(message) {
+    if (message.action && message.action == "restartSite") {
+        forkSite();
+    }
+    if (message.action && message.action == "updateStartedAt") {
+        site.send({
+            action: "updateStartedAt",
+            bot: message.times.bot,
+            shard: message.times.shard,
+        });
+    }
+    if (message.action && message.action == "setShardCount") {
+        site.send({ action: "setShardCount", value: message.value });
+    }
+}
+
+let sharder;
+function forkSharder() {
+    if (sharder) {
+        sharder.send({ action: "kill" });
+    }
+    log.info("forking sharder.js");
+    sharder = fork("src/sharder.js");
+    log.info("finished forking sharder.js");
+    sharder.on("message", (message) => {
+        return handleSharderRequests(message);
+    });
+    sharder.on("error", (err) => {
+        log.fatal(`FATAL SHARDER ERROR: \n${err}\n\n REFORKING...`);
+        forkSharder();
+    });
+    sharder.on("exit", (code, signal) => {
+        if (code !== 0) {
+            log.fatal(
+                `SHARDER EXITED WITH CODE ${code} AND SIGNAL ${signal}\n\n REFORKING...`
+            );
+            forkSharder();
+        }
+    });
+    sharder.once("message", (message) => {
+        if (message.action && message.action == "ready") {
+            log.info("sharder ready");
+        }
+    });
+}
 
 let site;
 function forkSite() {
@@ -28,64 +58,29 @@ function forkSite() {
     }
     log.info("forking site.js");
     site = fork("src/site.js");
+    log.info("finished forking site.js");
     site.on("message", (message) => {
         return handleSiteRequests(message);
     });
-    site.send({
-        action: "updateStartedAt",
-        bot: {
-            startedAt: humanReadableDate,
-            startedAtTimestamp: botStartedAt,
-        },
-        shard: {
-            startedAt: shardHumanReadableDate,
-            startedAtTimestamp: shardStartedAt,
-        },
+    site.on("error", (err) => {
+        log.fatal(`FATAL SHARDER ERROR: \n${err}\n\n REFORKING...`);
+        forkSharder();
+    });
+    site.on("exit", (code, signal) => {
+        if (code !== 0) {
+            log.fatal(
+                `SHARDER EXITED WITH CODE ${code} AND SIGNAL ${signal}\n\n REFORKING...`
+            );
+            forkSharder();
+        }
+    });
+    site.once("message", (message) => {
+        if (message.action && message.action == "ready") {
+            log.info("site ready");
+            if (!sharder) {
+                forkSharder();
+            }
+        }
     });
 }
-forkSite();
-
-let shardCount = 0;
-
-function setShardCount(count) {
-    site.send({ action: "setShardCount", value: count });
-}
-
-manager.on("shardCreate", (shard) => {
-    shardCount++;
-    setShardCount(shardCount);
-    log.debug(`launched pepperbot shard ${shard.id}`);
-});
-
-manager
-    .spawn()
-    .then((shards) => {
-        shards.forEach((shard) => {
-            shard.on("message", (message) => {
-                if (message.action && message.action == "restartSite") {
-                    forkSite();
-                }
-                if (message.action && message.action == "setStartedAt") {
-                    shardStartedAt = Date.now();
-                    shardStartedAtDate = new Date(shardStartedAt);
-                    shardHumanReadableDate =
-                        shardStartedAtDate.toLocaleString();
-                    site.send({
-                        action: "updateStartedAt",
-                        bot: {
-                            startedAt: humanReadableDate,
-                            startedAtTimestamp: botStartedAt,
-                        },
-                        shard: {
-                            startedAt: shardHumanReadableDate,
-                            startedAtTimestamp: shardStartedAt,
-                        },
-                    });
-                }
-                return message._result;
-            });
-        });
-    })
-    .catch(log.error);
-
-export default manager;
+await forkSite();

@@ -1,8 +1,10 @@
 import * as action from "../lib/discord_action.js";
+import * as log from "../lib/log.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { AttachmentBuilder, Collection } from "discord.js";
 import sharp from "sharp";
 import * as globals from "../lib/globals.js";
+import { error } from "shelljs";
 
 const config = globals.config;
 
@@ -48,7 +50,8 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction) {
-        if (!args.get("tail")) args.set("tail", "left");
+        let tail = args.get("tail");
+        if (!args.get("tail")) tail = "left";
         if (!args.get("image")) {
             action.reply(message, {
                 content: "provide the correct arguments RETARD",
@@ -93,14 +96,36 @@ const command = new Command(
             return;
         }
 
-        const inputImg = await fetch(args.get("image").url);
-        const inputImgBuf = await inputImg.arrayBuffer();
+        const sentReply = await action.reply(message, {
+            ephemeral: true,
+            content: "processing...",
+        });
+        let inputImg;
+        let inputImgBuf;
+        let outputImg;
+        let outputImgMetadata;
+        let errored = false;
+        try {
+            inputImg = await fetch(args.get("image").url);
+            inputImgBuf = await inputImg.arrayBuffer();
 
-        let outputImg = await sharp(inputImgBuf, { animated: true });
-        const outputImgMetadata = await outputImg.metadata();
+            outputImg = await sharp(inputImgBuf, { animated: true });
+            outputImgMetadata = await outputImg.metadata();
+        } catch (e) {
+            log.error(e);
+            errored = true;
+        }
+        if (errored) {
+            action.editMessage(sentReply, {
+                ephemeral: true,
+                content:
+                    "there was an error processing/fetching this image, see logs for more details",
+            });
+            return;
+        }
 
         let tailImg;
-        switch (args.get("tail")) {
+        switch (tail) {
             case "left":
                 tailImg = sharp("resources/images/tails/tail_left.png");
                 break;
@@ -139,7 +164,7 @@ const command = new Command(
             .toBuffer();
         if (replied) return;
         replied = true;
-        action.reply(message, {
+        action.editMessage(sentReply, {
             content: "hewwo :3 here is your chat bubble pookie-wookie bear!",
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),

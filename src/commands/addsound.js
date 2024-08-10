@@ -30,7 +30,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
-data.setAliases(["add", "as"]);
+data.setAliases(["addsounds"]);
 data.addAttachmentOption((option) =>
     option.setName("sound").setDescription("the sound to add").setRequired(true)
 );
@@ -44,7 +44,7 @@ const command = new Command(
     },
     async function execute(message, args) {
         if (args.get("sound")) {
-            const attachments = message.attachments;
+            const attachments = message.attachments || [args.get("sound")];
             attachments.forEach(async (attachment) => {
                 const filename = attachment.name;
                 if (

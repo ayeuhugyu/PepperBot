@@ -663,6 +663,7 @@ const playdata = new SubCommandData();
 playdata.setName("play");
 playdata.setDescription("plays/stops the queue");
 playdata.setPermissions([]);
+playdata.setAliases(["resume", "continue"]);
 playdata.setPermissionsReadable("");
 playdata.setWhitelist([]);
 playdata.setCanRunFromBot(true);

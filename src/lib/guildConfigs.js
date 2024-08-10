@@ -11,6 +11,13 @@ const defaultGuildConfig = {
 
 let guildConfigs = {};
 
+async function createGuildConfig(guildId) {
+    const path = `resources/data/guildConfigs/${guildId}.json`;
+    guildConfigs[guildId] = JSON.parse(JSON.stringify(defaultGuildConfig)); // this just creates a clone so that guildConfigs[guildId] doesn't reference the default object
+    await fsextra.outputFile(path, JSON.stringify(defaultGuildConfig, null, 4));
+    log.info(`created guild config for ${guildId}`);
+}
+
 function getGuildConfig(guildId) {
     if (!guildConfigs[guildId]) {
         log.warn(`nonexistent guild config requested: ${guildId}`);
@@ -92,14 +99,7 @@ async function getAllGuildConfigs() {
                 updateGuildConfig(guildId);
             }
         } else {
-            guildConfigs[guildId] = JSON.parse(
-                JSON.stringify(defaultGuildConfig)
-            ); // this just creates a clone so that guildConfigs[guildId] doesn't reference the default object
-            await fsextra.outputFile(
-                path,
-                JSON.stringify(defaultGuildConfig, null, 4)
-            );
-            log.info(`created missing guild config for ${guild.id}`);
+            createGuildConfig(guild.id);
         }
     }
 }
@@ -116,4 +116,5 @@ export default {
     guildConfigs,
     defaultGuildConfig,
     writeGuildConfig,
+    createGuildConfig,
 };
