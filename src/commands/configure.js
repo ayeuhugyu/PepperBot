@@ -293,7 +293,7 @@ function translateValue(value, nocolor) {
             }
             if (Array.isArray(value)) {
                 if (value.length == 0) {
-                    return "[2;30m[0m[2;30m[][0m";
+                    return nocolor ? "[]" : "[2;30m[0m[2;30m[][0m";
                 }
             }
             return objectAcc;
