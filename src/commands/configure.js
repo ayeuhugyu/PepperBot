@@ -47,16 +47,21 @@ const buttons = {
     formattingGuide: new ButtonBuilder()
         .setCustomId("formattingGuide")
         .setLabel("📜 Formatting")
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Primary),
 };
 const guildConfiguratorActionRow = new ActionRowBuilder();
 guildConfiguratorActionRow.addComponents(buttons.changeGuildConfig);
-const detailsActionRow = new ActionRowBuilder()
-detailsActionRow.addComponents(buttons.increaseDetailsIndex, buttons.decreaseDetailsIndex, buttons.changeGuildConfig, buttons.formattingGuide)
+const detailsActionRow = new ActionRowBuilder();
+detailsActionRow.addComponents(
+    buttons.increaseDetailsIndex,
+    buttons.decreaseDetailsIndex,
+    buttons.changeGuildConfig,
+    buttons.formattingGuide
+);
 
 const guildConfiguratorModal = new ModalBuilder()
     .setTitle("Guild Configuration")
-    .setCustomId("guildConfiguratorModal")
+    .setCustomId("guildConfiguratorModal");
 
 const keyTextInput = new TextInputBuilder()
     .setPlaceholder("enter a valid key")
@@ -85,13 +90,16 @@ valueTextInputActionRow.addComponents(valueTextInput);
 const resetTextInputActionRow = new ActionRowBuilder();
 resetTextInputActionRow.addComponents(resetTextInput);
 
-guildConfiguratorModal.addComponents(keyTextInputActionRow, valueTextInputActionRow);
-resetConfirmModal.addComponents(resetTextInputActionRow)
+guildConfiguratorModal.addComponents(
+    keyTextInputActionRow,
+    valueTextInputActionRow
+);
+resetConfirmModal.addComponents(resetTextInputActionRow);
 
 let activeConfigurators = {};
 
 function refresh(sent, detailsEmbed, gconfig, gid) {
-    const translatedGuildConfig = translateGuildConfigToString(gconfig)
+    const translatedGuildConfig = translateGuildConfigToString(gconfig);
     if (!sent) {
         if (activeConfigurators[gid]) {
             action.editMessage(activeConfigurators[gid].message, {
@@ -106,7 +114,9 @@ function refresh(sent, detailsEmbed, gconfig, gid) {
         }
     }
     action.editMessage(sent, {
-        content: `this is your current guild config. use the buttons in the details embed or the command to change it.\nyou can use \`${gconfig.prefix || config.generic.prefix}configure indexNumber value\` to change it, or the internal name (listed in italics in the details embed below) instead of index number. the index number is the number in grey appearing next to the part of the guild config.\n${translatedGuildConfig}`,
+        content: `this is your current guild config. use the buttons in the details embed or the command to change it.\nyou can use \`${
+            gconfig.prefix || config.generic.prefix
+        }configure indexNumber value\` to change it, or the internal name (listed in italics in the details embed below) instead of index number. the index number is the number in grey appearing next to the part of the guild config.\n${translatedGuildConfig}`,
         embeds: [detailsEmbed || activeConfigurators[gid].detailsEmbed],
         components: [detailsActionRow],
         ephemeral: true,
@@ -116,78 +126,104 @@ function refresh(sent, detailsEmbed, gconfig, gid) {
 function parseUserInputValue(value, type, arraytype) {
     switch (type) {
         case "boolean":
-            return value.toLowerCase() === "yes" || value.toLowerCase() === "true" || value.toLowerCase() === "on"
+            return (
+                value.toLowerCase() === "yes" ||
+                value.toLowerCase() === "true" ||
+                value.toLowerCase() === "on"
+            );
         case "array":
             if (arraytype === "string") {
-                return JSON.parse(`[${value.split(",").map(item => `"${item.trim()}"`)}]`)
+                return JSON.parse(
+                    `[${value.split(",").map((item) => `"${item.trim()}"`)}]`
+                );
             }
-            return JSON.parse(`[${value}]`)
+            return JSON.parse(`[${value}]`);
         case "string":
-            return value
+            return value;
         case "number":
-            return parseInt(value)
+            return parseInt(value);
         case "object":
-            return JSON.parse(`{${value}}`)
+            return JSON.parse(`{${value}}`);
         default:
-            return JSON.parse(value)
+            return JSON.parse(value);
     }
 }
 
-function changeGuildConfig(interaction, key, value, sent, guildConfig, guildConfigItemsIndexes, detailsEmbed, gid) {
-    const parsedNumericKey = parseInt(key)
-    console.log(parsedNumericKey)
-    const JSONObjectIndexKey = key
-    let guildConfigItemKey = undefined
-    let valueHasBeenChanged = false
-    if (!valueHasBeenChanged && parsedNumericKey && guildConfigItemsIndexes[parsedNumericKey - 1]) {
-        const item = guildConfigItemsIndexes[parsedNumericKey - 1]
-        console.log(item, parsedNumericKey - 1)
+function changeGuildConfig(
+    interaction,
+    key,
+    value,
+    sent,
+    guildConfig,
+    guildConfigItemsIndexes,
+    detailsEmbed,
+    gid
+) {
+    const parsedNumericKey = parseInt(key);
+    const JSONObjectIndexKey = key;
+    let guildConfigItemKey = undefined;
+    let valueHasBeenChanged = false;
+    if (
+        !valueHasBeenChanged &&
+        parsedNumericKey &&
+        guildConfigItemsIndexes[parsedNumericKey - 1]
+    ) {
+        const item = guildConfigItemsIndexes[parsedNumericKey - 1];
         if (!item) {
             action.reply(interaction, {
                 content: `invalid numeric index: ${parsedNumericKey}`,
-                ephemeral: true
-            })
+                ephemeral: true,
+            });
             return;
         }
         if (typeof guildConfig[item.key] === "undefined") {
             action.reply(interaction, {
                 content: `how did you even do that. somehow, you found a value inside of the item indexes that isn't a value inside of the guild config despite it being generated from it??? idfk how you even did that man wtf. ig if you wanna try to debug it, the item, guildConfig, and guildConfigItemsIndexes have been logged under the debug level, good fucking luck man.`,
-                ephemeral: true
-            })
-            log.info(item, guildConfig, guildConfigItemsIndexes)
+                ephemeral: true,
+            });
+            log.info(item, guildConfig, guildConfigItemsIndexes);
             return;
         }
-        guildConfigItemKey = item.key
-        valueHasBeenChanged = true
+        guildConfigItemKey = item.key;
+        valueHasBeenChanged = true;
     }
-    if (!valueHasBeenChanged && JSONObjectIndexKey && (typeof guildConfig[JSONObjectIndexKey] !== "undefined")) {
-        guildConfigItemKey = JSONObjectIndexKey
-        valueHasBeenChanged = true
+    if (
+        !valueHasBeenChanged &&
+        JSONObjectIndexKey &&
+        typeof guildConfig[JSONObjectIndexKey] !== "undefined"
+    ) {
+        guildConfigItemKey = JSONObjectIndexKey;
+        valueHasBeenChanged = true;
     }
-    if (guildConfigItemKey && (guildConfig[guildConfigItemKey] !== undefined)) {
-        let parsedValue
+    if (guildConfigItemKey && guildConfig[guildConfigItemKey] !== undefined) {
+        let parsedValue;
         try {
-            parsedValue = parseUserInputValue(value, gconfigInfo[guildConfigItemKey].type, gconfigInfo[guildConfigItemKey].arraytype)
+            parsedValue = parseUserInputValue(
+                value,
+                gconfigInfo[guildConfigItemKey].type,
+                gconfigInfo[guildConfigItemKey].arraytype
+            );
         } catch (e) {
-            log.error(e)
+            log.error(e);
             action.reply(interaction, {
                 content: "your value appears to be formatted incorrectly.",
-                ephemeral: true
-            })
+                ephemeral: true,
+            });
             return;
         }
         if (typeof parsedValue == "undefined") {
             action.reply(interaction, {
                 content: "your value appears to be formatted incorrectly.",
-                ephemeral: true
-            })
+                ephemeral: true,
+            });
             return;
         }
         // exceptions
         if (guildConfigItemKey == "disabledCommands") {
             if (parsedValue.includes("configure")) {
                 action.reply(interaction, {
-                    content: "you can't disable the configure command as that would prevent you from changing it back",
+                    content:
+                        "you can't disable the configure command as that would prevent you from changing it back",
                     ephemeral: true,
                 });
                 return;
@@ -205,33 +241,34 @@ function changeGuildConfig(interaction, key, value, sent, guildConfig, guildConf
         if (guildConfigItemKey === "blacklistedCommandChannelIds") {
             if (parsedValue.includes(interaction.channel.id)) {
                 action.reply(interaction, {
-                    content: "you can't blacklist the channel you're configuring in from having commands used in it.",
-                    ephemeral: true
-                })
+                    content:
+                        "you can't blacklist the channel you're configuring in from having commands used in it.",
+                    ephemeral: true,
+                });
                 return;
             }
         }
         if (interaction.deferUpdate) {
-            interaction.deferUpdate()
+            interaction.deferUpdate();
         } else {
-            interaction.react("✅")
+            interaction.react("✅");
         }
-        guildConfig[guildConfigItemKey] = parsedValue
-        guildConfigs.write(interaction.guild.id, guildConfig)
+        guildConfig[guildConfigItemKey] = parsedValue;
+        guildConfigs.write(interaction.guild.id, guildConfig);
     } else {
         action.reply(interaction, {
             content: "that key doesn't exist in the guild config",
-            ephemeral: true
-        })
+            ephemeral: true,
+        });
         return;
     }
-    refresh(sent, detailsEmbed, guildConfig, gid)
+    refresh(sent, detailsEmbed, guildConfig, gid);
 }
 function translateValue(value, nocolor) {
-    let objectAcc = "\n" // for some reason you can't define these in case blocks
-    let objectLength = 0
-    let objectIteration = 0
-    let isLastIteration = false
+    let objectAcc = "\n"; // for some reason you can't define these in case blocks
+    let objectLength = 0;
+    let objectIteration = 0;
+    let isLastIteration = false;
     switch (typeof value) {
         case "boolean":
             if (value) {
@@ -244,30 +281,38 @@ function translateValue(value, nocolor) {
         case "string":
             return nocolor ? value : chalk.blue(value);
         case "object":
-            objectLength = Object.entries(value).length
+            objectLength = Object.entries(value).length;
             for (const [key, vl] of Object.entries(value)) {
-                objectIteration++
-                isLastIteration = (objectIteration == objectLength)
-                objectAcc += nocolor ? `      ${key}: ${vl}${isLastIteration ? "" : "\n"}` : `      ${chalk.yellow(key)}: ${chalk.blue(vl)}${isLastIteration ? "" : chalk.reset("\n")}`;
-
+                objectIteration++;
+                isLastIteration = objectIteration == objectLength;
+                objectAcc += nocolor
+                    ? `      ${key}: ${vl}${isLastIteration ? "" : "\n"}`
+                    : `      ${chalk.yellow(key)}: ${chalk.blue(vl)}${
+                          isLastIteration ? "" : chalk.reset("\n")
+                      }`;
+            }
+            if (Array.isArray(value)) {
+                if (value.length == 0) {
+                    return "[2;30m[0m[2;30m[][0m";
+                }
             }
             return objectAcc;
-        default: 
-            return value
+        default:
+            return value;
     }
 }
-const gconfigInfo = guildConfigs.info
+const gconfigInfo = guildConfigs.info;
 function translateGuildConfigToString(gconfig) {
-    let acc = "```ansi\n"
-    let indexNumber = 0
+    let acc = "```ansi\n";
+    let indexNumber = 0;
     for (const [key, value] of Object.entries(gconfig)) {
-        const cleanname = gconfigInfo[key].cleanname || key
-        const cleanvalue = translateValue(value)
-        acc += `[2;30m[0m[2;30m[${indexNumber + 1}][0m ${cleanname}: ${cleanvalue}\n`
-        indexNumber++
+        const cleanname = gconfigInfo[key].cleanname || key;
+        const cleanvalue = translateValue(value);
+        acc += `[2;30m[0m[2;30m[${indexNumber + 1}][0m ${cleanname}: ${cleanvalue}\n`;
+        indexNumber++;
     }
-    acc += "```"
-    return acc
+    acc += "```";
+    return acc;
 }
 
 const data = new CommandData();
@@ -278,17 +323,16 @@ data.setPermissionsReadable("Administrator");
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.setAliases(["config", "cfg", "gconfig", "guildconfig", "serverconfig"]);
-data.setDisabledContexts(["dm"])
+data.setDisabledContexts(["dm"]);
 data.addStringOption((option) =>
-    option
-        .setName("key")
-        .setDescription("the key to change")
-        .setRequired(false)
-);  
+    option.setName("key").setDescription("the key to change").setRequired(false)
+);
 data.addStringOption((option) =>
     option
         .setName("value")
-        .setDescription("a JSON formatted string to set the key to; must be valid JSON and match the key's type")
+        .setDescription(
+            "a JSON formatted string to set the key to; must be valid JSON and match the key's type"
+        )
         .setRequired(false)
 );
 const command = new Command(
@@ -297,7 +341,14 @@ const command = new Command(
         const args = new Collection();
         args.set("key", message.content.split(" ")[1]);
         if (args.get("key")) {
-            args.set("value", message.content.slice(message.content.indexOf(args.get("key")) + args.get("key").length + 1));
+            args.set(
+                "value",
+                message.content.slice(
+                    message.content.indexOf(args.get("key")) +
+                        args.get("key").length +
+                        1
+                )
+            );
         }
         return args;
     },
@@ -309,55 +360,84 @@ const command = new Command(
             });
             return;
         }
-        const translatedGuildConfig = translateGuildConfigToString(messageGuildConfig)
-        let detailsIndex = 0
-        let guildConfigItemsIndexes = []
+        const translatedGuildConfig =
+            translateGuildConfigToString(messageGuildConfig);
+        let detailsIndex = 0;
+        let guildConfigItemsIndexes = [];
         for (const [key, value] of Object.entries(messageGuildConfig)) {
-            guildConfigItemsIndexes.push({ key: key, value: value })
+            guildConfigItemsIndexes.push({ key: key, value: value });
         }
         if (args.get("key")) {
-            changeGuildConfig(message, args.get("key"), args.get("value"), undefined, messageGuildConfig, guildConfigItemsIndexes, undefined, message.guild.id)
+            changeGuildConfig(
+                message,
+                args.get("key"),
+                args.get("value"),
+                undefined,
+                messageGuildConfig,
+                guildConfigItemsIndexes,
+                undefined,
+                message.guild.id
+            );
             return;
         }
         const translatedGuildConfigMessage = await action.reply(message, {
             content: `loading...`,
-            ephemeral: true
-        })
-        
-        const detailsEmbed = default_embed()
-        detailsEmbed.setTitle("loading...")
-        console.log(guildConfigItemsIndexes)
+            ephemeral: true,
+        });
+
+        const detailsEmbed = default_embed();
+        detailsEmbed.setTitle("loading...");
         function refreshDetails() {
-            guildConfigItemsIndexes = []
+            guildConfigItemsIndexes = [];
             for (const [key, value] of Object.entries(messageGuildConfig)) {
-                guildConfigItemsIndexes.push({ key: key, value: value })
+                guildConfigItemsIndexes.push({ key: key, value: value });
             }
-            console.log(guildConfigItemsIndexes)
             const item = guildConfigItemsIndexes[detailsIndex];
             if (!item) {
-                console.log(guildConfigItemsIndexes, detailsIndex, guildConfigItemsIndexes[detailsIndex])
                 return;
             }
-            const key = item.key
-            const value = item.value
-            const itemInfo = gconfigInfo[key]
-            const cleankey = itemInfo.cleanname || key
-            detailsEmbed.setTitle(`${cleankey} *(${key})*`)
-            detailsEmbed.setDescription(`current value: ${translateValue(value, true)}\ndefault value: ${translateValue(itemInfo.default, true)}\ntype: ${itemInfo.type}\ndescription: ${itemInfo.description}`)
+            const key = item.key;
+            const value = item.value;
+            const itemInfo = gconfigInfo[key];
+            const cleankey = itemInfo.cleanname || key;
+            detailsEmbed.setTitle(`${cleankey} *(${key})*`);
+            detailsEmbed.setDescription(
+                `current value: ${translateValue(
+                    value,
+                    true
+                )}\ndefault value: ${translateValue(
+                    itemInfo.default,
+                    true
+                )}\ntype: ${itemInfo.type}\ndescription: ${
+                    itemInfo.description
+                }`
+            );
             action.editMessage(translatedGuildConfigMessage, {
                 content: translatedGuildConfigMessage.content,
                 embeds: [detailsEmbed],
                 components: [detailsActionRow],
-                ephemeral: true
-            })
-            activeConfigurators[message.guild.id] = { message: translatedGuildConfigMessage, detailsEmbed: detailsEmbed }
+                ephemeral: true,
+            });
+            activeConfigurators[message.guild.id] = {
+                message: translatedGuildConfigMessage,
+                detailsEmbed: detailsEmbed,
+            };
         }
-        await refreshDetails()
-        activeConfigurators[message.guild.id] = { message: translatedGuildConfigMessage, detailsEmbed: detailsEmbed }
-        refresh(translatedGuildConfigMessage, detailsEmbed, messageGuildConfig, message.guild.id)
-        const collector = await translatedGuildConfigMessage.createMessageComponentCollector({
-            time: 240_000,
-        });
+        await refreshDetails();
+        activeConfigurators[message.guild.id] = {
+            message: translatedGuildConfigMessage,
+            detailsEmbed: detailsEmbed,
+        };
+        refresh(
+            translatedGuildConfigMessage,
+            detailsEmbed,
+            messageGuildConfig,
+            message.guild.id
+        );
+        const collector =
+            await translatedGuildConfigMessage.createMessageComponentCollector({
+                time: 240_000,
+            });
         collector.on("collect", (interaction) => {
             if (interaction.user.id !== message.author.id) {
                 action.reply(message, {
@@ -367,66 +447,101 @@ const command = new Command(
                 return;
             }
             if (interaction.customId === "increaseDetailsIndex") {
-                detailsIndex-- // not sure why these are reversed but they are
+                detailsIndex--; // not sure why these are reversed but they are
                 if (detailsIndex < 0) {
-                    detailsIndex = guildConfigItemsIndexes.length - 1
+                    detailsIndex = guildConfigItemsIndexes.length - 1;
                 }
-                refreshDetails()
-                interaction.deferUpdate()
+                refreshDetails();
+                interaction.deferUpdate();
                 return;
             }
             if (interaction.customId === "decreaseDetailsIndex") {
-                detailsIndex++
-                
+                detailsIndex++;
+
                 if (detailsIndex >= guildConfigItemsIndexes.length) {
-                    detailsIndex = 0
+                    detailsIndex = 0;
                 }
-                refreshDetails()
-                interaction.deferUpdate()
+                refreshDetails();
+                interaction.deferUpdate();
                 return;
             }
             if (interaction.customId === "changeGuildConfig") {
-                if (messageGuildConfig.configLockedToServerOwner && message.author.id !== message.guild.ownerId) {
+                if (
+                    messageGuildConfig.configLockedToServerOwner &&
+                    message.author.id !== message.guild.ownerId
+                ) {
                     action.reply(interaction, {
-                        content: "this guild's configuration is locked to the server owner",
+                        content:
+                            "this guild's configuration is locked to the server owner",
                         ephemeral: true,
                     });
                     return;
                 }
                 interaction.showModal(guildConfiguratorModal);
-                const filter = (interaction) => interaction.customId === "guildConfiguratorModal";
-                interaction.awaitModalSubmit({ filter, time: 120_000 }).then((interaction) => {
-                    const key = interaction.fields.getTextInputValue("key");
-                    const value = interaction.fields.getTextInputValue("value");
-                    changeGuildConfig(interaction, key, value, translatedGuildConfigMessage, messageGuildConfig, guildConfigItemsIndexes, detailsEmbed)
-                });
+                const filter = (interaction) =>
+                    interaction.customId === "guildConfiguratorModal";
+                interaction
+                    .awaitModalSubmit({ filter, time: 120_000 })
+                    .then((interaction) => {
+                        const key = interaction.fields.getTextInputValue("key");
+                        const value =
+                            interaction.fields.getTextInputValue("value");
+                        changeGuildConfig(
+                            interaction,
+                            key,
+                            value,
+                            translatedGuildConfigMessage,
+                            messageGuildConfig,
+                            guildConfigItemsIndexes,
+                            detailsEmbed
+                        );
+                    });
             }
             if (interaction.customId === "formattingGuide") {
                 action.reply(interaction, {
                     content: `here's a formatting guide for all of the guild config types:
 \`\`\`ansi
-bools (boolean) are either ${chalk.green("TRUE")} or ${chalk.red("FALSE")}. it is ${chalk.green("TRUE")} if you input "${chalk.green("yes")}", "${chalk.green("true")}", or "${chalk.green("on")}", and if you input anything else it is ${chalk.red("FALSE")}.
+bools (boolean) are either ${chalk.green("TRUE")} or ${chalk.red(
+                        "FALSE"
+                    )}. it is ${chalk.green(
+                        "TRUE"
+                    )} if you input "${chalk.green("yes")}", "${chalk.green(
+                        "true"
+                    )}", or "${chalk.green(
+                        "on"
+                    )}", and if you input anything else it is ${chalk.red(
+                        "FALSE"
+                    )}.
 
 for ${chalk.yellow("numbers")} you literally just input the number
 
-for ${chalk.blue("strings")} you literally just input the string, keep in mind channel IDs are handled as strings but are really just a number
+for ${chalk.blue(
+                        "strings"
+                    )} you literally just input the string, keep in mind channel IDs are handled as strings but are really just a number
 
-for arrays each ${chalk.blue("value")} is seperated by a comma. a list containing "${chalk.blue("test")}", "${chalk.blue("west")}", and "${chalk.blue("zest")}" would be formatted like this: \n${chalk.blue("test")}, ${chalk.blue("west")}, ${chalk.blue("zest")}
+for arrays each ${chalk.blue(
+                        "value"
+                    )} is seperated by a comma. a list containing "${chalk.blue(
+                        "test"
+                    )}", "${chalk.blue("west")}", and "${chalk.blue(
+                        "zest"
+                    )}" would be formatted like this: \n${chalk.blue(
+                        "test"
+                    )}, ${chalk.blue("west")}, ${chalk.blue("zest")}
 \`\`\`
                     `,
-                    ephemeral: true
-                })
+                    ephemeral: true,
+                });
             }
         });
-        collector
-            .on("end", () => {
-                delete activeConfigurators[message.guild.id];
-                action.editMessage(translatedGuildConfigMessage, {
-                    content: translatedGuildConfigMessage.content,
-                    embeds: [detailsEmbed],
-                    components: [],
-                });
-            })
+        collector.on("end", () => {
+            delete activeConfigurators[message.guild.id];
+            action.editMessage(translatedGuildConfigMessage, {
+                content: translatedGuildConfigMessage.content,
+                embeds: [detailsEmbed],
+                components: [],
+            });
+        });
     },
     []
 );
