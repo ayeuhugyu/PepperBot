@@ -7,7 +7,10 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
-const commands = commandsObject.commandsWithoutAliasesExecutions;
+const commands = new Collection();
+commandsObject.commandsWithoutAliases.forEach((value, key) => {
+    commands.set(key, value.execute);
+}); // idfk why this works and just using the execute function directly doesn't
 
 async function chatInputCommand(interaction) {
     interaction.author = interaction.user;
@@ -53,21 +56,21 @@ async function chatInputCommand(interaction) {
     }
     log.info(`command requested by ${interaction.user.id}: p/${command}`);
     const commandFn = commands.get(command);
-    await commandFn(interaction, interaction.options, true).catch((err) => {
-        log.error(err);
-    });
-    let logmsg = `command received: ${command} from: ${interaction.author.username} (${interaction.author}) `;
-    if (interaction.channel) {
-        if (interaction.channel.type === 1) {
-            logmsg += `in DM `;
-        } else {
-            logmsg += `in: ${interaction.channel.name} (${interaction.channel}) `;
+    const startCommand = performance.now()
+    commandFn(interaction, interaction.options, true).catch((err) => {log.error(err)}).then((returned) => {
+        let logmsg = `command received: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${interaction.author.username} (${interaction.author}) `;
+        if (interaction.channel) {
+            if (interaction.channel.type === 1) {
+                logmsg += `in DM `;
+            } else {
+                logmsg += `in: ${interaction.channel.name} (${interaction.channel}) `;
+            }
         }
-    }
-    if (interaction.guild) {
-        logmsg += `in guild: ${interaction.guild.name} (${interaction.guild}) `;
-    }
-    log.info(logmsg);
+        if (interaction.guild) {
+            logmsg += `in guild: ${interaction.guild.name} (${interaction.guild}) `;
+        }
+        log.info(logmsg);
+    });
 }
 
 function getIsDisgraceful(message) {

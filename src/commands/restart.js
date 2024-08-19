@@ -6,6 +6,8 @@ import process from "node:process";
 
 const config = globals.config;
 
+const processes = ["site", "sharder", "shard"];
+
 const data = new CommandData();
 data.setName("restart");
 data.setDescription("process.exit(0)");
@@ -22,23 +24,43 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         let argument = message.content.slice(
-            config.generic.prefix.length + commandLength
+            prefix.length + commandLength
         );
         if (argument) {
             argument.trim();
         } // this is necessary because if there are no arguments supplied argument will be equal to undefined and trim() will not be a function and thus will error
-        args.set("hostProcess", argument);
+        args.set("process", argument.split(" ")[0]);
+        if (args.get("process") == "shard") {
+            args.set("shardId", argument.split(" ")[1]);
+        }
         return args;
     },
     async function execute(message, args) {
-        if (args.get("hostProcess")) {
-            await action.reply(message, "restarting site process");
-            process.send({ action: "restartSite" });
-            return;
+        if (args.get("process")) {
+            if (processes.includes(args.get("process"))) {
+                if (args.get("process") == "shard") {
+                    await action.reply(
+                        message,
+                        `restarting shard #${args.get("shardId")}...`
+                    );
+                    process.send({ action: "restart", process: args.get("process"), shardId: args.get("shardId") });
+                    return;
+                }
+                await action.reply(
+                    message,
+                    `restarting ${args.get("process")} process...`
+                );
+                process.send({ action: "restart", process: args.get("process") });
+                return;
+            } else {
+                await action.reply(message, `invalid process. valid processes are: ${processes.join(", ")}`);
+                return;
+            }
         }
         await action.reply(message, "Bye Bye! 🌶");
         process.exit(0);

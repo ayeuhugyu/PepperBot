@@ -4,7 +4,7 @@ import { ShardingManager } from "discord.js";
 import * as log from "./lib/log.js";
 import process from "node:process";
 
-log.debug("starting pepperbot");
+log.info("starting pepperbot");
 
 const manager = new ShardingManager("src/bot.js", {
     token: process.env.DISCORD_TOKEN,
@@ -50,6 +50,10 @@ process.on("message", (message) => {
         kill();
         return;
     }
+    if (message.action === "forceUpdateTimes") {
+        updateSiteStartTimes();
+        return;
+    }
 });
 
 process.on("uncaughtException", (err) => {
@@ -59,7 +63,7 @@ process.on("uncaughtException", (err) => {
 manager.on("shardCreate", (shard) => {
     shardCount++;
     setShardCount(shardCount);
-    log.debug(`launched pepperbot shard ${shard.id}`);
+    log.info(`launched pepperbot shard ${shard.id}`);
 });
 
 manager.spawn().then((shards) => {
@@ -67,8 +71,18 @@ manager.spawn().then((shards) => {
     updateSiteStartTimes();
     shards.forEach((shard) => {
         shard.on("message", (message) => {
-            if (message.action && message.action == "restartSite") {
-                process.send({ action: "restartSite" });
+            if (message.action && message.action == "restart") {
+                if (message.process === "shard") {
+                    log.info(`restarting shard #${message.shardId}`);
+                    const shrd = shards.get(parseInt(message.shardId))
+                    if (!shrd) {
+                        log.warn(`could not find and restart shard #${message.shardId}`);
+                        return;
+                    }
+                    shrd.respawn();
+                    return;
+                }
+                process.send({ action: "restart", process: message.process });
             }
             if (message.action && message.action == "setStartedAt") {
                 shardStartedAt = Date.now();

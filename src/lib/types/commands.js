@@ -9,7 +9,7 @@ import * as log from "../log.js";
 
 const config = globals.config;
 
-export class SubCommandData extends SlashCommandSubcommandBuilder {
+export class BaseCommandData {
     setWhitelist(whitelist) {
         this.whitelist = whitelist;
         return this;
@@ -35,52 +35,42 @@ export class SubCommandData extends SlashCommandSubcommandBuilder {
     }
     setInvalidInputTypes(inputTypes) {
         this.invalidInputTypes = inputTypes;
+        return this;
     }
-    toSubCommandBuilder() {
-        let subcommandBuilder = this;
-        if (subcommandBuilder.whitelist) {
-            delete subcommandBuilder.whitelist;
-        }
-        if (subcommandBuilder.permissions) {
-            delete subcommandBuilder.permissions;
-        }
-        if (subcommandBuilder.permissionsReadable) {
-            delete subcommandBuilder.permissionsReadable;
-        }
-        if (subcommandBuilder.canRunFromBot) {
-            delete subcommandBuilder.canRunFromBot;
-        }
-        return subcommandBuilder.toJSON();
+    setDisabledContexts(disabledContexts) {
+        this.disabledContexts = disabledContexts;
+        return this;
+    }
+    
+}
+
+export class SubCommandData extends SlashCommandSubcommandBuilder {
+    constructor() {
+        super();
+        for (const method of Object.getOwnPropertyNames(BaseCommandData.prototype)) {
+            if (typeof BaseCommandData.prototype[method] === 'function') {
+                this[method] = BaseCommandData.prototype[method];
+            }
+        } // probably isn't the best way to do this, but i don't really care cuz it works.
+    }
+    setNormalAliases(aliases) {
+        this.normalAliases = aliases;
+        return this;
     }
 }
 
 export class CommandData extends SlashCommandBuilder {
-    setWhitelist(whitelist) {
-        this.whitelist = whitelist;
-        return this;
-    }
-    setPermissions(permissions) {
-        this.permissions = permissions;
-        this.setDefaultMemberPermissions(permissions[0]);
-        return this;
-    }
-    setPermissionsReadable(permissionsReadable) {
-        this.permissionsReadable = permissionsReadable;
-        return this;
-    }
-    setCanRunFromBot(canRunFromBot) {
-        this.canRunFromBot = canRunFromBot;
-        return this;
-    }
-    setAliases(aliases) {
-        this.aliases = aliases;
-        if (!this.name) {
-            this.setName(aliases[0]);
+    constructor() {
+        super();
+        for (const method of Object.getOwnPropertyNames(BaseCommandData.prototype)) {
+            if (typeof BaseCommandData.prototype[method] === 'function') {
+                this[method] = BaseCommandData.prototype[method];
+            }
         }
-        return this;
     }
-    setInvalidInputTypes(inputTypes) {
-        this.invalidInputTypes = inputTypes;
+    setPrimarySubcommand(primarySubcommand) {
+        this.primarySubcommand = primarySubcommand
+        return this;
     }
 }
 
@@ -166,21 +156,72 @@ export class Command {
                     return;
                 }
             }
+            this.inputType = `${fromInteraction ? "interaction" : "text"}`;
             if (this.invalidInputTypes) {
-                const inputType = `${fromInteraction ? "interaction" : "text"}`;
-                if (this.invalidInputTypes.includes(inputType)) {
+                
+                if (this.invalidInputTypes.includes(this.inputType)) {
                     action.reply(message, {
-                        content: `input type \`${inputType}\` is marked as invalid for this command`,
+                        content: `input type \`${this.inputType}\` is marked as invalid for this command`,
                         ephemeral: true,
                     });
+                    return;
+                }
+            }
+            this.inputContext = `${message.guild ? "guild" : "dm"}`
+            if (this.disabledContexts) {
+                if (this.disabledContexts.includes(this.inputContext)) {
+                    action.reply(message, {
+                        content: `input context \`${this.inputContext}\` is marked as invalid for this command`,
+                        ephemeral: true
+                    })
+                    return;
                 }
             }
             if (!shouldNotRun) {
                 if (!this.isSubCommand)
                     statistics.addCommandStat(this.data.name, 1);
                 const guildConfig = await guildConfigs.getGuildConfig(
-                    message.guild.id
+                    message.guildId
                 );
+                if (guildConfig) {
+                    if (guildConfig.disabledCommands.includes(this.data.name)) {
+                        action.reply(message, {
+                            content: "usage of this command has been disabled in this guild",
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    if (guildConfig.disableAllCommands && this.data.name !== "configure") {
+                        action.reply(message, {
+                            content: "command usage is disabled in this guild",
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    if (this.inputType === "interaction" && guildConfig.disableSlashCommands && this.data.name !== "configure") {
+                        action.reply(message, {
+                            content: "slash commands are disabled in this guild",
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    if (this.inputType === "text" && guildConfig.disableTextCommands && this.data.name !== "configure") {
+                        action.reply(message, {
+                            content: "text commands are disabled in this guild",
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    if (message.channel) {
+                        if (guildConfig.blacklistedCommandChannelIds.includes(message.channel.id)) {
+                            action.reply(message, {
+                                content: "command usage is disabled in this channel",
+                                ephemeral: true,
+                            });
+                            return;
+                        }
+                    }
+                }
                 if (!args) {
                     let errorReply = false;
                     args = await this.getArguments(message, guildConfig).catch(
@@ -196,7 +237,7 @@ export class Command {
                         );
                         return;
                     }
-                    log.debug(
+                    log.info(
                         `finished getting arguments for p/${this.data.name}`
                     );
                 }
@@ -205,8 +246,14 @@ export class Command {
                     this.subcommands.length > 0 &&
                     !this.isSubCommand
                 ) {
+                    let subcommand
+                    if (this.data.primarySubcommand) {
+                        if ((args && !args.get("_SUBCOMMAND")) || !args) {
+                            subcommand = this.data.primarySubcommand
+                        }
+                    }
                     if (args && args.get("_SUBCOMMAND")) {
-                        const subcommand = this.subcommands.find(
+                        subcommand = this.subcommands.find(
                             (subcommand) => {
                                 if (
                                     subcommand.data.name ===
@@ -225,26 +272,37 @@ export class Command {
                                 return false;
                             }
                         );
-                        if (subcommand) {
-                            let subcommandArgs;
-                            if (fromInteraction) {
-                                subcommandArgs = args;
-                            } else {
-                                message.content = message.content
-                                    .replace(args.get("_SUBCOMMAND"), "")
-                                    .replace("  ", " ")
-                                    .trim(); // it is intentional that i am using .replace instead of .replaceAll. don't change it.
-                                subcommandArgs = await subcommand.getArguments(
-                                    message,
-                                    guildConfig
-                                );
-                            }
-                            return await subcommand.execute(
+                    }
+                    if (subcommand) {
+                        let subcommandArgs;
+                        if (fromInteraction) {
+                            subcommandArgs = args;
+                        } else {
+                            message.content = message.content
+                                .replace(args.get("_SUBCOMMAND"), "")
+                                .replace("  ", " ")
+                                .trim(); // it is intentional that i am using .replace instead of .replaceAll. don't change it.
+                            subcommandArgs = await subcommand.getArguments(
                                 message,
-                                subcommandArgs,
-                                fromInteraction
+                                guildConfig
                             );
                         }
+                        const subcommandresult = await subcommand.execute(
+                            message,
+                            subcommandArgs,
+                            fromInteraction
+                        ).catch((err) => {
+                            log.error(err);
+                            errorReply = true;
+                        });
+                        if (errorReply) {
+                            action.reply(
+                                message,
+                                "an error occurred while executing this subcommand, the error has been logged."
+                            );
+                            return;
+                        }
+                        return subcommandresult;
                     }
                 }
                 let errorReply = false;

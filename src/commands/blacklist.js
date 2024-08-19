@@ -13,6 +13,19 @@ import * as globals from "../lib/globals.js";
 
 const config = globals.config;
 
+let blacklists
+fs.readFile("resources/data/blacklist.json", "utf-8", (err, data) => {
+    if (err) {
+        log.error(err);
+        return;
+    }
+    try {
+        blacklists = JSON.parse(data);
+    } catch (parseErr) {
+        log.error(parseErr);
+    }
+});
+
 const viewdata = new SubCommandData();
 viewdata.setName("view");
 viewdata.setDescription("view the blacklist");
@@ -26,11 +39,6 @@ const view = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction) {
-        let filestring = await fs.readFileSync(
-            "resources/data/blacklist.json",
-            "utf-8"
-        );
-        let blacklists = await JSON.parse(filestring);
         if (blacklists.length == 0 || blacklists == undefined) {
             action.reply(message, {
                 content: "nobodys blacklisted (you are now LOL!!!!!/j)",
@@ -51,7 +59,7 @@ const view = new SubCommand(
     }
 );
 
-const removedata = new CommandData();
+const removedata = new SubCommandData();
 removedata.setName("remove");
 removedata.setDescription("remove a user from the blacklist");
 removedata.setPermissions([]);
@@ -66,28 +74,30 @@ removedata.addStringOption((option) =>
 );
 const remove = new SubCommand(
     removedata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "user",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
     },
     async function execute(message, args, fromInteraction) {
         if (args.get("user")) {
-            let filestring = await fs.readFileSync(
-                "resources/data/blacklist.json"
-            );
-            let blacklists = await JSON.parse(filestring);
             if (blacklists.includes(args.get("user"))) {
                 blacklists.splice(blacklists.indexOf(args.get("user")), 1);
-                await fs.writeFileSync(
+                fs.writeFile(
                     "resources/data/blacklist.json",
-                    JSON.stringify(blacklists)
+                    JSON.stringify(blacklists),
+                    (err) => {
+                        if (err) {
+                            log.error(err);
+                        }
+                    }
                 );
                 action.reply(message, {
                     content: `removed \`${args.get(
@@ -112,7 +122,7 @@ const remove = new SubCommand(
     }
 );
 
-const adddata = new CommandData();
+const adddata = new SubCommandData();
 adddata.setName("add");
 adddata.setDescription("add to the blacklist");
 adddata.setPermissions([]);
@@ -124,16 +134,17 @@ adddata.addStringOption((option) =>
 );
 const add = new SubCommand(
     adddata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         if (message.mentions.users.first()) {
             args.set("user", message.mentions.users.first().id);
         } else {
             args.set(
                 "user",
                 message.content
-                    .slice(config.generic.prefix.length + commandLength)
+                    .slice(prefix.length + commandLength)
                     .trim()
             );
         }
@@ -142,14 +153,15 @@ const add = new SubCommand(
     },
     async function execute(message, args, fromInteraction) {
         if (args.get("user")) {
-            let filestring = await fs.readFileSync(
-                "resources/data/blacklist.json"
-            );
-            let blacklists = await JSON.parse(filestring);
             blacklists.push(args.get("user"));
-            await fs.writeFileSync(
+            fs.writeFile(
                 "resources/data/blacklist.json",
-                JSON.stringify(blacklists)
+                JSON.stringify(blacklists),
+                (err) => {
+                    if (err) {
+                        log.error(err);
+                    }
+                }
             );
             await action.reply(message, {
                 content: `blacklisted \`${args.get("user")}\``,
@@ -173,6 +185,7 @@ data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.setAliases(["bl"]);
+data.setPrimarySubcommand(view)
 data.addStringOption((option) =>
     option
         .setName("subcommand")
@@ -206,7 +219,6 @@ const command = new Command(
             });
             return;
         }
-        view.execute(message, args, fromInteraction);
     },
     [add, remove, view] // subcommands
 );

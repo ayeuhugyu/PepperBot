@@ -33,15 +33,16 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set("log", message.content.split(" ")[1]);
         if (args.get("log")) {
             args.set(
                 "amount",
                 message.content.slice(
-                    config.generic.prefix.length +
+                    prefix.length +
                         commandLength +
                         message.content.split(" ")[1].length +
                         1
@@ -53,7 +54,8 @@ const command = new Command(
         }
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
+        const prefix = gconfig.prefix || config.generic.prefix
         if (args.get("log")) {
             const logs = fs
                 .readdirSync(`logs`)
@@ -61,7 +63,7 @@ const command = new Command(
             if (!logs.includes(args.get("log"))) {
                 action.reply(
                     message,
-                    "There's no such thing! this could also mean there just haven't been any of that type of log since the last time i ran p/cleanup"
+                    `There's no such thing! this could also mean there just haven't been any of that type of log since the last time i ran ${prefix}cleanup`
                 );
                 return;
             }

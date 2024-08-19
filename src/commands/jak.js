@@ -128,13 +128,14 @@ getData.addStringOption((option) =>
 
 const get = new SubCommand(
     getData,
-    async function getArguments(message) {
-        const commandLength = message.content.split(" ")[0].length - 1;
+    async function getArguments(message, gconfig) {
+        const commandLength = message.content.split(" ")[0].length - 1;0
+        const prefix = gconfig.prefix || config.generic.prefix
         const args = new Collection();
         args.set(
             "jak",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -187,6 +188,7 @@ addData.setWhitelist([
     "726861364848492596",
     "436321340304392222",
 ]);
+addData.setNormalAliases(["jakadd", "addjak"])
 addData.setCanRunFromBot(true);
 addData.addAttachmentOption((option) =>
     option.setName("jakfile").setDescription("the jak to add").setRequired(true)

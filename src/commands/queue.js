@@ -239,6 +239,29 @@ function fixQueueSaveName(name) {
         .replaceAll("|", "_");
 }
 
+function autocorrect(message) {
+    message.toLowerCase();
+    let corrections = {
+        regular: message,
+        spaced: message.replaceAll(" ", "_"),
+        spacedmp3: message.replaceAll(" ", "_") + ".mp3",
+        mp3: message + ".mp3",
+        spacedogg: message.replaceAll(" ", "_") + ".ogg",
+        ogg: message + ".ogg",
+        spacedwav: message.replaceAll(" ", "_") + ".wav",
+        wav: message + ".wav",
+        spacedwebm: message.replaceAll(" ", "_") + ".webm",
+        webm: message + ".webm",
+        spacedm4a: message.replaceAll(" ", "_") + ".m4a",
+        m4a: message + ".m4a",
+        spacedmp4: message.replaceAll(" ", "_") + ".mp4",
+        mp4: message + ".mp4",
+        spacedflac: message.replaceAll(" ", "_") + ".flac",
+        flac: message + ".flac",
+    };
+    return corrections;
+}
+
 async function queue(queue, interaction, args, embed, row, sentMessage) {
     if (!interaction) {
         log.warn("returned from add");
@@ -251,6 +274,33 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
         }
         if (input.endsWith(">")) {
             input = input.slice(0, -1);
+        }
+        if (input.startsWith("file://")) {
+            const filePath = input.slice(7);
+            const sounds = fs.readdirSync("resources/sounds")
+            const sound = await autocorrect(filePath);
+            let soundPath
+            let soundName
+            for (const value of Object.values(sound)) {
+                if (sounds.includes(value)) {
+                    soundPath = `resources/sounds/${value}`
+                    soundName = value
+                    break;
+                }
+            }
+            if (fs.existsSync(soundPath)) {
+                await queue.add(`file://${soundName}`);
+                action.reply(interaction, {
+                    content: "added to queue",
+                    ephemeral: true,
+                });
+            } else {
+                action.reply(interaction, {
+                    content: "file not found",
+                    ephemeral: true,
+                });
+            }
+            return;
         }
         const urlState = await isUsableUrl(input);
         const isUsable = urlState.result;
@@ -492,6 +542,7 @@ shuffledata.setPermissionsReadable("");
 shuffledata.setWhitelist([]);
 shuffledata.setCanRunFromBot(true);
 shuffledata.setAliases(["randomize"]);
+shuffledata.setDisabledContexts(["dm"])
 const shuffle = new SubCommand(
     shuffledata,
     async function getArguments(message) {
@@ -528,6 +579,7 @@ adddata.setPermissions([]);
 adddata.setPermissionsReadable("");
 adddata.setWhitelist([]);
 adddata.setCanRunFromBot(true);
+adddata.setDisabledContexts(["dm"])
 adddata.addStringOption((option) =>
     option
         .setName("url")
@@ -569,6 +621,7 @@ removedata.setPermissions([]);
 removedata.setPermissionsReadable("");
 removedata.setWhitelist([]);
 removedata.setCanRunFromBot(true);
+removedata.setDisabledContexts(["dm"])
 removedata.addStringOption((option) =>
     option
         .setName("index")
@@ -610,6 +663,7 @@ cleardata.setPermissions([]);
 cleardata.setPermissionsReadable("");
 cleardata.setWhitelist([]);
 cleardata.setCanRunFromBot(true);
+cleardata.setDisabledContexts(["dm"])
 const clear = new SubCommand(
     cleardata,
     async function getArguments(message) {
@@ -638,6 +692,7 @@ skipdata.setPermissions([]);
 skipdata.setPermissionsReadable("");
 skipdata.setWhitelist([]);
 skipdata.setCanRunFromBot(true);
+skipdata.setDisabledContexts(["dm"])
 const skip = new SubCommand(
     skipdata,
     async function getArguments(message) {
@@ -663,9 +718,11 @@ const playdata = new SubCommandData();
 playdata.setName("play");
 playdata.setDescription("plays/stops the queue");
 playdata.setPermissions([]);
-playdata.setAliases(["resume", "continue"]);
+playdata.setAliases(["resume", "continue", "pause", "stop"]);
+playdata.setNormalAliases(["resume", "continue", "pause", "stop"]);
 playdata.setPermissionsReadable("");
 playdata.setWhitelist([]);
+playdata.setDisabledContexts(["dm"])
 playdata.setCanRunFromBot(true);
 const play = new SubCommand(
     playdata,
@@ -695,6 +752,7 @@ savedata.setPermissions([]);
 savedata.setPermissionsReadable("");
 savedata.setWhitelist([]);
 savedata.setCanRunFromBot(true);
+savedata.setDisabledContexts(["dm"])
 savedata.addStringOption((option) =>
     option
         .setName("name")
@@ -703,11 +761,12 @@ savedata.addStringOption((option) =>
 );
 const save = new SubCommand(
     savedata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         let argument = message.content.slice(
-            config.generic.prefix.length + commandLength
+            prefix.length + commandLength
         );
         if (argument) {
             argument.trim();
@@ -761,6 +820,7 @@ loaddata.addStringOption((option) =>
         .setDescription("which queue to load")
         .setRequired(false)
 );
+loaddata.setDisabledContexts(["dm"])
 const load = new SubCommand(
     loaddata,
     async function getArguments(message) {
@@ -769,8 +829,9 @@ const load = new SubCommand(
         args.set("isFromMessage", true);
         return args;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
         const filesArr = fs.readdirSync(`resources/data/queues/`);
+        const prefix = gconfig.prefix || config.generic.prefix
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -809,7 +870,7 @@ const load = new SubCommand(
         if (!filesArr.includes(`${fixQueueSaveName(args.get("name"))}.json`)) {
             action.reply(
                 message,
-                "that shit aint real, use `p/queue load ls` to list available queues"
+                `that shit aint real, use \`${prefix}queue load ls\` to list available queues`
             );
             return;
         }
@@ -829,6 +890,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
 data.setDMPermission(false);
+data.setDisabledContexts(["dm"])
 data.addStringOption((option) =>
     option
         .setName("subcommand")
@@ -868,16 +930,17 @@ data.addStringOption((option) =>
 
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set("operation", message.content.split(" ")[1]);
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         if (args.get("operation")) {
             args.set(
                 "url",
                 message.content.slice(
-                    config.generic.prefix.length +
+                    prefix.length +
                         commandLength +
                         args.get("operation").toString().length +
                         1

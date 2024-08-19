@@ -168,19 +168,17 @@ app.get("/read-statistics", (req, res) => {
                         startedAt: humanReadableDate,
                         startedAtTimestamp: siteStartedAt,
                     },
-                    bot: {
-                        startedAt: starts.bot.startedAt,
-                        startedAtTimestamp: starts.bot.startedAtTimestamp,
-                    },
-                    shard: {
-                        startedAt: starts.shard.startedAt,
-                        startedAtTimestamp: starts.shard.startedAtTimestamp,
-                    },
                 },
                 usage: JSON.parse(data),
                 shardCount: shardCount,
                 requestCount: requestCount,
             };
+            if (starts.bot) {
+                object.starts.bot = starts.bot;
+            }
+            if (starts.shard) {
+                object.starts.shard = starts.shard;
+            }
             res.send(object);
         }
     );

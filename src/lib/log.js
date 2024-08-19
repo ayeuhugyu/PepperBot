@@ -23,8 +23,6 @@ function levelPrefix(level) {
             return chalk.yellow("WRN");
         case Level.Err:
             return chalk.red("ERROR");
-        case Level.Deleted:
-            return chalk.blue("DELETED");
         case Level.Fatal:
             return chalk.hex("#FC0202").bold.underline("FATAL");
     }
@@ -98,10 +96,6 @@ export function warn(...message) {
 
 export function error(...message) {
     log(Level.Err, ...message);
-}
-
-export function deleted(...message) {
-    log(Level.Deleted, ...message);
 }
 
 export function fatal(...message) {

@@ -6,9 +6,6 @@ log.info("forking processes..");
 
 function handleSiteRequests(message) {}
 function handleSharderRequests(message) {
-    if (message.action && message.action == "restartSite") {
-        forkSite();
-    }
     if (message.action && message.action == "updateStartedAt") {
         site.send({
             action: "updateStartedAt",
@@ -18,6 +15,16 @@ function handleSharderRequests(message) {
     }
     if (message.action && message.action == "setShardCount") {
         site.send({ action: "setShardCount", value: message.value });
+    }
+    if (message.action && message.action == "restart") {
+        if (message.process) {
+            if (message.process == "site") {
+                forkSite();
+            }
+            if (message.process == "sharder") {
+                forkSharder();
+            }
+        }
     }
 }
 
@@ -33,7 +40,7 @@ function forkSharder() {
         return handleSharderRequests(message);
     });
     sharder.on("error", (err) => {
-        log.fatal(`FATAL SHARDER ERROR: \n${err}\n\n REFORKING...`);
+        log.fatal(`FATAL SHARDER ERROR: \n\n${err}${err.stack ? `\n${err.stack}` : ''}\n\n REFORKING...`);
         forkSharder();
     });
     sharder.on("exit", (code, signal) => {
@@ -63,7 +70,7 @@ function forkSite() {
         return handleSiteRequests(message);
     });
     site.on("error", (err) => {
-        log.fatal(`FATAL SHARDER ERROR: \n${err}\n\n REFORKING...`);
+        log.fatal(`FATAL SHARDER ERROR: \n\n${err}${err.stack ? `\n${err.stack}` : ''}\n\n REFORKING...`);
         forkSharder();
     });
     site.on("exit", (code, signal) => {
@@ -79,6 +86,8 @@ function forkSite() {
             log.info("site ready");
             if (!sharder) {
                 forkSharder();
+            } else {
+                sharder.send({ action: "forceUpdateTimes" });
             }
         }
     });

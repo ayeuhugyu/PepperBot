@@ -21,13 +21,14 @@ data.addStringOption((option) =>
 data.setAliases(["pepperannounce"]);
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "message",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;

@@ -16,6 +16,8 @@ import * as globals from "../lib/globals.js";
 import process from "node:process";
 import fsExtra from "fs-extra";
 import cheerio from "cheerio";
+import guildConfigs from "../lib/guildConfigs.js";
+import { start } from "repl";
 
 async function fetchTitle(url) {
     try {
@@ -36,7 +38,11 @@ async function fetchTitle(url) {
 const config = globals.config;
 const diabolical_events = globals.diabolical_events;
 
-const commands = commandsObject.commandExecutions;
+const commands = new Collection();
+commandsObject.commands.forEach((value, key) => {
+    commands.set(key, value.execute);
+}); // idfk why this works and just using the execute function directly doesn't
+const normalCommandAliases = commandsObject.commandSubCommandAliases;
 
 function logmessage(message) {
     fsExtra.ensureFileSync("logs/messages.log");
@@ -46,7 +52,7 @@ function logmessage(message) {
             .toLowerCase()
             .startsWith(config.generic.prefix.toLowerCase())
     ) {
-        fs.appendFileSync("logs/messages.log", message.content + "\n");
+        fs.appendFile("logs/messages.log", message.content + "\n", () => {});
     }
 }
 
@@ -89,12 +95,20 @@ async function processDM(message) {
     }
 }
 async function processDiabolicalEvent(message) {
+    const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
+    const prefix = gconfig.prefix || config.generic.prefix
     if (
         !message.author.bot &&
         !message.content
             .toLowerCase()
-            .startsWith(config.generic.prefix.toLowerCase())
+            .startsWith(prefix.toLowerCase())
     ) {
+        if (gconfig && gconfig.disableDiabolicalEvents) {
+            return;
+        }
+        if (gconfig && gconfig.diabolicalEventBlacklistedChannelIds && gconfig.diabolicalEventBlacklistedChannelIds.includes(message.channel.id)) {
+            return;
+        }
         const random = Math.random() * 250;
         if (random < 5) {
             // ~2%
@@ -111,15 +125,20 @@ async function processDiabolicalEvent(message) {
             // ~1%
             log.info(`diabolical thread event triggered on ${message.id}`);
             if (message.startThread) {
-                message
-                    .startThread({
-                        name: "Threaded! 🧵",
-                        autoArchiveDuration: 60,
-                        reason: "It's quite diabolical.",
-                    })
-                    .then((thread) => {
-                        thread.send("You've just been threaded! 🧵");
-                    });
+                if (message.channel && (message.channel.type === 0 || message.channel.type === 5)) {
+                    message
+                        .startThread({
+                            name: "Threaded! 🧵",
+                            autoArchiveDuration: 60,
+                            reason: "It's quite diabolical.",
+                        })
+                        .then((thread) => {
+                            thread.send("You've just been threaded! 🧵");
+                        });
+                } else {
+                    log.info("could not start thread on message due to channel type");
+                    return;
+                }
             }
         }
         if (random > 249) {
@@ -135,15 +154,25 @@ async function processDiabolicalEvent(message) {
 }
 
 async function processGPTResponse(message) {
+    const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
+    const prefix = gconfig.prefix || config.generic.prefix
     if (message.mentions) {
         if (
             message.mentions.has(client.user) &&
             !message.content
                 .toLowerCase()
-                .startsWith(config.generic.prefix.toLowerCase()) &&
+                .startsWith(prefix.toLowerCase()) &&
             !message.mentions.everyone
         ) {
             if (!message.author.bot) {
+                
+                if (gconfig && gconfig.disableGPTResponses) {
+                    return;
+                }
+                if (gconfig && gconfig.blacklistedGPTResponseChannelIds && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id)) {
+                    return;
+                }
+
                 let completion = await gpt.respond(message).catch((err) => {
                     log.error(err);
                 });
@@ -165,10 +194,12 @@ async function processGPTResponse(message) {
 }
 
 async function processCommand(message) {
+    const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
+    const prefix = gconfig.prefix || config.generic.prefix
     if (
         !message.content
             .toLowerCase()
-            .startsWith(config.generic.prefix.toLowerCase())
+            .startsWith(prefix.toLowerCase())
     ) {
         return;
     } // return if not a command
@@ -211,35 +242,45 @@ async function processCommand(message) {
     }
     const command =
         message.content // this is just the substring between the prefix and the first space lowercased
-            .slice(config.generic.prefix.length)
+            .slice(prefix.length)
             .split(/ +/)
             .shift() || "".toLowerCase();
 
     if (!command) {
-        log.warn("no command found in message");
+        action.reply(message, {
+            content: "supply a command, baffon!"
+        })
         return;
     } // return if command == '' (probably caused by entering just the prefix)
-    if (!commands.get(command)) {
+    if (!commands.get(command) && !normalCommandAliases.get(command)) {
         action.reply(message, `invalid command: ${command}, baffoon!`);
         log.info(`invalid command by ${message.author.id}: p/${command}`);
         return;
     }
+    
     log.info(`command requested by ${message.author.id}: p/${command}`);
-    const commandFn = commands.get(command);
-    await commandFn(message, undefined, false).catch((err) => log.error);
-    let logmsg = `command executed: ${command} from: ${message.author.username} (${message.author}) `;
-    if (message.channel) {
-        if (message.channel.type === 1) {
-            logmsg += `in DM `;
-        } else {
-            logmsg += `in: ${message.channel.name} (${message.channel}) `;
+    const commandFn = commands.get(command) || normalCommandAliases.get(command).subcommand.execute;
+    if (!commandFn) {
+        action.reply(message, `invalid command: ${command}, baffoon!`);
+        log.info(`invalid command by ${message.author.id}: p/${command}`);
+        return;
+    } // theoretically should never happen but im just being safe
+    const startCommand = performance.now()
+    commandFn(message, undefined, false).catch((err) => log.error).then((returned) => {
+        let logmsg = `command executed: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${message.author.username} (${message.author}) `;
+        if (message.channel) {
+            if (message.channel.type === 1) {
+                logmsg += `in DM `;
+            } else {
+                logmsg += `in: ${message.channel.name} (${message.channel}) `;
+            }
         }
-    }
-    if (message.guild) {
-        logmsg += `in guild: ${message.guild.name} (${message.guild}) `;
-    }
-    logmsg += `full: ${message.content}`;
-    log.info(logmsg);
+        if (message.guild) {
+            logmsg += `in guild: ${message.guild.name} (${message.guild}) `;
+        }
+        logmsg += `full: ${message.content}`;
+        log.info(logmsg);
+    });
 }
 
 async function getIsDisgraceful(message) {
@@ -279,7 +320,6 @@ async function getIsDisgraceful(message) {
                 action.sendMessage(message.channel, {
                     content: `<@${message.author.id}> TITLE YOUR FUCKING CLIPS YOU FUCKTARD`,
                 });
-                action.deleteMessage(message);
                 return true;
             }
         }

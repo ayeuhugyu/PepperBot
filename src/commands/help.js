@@ -22,9 +22,10 @@ const command_option_types = {
     11: "attachment",
 };
 
-async function listCommands(message) {
+async function listCommands(message, gconfig) {
     const embed = default_embed();
-    embed.setDescription("run p/help [command] for more info");
+    const prefix = gconfig.prefix || config.generic.prefix
+    embed.setDescription(`run ${prefix}help [command] for more info`);
     let fieldsText = {
         [1]: "",
         [2]: "",
@@ -57,7 +58,7 @@ async function listCommands(message) {
                 continue;
             }
         }
-        fieldsText[currentField] += `p/${commandData.name}\n`;
+        fieldsText[currentField] += `${prefix}${commandData.name}\n`;
         currentField = (currentField % 3) + 1;
     }
     embed.addFields(
@@ -101,16 +102,18 @@ async function infoAboutCommandWithOptions(
     command,
     currentEmbed,
     isSubCommand,
-    parentCommandName
+    parentCommandName,
+    gconfig
 ) {
     const menu = new AdvancedPagedMenuBuilder();
+    const prefix = gconfig.prefix || config.generic.prefix
     menu.full.addPage(currentEmbed);
     for (const option of command.options) {
         let titleText = ``;
         if (isSubCommand) {
-            titleText = `p/${parentCommandName} ${command.name}: ${option.name}`;
+            titleText = `${prefix}${parentCommandName} ${command.name}: ${option.name}`;
         } else {
-            titleText = `p/${command.name}: ${option.name}`;
+            titleText = `${prefix}${command.name}: ${option.name}`;
         }
         const optionEmbed = default_embed();
         optionEmbed.setTitle(titleText);
@@ -130,16 +133,18 @@ async function infoAboutCommand(
     message,
     command,
     isSubCommand,
-    parentCommandName
+    parentCommandName,
+    gconfig
 ) {
     const originalCommand = command;
+    const prefix = gconfig.prefix || config.generic.prefix
     command = originalCommand.data;
     const commandPage = default_embed();
     let title = "";
     if (isSubCommand) {
-        title = `p/${parentCommandName} ${command.name}`;
+        title = `${prefix}${parentCommandName} ${command.name}`;
     } else {
-        title = "p/" + command.name;
+        title = `${prefix}${command.name}`
     }
     commandPage.setTitle(title);
     let text = `${command.description}\n`;
@@ -152,6 +157,12 @@ async function infoAboutCommand(
     if (command.whitelist && command.whitelist.length > 0) {
         text += `WHITELIST: ${command.whitelist.toString()}\n`;
     }
+    if (command.disabledContexts) {
+        text += `DISABLED CONTEXTS: ${command.disabledContexts.join(", ")}\n`
+    }
+    if (command.invalidInputTypes) {
+        text += `DISABLED INPUT TYPES: ${command.invalidInputTypes.join(", ")}\n`
+    }
     text += `CAN RUN FROM BOT: ${command.canRunFromBot}\n`;
     commandPage.setDescription(text);
     if (command.options && command.options.length > 0) {
@@ -160,7 +171,8 @@ async function infoAboutCommand(
             command,
             commandPage,
             isSubCommand,
-            parentCommandName
+            parentCommandName,
+            gconfig
         );
     } else {
         return action.reply(message, {
@@ -195,15 +207,16 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set("command", message.content.split(" ")[1]);
         if (args.get("command")) {
             args.set(
                 "subcmd",
                 message.content.slice(
-                    config.generic.prefix.length +
+                    prefix.length +
                         commandLength +
                         message.content.split(" ")[1].length +
                         1
@@ -212,55 +225,70 @@ const command = new Command(
         }
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("command")) {
-            return await listCommands(message);
+            return await listCommands(message, gconfig);
         }
+        const prefix = gconfig.prefix || config.generic.prefix
         const requestedCommand = args
             .get("command")
-            .startsWith(config.generic.prefix)
-            ? args.get("command").slice(config.generic.prefix.length)
+            .startsWith(prefix)
+            ? args.get("command").slice(prefix.length)
             : args.get("command");
         const commands = await import("../lib/commands.js");
         const command = commands.default.commands.get(requestedCommand);
-        if (!command) {
+        const commandAsSubCommand = commands.default.commandSubCommandAliases.get(requestedCommand)
+        if (!command && !commandAsSubCommand) {
             action.reply(message, {
                 content: `there's no command named ${requestedCommand}`,
                 ephemeral: true,
             });
             return;
         }
-        if (!args.get("subcmd")) {
-            return await infoAboutCommand(message, command);
+        if (!args.get("subcmd") && !commandAsSubCommand) {
+            return await infoAboutCommand(message, command, undefined, undefined, gconfig);
         }
-        const requestedSubCommand = args.get("subcmd");
-        const subCommands = command.subcommands; // subCommands is an array
-        if (!subCommands || subCommands.length === 0) {
-            action.reply(message, {
-                content: `there's no subcommands for p/${command.data.name}`,
-                ephemeral: true,
-            });
-            return;
+        
+        if (!commandAsSubCommand) {
+            const requestedSubCommand = args.get("subcmd");
+            const subCommands = command.subcommands; // subCommands is an array
+            if (!subCommands || subCommands.length === 0) {
+                action.reply(message, {
+                    content: `there's no subcommands for ${prefix}${command.data.name}`,
+                    ephemeral: true,
+                });
+                return;
+            }
+    
+            const subCommand = subCommands.find(
+                (subCommand) =>
+                    subCommand.data.name === requestedSubCommand ||
+                    (subCommand.data.aliases &&
+                        subCommand.data.aliases.includes(requestedSubCommand))
+            );
+            if (!subCommand) {
+                action.reply(message, {
+                    content: `there's no subcommand named "${requestedSubCommand}" for ${prefix}${command.data.name}`,
+                    ephemeral: true,
+                });
+                return;
+            }
+            return await infoAboutCommand(
+                message,
+                subCommand,
+                true,
+                command.data.name,
+                gconfig
+            );
         }
-
-        const subCommand = subCommands.find(
-            (subCommand) =>
-                subCommand.data.name === requestedSubCommand ||
-                (subCommand.data.aliases &&
-                    subCommand.data.aliases.includes(requestedSubCommand))
-        );
-        if (!subCommand) {
-            action.reply(message, {
-                content: `there's no subcommand named  "${requestedSubCommand}" for p/${command.data.name}`,
-                ephemeral: true,
-            });
-            return;
-        }
+        const subCommand = commandAsSubCommand.subcommand
+        const parentCommand = commandAsSubCommand.parentCommandNonExecution
         return await infoAboutCommand(
             message,
             subCommand,
             true,
-            command.data.name
+            parentCommand.data.name,
+            gconfig
         );
     }
 );

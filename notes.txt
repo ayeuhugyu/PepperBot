@@ -1,44 +1,136 @@
-todo:
-
-[1] - add p/corrupt image support
-[2] - ai image processing
-[3] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
-[4] - remake p/reactionrole, the syntax is ust horrific
-[5] - status displays currently playing song for guild
-[6] - fix p/queue (and future stuff) editing the message twice when collector stops
-[7] - p/todo pages if list length > 15
-[8] - make logs page only display 1 log and you switch between them and it only requests one at a time and only the bottom 200 or so lines
-[9] - peppersite statistics on most visited pages
-[10] - using p/queue while p/playurl is playing converts it to a queue system
-[11] - somehow fix p/queue only retrieving 50 playlist items despite the limit being set to 150 (its probably google's thing i likely can't do anything about it)
-[12] - peppersite resources viewer
-[13] - p/jak viewer
-[14] - p/addsound and p/jak add arguments for filename
-[15] - update/patch logger appends on subUpdates
-[16] - queue direct file support
-[17] - limit filenames of p/addsound, p/jak add, p/queue, etc. to 200 characters
-[18] - reminder / scheduling capabilities
-[19] - actually finish p/configure
-[20] - increase p/chatbubble sharp module pixel limit
-[21] - subcommand aliases from normal commands
-
 for update:
 
 to test:
 
+all features
+- slash commands
+- disabling slash commands in guild config
+
+to upload:
+
+src/lib/files.js, src/lib/types/commands.js, src/lib/guildConfigs.js, src/lib/commands.js, src/events/MessageCreate.js, 
+src/index.js, src/site.js, src/sharder.js, resources/data/defaultGuildConfig.json, resources/data/guildConfigInformation.json, src/lib/types/queue.js,
+literally every single command, README.md, actually just everything now that i think about it, src/lib/logs/js
+
+remember to delete on pi: p/pepperupdate, p/pepperpatch, p/soundboard, p/addsound, p/retrievesound, the deleted message logs, p/say, p/dmuser, p/joinvc, p/leavevc
+
 shit on the todo list:
 
-p/update too many bugfixes
+[1] - add p/corrupt image support
+[2] - ai image processing
+[3] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
+[4] - fix p/queue (and future stuff) editing the message twice when collector stops
+[5] - p/todo pages if list length > 15
+[6] - make logs page only display 1 log and you switch between them and it only requests one at a time and only the bottom 200 or so lines
+[7] - peppersite statistics on most visited pages
+[8] - using p/queue while p/playurl is playing converts it to a queue system
+[9] - somehow fix p/queue only retrieving 50 playlist items despite the limit being set to 150 (its probably google's thing i likely can't do anything about it)
+[10] - peppersite resources viewer
+[11] - p/jak viewer
+[12] - reminder / scheduling capabilities
+[13] - p/notice multi-shard fix
+[14] - custom command aliases
+[15] - custom command permissions from gconfig
+[16] - p/queue play pauses instead of stopping
+[17] - p/info subcommands for other varieties of info
+[18] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
+[19] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
+[20] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+
+to add to todo list:
+
+p/update finally an actually large update
 
 **actual content:**
 
-**fixes/optimizations/small stuff:**
+- p/configure is functional now, its not very user friendly at the moment, but it works. if you need help with it, click the "formatting" button for a quick formatting guide for each type.
+  - guild configs include:
+      - custom prefix (not extensively tested may break some stuff if character length is > or < 2, though unlikely)
+      - blacklisting channels for commands/GPT responses/diabolical events
+      - entirely disabling commands/GPT responses/diabolical events
+      - disabling specific commands
+      - disabling text commands
+      - disabling slash commands
+      - visibility to the p/explore command
+      - pepperbot notices channel
+p/subupdate - i can now add aliases to subcommands to execute from normal commands; you can execute something like p/jak add as p/addjak now.
+  - new normalSubcommandAliases:
+    - p/jak add: addjak, jakadd
+    - p/queue play: resume, continue, pause, stop
+    - p/random buildidea: randombuildidea
+    - p/random freshie: randomfreshie
+    - p/random pepper: pepper, randompepper
+    - p/random words: randomwords
+    - p/random sound: randomsound
+    - p/random name: randomname
+    - p/random message: randommessage
+    - p/random nickname: randomnickname
+    - p/random jak: randomjak
+    - p/sound play: soundboard (you don't recognize p/sound because its new don't worry)
+    - p/sound add: addsound
+    - p/sound get: retrievesound
+    - p/force say: say (you don't recognize p/force either because its also new)
+    - p/force dm: dmuser, dm, send
+    - p/force react: react
+    - p/force reply: reply
+    - p/vc join: joinvc, join, joincall, call (you also yet again don't recognize p/vc because its also new)
+    - p/vc leave: leavevc, leave, leavecall, fuckoff, goaway
+p/subupdate - commands & subcommands can now have disabled contexts and input types, meaning they can be guild / dm only or text / slash command only
+  - commands affected:
+    - p/configure, p/joinvc, p/leavevc, p/playurl, p/queue, p/reactionrole, and p/sound play, can all only be used in guild channels due to their functionality being either useless or broken outside of them
+    - its likely these comamnds will be able to be used in these contexts/input types later, but at the moment these are either useless or broken in those cases.
+- commands can now have primarySubCommands which basically mean if no subcommand is supplied instead of executing the normal command the primary subcommand is executed.
+  - commands affected:
+    - p/vc join is now the primary subcommand of p/vc
+    - p/blacklist view is now the primary subcommand of p/blacklist
+p/subupdate - new p/force react allows you to force the bot to react to a message with an emoji
+- new p/force reply allows you to force the bot to reply to a message with something
+- p/soundboard, p/addsound, and p/retrievesound have all been merged into a new p/sound command. using the new normalAliases system, i've added p/soundboard and the others as normal aliases to them, so this shouldn't affect how they are used.
+- p/say, p/dmuser, p/react, and p/reply have all been merged into a new p/force command. using the new normalAliases system, i've added p/say and the others as normal aliases to them, so this shouldn't affect how they are used.
+- p/joinvc and p/leavevc have been merged into a new p/vc command. using the new normalAliases system, i've added p/joinvc and p/leavevc as normal aliases to them, so this shouldn't affect how they are used.
+- new p/notice command allows me to send notices to every server cuz idfk it might be useful (prolly just gonna be for guild config updates / other things server admins might need to know); btw make sure to set a notice channel via p/configure otherwise it will dm the server owner every time a notice is sent
+p/subupdate
+- you can now add soundboard files to the queue / play them with p/playurl; simply instead of typing a youtube url type "file://filename" (filename formatted same as p/soundboard would.) i decided to do it like this because discord already uses a system similar to this for adding images to embeds with their attachment://filename. 
+- **the deleted message log level, as well as the deleted message logs have been entirely removed.** i've decided this really wasn't doing anything other than clogging my output, these things were rarely used anyway. there are plenty of other message loggers out there, i don't need to be another one. (also people probably aren't huge fans of their messages being logged)
+- untitled medal clips are no longer deleted (that part was honestly just annoying) but pepperbot still gets heated if you do send an untitled clip
+- when adding pepperbot to a server, he now uses discord's weird role thingy where it makes a role for the bot with the requested permissions (and i obviously request administrator so i don't have to deal with permissions. if you still have an old version that doesn't have this role, removing administrator *will* cause issues, so i suggest that you don't) (this has actually been a thing for a few days just nobody noticed and i didn't say anything about it)
+- added 1 new diabolical event
 
+p/subupdate **fixes/optimizations:**
+
+- p/addsound, jak add, and queue file names are now sliced to the first 200 characters, file extensions are sliced to the first 50 characters. hopefully this will prevent really large file names from causing errors, and realistically there aren't any file extensions with over 50 characters in them
+- 2 new p/queue play aliases: pause, stop
+- removed unnecessary code to convert subcommands to discordjs's subcommand builders
+- site now calls to update start times whenever it restarts; restarting the site and then visiting the statistics page won't make it bootloop anymore
+- fixed "Threaded! 🧵" events happening on messages already inside threads / forum channels / etc.
+- merged p/pepperpatch and p/pepperupdate into p/update and p/patch
+- default guild config is now defined in a seperate json file rather than an object at the start of the guild configs handler
+- p/joinvc no longer allows joining of channels the executer doesn't have permission to join
+- replaced all instances of a constant "p/" in responses and checks with the current prefix
+- message logging for p/markov is now done asynchronously
+- commands are no longer awaited to continue execution
+- p/peppersubupdate has been renamed to p/subupdate (added alias for original)
+- update logger now appends on subupdates
+- p/help now displays disabled input types and contexts
+- p/help now redirects normalAliases to their respective subcommands
+- p/restart can now restart specific shards / processes
+p/subupdate - CommandData objects now add all methods from a BaseCommandData class. basically, i no longer have to create a duplicate of every custom method i have for commands and can just add them to one class.
+- p/info no longer uses discords internal client uptime (because as it turns out that thing resets every 48 hours for some dumb reason) and instead uses the same uptime system used on the statistics page on the website
+- removed part of p/info that displayed number of servers the bot was in, this is done better by p/explore andddd it makes p/info look nicer
+- removed unused code in p/random that would get an amount if args.get("type") existed (i assume this was a leftover from before subcommands existed)
+- if a command errors while caching to the commands object, instead of all commands being broken that command is simply skipped and the error is logged
+- typing "p/" no longer causes a warning in the output and instead informs the user that they failed to supply a command. this was leftover code from when i was first making/debugging the text command processor
+- errors originating from subcommands are now caught and an error reply is sent
+- time taken to cache each induvidual command is now logged, rather than just all of them, additionally the one that takes the longest/shortest is also logged.
+- time taken to execute each command is now logged
+p/subupdate - fixed p/blacklist remove/add being normal command data instead of sub command data
 - added aliases "resume", "continue" to p/queue play
-- removed aliases "add", "as" from p/addsound as they didn't make much sense
-- added alias "addsounds" to p/addsound as it can now add multiple
 - p/queue now subtracts from current index when removed index <= current index (yes i know that means that if you remove the one its currently on it says its playing the previous one but i don't care at least itll play what would actually be the next song)
 - p/chatbubble now has a "processing" message to avoid discord timing out slash commands
 - p/chatbubble now responds with an error message if fetching / putting the image through sharp throws an error
 - a guild config is now created upon the bot joining a server if an existing one cannot be found
-- there are now options in the command buider to disable certain input types (slash command only / text command only)
+- p/blacklist reads / writes are now done asynchronously
+- changed every instance of the debug log level being used into the info log level, it makes more sense to me. debug should really only be used for when im actually debugging something.
+- entirely removed the 2 collections for commandExecutions and commandsWithoutAliasesExecutions, they could be replaced with just commands.value.execute and commandsWithoutAliases.value.execute
+- p/test now responds with the time taken to recieve the message back
+- "latency" field in p/info's embed has been renamed to "ws latency" because thats what it actually is, the websocket latency

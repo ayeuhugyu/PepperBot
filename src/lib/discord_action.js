@@ -215,3 +215,9 @@ export async function editInteractionReply(interaction, content) {
         log.error(err);
     }
 }
+
+export async function messageReact(message, reaction) {
+    if (message) {
+        message.react(reaction);
+    }
+}

@@ -18,7 +18,15 @@ const command = new Command(
         return null;
     },
     async function execute(message, args) {
-        action.reply(message, { content: "glorb" });
+        const start = performance.now();
+        const sent = await action.reply(message, {
+            content: "awaiting response...",
+        });
+        action.editMessage(sent, {
+            content: `response time: ${(performance.now() - start).toFixed(
+                3
+            )}ms`,
+        });
     }
 );
 

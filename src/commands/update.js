@@ -3,11 +3,10 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import * as globals from "../lib/globals.js";
-import pepperupdate from "./pepperupdate.js";
-import pepperpatch from "./pepperpatch.js";
 import setversion from "./setversion.js";
 import deploycommands from "./deploycommands.js";
 import fsextra from "fs-extra";
+import default_embed from "../lib/default_embed.js";
 
 const config = globals.config;
 
@@ -26,13 +25,14 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "message",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -66,11 +66,23 @@ const command = new Command(
                 args.get("message")
             );
             action.editMessage(writeFileMessage, "file written");
-            if (args.get("patch")) {
-                await pepperpatch.execute(message, args, isInteraction);
-                return;
+            const messageTextContent = args.get("patch") ? `PepperBot small update/patch! 🌶` : `<@&1210034891018993755> PepperBot update! 🌶`;
+            const embed = default_embed()
+                .setTitle(`VERSION ${persistent_data.version}`)
+                .setDescription(args.get("message"));
+            const sent = await action.sendMessage(
+                message.client.channels.cache.get("1171660137946157146"),
+                {
+                    content: messageTextContent,
+                    embeds: [embed],
+                }
+            );
+
+            if (isInteraction) {
+                action.reply(message, { content: "sent!", ephemeral: true });
             }
-            await pepperupdate.execute(message, args, isInteraction);
+            action.deleteMessage(message);
+            sent.crosspost();
         } else {
             action.reply(message, "provide an update log you baffoon!");
         }

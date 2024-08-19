@@ -8,6 +8,17 @@ import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
 
+const startedAtTimestamp = Date.now(); // too lazy to export from the sharder and deal with circular dependencies so this is close enough (it will be like 0.15 seconds off but i don't care)
+function padZero(number) {
+    return number.toString().padStart(2, "0");
+}
+function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    return `${padZero(hours)}:${padZero(minutes)}:${padZero(remainingSeconds)}`;
+}
+
 const config = globals.config;
 
 const dirSize = async (directory) => {
@@ -26,7 +37,7 @@ const dirSize = async (directory) => {
         0
     );
 };
-
+/*
 async function convertMilisecondsToReadable(time) {
     var milliseconds = Math.floor((time % 1000) / 100),
         seconds = Math.floor((time / 1000) % 60),
@@ -39,6 +50,8 @@ async function convertMilisecondsToReadable(time) {
 
     return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
 }
+// will probably be useful at some point in time
+*/
 
 const data = new CommandData();
 data.setName("info");
@@ -72,14 +85,6 @@ const command = new Command(
                     inline: true,
                 },
                 {
-                    name: "servers",
-                    value: `${guilds.reduce(
-                        (acc, guildCount) => acc + guildCount,
-                        0
-                    )}`,
-                    inline: true,
-                },
-                {
                     name: "memory usage",
                     value: `${prettyBytes(
                         memory.rss
@@ -89,9 +94,9 @@ const command = new Command(
                     inline: true,
                 },
                 {
-                    name: "uptime",
-                    value: `${await convertMilisecondsToReadable(
-                        message.client.uptime
+                    name: "approx. uptime",
+                    value: `${formatTime(
+                        Math.floor((Date.now() - startedAtTimestamp) / 1000)
                     )}`,
                     inline: true,
                 },
@@ -113,7 +118,7 @@ const command = new Command(
                     inline: true,
                 },
                 {
-                    name: "latency",
+                    name: "ws latency",
                     value: `${message.client.ws.ping}ms`,
                     inline: true,
                 },

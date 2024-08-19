@@ -185,7 +185,17 @@ export class AudioPlayerQueueManager {
         if (this.queues[index]) {
             this.currentIndex = index;
             this.state = queueStates.downloading;
-            const resourceLocation = await download(this.queues[index], this);
+            let resourceLocation
+            if (this.queues[index].startsWith("file://")) {
+                resourceLocation = `resources/sounds/${this.queues[index].slice(7)}`
+                action.sendMessage(
+                    this.messageChannel,
+                    `playing \`${this.queues[index].slice(7)}\``
+                );
+            } else {
+                resourceLocation = await download(this.queues[index], this);
+            }
+            
             if (!resourceLocation) {
                 log.error("error while downloading resource, skipping");
                 action.sendMessage(
@@ -221,34 +231,42 @@ export class AudioPlayerQueueManager {
         this.emitter.emit("update", this.readableQueue);
     }
     async add(queue) {
-        if (queue.includes("&list=")) {
-            const queues = await playlist(queue, this);
-            if (typeof queues == "string") {
-                log.error(queues);
-                return;
-            }
-            queues.forEach((queue) => {
+        let skipURLCheck = false
+        if (queue.startsWith("file://")) {
+            this.queues.push(queue)
+            this.readableQueue.push(`file: ${queue.slice(7)}`)
+            skipURLCheck = true
+        }
+        if (!skipURLCheck) {
+            if (queue.includes("&list=")) {
+                const queues = await playlist(queue, this);
+                if (typeof queues == "string") {
+                    log.error(queues);
+                    return;
+                }
+                queues.forEach((queue) => {
+                    try {
+                        this.readableQueue.push(
+                            `[${queue.snippet.title}](https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId})`
+                        );
+                        this.queues.push(
+                            `https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId}`
+                        );
+                    } catch (e) {
+                        log.error(e);
+                        return;
+                    }
+                });
+            } else {
                 try {
                     this.readableQueue.push(
-                        `[${queue.snippet.title}](https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId})`
+                        `[${await fetchTitleFromURL(queue)}](${queue})`
                     );
-                    this.queues.push(
-                        `https://www.youtube.com/watch?v=${queue.snippet.resourceId.videoId}`
-                    );
+                    this.queues.push(queue);
                 } catch (e) {
                     log.error(e);
                     return;
                 }
-            });
-        } else {
-            try {
-                this.readableQueue.push(
-                    `[${await fetchTitleFromURL(queue)}](${queue})`
-                );
-                this.queues.push(queue);
-            } catch (e) {
-                log.error(e);
-                return;
             }
         }
         this.emitter.emit("update", this.readableQueue);

@@ -38,6 +38,29 @@ async function isExistingVideo(url) {
     }
 }
 
+function autocorrect(message) {
+    message.toLowerCase();
+    let corrections = {
+        regular: message,
+        spaced: message.replaceAll(" ", "_"),
+        spacedmp3: message.replaceAll(" ", "_") + ".mp3",
+        mp3: message + ".mp3",
+        spacedogg: message.replaceAll(" ", "_") + ".ogg",
+        ogg: message + ".ogg",
+        spacedwav: message.replaceAll(" ", "_") + ".wav",
+        wav: message + ".wav",
+        spacedwebm: message.replaceAll(" ", "_") + ".webm",
+        webm: message + ".webm",
+        spacedm4a: message.replaceAll(" ", "_") + ".m4a",
+        m4a: message + ".m4a",
+        spacedmp4: message.replaceAll(" ", "_") + ".mp4",
+        mp4: message + ".mp4",
+        spacedflac: message.replaceAll(" ", "_") + ".flac",
+        flac: message + ".flac",
+    };
+    return corrections;
+}
+
 const data = new CommandData();
 data.setName("playurl");
 data.setDescription("plays the specified url");
@@ -55,15 +78,17 @@ data.addStringOption((option) =>
         )
         .setRequired(true)
 );
+data.setDisabledContexts(["dm"])
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 2;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "sound",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -87,6 +112,33 @@ const command = new Command(
             }
             const audioPlayer = await voice.createAudioPlayer(message.guild.id);
             connection.subscribe(audioPlayer);
+            if (args.get("sound").startsWith("file://")) {
+                const filePath = args.get("sound").slice(7);
+                const sounds = fs.readdirSync("resources/sounds")
+                const sound = await autocorrect(filePath);
+                let soundPath
+                let soundName
+                for (const value of Object.values(sound)) {
+                    if (sounds.includes(value)) {
+                        soundPath = `resources/sounds/${value}`
+                        soundName = value
+                        break;
+                    }
+                }
+                if (fs.existsSync(soundPath)) {
+                    action.reply(message, {
+                        ephemeral: true,
+                        content: `playing \`${soundName}\``,
+                    });
+                } else {
+                    return;
+                }
+                const resource = await voice.createAudioResource(
+                    `resources/sounds/${soundName}`
+                );
+                audioPlayer.play(resource);
+                return;
+            }
             if (isValidYouTubeUrl(args.get("sound"))) {
                 // youtube behavior
                 try {

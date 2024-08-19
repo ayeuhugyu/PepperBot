@@ -26,8 +26,8 @@ export const client = new Client({
 });
 
 async function init() {
-    log.debug("initializing bot...");
-    log.debug("logging into discord...");
+    log.info("initializing bot...");
+    log.info("logging into discord...");
     try {
         await client.login(process.env.DISCORD_TOKEN);
     } catch (err) {
@@ -74,9 +74,9 @@ client.on(Events.ClientReady, async () => {
     log.info("edited presence");
 
     log.info("bot ready to serve");
-    log.debug(`running on ${process.platform} ${process.arch}`);
+    log.info(`running on ${process.platform} ${process.arch}`);
     const memory = process.memoryUsage();
-    log.debug(
+    log.info(
         `${prettyBytes(memory.rss)} memory usage, ${prettyBytes(
             memory.heapUsed
         )} / ${prettyBytes(memory.heapTotal)} heap usage`

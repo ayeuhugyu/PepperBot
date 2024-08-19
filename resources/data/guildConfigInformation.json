@@ -1,0 +1,84 @@
+{
+    "exploreVisible": {
+        "type": "boolean",
+        "default": true,
+        "cleanname": "explore visible",
+        "description": "whether or not your server is hidden to the p/explore command"
+    },
+    "disabledCommands": {
+        "type": "array",
+        "arraytype": "string",
+        "default": [],
+        "cleanname": "disabled commands",
+        "description": "list of commands to be disabled; to disable p/say, you would add \"say\" to it."
+    },
+    "disableTextCommands": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "disable text commands",
+        "description": "whether or not to disable text commands"
+    },
+    "disableSlashCommands": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "disable slash commands",
+        "description": "whether or not to disable slash commands"
+    },
+    "disableDiabolicalEvents": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "disable diabolical events",
+        "description": "whether or not to entirely disable the \"diabolical events;\" such as the random reactions or Threaded!🧵"
+    },
+    "configLockedToServerOwner": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "lock bot configuration to server owner",
+        "description": "whether or not config values can only be changed by the owner of the server. this can obviously only be changed by the owner of the server regardless of it being true or false."
+    },
+    "noticesChannelId": {
+        "type": "string",
+        "default": "-1",
+        "cleanname": "notices channel ID",
+        "description": "channel ID to which pepperbot should send server notices to. notices are generally things like new config options or things server admins should otherwise know about."
+    },
+    "diabolicalEventBlacklistedChannelIds": {
+        "type": "array",
+        "arraytype": "string",
+        "default": [],
+        "cleanname": "diabolical event blacklist channels",
+        "description": "list of channel IDs to disable diabolical events within."
+    },
+    "disableAllCommands": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "disable all command usage",
+        "description": "whether or not to disable all command usage"
+    },
+    "blacklistedCommandChannelIds": {
+        "type": "array",
+        "arraytype": "string",
+        "default": [],
+        "cleanname": "command usage blacklist channels",
+        "description": "list of channel IDs to disable commands within."
+    },
+    "disableGPTResponses": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "disable GPT responses",
+        "description": "whether or not to disable GPT responses"
+    },
+    "blacklistedGPTResponseChannelIds": {
+        "type": "array",
+        "arraytype": "string",
+        "default": [],
+        "cleanname": "GPT response blacklist channels",
+        "description": "list of channel IDs to disable GPT responses within."
+    },
+    "prefix": {
+        "type": "string",
+        "default": "p/",
+        "cleanname": "prefix",
+        "description": "the prefix used for text commands"
+    }
+}

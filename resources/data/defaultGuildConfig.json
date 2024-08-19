@@ -1,0 +1,15 @@
+{
+    "exploreVisible": true,
+    "disabledCommands": [],
+    "disableTextCommands": false,
+    "disableSlashCommands": false,
+    "disableDiabolicalEvents": false,
+    "configLockedToServerOwner": false,
+    "noticesChannelId": "1111111111111111111",
+    "diabolicalEventBlacklistedChannelIds": [],
+    "disableAllCommands": false,
+    "blacklistedCommandChannelIds": [],
+    "disableGPTResponses": false,
+    "blacklistedGPTResponseChannelIds": [],
+    "prefix": "p/"
+}

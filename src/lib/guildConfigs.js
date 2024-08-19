@@ -1,13 +1,30 @@
 import * as log from "./log.js";
-import fs, { write } from "fs";
+import fs from "fs";
 import fsextra from "fs-extra";
 
-const start = performance.now();
 
-const defaultGuildConfig = {
-    disabledCommands: [],
-    exploreVisible: true,
-};
+
+const defaultGuildConfig = JSON.parse(fs.readFileSync("resources/data/defaultGuildConfig.json"))
+const guildConfigInformation = JSON.parse(fs.readFileSync("resources/data/guildConfigInformation.json"))
+
+for (const key in defaultGuildConfig) {
+    if (!guildConfigInformation[key]) {
+        log.warn(`missing key in guildConfigInformation: ${key}`);
+    }
+}
+for (const [key, value] of Object.entries(guildConfigInformation)) {
+    if ((typeof value.type !== "undefined") && value.type == "array") {
+        if (typeof value.arraytype === "undefined") {
+            log.warn(`${key} in guildConfigInformation has type array, but is missing array values type specification.`)
+        }
+    }
+    const requiredFields = ["type", "default", "cleanname", "description"];
+    for (const field of requiredFields) {
+        if (typeof value[field] === "undefined") {
+            log.warn(`${key} in guildConfigInformation is missing ${field}`);
+        }
+    }
+}
 
 let guildConfigs = {};
 
@@ -26,11 +43,12 @@ function getGuildConfig(guildId) {
     return guildConfigs[guildId];
 }
 
-function writeGuildConfig(guildId) {
+function writeGuildConfig(guildId, config) {
+    const usedConfig = config || guildConfigs[guildId];
     const path = `resources/data/guildConfigs/${guildId}.json`;
     fs.writeFile(
         path,
-        JSON.stringify(guildConfigs[guildId], null, 4),
+        JSON.stringify(usedConfig, null, 4),
         () => {}
     );
     return guildConfigs[guildId];
@@ -87,6 +105,7 @@ function checkConfigIsOutdated(guildId) {
 }
 
 async function getAllGuildConfigs() {
+    const start = performance.now();
     const index = await import("../bot.js");
     const client = index.client;
     const guilds = client.guilds.cache;
@@ -102,13 +121,24 @@ async function getAllGuildConfigs() {
             createGuildConfig(guild.id);
         }
     }
+    log.info(
+        `guild configurations cached in ${(performance.now() - start).toFixed(3)}ms`
+    );
 }
 await getAllGuildConfigs();
-log.info(
-    `guild configurations cached in ${(performance.now() - start).toFixed(3)}ms`
-);
+
 
 export default {
+    get: getGuildConfig,
+    update: updateGuildConfig,
+    checkOutdated: checkConfigIsOutdated,
+    getAll: getAllGuildConfigs,
+    write: writeGuildConfig,
+    create: createGuildConfig,
+    info: guildConfigInformation,
+    default: defaultGuildConfig,
+    configs: guildConfigs,
+    // above are better names, but i kept below because i don't feel like changing the scripts that use it
     getGuildConfig,
     updateGuildConfig,
     checkConfigIsOutdated,
@@ -117,4 +147,5 @@ export default {
     defaultGuildConfig,
     writeGuildConfig,
     createGuildConfig,
+    guildConfigInformation,
 };

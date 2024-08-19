@@ -49,6 +49,7 @@ export function fixFileName(name) {
             .replaceAll("<", "_")
             .replaceAll(">", "_")
             .replaceAll(";", "_")
-            .replaceAll(",", "_") + name.slice(name.lastIndexOf("."));
+            .replaceAll(",", "_")
+            .slice(0, 200) + name.slice(name.lastIndexOf(".")).slice(0, 50);
     return correctedFileName;
 }

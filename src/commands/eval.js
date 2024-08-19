@@ -16,6 +16,7 @@ import * as gpt from "../lib/gpt.js";
 import * as adobe from "../lib/adobe.js";
 import shell from "shelljs";
 import util from "node:util";
+import guildConfigs from "../lib/guildConfigs.js";
 
 const config = globals.config;
 
@@ -33,13 +34,14 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "code",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -50,6 +52,7 @@ const command = new Command(
             return;
         }
         try {
+            const commandsObject = await import("../lib/commands.js");
             const result = await (async function () {
                 return await eval(args.get("code"));
             })();

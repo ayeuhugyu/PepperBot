@@ -26,6 +26,7 @@ jakdata.setDescription("return a random jak");
 jakdata.setPermissions([]);
 jakdata.setPermissionsReadable("");
 jakdata.setWhitelist([]);
+jakdata.setNormalAliases(["randomjak"])
 jakdata.setCanRunFromBot(true);
 const jak = new SubCommand(
     jakdata,
@@ -55,6 +56,7 @@ nicknamedata.setDescription("returns a random nickname for a user");
 nicknamedata.setPermissions([]);
 nicknamedata.setPermissionsReadable("");
 nicknamedata.setWhitelist([]);
+nicknamedata.setNormalAliases(["randomnickname"])
 nicknamedata.setCanRunFromBot(true);
 const nickname = new SubCommand(
     nicknamedata,
@@ -81,20 +83,22 @@ rmessagedata.setDescription(
 rmessagedata.setPermissions([]);
 rmessagedata.setPermissionsReadable("");
 rmessagedata.setWhitelist([]);
+rmessagedata.setNormalAliases(["randommessage"])
 rmessagedata.setCanRunFromBot(true);
 const rmessage = new SubCommand(
     rmessagedata,
     async function getArguments(message) {
         return new Collection();
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const channel = message.channel;
         const messages = channel.messages;
         const messageCache = await messages.fetch({ limit: 100, cache: true });
         let acc = 0;
         let randomMessage = messageCache.random();
+        const prefix = gconfig.prefix || config.generic.prefix
         while (
-            randomMessage.content.startsWith(config.generic.prefix) ||
+            randomMessage.content.startsWith(prefix) ||
             randomMessage.content.startsWith("d/") ||
             randomMessage.content.startsWith("p/") ||
             randomMessage.author.bot
@@ -121,6 +125,7 @@ namedata.setDescription("return a random deepwoken name");
 namedata.setPermissions([]);
 namedata.setPermissionsReadable("");
 namedata.setWhitelist([]);
+namedata.setNormalAliases(["randomname"])
 namedata.setCanRunFromBot(true);
 const name = new SubCommand(
     namedata,
@@ -148,6 +153,7 @@ sounddata.setDescription("play a random noise from the soundboard");
 sounddata.setPermissions([]);
 sounddata.setPermissionsReadable("");
 sounddata.setWhitelist([]);
+sounddata.setNormalAliases(["randomsound"])
 sounddata.setCanRunFromBot(true);
 const sound = new SubCommand(
     sounddata,
@@ -191,6 +197,7 @@ wordsdata.setDescription("return an amount of random words");
 wordsdata.setPermissions([]);
 wordsdata.setPermissionsReadable("");
 wordsdata.setWhitelist([]);
+wordsdata.setNormalAliases(["randomwords"])
 wordsdata.setCanRunFromBot(true);
 wordsdata.addNumberOption((option) =>
     option
@@ -200,12 +207,13 @@ wordsdata.addNumberOption((option) =>
 );
 const words = new SubCommand(
     wordsdata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         let args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         const commandLength = message.content.split(" ")[0].length - 1;
         args = new Collection();
         let amount = message.content
-            .slice(config.generic.prefix.length + commandLength)
+            .slice(prefix.length + commandLength)
             .trim();
         args.set("amount", amount);
         return args;
@@ -241,6 +249,7 @@ pepperdata.setDescription("return a random pepper");
 pepperdata.setPermissions([]);
 pepperdata.setPermissionsReadable("");
 pepperdata.setWhitelist([]);
+pepperdata.setNormalAliases(["pepper", "randompepper"])
 pepperdata.setCanRunFromBot(true);
 const pepper = new SubCommand(
     pepperdata,
@@ -269,6 +278,7 @@ freshiedata.setDescription("return a random deepwoken freshie");
 freshiedata.setPermissions([]);
 freshiedata.setPermissionsReadable("");
 freshiedata.setWhitelist([]);
+freshiedata.setNormalAliases(["randomfreshie"])
 freshiedata.setCanRunFromBot(true);
 const freshie = new SubCommand(
     freshiedata,
@@ -329,6 +339,7 @@ buildideadata.setDescription("return a random build idea for deepwoken");
 buildideadata.setPermissions([]);
 buildideadata.setPermissionsReadable("");
 buildideadata.setWhitelist([]);
+buildideadata.setNormalAliases(["randombuildidea"])
 buildideadata.setCanRunFromBot(true);
 const buildidea = new SubCommand(
     buildideadata,
@@ -398,21 +409,9 @@ data.addBooleanOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
-        const commandLength = message.content.split(" ")[0].length - 1;
+    async function getArguments(message, gconfig) {
         const args = new Collection();
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
-        if (args.get("type")) {
-            args.set(
-                "amount",
-                message.content.slice(
-                    config.generic.prefix.length +
-                        commandLength +
-                        args.get("type").toString().length +
-                        1
-                )
-            );
-        }
         return args;
     },
     async function execute(message, args, fromInteraction) {

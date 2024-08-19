@@ -117,10 +117,24 @@ const allowedFileNames = [
     ".msg",
     ".rs",
 ];
+const allowedImageFiles = [
+    ".png",
+    ".jpg",
+    ".jpeg",
+]
 
 function isTextFile(filename) {
     for (const allowedFileName of allowedFileNames) {
         if (filename.endsWith(allowedFileName)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isImageFile(filename) {
+    for (const allowedImageFiles of allowedImageFiles) {
+        if (filename.endsWith(allowedImageFiles)) {
             return true;
         }
     }
@@ -153,9 +167,12 @@ async function fixIncomingMessage(message) {
                     attachedMessage +=
                         "The user you are speaking with attached a file that exceeded the maximum file size of 25 megabytes. This message is not created by the user.";
                 }
+            } else if (isImageFile(attachment.name)) {
+                attachedMessage +=
+                        "The user you are speaking with attached an image file, a type which is not yet supported. This message is not created by the user.";
             } else {
                 attachedMessage +=
-                    "The user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs. This message is not created by the user.";
+                    "The user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs, .png, .jpg, .jpeg. This message is not created by the user.";
             }
         }
     }

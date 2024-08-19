@@ -188,13 +188,14 @@ switchData.addStringOption((option) =>
 
 const switchc = new SubCommand(
     switchData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -263,13 +264,14 @@ addTaskData.addStringOption((option) =>
 
 const addTask = new SubCommand(
     addTaskData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -320,13 +322,14 @@ removeTaskData.addIntegerOption((option) =>
 
 const removeTask = new SubCommand(
     removeTaskData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -388,13 +391,14 @@ checkOffTaskData.addStringOption((option) =>
 
 const checkOffTask = new SubCommand(
     checkOffTaskData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -606,15 +610,16 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         if (args.get("args")) {
             args.set(
                 "content",
                 message.content.slice(
-                    config.generic.prefix.length +
+                    prefix.length +
                         commandLength +
                         message.content.split(" ")[1].length +
                         1

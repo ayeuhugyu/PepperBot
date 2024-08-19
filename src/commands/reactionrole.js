@@ -27,6 +27,7 @@ removedata.addStringOption((option) =>
         )
         .setRequired(true)
 );
+removedata.setDisabledContexts(["dm"])
 const remove = new SubCommand(
     removedata,
     async function getArguments(message) {
@@ -104,15 +105,17 @@ createdata.addStringOption((option) =>
         .setDescription("the text to use in the message")
         .setRequired(true)
 );
+createdata.setDisabledContexts(["dm"])
 const create = new SubCommand(
     createdata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "emoji",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .split(" ")[0]
                 .trim()
         );
@@ -124,7 +127,7 @@ const create = new SubCommand(
                     await message.guild.roles.fetch(
                         message.content
                             .slice(
-                                config.generic.prefix.length +
+                                prefix.length +
                                     commandLength +
                                     args.get("emoji").length +
                                     1
@@ -137,7 +140,7 @@ const create = new SubCommand(
                     "text",
                     message.content
                         .slice(
-                            config.generic.prefix.length +
+                            prefix.length +
                                 commandLength +
                                 args.get("emoji").length +
                                 1 +
@@ -154,7 +157,7 @@ const create = new SubCommand(
                 "text",
                 message.content
                     .slice(
-                        config.generic.prefix.length +
+                        prefix.length +
                             commandLength +
                             args.get("emoji").length +
                             1 +
@@ -246,6 +249,7 @@ data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.setAliases(["rr"]);
+data.setDisabledContexts(["dm"])
 data.addStringOption((option) =>
     option
         .setName("subcommand")

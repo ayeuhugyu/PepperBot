@@ -39,11 +39,12 @@ savedata.setWhitelist([]);
 savedata.setCanRunFromBot(true);
 const save = new SubCommand(
     savedata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         const commandLength = message.content.split(" ")[0].length - 1;
         let argument = message.content.slice(
-            config.generic.prefix.length + commandLength
+            prefix.length + commandLength
         );
         if (argument) {
             argument.trim();
@@ -92,11 +93,12 @@ loaddata.setWhitelist([]);
 loaddata.setCanRunFromBot(true);
 const load = new SubCommand(
     loaddata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         const commandLength = message.content.split(" ")[0].length - 1;
         let argument = message.content.slice(
-            config.generic.prefix.length + commandLength
+            prefix.length + commandLength
         );
         if (argument) {
             argument.trim();
@@ -104,7 +106,8 @@ const load = new SubCommand(
         args.set("content", files.fixFileName(argument));
         return args;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
+        const prefix = gconfig.prefix || config.generic.prefix
         if (!args.get("content")) {
             action.reply(message, "what tf am i supposed to load");
             return;
@@ -131,7 +134,7 @@ const load = new SubCommand(
         if (!savedEmbeds.includes(`${args.get("content")}.json`)) {
             action.reply(
                 message,
-                "that shit aint real, use `p/embed load ls` to list available embeds"
+                `that shit aint real, use \`${prefix}embed load ls\` to list available embeds`
             );
             return;
         }
@@ -175,13 +178,14 @@ restartData.setCanRunFromBot(true);
 
 const restart = new SubCommand(
     restartData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -219,13 +223,14 @@ setImageData.addStringOption((option) =>
 
 const setImage = new SubCommand(
     setImageData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -277,13 +282,14 @@ setThumbnailData.addStringOption((option) =>
 
 const setThumbnail = new SubCommand(
     setThumbnailData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -335,13 +341,14 @@ setAuthorData.addStringOption((option) =>
 
 const setAuthor = new SubCommand(
     setAuthorData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -392,13 +399,14 @@ setFooterData.addStringOption((option) =>
 
 const setFooter = new SubCommand(
     setFooterData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -449,11 +457,12 @@ setColorData.addStringOption((option) =>
 
 const setColor = new SubCommand(
     setColorData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         let content = message.content
-            .slice(config.generic.prefix.length + commandLength)
+            .slice(prefix.length + commandLength)
             .trim();
         if (content.startsWith("0x")) {
             content = content.slice(2);
@@ -509,13 +518,14 @@ setDescriptionData.addStringOption((option) =>
 
 const setDescription = new SubCommand(
     setDescriptionData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -566,13 +576,14 @@ setTitleData.addStringOption((option) =>
 
 const setTitle = new SubCommand(
     setTitleData,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "content",
             message.content
-                .slice(config.generic.prefix.length + commandLength)
+                .slice(prefix.length + commandLength)
                 .trim()
         );
         return args;
@@ -779,10 +790,11 @@ const command = new Command(
         args.set("_SUBCOMMAND", content);
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
+        const prefix = gconfig.prefix || config.generic.prefix
         action.reply(message, {
             content:
-                "you need to supply a subcommand to do anything with this command. if you don't know any, use `p/help embed`. also, you might have capitalized it by accident. don't capitalize it.",
+                `you need to supply a subcommand to do anything with this command. if you don't know any, use \`${prefix}help embed\`. also, you might have capitalized it by accident. don't capitalize it.`,
             ephemeral: true,
         });
     },
