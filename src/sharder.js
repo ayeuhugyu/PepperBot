@@ -40,6 +40,10 @@ function setShardCount(count) {
 
 function kill() {
     log.info("kill called, killing bot host");
+    manager.shards.forEach((shard) => {
+        shard.kill();
+        log.info(`killed shard ${shard.id}`);
+    });
     process.exit(0);
 }
 
@@ -74,9 +78,11 @@ manager.spawn().then((shards) => {
             if (message.action && message.action == "restart") {
                 if (message.process === "shard") {
                     log.info(`restarting shard #${message.shardId}`);
-                    const shrd = shards.get(parseInt(message.shardId))
+                    const shrd = shards.get(parseInt(message.shardId));
                     if (!shrd) {
-                        log.warn(`could not find and restart shard #${message.shardId}`);
+                        log.warn(
+                            `could not find and restart shard #${message.shardId}`
+                        );
                         return;
                     }
                     shrd.respawn();
