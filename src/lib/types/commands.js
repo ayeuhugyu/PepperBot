@@ -41,14 +41,15 @@ export class BaseCommandData {
         this.disabledContexts = disabledContexts;
         return this;
     }
-    
 }
 
 export class SubCommandData extends SlashCommandSubcommandBuilder {
     constructor() {
         super();
-        for (const method of Object.getOwnPropertyNames(BaseCommandData.prototype)) {
-            if (typeof BaseCommandData.prototype[method] === 'function') {
+        for (const method of Object.getOwnPropertyNames(
+            BaseCommandData.prototype
+        )) {
+            if (typeof BaseCommandData.prototype[method] === "function") {
                 this[method] = BaseCommandData.prototype[method];
             }
         } // probably isn't the best way to do this, but i don't really care cuz it works.
@@ -62,14 +63,16 @@ export class SubCommandData extends SlashCommandSubcommandBuilder {
 export class CommandData extends SlashCommandBuilder {
     constructor() {
         super();
-        for (const method of Object.getOwnPropertyNames(BaseCommandData.prototype)) {
-            if (typeof BaseCommandData.prototype[method] === 'function') {
+        for (const method of Object.getOwnPropertyNames(
+            BaseCommandData.prototype
+        )) {
+            if (typeof BaseCommandData.prototype[method] === "function") {
                 this[method] = BaseCommandData.prototype[method];
             }
         }
     }
     setPrimarySubcommand(primarySubcommand) {
-        this.primarySubcommand = primarySubcommand
+        this.primarySubcommand = primarySubcommand;
         return this;
     }
 }
@@ -158,7 +161,6 @@ export class Command {
             }
             this.inputType = `${fromInteraction ? "interaction" : "text"}`;
             if (this.invalidInputTypes) {
-                
                 if (this.invalidInputTypes.includes(this.inputType)) {
                     action.reply(message, {
                         content: `input type \`${this.inputType}\` is marked as invalid for this command`,
@@ -167,13 +169,13 @@ export class Command {
                     return;
                 }
             }
-            this.inputContext = `${message.guild ? "guild" : "dm"}`
+            this.inputContext = `${message.guild ? "guild" : "dm"}`;
             if (this.disabledContexts) {
                 if (this.disabledContexts.includes(this.inputContext)) {
                     action.reply(message, {
                         content: `input context \`${this.inputContext}\` is marked as invalid for this command`,
-                        ephemeral: true
-                    })
+                        ephemeral: true,
+                    });
                     return;
                 }
             }
@@ -186,26 +188,39 @@ export class Command {
                 if (guildConfig) {
                     if (guildConfig.disabledCommands.includes(this.data.name)) {
                         action.reply(message, {
-                            content: "usage of this command has been disabled in this guild",
+                            content:
+                                "usage of this command has been disabled in this guild",
                             ephemeral: true,
                         });
                         return;
                     }
-                    if (guildConfig.disableAllCommands && this.data.name !== "configure") {
+                    if (
+                        guildConfig.disableAllCommands &&
+                        this.data.name !== "configure"
+                    ) {
                         action.reply(message, {
                             content: "command usage is disabled in this guild",
                             ephemeral: true,
                         });
                         return;
                     }
-                    if (this.inputType === "interaction" && guildConfig.disableSlashCommands && this.data.name !== "configure") {
+                    if (
+                        this.inputType === "interaction" &&
+                        guildConfig.disableSlashCommands &&
+                        this.data.name !== "configure"
+                    ) {
                         action.reply(message, {
-                            content: "slash commands are disabled in this guild",
+                            content:
+                                "slash commands are disabled in this guild",
                             ephemeral: true,
                         });
                         return;
                     }
-                    if (this.inputType === "text" && guildConfig.disableTextCommands && this.data.name !== "configure") {
+                    if (
+                        this.inputType === "text" &&
+                        guildConfig.disableTextCommands &&
+                        this.data.name !== "configure"
+                    ) {
                         action.reply(message, {
                             content: "text commands are disabled in this guild",
                             ephemeral: true,
@@ -213,9 +228,14 @@ export class Command {
                         return;
                     }
                     if (message.channel) {
-                        if (guildConfig.blacklistedCommandChannelIds.includes(message.channel.id)) {
+                        if (
+                            guildConfig.blacklistedCommandChannelIds.includes(
+                                message.channel.id
+                            )
+                        ) {
                             action.reply(message, {
-                                content: "command usage is disabled in this channel",
+                                content:
+                                    "command usage is disabled in this channel",
                                 ephemeral: true,
                             });
                             return;
@@ -241,37 +261,35 @@ export class Command {
                         `finished getting arguments for p/${this.data.name}`
                     );
                 }
+                let errorReply = false;
                 if (
                     this.subcommands &&
                     this.subcommands.length > 0 &&
                     !this.isSubCommand
                 ) {
-                    let subcommand
+                    let subcommand;
                     if (this.data.primarySubcommand) {
                         if ((args && !args.get("_SUBCOMMAND")) || !args) {
-                            subcommand = this.data.primarySubcommand
+                            subcommand = this.data.primarySubcommand;
                         }
                     }
                     if (args && args.get("_SUBCOMMAND")) {
-                        subcommand = this.subcommands.find(
-                            (subcommand) => {
-                                if (
-                                    subcommand.data.name ===
-                                    args.get("_SUBCOMMAND")
-                                ) {
-                                    return true;
-                                }
-                                if (
-                                    subcommand.data.aliases &&
-                                    subcommand.data.aliases.includes(
-                                        args.get("_SUBCOMMAND")
-                                    )
-                                ) {
-                                    return true;
-                                }
-                                return false;
+                        subcommand = this.subcommands.find((subcommand) => {
+                            if (
+                                subcommand.data.name === args.get("_SUBCOMMAND")
+                            ) {
+                                return true;
                             }
-                        );
+                            if (
+                                subcommand.data.aliases &&
+                                subcommand.data.aliases.includes(
+                                    args.get("_SUBCOMMAND")
+                                )
+                            ) {
+                                return true;
+                            }
+                            return false;
+                        });
                     }
                     if (subcommand) {
                         let subcommandArgs;
@@ -287,14 +305,12 @@ export class Command {
                                 guildConfig
                             );
                         }
-                        const subcommandresult = await subcommand.execute(
-                            message,
-                            subcommandArgs,
-                            fromInteraction
-                        ).catch((err) => {
-                            log.error(err);
-                            errorReply = true;
-                        });
+                        const subcommandresult = await subcommand
+                            .execute(message, subcommandArgs, fromInteraction)
+                            .catch((err) => {
+                                log.error(err);
+                                errorReply = true;
+                            });
                         if (errorReply) {
                             action.reply(
                                 message,
@@ -305,7 +321,6 @@ export class Command {
                         return subcommandresult;
                     }
                 }
-                let errorReply = false;
                 const commandresult = await exc(
                     message,
                     args,
