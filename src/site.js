@@ -198,7 +198,6 @@ app.get("/read-log", (req, res) => {
     const startIndex = req.query.start;
     const endIndex = req.query.end;
     const logPath = `./logs/${logType}.log`;
-    console.log(req.query, startIndex, endIndex);
     try {
         if (!fs.existsSync(logPath)) {
             return res.status(404).send(`log "${logType}" not found`);

@@ -56,7 +56,6 @@ export function fixFileName(name) {
 }
 
 export function readLinesBetween(filePath, startIndex, endIndex, callback) {
-    log.debug(`Reading lines from index ${startIndex} to ${endIndex} from file ${filePath}`);
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
             return callback(err);

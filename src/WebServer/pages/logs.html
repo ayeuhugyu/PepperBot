@@ -219,7 +219,6 @@
                 status.innerText = `reading ${selectedLevel.toLowerCase()}.log...`
                 await fetch(`/read-log?level=${selectedLevel.toLowerCase()}&end=${startIndex}&start=${startIndex - 150}`).then((response) => response.text()).then((data) => {
                     const container = document.querySelector("#logFileContent");
-                    console.log(data)
                     processLogs(
                         "logFileContent",
                         data,
