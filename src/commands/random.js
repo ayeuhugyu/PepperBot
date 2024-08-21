@@ -26,7 +26,7 @@ jakdata.setDescription("return a random jak");
 jakdata.setPermissions([]);
 jakdata.setPermissionsReadable("");
 jakdata.setWhitelist([]);
-jakdata.setNormalAliases(["randomjak"])
+jakdata.setNormalAliases(["randomjak"]);
 jakdata.setCanRunFromBot(true);
 const jak = new SubCommand(
     jakdata,
@@ -56,7 +56,7 @@ nicknamedata.setDescription("returns a random nickname for a user");
 nicknamedata.setPermissions([]);
 nicknamedata.setPermissionsReadable("");
 nicknamedata.setWhitelist([]);
-nicknamedata.setNormalAliases(["randomnickname"])
+nicknamedata.setNormalAliases(["randomnickname"]);
 nicknamedata.setCanRunFromBot(true);
 const nickname = new SubCommand(
     nicknamedata,
@@ -75,6 +75,28 @@ const nickname = new SubCommand(
     }
 );
 
+const emojidata = new SubCommandData();
+emojidata.setName("emoji");
+emojidata.setDescription("returns a random emoji");
+emojidata.setPermissions([]);
+emojidata.setPermissionsReadable("");
+emojidata.setWhitelist([]);
+emojidata.setAliases(["emojis", "reaction", "reactions"]);
+emojidata.setNormalAliases(["randomemoji"]);
+emojidata.setCanRunFromBot(true);
+const emoji = new SubCommand(
+    emojidata,
+    async function getArguments(message, gconfig) {
+        let args = new Collection();
+        return args;
+    },
+    async function execute(message, args, fromInteraction) {
+        const randommoji =
+            globals.emojis[Math.floor(Math.random() * globals.emojis.length)];
+        action.reply(message, randommoji);
+    }
+);
+
 const rmessagedata = new SubCommandData();
 rmessagedata.setName("message");
 rmessagedata.setDescription(
@@ -83,7 +105,7 @@ rmessagedata.setDescription(
 rmessagedata.setPermissions([]);
 rmessagedata.setPermissionsReadable("");
 rmessagedata.setWhitelist([]);
-rmessagedata.setNormalAliases(["randommessage"])
+rmessagedata.setNormalAliases(["randommessage"]);
 rmessagedata.setCanRunFromBot(true);
 const rmessage = new SubCommand(
     rmessagedata,
@@ -96,7 +118,7 @@ const rmessage = new SubCommand(
         const messageCache = await messages.fetch({ limit: 100, cache: true });
         let acc = 0;
         let randomMessage = messageCache.random();
-        const prefix = gconfig.prefix || config.generic.prefix
+        const prefix = gconfig.prefix || config.generic.prefix;
         while (
             randomMessage.content.startsWith(prefix) ||
             randomMessage.content.startsWith("d/") ||
@@ -125,7 +147,7 @@ namedata.setDescription("return a random deepwoken name");
 namedata.setPermissions([]);
 namedata.setPermissionsReadable("");
 namedata.setWhitelist([]);
-namedata.setNormalAliases(["randomname"])
+namedata.setNormalAliases(["randomname"]);
 namedata.setCanRunFromBot(true);
 const name = new SubCommand(
     namedata,
@@ -153,7 +175,7 @@ sounddata.setDescription("play a random noise from the soundboard");
 sounddata.setPermissions([]);
 sounddata.setPermissionsReadable("");
 sounddata.setWhitelist([]);
-sounddata.setNormalAliases(["randomsound"])
+sounddata.setNormalAliases(["randomsound"]);
 sounddata.setCanRunFromBot(true);
 const sound = new SubCommand(
     sounddata,
@@ -197,7 +219,7 @@ wordsdata.setDescription("return an amount of random words");
 wordsdata.setPermissions([]);
 wordsdata.setPermissionsReadable("");
 wordsdata.setWhitelist([]);
-wordsdata.setNormalAliases(["randomwords"])
+wordsdata.setNormalAliases(["randomwords"]);
 wordsdata.setCanRunFromBot(true);
 wordsdata.addNumberOption((option) =>
     option
@@ -209,7 +231,7 @@ const words = new SubCommand(
     wordsdata,
     async function getArguments(message, gconfig) {
         let args = new Collection();
-        const prefix = gconfig.prefix || config.generic.prefix
+        const prefix = gconfig.prefix || config.generic.prefix;
         const commandLength = message.content.split(" ")[0].length - 1;
         args = new Collection();
         let amount = message.content
@@ -249,7 +271,7 @@ pepperdata.setDescription("return a random pepper");
 pepperdata.setPermissions([]);
 pepperdata.setPermissionsReadable("");
 pepperdata.setWhitelist([]);
-pepperdata.setNormalAliases(["pepper", "randompepper"])
+pepperdata.setNormalAliases(["pepper", "randompepper"]);
 pepperdata.setCanRunFromBot(true);
 const pepper = new SubCommand(
     pepperdata,
@@ -278,7 +300,7 @@ freshiedata.setDescription("return a random deepwoken freshie");
 freshiedata.setPermissions([]);
 freshiedata.setPermissionsReadable("");
 freshiedata.setWhitelist([]);
-freshiedata.setNormalAliases(["randomfreshie"])
+freshiedata.setNormalAliases(["randomfreshie"]);
 freshiedata.setCanRunFromBot(true);
 const freshie = new SubCommand(
     freshiedata,
@@ -339,7 +361,7 @@ buildideadata.setDescription("return a random build idea for deepwoken");
 buildideadata.setPermissions([]);
 buildideadata.setPermissionsReadable("");
 buildideadata.setWhitelist([]);
-buildideadata.setNormalAliases(["randombuildidea"])
+buildideadata.setNormalAliases(["randombuildidea"]);
 buildideadata.setCanRunFromBot(true);
 const buildidea = new SubCommand(
     buildideadata,
@@ -395,7 +417,7 @@ data.addStringOption((option) =>
     option
         .setName("amount")
         .setDescription(
-            "amount of random words to reply with (does nothing if subcommand is not words)"
+            "amount of random words/emojis to reply with (does nothing if subcommand is not words/emoji)"
         )
         .setRequired(false)
 );
@@ -429,7 +451,18 @@ const command = new Command(
             )}\`, you baffoon!`
         );
     },
-    [buildidea, freshie, pepper, words, sound, name, rmessage, nickname, jak]
+    [
+        buildidea,
+        freshie,
+        pepper,
+        words,
+        sound,
+        name,
+        rmessage,
+        nickname,
+        emoji,
+        jak,
+    ]
 );
 
 export default command;

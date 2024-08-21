@@ -776,7 +776,7 @@ data.addStringOption((option) =>
         .setDescription(
             "content to pass to the subcommand. usually a phrase or url"
         )
-        .setRequired(true)
+        .setRequired(false)
 );
 const command = new Command(
     data,

@@ -1,6 +1,7 @@
 import fsextra from "fs-extra";
 import fs from "fs";
 import * as globals from "./globals.js";
+import * as log from "./log.js";
 
 const config = globals.config;
 
@@ -52,4 +53,33 @@ export function fixFileName(name) {
             .replaceAll(",", "_")
             .slice(0, 200) + name.slice(name.lastIndexOf(".")).slice(0, 50);
     return correctedFileName;
+}
+
+export function readLinesBetween(filePath, startIndex, endIndex, callback) {
+    log.debug(`Reading lines from index ${startIndex} to ${endIndex} from file ${filePath}`);
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return callback(err);
+        }
+        const lines = data.trim().split('\n');
+        
+        // Ensure startIndex and endIndex are within bounds
+        const start = Math.max(startIndex, 0);
+        const end = Math.min(endIndex, lines.length);
+
+        // Read lines between start and end indices
+        const resultLines = lines.slice(start, end).join('\n');
+
+        callback(null, resultLines);
+    });
+}
+
+export function getFileLength(filePath, callback) {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return callback(err);
+        }
+        const lines = data.trim().split('\n');
+        callback(null, lines.length);
+    });
 }

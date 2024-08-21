@@ -6,6 +6,7 @@ import * as stream from "stream";
 import fsExtra from "fs-extra";
 import * as globals from "./globals.js";
 import process from "node:process";
+import * as files from "./files.js"
 
 const config = globals.config;
 
@@ -75,11 +76,6 @@ let conversations = {};
 async function download(url, filename) {
     return new Promise((resolve, reject) => {
         const fixedFileName = filename
-            .toLowerCase()
-            .replaceAll(" ", "_")
-            .replaceAll("-", "_")
-            .replaceAll("/", "_")
-            .replaceAll("\\", "_");
         fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
         fetch(url).then((res) => {
             const ws = fs.createWriteStream(
@@ -133,8 +129,8 @@ function isTextFile(filename) {
 }
 
 function isImageFile(filename) {
-    for (const allowedImageFiles of allowedImageFiles) {
-        if (filename.endsWith(allowedImageFiles)) {
+    for (const allowedFileName of allowedImageFiles) {
+        if (filename.endsWith(allowedFileName)) {
             return true;
         }
     }
@@ -150,18 +146,9 @@ async function fixIncomingMessage(message) {
                     log.info("gpt: downloading file");
                     await download(
                         attachment.url,
-                        attachment.id + "_" + attachment.name
+                        files.fixFileName(attachment.id + "_" + attachment.name)
                     );
-                    const file = `./resources/gptdownloads/${
-                        attachment.id +
-                        "_" +
-                        attachment.name
-                            .toLowerCase()
-                            .replaceAll(" ", "_")
-                            .replaceAll("-", "_")
-                            .replaceAll("/", "_")
-                            .replaceAll("\\", "_")
-                    }`;
+                    const file = `./resources/gptdownloads/${files.fixFileName(attachment.id + "_" + attachment.name)}`;
                     attachedMessage += await fs.readFileSync(file, "utf-8");
                 } else {
                     attachedMessage +=

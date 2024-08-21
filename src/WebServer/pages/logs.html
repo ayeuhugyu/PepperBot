@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Pepper Site</title>
-        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
         <meta content="ye" property="og:description" />
@@ -86,22 +86,31 @@
                 });
             </script>
         </div>
-        <h1 id="mainTitle">Logs</h1>
-
-        <div class="dropdown-wrapper">
-            <select class="logLevelDropdown">
-                <option class="logLevelDropdownOption" value="-">-</option>
-                <option value="ACCESS">ACCESS</option>
-                <option value="INFO">INFO</option>
-                <option value="DEBUG">DEBUG</option>
-                <option value="WARN">WARN</option>
-                <option value="ERROR">ERROR</option>
-                <option value="FATAL">FATAL</option>
-            </select>
-        </div>
-
-        <div class="logFileContentContainer">
-            <pre class="logFileContent" , id="logFileContent"></pre>
+        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
+            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
+                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
+                        <h2 class="sectionTitle">logs viewer</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="dropdown-wrapper">
+                                <select class="logLevelDropdown">
+                                    <option class="logLevelDropdownOption" value="-">-</option>
+                                    <option value="ACCESS">ACCESS</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="DEBUG">DEBUG</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="ERROR">ERROR</option>
+                                    <option value="FATAL">FATAL</option>
+                                </select>
+                            </div>
+                            <div id="status" style="text-align: right;">awaiting input...</div>
+                        </div>
+                        <div class="logFileContentContainer" style="width: calc(100% - 3px); flex-grow: 1; overflow: hidden;">
+                            <pre class="outlined" id="logFileContent" style="width: 100%; height: 100%; overflow: scroll; text-align: left;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <script>
             window.onload = function () {
@@ -120,9 +129,14 @@
             };
         </script>
         <script>
+            const status = document.getElementById("status");
             function processLogs(containerId, logs, keyword, color) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = ""; // Clear existing content
+                const parentContainer = document.getElementById(containerId);
+                const container = document.createElement("div");
+
+                const previousScrollHeight = parentContainer.scrollHeight;
+                const previousScrollTop = parentContainer.scrollTop;
+
                 logs.split("\n").forEach((log) => {
                     const keywordIndex = log.indexOf(keyword);
                     if (keywordIndex === -1) {
@@ -158,43 +172,75 @@
                         container.appendChild(lineElement);
                     }
                 });
+                parentContainer.insertBefore(container, parentContainer.firstChild);
+
+                parentContainer.scrollTop = previousScrollTop + (parentContainer.scrollHeight - previousScrollHeight);
             }
+            let startIndex = 0
             const logLevelDropdown =
                 document.querySelector(".logLevelDropdown");
             const container = document.querySelector("#logFileContent");
             container.innerText =
                 "select a log file to view from the dropdown above";
-            logLevelDropdown.addEventListener("change", () => {
+            let previousLevel = undefined
+            let logLength = 0
+            let isAtEnd = false
+            let hasAppended = false
+            async function readlog() {
                 const selectedLevel = logLevelDropdown.value;
                 if (selectedLevel === "-") {
                     container.innerHTML = ""; // Clear existing content
                     container.innerText =
                         "select a log file to view from the dropdown above";
+                    status.innerText = `awaiting input...`;
                     return;
                 }
-                container.innerHTML = ""; // Clear existing content
-                container.innerText = `reading ${selectedLevel.toLowerCase()}.log...`;
-                fetch(`/read-log?level=${selectedLevel.toLowerCase()}`)
-                    .then((response) => response.text())
-                    .then((data) => {
-                        const container =
-                            document.querySelector("#logFileContent");
-                        container.innerHTML = ""; // Clear existing content
-                        processLogs(
-                            "logFileContent",
-                            data,
-                            selectedLevel.toUpperCase(),
-                            getColor(selectedLevel)
-                        );
-                        let preElements = document.querySelectorAll("pre");
-                        preElements.forEach(function (pre) {
-                            pre.scrollTop = pre.scrollHeight;
-                        });
-                    })
-                    .catch((error) => console.error("Error:", error));
+                if (isAtEnd && !hasAppended) {
+                    const end = document.createElement("div");
+                    end.innerText = "end of log file";
+                    container.insertBefore(end, container.firstChild);
+                    status.innerText = `awaiting input...`;
+                    hasAppended = true
+                }
+                if (isAtEnd) {
+                    return;
+                }
+                if (selectedLevel != previousLevel) {
+                    container.innerHTML = ""; // Clear existing content
+                    startingIndex = 0
+                    container.innerText = ``;
+                    startIndex = await fetch("/get-log-length?level=" + selectedLevel.toLowerCase()).then((response) => response.text()).then(async (data) => { return await parseInt(await data) }).catch((error) => console.error("Error:", error));
+                } else {
+                    startIndex -= 150
+                }
+                if (startIndex < 0) {
+                    isAtEnd = true
+                }
+                status.innerText = `reading ${selectedLevel.toLowerCase()}.log...`
+                await fetch(`/read-log?level=${selectedLevel.toLowerCase()}&end=${startIndex}&start=${startIndex - 150}`).then((response) => response.text()).then((data) => {
+                    const container = document.querySelector("#logFileContent");
+                    console.log(data)
+                    processLogs(
+                        "logFileContent",
+                        data,
+                        selectedLevel.toUpperCase(),
+                        getColor(selectedLevel)
+                    );
+                    status.innerText = `awaiting input...`;
+                }).catch((error) => console.error("Error:", error));
+                if (selectedLevel != previousLevel) {
+                    container.scrollTop = container.scrollHeight;
+                }
+                previousLevel = selectedLevel
+            }
+            logLevelDropdown.addEventListener("change", () => {
+                readlog()
             });
-            document.body.appendChild(logLevelDropdown);
-
+            container.addEventListener("scroll", () => {
+                if (container.scrollTop === 0) {
+                    readlog()
+                }
+            });
             function getColor(level) {
                 switch (level) {
                     case "ERROR":

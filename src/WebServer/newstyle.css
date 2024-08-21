@@ -67,22 +67,24 @@ body {
 
 /* Containers */
 
-.container {
+.cardcontainer {
     position: fixed;
     word-wrap: break-word;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
 }
 
 #mobiledisplay {
     width: fit-content;
     height: 100%;
     padding: 15px;
-    position: fixed;
     z-index: -1;
     overflow: auto;
     word-wrap: break-word;
-    position: fixed;
     top: 0;
-    left: calc(50% - 300px);
 }
 
 .sectionoutline {
@@ -176,4 +178,32 @@ pre {
 * {
     scrollbar-width: thin;
     scrollbar-color: #a38ac8 #2a1d3e;
+}
+
+/* Dropdowns */
+
+select {
+    background-color: #1E1E2E;
+    color: white;
+    border: 1px solid #cca1db;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+    cursor: pointer;
+}
+select:focus {
+    outline: none; /* Optionally remove the default focus outline */
+}
+option {
+    background-color: #1E1E2E;
+    color: white;
+    cursor: pointer;
+}
+option:hover {
+    background-color: #2a1d3e;
+    cursor: pointer;
+}
+option:focus {
+    background-color: #2a1d3e;
+    cursor: pointer;
 }

@@ -5,6 +5,7 @@ import path from "node:path";
 import { stat } from "fs/promises";
 import rateLimit from "express-rate-limit";
 import * as log from "./lib/log.js";
+import * as files from "./lib/files.js"
 import process from "node:process";
 
 const blockedIps = {
@@ -193,31 +194,59 @@ const ipv4regex =
 
 app.get("/read-log", (req, res) => {
     const logType = req.query.level;
-    const pretty = req.query.pretty;
+    const pretty = req.query.pretty || false;
+    const startIndex = req.query.start;
+    const endIndex = req.query.end;
+    const logPath = `./logs/${logType}.log`;
+    console.log(req.query, startIndex, endIndex);
+    try {
+        if (!fs.existsSync(logPath)) {
+            return res.status(404).send(`log "${logType}" not found`);
+        }
+        const logContent = files.readLinesBetween(logPath, startIndex, endIndex, (err, logContent) => {
+            if (err) {
+                log.error(err);
+                return res.status(500).send("error reading log");
+            }
+            if (pretty) {
+                return res.send(logContent.replace(/\n/g, "<br>"));
+            }
+            if (logType == "access") {
+                const matches = logContent.match(ipv4regex);
+                if (matches) {
+                    const truncatedLogContent = logContent.replace(
+                        ipv4regex,
+                        (match) => {
+                            const parts = match.split(".");
+                            return `${parts[0]}.${parts[1].slice(0, 1)}...`;
+                        }
+                    );
+                    res.send(truncatedLogContent);
+                    return;
+                }
+            }
+            res.send(logContent);
+        });
+    } catch (err) {
+        log.error(err);
+        return res.status(500).send("error reading log");
+    }
+});
+
+app.get("/get-log-length", (req, res) => {
+    const logType = req.query.level;
     const logPath = `./logs/${logType}.log`;
     try {
         if (!fs.existsSync(logPath)) {
             return res.status(404).send(`log "${logType}" not found`);
         }
-        const logContent = fs.readFileSync(logPath, "utf8");
-        if (pretty) {
-            return res.send(logContent.replace(/\n/g, "<br>"));
-        }
-        if (logType == "access") {
-            const matches = logContent.match(ipv4regex);
-            if (matches) {
-                const truncatedLogContent = logContent.replace(
-                    ipv4regex,
-                    (match) => {
-                        const parts = match.split(".");
-                        return `${parts[0]}.${parts[1].slice(0, 1)}...`;
-                    }
-                );
-                res.send(truncatedLogContent);
-                return;
+        const logLength = files.getFileLength(logPath, (err, logLength) => {
+            if (err) {
+                log.error(err);
+                return res.status(500).send("error reading log");
             }
-        }
-        res.send(logContent);
+            res.send(String(logLength));
+        });
     } catch (err) {
         log.error(err);
         return res.status(500).send("error reading log");

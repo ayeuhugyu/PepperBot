@@ -96,22 +96,26 @@ async function processDM(message) {
 }
 async function processDiabolicalEvent(message) {
     const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
-    const prefix = gconfig.prefix || config.generic.prefix
+    const prefix = gconfig.prefix || config.generic.prefix;
     if (
         !message.author.bot &&
-        !message.content
-            .toLowerCase()
-            .startsWith(prefix.toLowerCase())
+        !message.content.toLowerCase().startsWith(prefix.toLowerCase())
     ) {
         if (gconfig && gconfig.disableDiabolicalEvents) {
             return;
         }
-        if (gconfig && gconfig.diabolicalEventBlacklistedChannelIds && gconfig.diabolicalEventBlacklistedChannelIds.includes(message.channel.id)) {
+        if (
+            gconfig &&
+            gconfig.diabolicalEventBlacklistedChannelIds &&
+            gconfig.diabolicalEventBlacklistedChannelIds.includes(
+                message.channel.id
+            )
+        ) {
             return;
         }
-        const random = Math.random() * 250;
-        if (random < 5) {
-            // ~2%
+        const random = Math.random() * 500;
+        if (random < 1.25) {
+            // ~0.25%
             const emojiIndex = Math.floor(
                 Math.random() * globals.emojis.length
             );
@@ -121,11 +125,14 @@ async function processDiabolicalEvent(message) {
             const emoji = globals.emojis[emojiIndex];
             message.react(emoji);
         }
-        if (random > 246.5 && random < 249) {
-            // ~1%
+        if (random > 248.875 && random < 249) {
+            // ~0.025%
             log.info(`diabolical thread event triggered on ${message.id}`);
             if (message.startThread) {
-                if (message.channel && (message.channel.type === 0 || message.channel.type === 5)) {
+                if (
+                    message.channel &&
+                    (message.channel.type === 0 || message.channel.type === 5)
+                ) {
                     message
                         .startThread({
                             name: "Threaded! 🧵",
@@ -136,13 +143,15 @@ async function processDiabolicalEvent(message) {
                             thread.send("You've just been threaded! 🧵");
                         });
                 } else {
-                    log.info("could not start thread on message due to channel type");
+                    log.info(
+                        "could not start thread on message due to channel type"
+                    );
                     return;
                 }
             }
         }
-        if (random > 249) {
-            // ~0.4%
+        if (random > 249.75 && random < 250) {
+            // ~0.05%
             log.info(`diabolical event triggered on ${message.id}`);
             const event =
                 diabolical_events[
@@ -155,21 +164,24 @@ async function processDiabolicalEvent(message) {
 
 async function processGPTResponse(message) {
     const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
-    const prefix = gconfig.prefix || config.generic.prefix
+    const prefix = gconfig.prefix || config.generic.prefix;
     if (message.mentions) {
         if (
             message.mentions.has(client.user) &&
-            !message.content
-                .toLowerCase()
-                .startsWith(prefix.toLowerCase()) &&
+            !message.content.toLowerCase().startsWith(prefix.toLowerCase()) &&
             !message.mentions.everyone
         ) {
             if (!message.author.bot) {
-                
                 if (gconfig && gconfig.disableGPTResponses) {
                     return;
                 }
-                if (gconfig && gconfig.blacklistedGPTResponseChannelIds && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id)) {
+                if (
+                    gconfig &&
+                    gconfig.blacklistedGPTResponseChannelIds &&
+                    gconfig.blacklistedGPTResponseChannelIds.includes(
+                        message.channel.id
+                    )
+                ) {
                     return;
                 }
 
@@ -195,12 +207,8 @@ async function processGPTResponse(message) {
 
 async function processCommand(message) {
     const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
-    const prefix = gconfig.prefix || config.generic.prefix
-    if (
-        !message.content
-            .toLowerCase()
-            .startsWith(prefix.toLowerCase())
-    ) {
+    const prefix = gconfig.prefix || config.generic.prefix;
+    if (!message.content.toLowerCase().startsWith(prefix.toLowerCase())) {
         return;
     } // return if not a command
 
@@ -248,8 +256,8 @@ async function processCommand(message) {
 
     if (!command) {
         action.reply(message, {
-            content: "supply a command, baffon!"
-        })
+            content: "supply a command, baffon!",
+        });
         return;
     } // return if command == '' (probably caused by entering just the prefix)
     if (!commands.get(command) && !normalCommandAliases.get(command)) {
@@ -257,30 +265,38 @@ async function processCommand(message) {
         log.info(`invalid command by ${message.author.id}: p/${command}`);
         return;
     }
-    
+
     log.info(`command requested by ${message.author.id}: p/${command}`);
-    const commandFn = commands.get(command) || normalCommandAliases.get(command).subcommand.execute;
+    const commandFn =
+        commands.get(command) ||
+        normalCommandAliases.get(command).subcommand.execute;
     if (!commandFn) {
         action.reply(message, `invalid command: ${command}, baffoon!`);
         log.info(`invalid command by ${message.author.id}: p/${command}`);
         return;
     } // theoretically should never happen but im just being safe
-    const startCommand = performance.now()
-    commandFn(message, undefined, false).catch((err) => log.error).then((returned) => {
-        let logmsg = `command executed: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${message.author.username} (${message.author}) `;
-        if (message.channel) {
-            if (message.channel.type === 1) {
-                logmsg += `in DM `;
-            } else {
-                logmsg += `in: ${message.channel.name} (${message.channel}) `;
+    const startCommand = performance.now();
+    commandFn(message, undefined, false)
+        .catch((err) => log.error)
+        .then((returned) => {
+            let logmsg = `command executed: ${command} in: ${(
+                performance.now() - startCommand
+            ).toFixed(3)}ms from: ${message.author.username} (${
+                message.author
+            }) `;
+            if (message.channel) {
+                if (message.channel.type === 1) {
+                    logmsg += `in DM `;
+                } else {
+                    logmsg += `in: ${message.channel.name} (${message.channel}) `;
+                }
             }
-        }
-        if (message.guild) {
-            logmsg += `in guild: ${message.guild.name} (${message.guild}) `;
-        }
-        logmsg += `full: ${message.content}`;
-        log.info(logmsg);
-    });
+            if (message.guild) {
+                logmsg += `in guild: ${message.guild.name} (${message.guild}) `;
+            }
+            logmsg += `full: ${message.content}`;
+            log.info(logmsg);
+        });
 }
 
 async function getIsDisgraceful(message) {

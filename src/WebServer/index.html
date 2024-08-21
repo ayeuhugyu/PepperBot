@@ -86,12 +86,12 @@
                 });
             </script>
         </div>
-        <div class="container" id="maintitle" style="left: 50%; top: 15px; transform: translateX(-50%)">
+        <div class="cardcontainer" id="maintitle" style="left: 50%; top: 15px; transform: translateX(-50%)">
             <div class="sectionoutline" style="justify-content: center; align-items: center; text-align: center;">
                 <h2 class="sectionTitle">ze peppersite</h2>
             </div>
         </div>
-        <div id="leftcontainer" class="container" style="left: 5%; top: 10%;">
+        <div id="leftcontainer" class="cardcontainer" style="left: 5%; top: 10%;">
             <div class="container" id="whereami" style="position: relative; padding-bottom: 15px">
                 <div class="sectionoutline">
                     <div class="sectioncontent" style="max-width: 600px">
@@ -147,7 +147,7 @@
                 </div>
             </div>
         </div>
-        <div id="rightcontainer" class="container" style="right: 5%; top: 10%;">
+        <div id="rightcontainer" class="cardcontainer" style="right: 5%; top: 10%;">
             <div class="container" id="whatshere" style="position: relative; padding-bottom: 15px">
                 <div class="sectionoutline">
                     <div class="sectioncontent" style="max-width: 600px">
@@ -198,7 +198,9 @@
                 </div>
             </div>
         </div>
-        <div id="mobiledisplay" class="container"></div>
+        <div id="mobileholder" class="container">
+            <div id="mobiledisplay" class="cardcontainer"></div>
+        </div>
         <script id="mobiledisplay">
             function enableMobileMode() {
                 const whereami = document.getElementById("whereami");

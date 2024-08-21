@@ -18,6 +18,7 @@ async function getCommands() {
         import(filePath)
             .then((command) => {
                 const data = command.default.data.toJSON();
+                //data.type = command.default.data.type || 1;
                 if (!(data.whitelist && data.whitelist.length > 0)) {
                     commands.push(data);
                 }
