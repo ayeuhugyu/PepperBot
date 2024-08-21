@@ -70,3 +70,6 @@ p/update
 - fixed attaching image files causing gpt response errors
 - gpt file reads now use the standard fixFileName function
 - fixed p/embed having the content value required (some subcommands don't require it)
+
+btw, don't ask me how, i have ZERO clue, the statistics file somehow managed to get just completely deleted. i don't fucking know why. so all of the statistics are gone
+oh well nobody really cared

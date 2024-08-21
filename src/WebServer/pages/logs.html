@@ -195,6 +195,10 @@
                     status.innerText = `awaiting input...`;
                     return;
                 }
+                if (selectedLevel != previousLevel) {
+                    isAtEnd = false
+                    hasAppended = false
+                }
                 if (isAtEnd && !hasAppended) {
                     const end = document.createElement("div");
                     end.innerText = "end of log file";
