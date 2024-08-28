@@ -27,6 +27,7 @@ import * as globals from "../lib/globals.js";
 import process from "node:process";
 import fs from "fs";
 import * as files from "../lib/files.js";
+import commonRegex from "../lib/commonRegex.js";
 
 const config = globals.config;
 
@@ -36,7 +37,7 @@ let queuePageBuilders = {};
 
 function convertISO8601ToHumanReadable(duration) {
     const match = duration.match(
-        /P(?:([0-9]+)D)?T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?/
+        commonRegex.ISO8601
     );
     const days = parseInt(match[1]) || 0;
     const hours = parseInt(match[2]) || 0;
@@ -172,7 +173,7 @@ async function isUsableUrl(url) {
             issue: "no url supplied",
         };
     }
-    const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
+    const pattern = commonRegex.youtubeURL;
     const isValidYoutubeUrl = pattern.test(url);
     if (!isValidYoutubeUrl) {
         return {

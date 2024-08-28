@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import * as log from "./lib/log.js";
 import * as files from "./lib/files.js"
 import process from "node:process";
+import commonRegex from "./lib/commonRegex.js";
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -189,8 +190,7 @@ app.get("/test", (req, res) => {
     res.send(`${req.ip} test recieved`);
 });
 
-const ipv4regex =
-    /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g;
+const ipv4regex = commonRegex.ipv4regex
 
 app.get("/read-log", (req, res) => {
     const logType = req.query.level;

@@ -125,12 +125,12 @@ const command = new Command(
     },
     async function execute(message, args) {
         if (args.get("prompt")) {
-            gpt.generateConversationData(message.author.id, args.get("prompt"));
+            gpt.generateConversationData(message.author.id, args.get("prompt"), true);
             action.reply(
                 message,
                 `the next conversation you have with pepperbot will be influenced by your prompt: \`\`\`${args.get(
                     "prompt"
-                )}\`\`\`rather than the default. however, pinging him will still use the default prompt. instead, reply to this message.`
+                )}\`\`\`rather than the default. pinging him twice will reset the prompt.`
             );
         } else {
             action.reply(message, "provide a prompt to use you baffoon!");

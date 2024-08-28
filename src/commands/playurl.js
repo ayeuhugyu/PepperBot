@@ -11,11 +11,12 @@ const youtube = google.youtube("v3");
 import * as globals from "../lib/globals.js";
 import process from "node:process";
 import * as files from "../lib/files.js";
+import commonRegex from "../lib/commonRegex.js";
 
 const config = globals.config;
 
 function isValidYouTubeUrl(url) {
-    const pattern = /^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/;
+    const pattern = commonRegex.youtubeURL;
     return pattern.test(url);
 }
 

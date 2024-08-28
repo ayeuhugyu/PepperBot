@@ -30,6 +30,10 @@ const leave = new SubCommand(
     async function execute(message, args) {
         const connection = await voice.getVoiceConnection(message.guild.id);
         if (connection) {
+            const channel = await message.guild.channels.fetch(connection.joinConfig.channelId)
+            if (!voice.checkMemberPermissionsForVoiceChannel(message.member, channel)) {
+                return action.reply(message, { content: "you can't join this channel, so i won't let you force me to leave.", ephemeral: true})
+            }
             voice.leaveVoiceChannel(connection).catch((e) => {
                 log.error(e);
             });
@@ -138,8 +142,7 @@ const join = new SubCommand(
             });
         }
         if (args.get("channel")) {
-            const permissionsForMember = args.get("channel").permissionsFor(message.member)
-            if (!permissionsForMember.has("Connect")) {
+            if (!voice.checkMemberPermissionsForVoiceChannel(message.member, args.get("channel"))) {
                 action.reply(message, {
                     content: "i won't join that voice channel because you don't have permissions to join it",
                     ephemeral: true

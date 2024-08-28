@@ -68,12 +68,13 @@ const command = new Command(
             action.editMessage(writeFileMessage, "file written");
             const messageTextContent = args.get("patch") ? `PepperBot small update/patch! 🌶` : `<@&1210034891018993755> PepperBot update! 🌶`;
             const embed = default_embed()
-                .setTitle(`VERSION ${persistent_data.version}`)
+                .setTitle(`VERSION ${version + 1}`)
                 .setDescription(args.get("message"));
             const sent = await action.sendMessage(
                 message.client.channels.cache.get("1171660137946157146"),
                 {
                     content: messageTextContent,
+                    bypassFixer: true,
                     embeds: [embed],
                 }
             );

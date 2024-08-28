@@ -100,3 +100,15 @@ export async function setVolume(player, volume) {
 export async function destroyVoiceConnection(connection) {
     return leaveVoiceChannel(connection);
 }
+
+export function checkMemberPermissionsForVoiceChannel(member, channel) {
+    if (!member || !channel) {
+        return false;
+    }
+    if (channel.type === 2) {
+        return member.permissionsIn(channel).has("Connect");
+    } else if (channel.type === 13) {
+        return member.permissionsIn(channel).has("Speak");
+    }
+    return false;
+}

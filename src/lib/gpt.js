@@ -169,12 +169,17 @@ async function fixIncomingMessage(message) {
     return messageContent;
 }
 
-export function generateConversationData(id, prompt, defaultMessage) {
+let ignoreResetList = {};
+
+export function generateConversationData(id, prompt, addToIgnoreList) {
     let conversation = new Conversation(id);
     if (!prompt) {
         conversation.addMessage("system", botPrompt);
     } else {
         conversation.addMessage("system", prompt);
+    }
+    if (addToIgnoreList) {
+        ignoreResetList[id] = prompt ? prompt : botPrompt;
     }
     conversations[id] = conversation;
     return conversation;
@@ -200,15 +205,17 @@ async function addReference(message, conversation) {
 export async function respond(message) {
     let conversation;
     const readableContent = await fixIncomingMessage(message);
-
     if (message.author.id in conversations) {
-        if (message.content.includes(`<@1209297323029565470>`)) {
+        if ((message.content.includes(`<@1209297323029565470>`) || message.content.includes(`<@1148796261793800303>`)) && !ignoreResetList[message.author.id]) {
             conversations[message.author.id] = await generateConversationData(
                 message.author.id
             );
             conversation = conversations[message.author.id];
         } else {
             conversation = conversations[message.author.id];
+            if (ignoreResetList[message.author.id]) {
+                delete ignoreResetList[message.author.id];
+            }
         }
     } else {
         conversation = await generateConversationData(message.author.id);

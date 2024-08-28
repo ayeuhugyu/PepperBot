@@ -152,10 +152,11 @@ the only argument passed to the getArguments function is the message thats execu
 here's some quick example getArguments functions:
 
 ```js
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
-        let argument = message.content.slice(config.generic.prefix.length + commandLength)
+        const prefix = gconfig.prefix || config.generic.prefix
+        let argument = message.content.slice(prefix.length + commandLength)
         if (argument) {
             argument.trim()
         } // this is necessary because if there are no arguments supplied argument will be equal to undefined and trim() will not be a function and thus will error
@@ -172,9 +173,10 @@ this will get you all the text coming after the command.\
 async function getArguments(message) {
     const commandLength = message.content.split(" ")[0].length - 1;
     const args = new Collection();
+    const prefix = gconfig.prefix || config.generic.prefix
     args.set("argument1", message.content.split(" ")[1])
     if (args.get("argument1")) {
-        args.set("argument2", message.content.slice(config.generic.prefix.length + commandLength + message.content.split(" ")[1].length + 1));
+        args.set("argument2", message.content.slice(prefix.length + commandLength + message.content.split(" ")[1].length + 1));
     }
     return args;
 }

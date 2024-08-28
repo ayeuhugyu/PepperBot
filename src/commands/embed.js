@@ -118,7 +118,6 @@ const load = new SubCommand(
                 `resources/data/embeds/`,
                 true
             );
-            text = text.replace(/\.[^.]+$/, "");
             const file = await files.textToFile(text, "embeds");
             action.reply(message, {
                 content: "here's a list of all the embeds",

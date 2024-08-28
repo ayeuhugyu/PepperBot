@@ -2,18 +2,6 @@ for update:
 
 to test:
 
-all features
-- slash commands
-- disabling slash commands in guild config
-
-to upload:
-
-src/lib/files.js, src/lib/types/commands.js, src/lib/guildConfigs.js, src/lib/commands.js, src/events/MessageCreate.js, 
-src/index.js, src/site.js, src/sharder.js, resources/data/defaultGuildConfig.json, resources/data/guildConfigInformation.json, src/lib/types/queue.js,
-literally every single command, README.md, actually just everything now that i think about it, src/lib/logs/js
-
-remember to delete on pi: p/pepperupdate, p/pepperpatch, p/soundboard, p/addsound, p/retrievesound, the deleted message logs, p/say, p/dmuser, p/joinvc, p/leavevc
-
 shit on the todo list:
 
 [1] - add p/corrupt image support
@@ -21,55 +9,36 @@ shit on the todo list:
 [3] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 [4] - fix p/queue (and future stuff) editing the message twice when collector stops
 [5] - p/todo pages if list length > 15
-[6] - make logs page only display 1 log and you switch between them and it only requests one at a time and only the bottom 200 or so lines
-[7] - peppersite statistics on most visited pages
-[8] - using p/queue while p/playurl is playing converts it to a queue system
-[9] - somehow fix p/queue only retrieving 50 playlist items despite the limit being set to 150 (its probably google's thing i likely can't do anything about it)
-[10] - peppersite resources viewer
-[11] - p/jak viewer
-[12] - reminder / scheduling capabilities
-[13] - p/notice multi-shard fix
-[14] - custom command aliases
-[15] - custom command permissions from gconfig
-[16] - p/queue play pauses instead of stopping
-[17] - p/info subcommands for other varieties of info
-[18] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
-[19] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
-[20] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+[6] - peppersite statistics on most visited pages
+[7] - using p/queue while p/playurl is playing converts it to a queue system
+[8] - somehow fix p/queue only retrieving 50 playlist items despite the limit being set to 150 (its probably google's thing i likely can't do anything about it)
+[9] - peppersite resources viewer
+[10] - p/jak viewer
+[11] - reminder / scheduling capabilities
+[12] - p/notice multi-shard fix
+[13] - custom command aliases
+[14] - custom command permissions from gconfig
+[15] - p/queue play pauses instead of stopping
+[16] - p/info subcommands for other varieties of info
+[17] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
+[18] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
+[19] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+[20] - logs page removes content at the bottom after you've scrolled wayy past it
 
 to add to todo list:
 
-p/update 
+p/update lotta diabolical event stuff, some website changes, etc.
 
 **actual content:**
 
-- removed 4 diabolical events
-  - specifically:
-    - adobe stock heart eyes thingy
-    - cerveza cristal
-      - (both of those for being too taxing on my wifi, there was a noticeable drop each time they triggered)
-    - "ur pookie" scott gerwick balloon gif thingy
-    - It's time to feast!
-      - (both of these mostly for being not that funny & taking up a lot of screen space)
-- significantly reduced diabolical event rate by rougly 8x
-- additionally reduced thread diabolical event rates by roughly 40x
-- comparison of old rates to new rates:
-    - emoji reactions: ~2% -> ~0.25%
-    - regular replies: ~0.4% -> ~0.05%
-    - thread creation: ~1% -> ~0.025%
-- added 5 new diabolical events
-- new p/random emoji allows you to acquire a random emoji
-- logs page on the website now uses the new and updated style
-- logs page now reads 150 lines at a time, inserting the next 150 lines each time you reach the top of the current content.
-
 **fixes/optimizations:**
 
-- fixed Infinite Duplication from p/restart sharder
-- cleaned up p/configure
-- fixed errorReply being declared too late in command executions
-- fixed attaching image files causing gpt response errors
-- gpt file reads now use the standard fixFileName function
-- fixed p/embed having the content value required (some subcommands don't require it)
-
-btw, don't ask me how, i have ZERO clue, the statistics file somehow managed to get just completely deleted. i don't fucking know why. so all of the statistics are gone
-oh well nobody really cared
+- fixed p/update embed showing version 1 behind most of the time
+- added a way for messages to bypass the message fixer
+- replaced @ everyone/here/roles are no longer "##afood"
+- fixed being able to ping roles using functions that force the bot to say something
+- you no longer have to reply to p/setprompt to get a response using that prompt, the prompt reset is instead just ignored once.
+- removed a useless part of p/embed load ls
+- moved all regex that is either used in 2 files or that i can see myself using often into a commonRegex file
+- you can no longer use p/joinvc to join channels you don't have permissions to join
+- you can no longer use p/leavevc to leave channels you don't have permissions to join
