@@ -13,13 +13,13 @@ export default function () {
     embed.setFooter({
         text: "Bot made by and hosted by anti_pepperphobes",
         iconURL:
-            "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
-        url: "http://199.58.97.155"
+            "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png"
     });
     embed.setAuthor({
         name: "PepperBot",
         iconURL:
             "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
+        url: "http://199.58.97.155"
     });
     return embed;
 }
