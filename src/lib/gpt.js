@@ -143,7 +143,7 @@ async function fixIncomingMessage(message) {
         for (let attachment of message.attachments.values()) {
             if (await isTextFile(attachment.name)) {
                 if (attachment.size <= "25000000") {
-                    log.info("gpt: downloading file");
+                    log.debug("gpt: downloading file");
                     await download(
                         attachment.url,
                         files.fixFileName(attachment.id + "_" + attachment.name)

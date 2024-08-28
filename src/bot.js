@@ -8,7 +8,7 @@ import process from "node:process";
 
 const config = globals.config;
 
-log.info("update start timestamp for shard");
+log.debug("update start timestamp for shard");
 process.send({ action: "setStartedAt" });
 
 export const client = new Client({
@@ -71,16 +71,12 @@ client.on(Events.ClientReady, async () => {
     }
 
     client.user.setActivity("pepper whisperers.", { type: 2 });
-    log.info("edited presence");
+    log.debug("edited presence");
 
     log.info("bot ready to serve");
     log.info(`running on ${process.platform} ${process.arch}`);
     const memory = process.memoryUsage();
-    log.info(
-        `${prettyBytes(memory.rss)} memory usage, ${prettyBytes(
-            memory.heapUsed
-        )} / ${prettyBytes(memory.heapTotal)} heap usage`
-    );
+    log.info(`${prettyBytes(memory.rss)} memory usage, ${prettyBytes(memory.heapUsed)} / ${prettyBytes(memory.heapTotal)} heap usage`);
 });
 
 await init();

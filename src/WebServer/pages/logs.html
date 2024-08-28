@@ -95,12 +95,13 @@
                             <div class="dropdown-wrapper">
                                 <select class="logLevelDropdown">
                                     <option class="logLevelDropdownOption" value="-">-</option>
-                                    <option value="ACCESS">ACCESS</option>
+                                    <option value="GLOBAL">GLOBAL</option>
                                     <option value="INFO">INFO</option>
                                     <option value="DEBUG">DEBUG</option>
                                     <option value="WARN">WARN</option>
                                     <option value="ERROR">ERROR</option>
                                     <option value="FATAL">FATAL</option>
+                                    <option value="ACCESS">ACCESS</option>
                                 </select>
                             </div>
                             <div id="status" style="text-align: right;">awaiting input...</div>
@@ -130,50 +131,79 @@
         </script>
         <script>
             const status = document.getElementById("status");
-            function processLogs(containerId, logs, keyword, color) {
+            function processLogs(containerId, logs, keyword, color, global) {
                 const parentContainer = document.getElementById(containerId);
                 const container = document.createElement("div");
-
+            
                 const previousScrollHeight = parentContainer.scrollHeight;
                 const previousScrollTop = parentContainer.scrollTop;
-
+            
                 logs.split("\n").forEach((log) => {
-                    const keywordIndex = log.indexOf(keyword);
-                    if (keywordIndex === -1) {
-                        // If the keyword is not found, display the log as is.
-                        const lineElement = document.createElement("div");
-                        lineElement.innerText = log;
-                        container.appendChild(lineElement);
-                    } else {
-                        // If the keyword is found, split and display accordingly.
-                        const beforeKeyword = log.substring(0, keywordIndex);
-                        const afterKeyword = log.substring(
-                            keywordIndex + keyword.length
-                        );
-
-                        const lineElement = document.createElement("div");
-
-                        // Part before the keyword
-                        const beforeSpan = document.createElement("span");
-                        beforeSpan.style.color = "#7d848e";
-                        beforeSpan.innerText = beforeKeyword;
-                        lineElement.appendChild(beforeSpan);
-
-                        // Keyword part
-                        const keywordSpan = document.createElement("span");
-                        keywordSpan.innerHTML = `<span style="color: ${color}">${keyword}</span>`;
-                        lineElement.appendChild(keywordSpan);
-
-                        // Part after the keyword
+                    const lineElement = document.createElement("div");
+            
+                    if (global) {
+                        // If global is true, treat keyword as an array and color as an object
+                        let modifiedLog = log;
+                        keyword.forEach((kw) => {
+                            const kwIndex = modifiedLog.indexOf(kw);
+                            if (kwIndex !== -1) {
+                                const beforeKeyword = modifiedLog.substring(0, kwIndex);
+                                const afterKeyword = modifiedLog.substring(kwIndex + kw.length);
+            
+                                // Part before the keyword
+                                const beforeSpan = document.createElement("span");
+                                beforeSpan.style.color = "#7d848e";
+                                beforeSpan.innerText = beforeKeyword;
+                                lineElement.appendChild(beforeSpan);
+            
+                                // Keyword part
+                                const keywordSpan = document.createElement("span");
+                                keywordSpan.innerHTML = `<span style="color: ${color[kw]}">${kw}</span>`;
+                                lineElement.appendChild(keywordSpan);
+            
+                                // Update modifiedLog to process the remaining part
+                                modifiedLog = afterKeyword;
+                            }
+                        });
+            
+                        // Part after the last keyword
                         const afterSpan = document.createElement("span");
-                        afterSpan.innerText = afterKeyword;
+                        afterSpan.innerText = modifiedLog;
                         lineElement.appendChild(afterSpan);
-
-                        container.appendChild(lineElement);
+                    } else {
+                        // If global is false, treat keyword as a single keyword and color as a single color
+                        const keywordIndex = log.indexOf(keyword);
+                        if (keywordIndex === -1) {
+                            // If the keyword is not found, display the log as is.
+                            lineElement.innerText = log;
+                        } else {
+                            // If the keyword is found, split and display accordingly.
+                            const beforeKeyword = log.substring(0, keywordIndex);
+                            const afterKeyword = log.substring(keywordIndex + keyword.length);
+            
+                            // Part before the keyword
+                            const beforeSpan = document.createElement("span");
+                            beforeSpan.style.color = "#7d848e";
+                            beforeSpan.innerText = beforeKeyword;
+                            lineElement.appendChild(beforeSpan);
+            
+                            // Keyword part
+                            const keywordSpan = document.createElement("span");
+                            keywordSpan.innerHTML = `<span style="color: ${color}">${keyword}</span>`;
+                            lineElement.appendChild(keywordSpan);
+            
+                            // Part after the keyword
+                            const afterSpan = document.createElement("span");
+                            afterSpan.innerText = afterKeyword;
+                            lineElement.appendChild(afterSpan);
+                        }
                     }
+            
+                    container.appendChild(lineElement);
                 });
+            
                 parentContainer.insertBefore(container, parentContainer.firstChild);
-
+            
                 parentContainer.scrollTop = previousScrollTop + (parentContainer.scrollHeight - previousScrollHeight);
             }
             let startIndex = 0
@@ -193,6 +223,7 @@
                     container.innerText =
                         "select a log file to view from the dropdown above";
                     status.innerText = `awaiting input...`;
+                    previousLevel = undefined;
                     return;
                 }
                 if (selectedLevel != previousLevel) {
@@ -223,12 +254,28 @@
                 status.innerText = `reading ${selectedLevel.toLowerCase()}.log...`
                 await fetch(`/read-log?level=${selectedLevel.toLowerCase()}&end=${startIndex}&start=${startIndex - 150}`).then((response) => response.text()).then((data) => {
                     const container = document.querySelector("#logFileContent");
-                    processLogs(
-                        "logFileContent",
-                        data,
-                        selectedLevel.toUpperCase(),
-                        getColor(selectedLevel)
-                    );
+                    if (selectedLevel == "GLOBAL") {
+                        const levels = ["INFO", "DEBUG", "WARN", "ERROR", "FATAL"];
+                        const levelColors = {}
+                        levels.forEach(level => {
+                            levelColors[level] = getColor(level)
+                        });
+                        processLogs(
+                            "logFileContent",
+                            data,
+                            levels,
+                            levelColors,
+                            true
+                        );
+                    } else {
+                        processLogs(
+                            "logFileContent",
+                            data,
+                            selectedLevel.toUpperCase(),
+                            getColor(selectedLevel)
+                        );
+                    }
+                    
                     status.innerText = `awaiting input...`;
                 }).catch((error) => console.error("Error:", error));
                 if (selectedLevel != previousLevel) {

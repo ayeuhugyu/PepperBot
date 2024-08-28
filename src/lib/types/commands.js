@@ -101,9 +101,7 @@ export class Command {
                                     log.error(err);
                                 });
                             if (completion) {
-                                log.info(
-                                    `gpt response succssful for ${message.author.id}`
-                                );
+                                log.info(`gpt response succssful for ${message.author.id}`);
                                 action.reply(
                                     message,
                                     completion.choices[0].message.content
@@ -136,9 +134,7 @@ export class Command {
                                 log.error(err);
                             });
                         if (completion) {
-                            log.info(
-                                `gpt response succssful for ${message.author.id}`
-                            );
+                            log.info(`gpt response succssful for ${message.author.id}`);
                             action.reply(
                                 message,
                                 completion.choices[0].message.content
@@ -257,9 +253,7 @@ export class Command {
                         );
                         return;
                     }
-                    log.info(
-                        `finished getting arguments for p/${this.data.name}`
-                    );
+                    log.info(`finished getting arguments for p/${this.data.name}`);
                 }
                 let errorReply = false;
                 if (

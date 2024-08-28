@@ -54,7 +54,7 @@ async function chatInputCommand(interaction) {
         );
         return;
     }
-    log.info(`command requested by ${interaction.user.id}: p/${command}`);
+    log.info(`SLASH command requested by <@${interaction.user.id}>: p/${command}`);
     const commandFn = commands.get(command);
     const startCommand = performance.now()
     commandFn(interaction, interaction.options, true).catch((err) => {log.error(err)}).then((returned) => {
@@ -69,7 +69,7 @@ async function chatInputCommand(interaction) {
         if (interaction.guild) {
             logmsg += `in guild: ${interaction.guild.name} (${interaction.guild}) `;
         }
-        log.info(logmsg);
+        log.debug(logmsg);
     });
 }
 

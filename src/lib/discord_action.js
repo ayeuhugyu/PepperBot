@@ -82,12 +82,9 @@ export async function fixMsg(msg) {
 export async function sendMessage(channel, content) {
     try {
         channel.sendTyping();
-        log.info(
-            `sending message to ${channel.id} with content: ${
-                (await fixMsg(content)).content
-            }`
-        );
-        const sent = await channel.send(await fixMsg(content)).catch((err) => {
+        const fixed = await fixMsg(content);
+        log.debug(`sending message to ${channel.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+        const sent = await channel.send(fixed).catch((err) => {
             log.error(err);
         });
         return sent;
@@ -109,24 +106,22 @@ export async function reply(message, content) {
     if (!(typeof content === "string") && !content.ephemeral)
         channel.sendTyping();
     let sent;
-    log.info(
-        `replying to ${message.id} with: ${(await fixMsg(content)).content}`
-    );
+    const fixed = await fixMsg(content);
+    log.debug(`replying to ${message.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
     try {
-        const msg = await fixMsg(content);
         if (message.replied) {
-            sent = await message.followUp(msg).catch(() => {});
+            sent = await message.followUp(fixed).catch(() => {});
         }
         if (!sent && message.deferred) {
-            sent = await message.editReply(msg).catch(() => {});
+            sent = await message.editReply(fixed).catch(() => {});
         }
         if (!sent) {
-            sent = await message.reply(msg).catch((err) => {
+            sent = await message.reply(fixed).catch((err) => {
                 log.error(err);
             });
         }
         if (!sent && channel) {
-            sent = await channel.send(msg).catch(() => {});
+            sent = await channel.send(fixed).catch(() => {});
         }
         if (!sent) {
             log.error("fully failed to reply to a message");
@@ -143,12 +138,9 @@ export async function sendDM(user, content) {
         return;
     }
     try {
-        log.info(
-            `sending dm to ${user.id} with content: ${
-                (await fixMsg(content)).content
-            }`
-        );
-        const msg = await user.send(await fixMsg(content)).catch((err) => {
+        const fixed = await fixMsg(content);
+        log.debug(`sending dm to ${user.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+        const msg = await user.send(fixed).catch((err) => {
             log.error(err);
         });
         return msg;
@@ -165,7 +157,7 @@ export async function deleteMessage(message) {
     }
     try {
         if (message.deletable) {
-            log.info(`deleting message: ${message.id}`);
+            log.debug(`deleting message: ${message.id}`);
             if (!message) {
                 log.warn(`message was already deleted`);
                 return;
@@ -174,7 +166,7 @@ export async function deleteMessage(message) {
                 log.error(err);
             });
         } else {
-            log.error("unable to delete message");
+            log.warn("unable to delete message; message is not deletable");
         }
     } catch (err) {
         log.error(err);
@@ -187,13 +179,10 @@ export async function editMessage(message, content) {
         return;
     }
     try {
-        log.info(
-            `editing message: ${message.id} with content: ${
-                (await fixMsg(content)).content
-            }`
-        );
+        const fixed = await fixMsg(content);
+        log.debug(`editing message: ${message.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
         const sent = await message
-            .edit(await fixMsg(content))
+            .edit(fixed)
             .catch(async (err) => {
                 log.error(err);
             });
@@ -209,13 +198,10 @@ export async function editInteractionReply(interaction, content) {
         return;
     }
     try {
-        log.info(
-            `editing message: ${interaction.id} with content: ${
-                (await fixMsg(content)).content
-            }`
-        );
+        const fixed = await fixMsg(content);
+        log.debug(`editing message: ${interaction.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
         const sent = await interaction
-            .editReply(await fixMsg(content))
+            .editReply(fixed)
             .catch(async (err) => {
                 log.error(err);
             });

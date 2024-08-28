@@ -30,9 +30,7 @@ export default {
                         ).size <= 1
                     ) {
                         connection.destroy();
-                        log.info(
-                            `left ${connection.joinConfig.channelId} due to nobody being in it`
-                        );
+                        log.info(`left ${connection.joinConfig.channelId} due to nobody being in it`);
                     }
                 }
             }

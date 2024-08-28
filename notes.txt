@@ -33,12 +33,8 @@ p/update lotta diabolical event stuff, some website changes, etc.
 
 **fixes/optimizations:**
 
-- fixed p/update embed showing version 1 behind most of the time
-- added a way for messages to bypass the message fixer
-- replaced @ everyone/here/roles are no longer "##afood"
-- fixed being able to ping roles using functions that force the bot to say something
-- you no longer have to reply to p/setprompt to get a response using that prompt, the prompt reset is instead just ignored once.
-- removed a useless part of p/embed load ls
-- moved all regex that is either used in 2 files or that i can see myself using often into a commonRegex file
-- you can no longer use p/joinvc to join channels you don't have permissions to join
-- you can no longer use p/leavevc to leave channels you don't have permissions to join
+- changed MANY logs to use log.debug instead of log.info as those were used purely for debugging purposes
+- all logs are now logged to a "global" log file, site log viewer now has an option to view this
+- fixed switching to "-" log level on site log viewer not updating previousLevel
+- all embeds using the default_embed have the author URL set to the site
+- removed assets.html it was fucking useless

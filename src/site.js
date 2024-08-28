@@ -329,7 +329,7 @@ process.on("message", (message) => {
     if (message.action === "updateStartedAt") {
         starts.bot = message.bot;
         starts.shard = message.shard;
-        log.info("updated started at times");
+        log.debug("updated started at times");
         return;
     }
 });

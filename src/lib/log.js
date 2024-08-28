@@ -71,14 +71,12 @@ function log(level, ...message) {
             .split("\n")
             .join(`\n${chalk.grey(formattedDate)} ${prefix}`)}\n`
     );
+    const fileWriteString = `${formattedDate} ${level.toUpperCase()} ${formatted.split("\n").join(`\n${formattedDate} ${level.toUpperCase()} `)}\n`
     fsextra.ensureFile(`././logs/${level.toLowerCase()}.log`, () => {
-        fs.appendFile(
-            `././logs/${level.toLowerCase()}.log`,
-            `${formattedDate} ${level.toUpperCase()} ${formatted
-                .split("\n")
-                .join(`\n${formattedDate} ${level.toUpperCase()} `)}\n`,
-            () => {}
-        );
+        fs.appendFile(`././logs/${level.toLowerCase()}.log`, fileWriteString, () => {});
+    });
+    fsextra.ensureFile("././logs/global.log", () => {
+        fs.appendFile("././logs/global.log", fileWriteString, () => {});
     });
 }
 

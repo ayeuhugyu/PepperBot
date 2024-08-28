@@ -79,9 +79,7 @@ function updateGuildConfig(guildId) {
     const path = `resources/data/guildConfigs/${guildId}.json`;
     fs.writeFile(path, JSON.stringify(gconfig, null, 4), () => {});
     if (missingKeys.length > 0 || extraKeys.length > 0) {
-        log.info(
-            `updating guild config for ${guildId}; ${missingKeys.length} missing keys, ${extraKeys.length} extra keys`
-        );
+        log.info(`updating guild config for ${guildId}; ${missingKeys.length} missing keys, ${extraKeys.length} extra keys`);
     }
 }
 
@@ -121,9 +119,7 @@ async function getAllGuildConfigs() {
             createGuildConfig(guild.id);
         }
     }
-    log.info(
-        `guild configurations cached in ${(performance.now() - start).toFixed(3)}ms`
-    );
+    log.info(`guild configurations cached in ${(performance.now() - start).toFixed(3)}ms`);
 }
 await getAllGuildConfigs();
 

@@ -82,9 +82,7 @@ async function processDM(message) {
                         token: process.env.WEBHOOK_TOKEN,
                     });
                 }
-                log.info(
-                    `dm received from ${message.author.id} with: ${message.content}`
-                );
+                log.info(`dm received from ${message.author} with: ${message.content}`);
                 webhook
                     .send(await action.fixMsg(message.content))
                     .catch((err) => {
@@ -119,15 +117,13 @@ async function processDiabolicalEvent(message) {
             const emojiIndex = Math.floor(
                 Math.random() * globals.emojis.length
             );
-            log.info(
-                `diabolical emoji event triggered on ${message.id} with: ${globals.emojis[emojiIndex]} at index: ${emojiIndex}`
-            );
+            log.debug(`diabolical emoji event triggered on ${message.id} with: ${globals.emojis[emojiIndex]} at index: ${emojiIndex}`);
             const emoji = globals.emojis[emojiIndex];
             message.react(emoji);
         }
         if (random > 248.875 && random < 249) {
             // ~0.025%
-            log.info(`diabolical thread event triggered on ${message.id}`);
+            log.debug(`diabolical thread event triggered on ${message.id}`);
             if (message.startThread) {
                 if (
                     message.channel &&
@@ -143,16 +139,14 @@ async function processDiabolicalEvent(message) {
                             thread.send("You've just been threaded! 🧵");
                         });
                 } else {
-                    log.info(
-                        "could not start thread on message due to channel type"
-                    );
+                    log.warn("could not start thread on message due to channel type");
                     return;
                 }
             }
         }
         if (random > 249.75 && random < 250) {
             // ~0.05%
-            log.info(`diabolical event triggered on ${message.id}`);
+            log.debug(`diabolical event triggered on ${message.id}`);
             const event =
                 diabolical_events[
                     Math.floor(Math.random() * diabolical_events.length)
@@ -262,17 +256,17 @@ async function processCommand(message) {
     } // return if command == '' (probably caused by entering just the prefix)
     if (!commands.get(command) && !normalCommandAliases.get(command)) {
         action.reply(message, `invalid command: ${command}, baffoon!`);
-        log.info(`invalid command by ${message.author.id}: p/${command}`);
+        log.debug(`invalid command by ${message.author.id}: p/${command}`);
         return;
     }
 
-    log.info(`command requested by ${message.author.id}: p/${command}`);
+    log.info(`TEXT command requested by ${message.author.id}: p/${command}`);
     const commandFn =
         commands.get(command) ||
         normalCommandAliases.get(command).subcommand.execute;
     if (!commandFn) {
         action.reply(message, `invalid command: ${command}, baffoon!`);
-        log.info(`invalid command by ${message.author.id}: p/${command}`);
+        log.debug(`invalid command by ${message.author.id}: p/${command}`);
         return;
     } // theoretically should never happen but im just being safe
     const startCommand = performance.now();
@@ -295,7 +289,7 @@ async function processCommand(message) {
                 logmsg += `in guild: ${message.guild.name} (${message.guild}) `;
             }
             logmsg += `full: ${message.content}`;
-            log.info(logmsg);
+            log.debug(logmsg);
         });
 }
 

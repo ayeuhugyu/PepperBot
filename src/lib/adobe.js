@@ -14,12 +14,7 @@ export function search({ query, limit, creatorId, quality }) {
                 "x-product": "myTestApp1.0",
             },
         });
-        log.info(
-            `searched adobe stock for ${query} ` +
-                (creatorId ? `by creator ${creatorId}` : "") +
-                (limit ? ` with limit ${limit}` : "") +
-                (quality ? ` with quality ${quality}` : ``)
-        );
+        log.debug(`searched adobe stock for ${query} ` + (creatorId ? `by creator ${creatorId}` : "") + (limit ? ` with limit ${limit}` : "") + (quality ? ` with quality ${quality}` : ``));
         resolve(result);
     });
 }

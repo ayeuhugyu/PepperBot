@@ -42,16 +42,12 @@ async function deployToGuild(guild) {
             if (!guild.id) {
                 guild = { name: "idConvertedGuild", id: guild };
             }
-            log.info(
-                `refreshing ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})`
-            );
+            log.info(`refreshing ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})`);
             const data = rest.put(
                 Routes.applicationGuildCommands(client.user.id, guild.id),
                 { body: commands }
             );
-            log.info(
-                `reloaded ${data.length} application (/) commands. for guild ${guild.name} (${guild.id})`
-            );
+            log.info(`reloaded ${data.length} application (/) commands. for guild ${guild.name} (${guild.id})`);
             resolve();
         } catch (error) {
             reject(error);
@@ -65,16 +61,12 @@ async function undeployFromGuild(guild) {
             if (!guild.id) {
                 guild = { name: "idConvertedGuild", id: guild };
             }
-            log.info(
-                `deleting ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`
-            );
+            log.info(`deleting ${commands.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`);
             const data = rest.put(
                 Routes.applicationGuildCommands(client.user.id, guild.id),
                 { body: [] }
             );
-            log.info(
-                `deleted ${data.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`
-            );
+            log.info(`deleted ${data.length} application (/) commands. for guild ${guild.name} (${guild.id})\n`);
             resolve();
         } catch (error) {
             reject(error);

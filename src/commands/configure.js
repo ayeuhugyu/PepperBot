@@ -181,7 +181,7 @@ function changeGuildConfig(
                 content: `how did you even do that. somehow, you found a value inside of the item indexes that isn't a value inside of the guild config despite it being generated from it??? idfk how you even did that man wtf. ig if you wanna try to debug it, the item, guildConfig, and guildConfigItemsIndexes have been logged under the debug level, good fucking luck man.`,
                 ephemeral: true,
             });
-            log.info(item, guildConfig, guildConfigItemsIndexes);
+            log.debug(item, guildConfig, guildConfigItemsIndexes);
             return;
         }
         guildConfigItemKey = item.key;
