@@ -83,7 +83,9 @@ export async function sendMessage(channel, content) {
     try {
         channel.sendTyping();
         const fixed = await fixMsg(content);
-        log.debug(`sending message to ${channel.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+        const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
+        const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
+        log.debug(`sending message to ${channel.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
         const sent = await channel.send(fixed).catch((err) => {
             log.error(err);
         });
@@ -107,7 +109,9 @@ export async function reply(message, content) {
         channel.sendTyping();
     let sent;
     const fixed = await fixMsg(content);
-    log.debug(`replying to ${message.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+    const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
+    const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
+    log.debug(`replying to ${message.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
     try {
         if (message.replied) {
             sent = await message.followUp(fixed).catch(() => {});
@@ -139,7 +143,9 @@ export async function sendDM(user, content) {
     }
     try {
         const fixed = await fixMsg(content);
-        log.debug(`sending dm to ${user.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+        const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
+        const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
+        log.debug(`sending dm to ${user.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
         const msg = await user.send(fixed).catch((err) => {
             log.error(err);
         });
@@ -180,7 +186,9 @@ export async function editMessage(message, content) {
     }
     try {
         const fixed = await fixMsg(content);
-        log.debug(`editing message: ${message.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+        const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
+        const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
+        log.debug(`editing message: ${message.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
         const sent = await message
             .edit(fixed)
             .catch(async (err) => {
@@ -199,7 +207,9 @@ export async function editInteractionReply(interaction, content) {
     }
     try {
         const fixed = await fixMsg(content);
-        log.debug(`editing message: ${interaction.id} with ${fixed.content ? `content: ${fixed.content}` : "no content; embed/attachment only"}`);
+        const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
+        const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
+        log.debug(`editing message: ${interaction.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
         const sent = await interaction
             .editReply(fixed)
             .catch(async (err) => {

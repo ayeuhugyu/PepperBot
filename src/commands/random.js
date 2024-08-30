@@ -14,6 +14,8 @@ import * as log from "../lib/log.js";
 import { randomBuildIdea as randomUnbiasedBuildIdea } from "../lib/deepwokenUnbiasedBuildIdea.js";
 import { randomBuildIdea as randomBiasedBuildIdea } from "../lib/deepwokenBiasedBuildIdea.js";
 import * as globals from "../lib/globals.js";
+import equipmentCommmand from "./equipment.js";
+import jakCommand from "./jak.js";
 
 const config = globals.config;
 
@@ -34,19 +36,27 @@ const jak = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction) {
-        //todo: redirect this to p/jak rand instead of a copy of it
-        const alljaks = fs.readdirSync("resources/images/jaks");
-        if (alljaks.length === 0) {
-            action.reply(
-                message,
-                "there are currently no jaks, please wait for there to be some"
-            );
-            return;
-        }
-        const randomJak = alljaks[Math.floor(Math.random() * alljaks.length)];
-        action.reply(message, {
-            files: [`resources/images/jaks/${randomJak}`],
-        });
+        args.set("_SUBCOMMAND", "random");
+        jakCommand.execute(message, args, fromInteraction);
+    }
+);
+
+const equipmentdata = new SubCommandData();
+equipmentdata.setName("equipment");
+equipmentdata.setDescription("return a random deepwoken equipment");
+equipmentdata.setPermissions([]);
+equipmentdata.setPermissionsReadable("");
+equipmentdata.setWhitelist([]);
+equipmentdata.setNormalAliases(["randomequipment"]);
+equipmentdata.setCanRunFromBot(true);
+const equipment = new SubCommand(
+    equipmentdata,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction) {
+        args.set("_SUBCOMMAND", "random");
+        equipmentCommmand.execute(message, args, fromInteraction);
     }
 );
 
@@ -462,6 +472,7 @@ const command = new Command(
         nickname,
         emoji,
         jak,
+        equipment
     ]
 );
 

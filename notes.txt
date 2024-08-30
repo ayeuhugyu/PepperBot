@@ -24,6 +24,9 @@ shit on the todo list:
 [18] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
 [19] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
 [20] - logs page removes content at the bottom after you've scrolled wayy past it
+[21] - p/random jak processing message
+[22] - p/equipment: if requirement key = "power" then display key before value instead of value before key
+[23] - p/equipment: if pip has no value for pip rarity for category when calculating highest just roll a random one instead of deleting it
 
 to add to todo list:
 
@@ -31,10 +34,8 @@ p/update lotta diabolical event stuff, some website changes, etc.
 
 **actual content:**
 
+- new p/equipment allows you to easily calculate godrolls, get random equipment, etc.
+
 **fixes/optimizations:**
 
-- changed MANY logs to use log.debug instead of log.info as those were used purely for debugging purposes
-- all logs are now logged to a "global" log file, site log viewer now has an option to view this
-- fixed switching to "-" log level on site log viewer not updating previousLevel
-- all embeds using the default_embed have the author URL set to the site
-- removed assets.html it was fucking useless
+- message logging for debug purposes has been changed to only log the first newline as to not spam my output when you execute commands with many newlines (such as p/configure or p/equipment)
