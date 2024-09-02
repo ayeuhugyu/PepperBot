@@ -10,6 +10,13 @@ import * as log from "../log.js";
 const config = globals.config;
 
 export class BaseCommandData {
+    whitelist = [];
+    permissions = [];
+    permissionsReadable = [];
+    canRunFromBot = true;
+    aliases = [];
+    invalidInputTypes = [];
+    disabledContexts = [];
     setWhitelist(whitelist) {
         this.whitelist = whitelist;
         return this;
@@ -44,6 +51,7 @@ export class BaseCommandData {
 }
 
 export class SubCommandData extends SlashCommandSubcommandBuilder {
+    normalAliases = [];
     constructor() {
         super();
         for (const method of Object.getOwnPropertyNames(
@@ -61,6 +69,8 @@ export class SubCommandData extends SlashCommandSubcommandBuilder {
 }
 
 export class CommandData extends SlashCommandBuilder {
+    primarySubcommand = undefined;
+    integration_types = [0, 1];
     constructor() {
         super();
         for (const method of Object.getOwnPropertyNames(
@@ -73,6 +83,10 @@ export class CommandData extends SlashCommandBuilder {
     }
     setPrimarySubcommand(primarySubcommand) {
         this.primarySubcommand = primarySubcommand;
+        return this;
+    }
+    setIntegrationTypes(integrationTypes) {
+        this.integration_types = integrationTypes;
         return this;
     }
 }

@@ -394,7 +394,7 @@ export function getEquipment(name) {
     if (equipment[name]) {
         return equipment[name];
     }
-    const matchingEquipment = Object.keys(equipment).filter(equipmentName => equipmentName.toLowerCase().replaceAll("'", "").startsWith(name.toLowerCase().replaceAll("'", "")));
+    const matchingEquipment = Object.keys(equipment).filter(equipmentName => equipmentName.toLowerCase().replaceAll("'", "").replaceAll(" ", "").startsWith(name.toLowerCase().replaceAll("'", "").replaceAll(" ", "")));
     return matchingEquipment.length > 0 ? equipment[matchingEquipment[0]] : null;
 }
 
@@ -469,7 +469,11 @@ export function getRandomPip(type, pipRarity, blacklistedPip) {
         }
     }
     if (pipValue == 0) {
-        return undefined
+        if (!blacklistedPip) {
+            return undefined;
+        } else {
+            return getRandomPip(type, pipRarity);
+        }
     }
     return { pip: pip, value: pipValue, rarity: pipRarity, displayAsPercentage: pips[pip].displayAsPercentage };
 }
@@ -489,12 +493,14 @@ const pipPriority = {
     "common": 0
 }
 
-export function getHighestPipValue(pips, type, pip, checkForSameType) {
+export function getHighestPipValue(passedPips, type, pip, checkForSameType) {
     let rolledPips = [];
-    pips.forEach(pipRarity => {
+    passedPips.forEach(pipRarity => {
         let pipValue = getPipValue(pip, type, pipRarity);
         if (pipValue !== 0) {
-            rolledPips.push({ pip: pip, value: pipValue, rarity: pipRarity });
+            rolledPips.push({ pip: pip, value: pipValue, rarity: pipRarity, displayAsPercentage: pips[pip].displayAsPercentage });
+        } else {
+            rolledPips.push(getRandomPip(type, pipRarity));
         }
     })
     if (checkForSameType && rolledPips.length > 0) {

@@ -42,7 +42,7 @@ const pipNameOverrides = {
     "carry": "carry load",
 }
 
-function equipmentDataToMessage(equipmentData) {
+function equipmentDataToMessage(equipmentData, requestedGodrollPip) { // todo: bold requested godroll pips
     const starMessage = starMessages[equipmentData.stars] || "";
     const titleMessage = `--${starMessage ? ` ${starMessage} ` : ""}${equipmentData.name.toUpperCase()}--`
     let processedTitleMessage = "";
@@ -76,26 +76,31 @@ function equipmentDataToMessage(equipmentData) {
 ${processedTitleMessage}${equipmentData.flagInvalidStar ? chalk.red(" (★★★ is not obtainable on this item)") : ""}
 type: ${equipmentData.type}\n`;
     if (Object.keys(equipmentData.requirements).length > 0) message += "\nrequirements:\n";
-    for (const [key, value] of Object.entries(equipmentData.requirements)) {
+    for (const [key, value] of Object.entries(equipmentData.requirements)) { // REQUIREMENTS
         if (typeof value === "number") {
-            message += `    ${chalk.yellow(`${value} ${key.charAt(0).toUpperCase() + key.slice(1)}`)}\n`;
+            message += `    ${(key === "power") ? chalk.yellow(`${key.charAt(0).toUpperCase() + key.slice(1)} ${value}`) : chalk.yellow(`${value} ${key.charAt(0).toUpperCase() + key.slice(1)}`)}\n`;
         }
     }
 
     if (equipmentData.pips.length > 0 || Object.keys(equipmentData.innate).length > 0) message += "\nstats:\n";
-    for (const [key, value] of Object.entries(equipmentData.innate)) {
+    for (const [key, value] of Object.entries(equipmentData.innate)) { // INNATE 
         if (typeof value === "number") {
             const usedKey = pipNameOverrides[key] || key;
             const displayAsPercentage = deepwokenequipment.pips[key].displayAsPercentage;
-            message += `    [2;30m+${value}${displayAsPercentage ? "%" : ""} ${usedKey.charAt(0).toUpperCase() + usedKey.slice(1)}[0m\n`;
+            const shouldBold = requestedGodrollPip && key === requestedGodrollPip;
+            let unboldedMessage = `[2;30m+${value}${displayAsPercentage ? "%" : ""} ${usedKey.charAt(0).toUpperCase() + usedKey.slice(1)}[0m\n`;
+            message += "    " 
+            message += shouldBold ? chalk.underline(chalk.bold(unboldedMessage)) + "[0m" : unboldedMessage;
         }
         if (typeof value === "string") {
             message += `    [2;30m+Talent: ${key}\n        ${value}[0m\n`;
         }
     }
-    equipmentData.pips.forEach((pipData) => {
+    equipmentData.pips.forEach((pipData) => { // PIPS
         const usedKey = pipNameOverrides[pipData.pip] || pipData.pip;
-        const pipMessage = `+${pipData.value}${pipData.displayAsPercentage ? "%" : ""} ${usedKey.charAt(0).toUpperCase() + usedKey.slice(1)}`;
+        let pipMessage = `+${pipData.value}${pipData.displayAsPercentage ? "%" : ""} ${usedKey.charAt(0).toUpperCase() + usedKey.slice(1)}${pipData.rarity === "star" ? ` (${starMessage})` : ""}`;
+        const shouldBold = requestedGodrollPip && pipData.pip === requestedGodrollPip;
+        if (shouldBold) pipMessage = chalk.underline(chalk.bold(pipMessage)) + "[0m"; 
         switch (pipData.rarity) {
             case "common":
                 message += `    ${pipMessage}\n`;
@@ -110,31 +115,57 @@ type: ${equipmentData.type}\n`;
                 message += `    ${chalk.cyan(pipMessage)}\n`;
                 break;
             case "star":
-                message += `    ${chalk.green(`${pipMessage} (${starMessage})`)}\n`;
+                message += `    ${chalk.green(pipMessage)}\n`;
                 break;
         }
     });
     if (equipmentData.pips.length > 0 || (Object.keys(equipmentData.innate).length > 0 && !Object.keys(equipmentData.innate).every((key) => typeof equipmentData.innate[key] === "string"))) {
         message += `\ntotals: \n`;
         let totals = {}
-        for (const [key, value] of Object.entries(equipmentData.innate)) {
+        for (const [key, value] of Object.entries(equipmentData.innate)) { // INNATE TOTALS
             if (typeof value === "number") {
                 if (!totals[key]) totals[key] = 0;
                 totals[key] += value;
             }
         }
-        equipmentData.pips.forEach((pipData) => {
+        equipmentData.pips.forEach((pipData) => { // PIP TOTALS
             if (!totals[pipData.pip]) totals[pipData.pip] = 0;
             totals[pipData.pip] += pipData.value;
         });
-        for (const [key, value] of Object.entries(totals)) {
+        for (const [key, value] of Object.entries(totals)) { // TOTALS
             const displayAsPercentage = deepwokenequipment.pips[key].displayAsPercentage;
             const usedKey = pipNameOverrides[key] || key;
-            message += `    +${value}${displayAsPercentage ? "%" : ""} ${usedKey.charAt(0).toUpperCase() + usedKey.slice(1)}\n`;
+            const shouldBold = requestedGodrollPip && key === requestedGodrollPip;
+            let unboldedMessage = `+${value}${displayAsPercentage ? "%" : ""} ${usedKey.charAt(0).toUpperCase() + usedKey.slice(1)}\n`;
+            message += "    " 
+            message += shouldBold ? chalk.underline(chalk.bold(unboldedMessage)) + "[0m" : unboldedMessage;
         }
     }
     message += "```";
     return message;
+}
+
+const statAliases = {
+    "hp": "health",
+    "monsterarmor": "monster",
+    "damagevsmonsters": "dvm",
+    "physicalarmor": "physical",
+    "elementalarmor": "elemental",
+    "shadowarmor": "shadow",
+    "flamearmor": "flame",
+    "frostarmor": "frost",
+    "icearmor": "frost",
+    "ice": "frost",
+    "thunderarmor": "thunder",
+    "galearmor": "gale",
+    "windarmor": "gale",
+    "wind": "gale",
+    "ironsingarmor": "ironsing",
+    "lightningarmor": "thunder",
+    "thundercallarmor": "thunder",
+    "thundercall": "thunder",
+    "lightning": "thunder",
+    "carryload": "carry",
 }
 
 const godrolldata = new SubCommandData();
@@ -178,11 +209,15 @@ const godroll = new SubCommand(
         if (!args.get("stat")) {
             args.set("stat", "health");
         }
+        args.set("stat", args.get("stat").toLowerCase().replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " "));
         if (typeof args.get("stars") == "undefined" || isNaN(args.get("stars"))) {
             args.set("stars", 3);
             if (equipment && deepwokenequipment.maxStarBlacklistTypes.includes(equipment.type)) {
                 args.set("stars", 2);
             }
+        }
+        if (args.get("stat") && statAliases[args.get("stat")]) {
+            args.set("stat", statAliases[args.get("stat")]);
         }
         if (!deepwokenequipment.pips[args.get("stat")]) {
             action.reply(message, { content: `invalid pip \`${args.get("stat")}\``, ephemeral: true });
@@ -193,12 +228,13 @@ const godroll = new SubCommand(
             return;
         }
         if (!equipment) {
-            action.reply(message, { content: `could not find equipment \`${args.get("equipment").replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " ")}\``, ephemeral: true });
+            action.reply(message, { content: `could not find equipment \`${args.get("equipment").replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " ").replaceAll("'", "")}\``, ephemeral: true });
             return;
         }
         
         const processedEquipment = deepwokenequipment.calculateEquipmentStats(equipment, args.get("stars"), args.get("stat"));
-        const processedMessage = equipmentDataToMessage(processedEquipment);
+        console.log(processedEquipment)
+        const processedMessage = equipmentDataToMessage(processedEquipment, args.get("stat"));
         action.reply(message, { content: processedMessage, ephemeral: true });
     }
 );
@@ -288,10 +324,10 @@ data.addStringOption((option) =>
         {name: "godroll", value: "godroll"},
     )
 );
-godrolldata.addStringOption((option) => 
+data.addStringOption((option) => 
     option.setName("equipment").setDescription("the equipment to calculate the godroll for; use -, _ and + for spaces. punctuation is not necessary.").setRequired(false)
 )
-godrolldata.addStringOption((option) =>
+data.addStringOption((option) =>
     option.setName("stat").setDescription("the stat to calculate the godroll for").setRequired(false)
     .addChoices(
         {name: "health", value: "health"},
@@ -304,7 +340,7 @@ godrolldata.addStringOption((option) =>
         {name: "monster armor", value: "monster"},
     )
 )
-godrolldata.addIntegerOption((option) =>
+data.addIntegerOption((option) =>
     option.setName("stars").setDescription("the stars of the equipment").setRequired(false)
 )
 const command = new Command(
@@ -331,59 +367,3 @@ const command = new Command(
 );
 
 export default command;
-
-/*
-example subcommand:
-const subcommand1data = new CommandData();
-subcommand1data.setName("");
-subcommand1data.setDescription("");
-subcommand1data.setPermissions([]);
-subcommand1data.setPermissionsReadable("");
-subcommand1data.setWhitelist([]);
-subcommand1data.setCanRunFromBot(true);
-subcommand1data.addStringOption((option) =>
-    option.setName("").setDescription("").setRequired(true)
-);
-
-const subcommand1 = new SubCommand(
-    subcommand1data,
-    async function getArguments(message, gconfig) {
-        const commandLength = message.content.split(" ")[0].length - 1;
-        const args = new Collection();
-        const prefix = gconfig.prefix || config.generic.prefix
-        args.set(
-            "ARGUMENT",
-                message.content
-                .slice(prefix.length + commandLength)
-                .split(" ")[0]
-                .trim()
-        );
-        return args;
-    },
-    async function execute(message, args, fromInteraction) {}
-);
-
-additional notes:
-subcommands do not (as of now) support aliases, only the main command does
-subcommands do not (as of now) support additional subcommands, only the main command does
-subcommands need to have their own argument in the getArgs function.
-if you're going to use subcommands, your getArgs function in the main command should include somewhere:
-        args.set(
-            "_SUBCOMMAND",
-            message.content.split(" ")[1].trim()
-        );
-or similiar
-you also need to have the following in your main data:
-data.addStringOption((option) =>
-    option
-        .setName("subcommand")
-        .setDescription("subcommand to run")
-        .setRequired(false)
-        .addChoices(
-            {name: "subcommandname", value: "subcommandname"},
-        )
-);
-but obviously choices would have all of your subcommands
-this just allows for the use of subcommands from slash commands
-
-*/

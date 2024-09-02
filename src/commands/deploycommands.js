@@ -32,13 +32,18 @@ const command = new Command(
         return args;
     },
     async function execute(message, args) {
+        const msg = await action.reply(message, "deploying commands...");
         try {
-            const msg = await action.reply(message, "deploying commands...");
-            await slashcommands.register(args.get("guild"));
+            if (args.get("guild") === "global") {
+                await slashcommands.refreshGlobalCommands(false);
+            } else {
+                await slashcommands.refreshGuildCommands(args.get("guild"), false);
+            }
             action.editMessage(msg, "all commands deployed successfully");
         } catch (err) {
             action.reply(message, "failed to deploy commands");
             action.reply(message, err.toString());
+            action.editMessage(msg, "error occurred while deploying commands");
         }
     }
 );
