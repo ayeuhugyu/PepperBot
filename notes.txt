@@ -34,3 +34,9 @@ p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 
 **fixes/optimizations:**
 
+- updated node (v19.0.0 -> v22.0.0), npm, discord.js (v14.14.1 -> v14.16.1), and @distube/ytdl-core
+- made p/vc join much more reliable with slash commands
+- p/vc join now informs you of what vc was requested when it fails
+- p/vc join now differentiates between invalid vc type errors and nonreal channel errors
+- p/random jak & p/jak now have processing messages
+- commandData now has default values for everything

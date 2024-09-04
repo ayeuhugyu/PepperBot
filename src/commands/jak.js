@@ -78,9 +78,8 @@ const random = new SubCommand(
             return;
         }
         const randomJak = alljaks[Math.floor(Math.random() * alljaks.length)];
-        action.reply(message, {
-            files: [`resources/images/jaks/${randomJak}`],
-        });
+        const processing = await action.reply(message, { content: "processing..." });
+        action.editMessage(processing, { content: "here's your jak!", files: [`resources/images/jaks/${randomJak}`] });
     }
 );
 
@@ -166,9 +165,8 @@ const get = new SubCommand(
                 action.reply(message, "jak not found");
                 return;
             }
-            action.reply(message, {
-                files: [`resources/images/jaks/${jak}`],
-            });
+            const processing = await action.reply(message, { content: "processing..." });
+            action.editMessage(processing, { content: "here's your jak!", files: [`resources/images/jaks/${jak}`] });
         } else {
             action.reply(message, {
                 content: "provide a jak to get you baffoon!",

@@ -75,63 +75,38 @@ const join = new SubCommand(
             args.set("channel", message.mentions.channels.first());
         } else {
             if (
-                message.guild.channels.cache.get(
-                    message.content
-                        .slice(prefix.length + commandLength)
-                        .trim()
-                )
+                message.guild.channels.cache.get(message.content.slice(prefix.length + commandLength).trim())
             ) {
-                args.set(
-                    "channel",
-                    await message.guild.channels.fetch(
-                        message.content
-                            .slice(prefix.length + commandLength)
-                            .trim()
-                    )
-                );
+                args.set("channel", await message.guild.channels.fetch(message.content.slice(prefix.length + commandLength).trim()));
             } else {
-                const channel = message.guild.channels.cache.find((channel) =>
-                    channel.name.toLowerCase().startsWith(
-                        message.content
-                            .slice(prefix.length + commandLength)
-                            .trim()
-                            .toLowerCase()
-                    )
-                );
+                const channel = message.guild.channels.cache.find((channel) => channel.name.toLowerCase().startsWith(message.content.slice(prefix.length + commandLength).trim().toLowerCase()));
                 if (channel) {
                     args.set("channel", channel);
                 }
             }
         }
         if (
-            !args.get("channel") ||
-            !args.get("channel").type ||
-            (args.get("channel").type &&
-                args.get("channel").type != 2 &&
-                args.get("channel").type != 13)
+            !args.get("channel")
         ) {
             args.set("channel", message.member.voice.channel);
         }
-        if (!args.get("channel")) {
-            args = false;
+        let requestedchannel = args.get("channel");
+        if (args.get("channel")) {
+            requestedchannel = args.get("channel").name;
+        } else {
+            requestedchannel = message.mentions.channels.first() || message.content.slice(prefix.length + commandLength) || "undefined";
         }
+        args.set("requestedchannel", requestedchannel);
         return args;
     },
     async function execute(message, args) {
-        if (typeof args == "boolean" || !args) {
-            action.reply(message, {
-                content: "channel does not exist, or is not a voice channel",
-                ephemeral: true,
-            });
+        if (!args.get("channel")) {
+            action.reply(message, { content: `channel \`${args.get("requestedchannel")}\` does not exist`, ephemeral: true });
             return;
         }
-        if (args.get("channel")) {
-            if (
-                args.get("channel").type != 2 &&
-                args.get("channel").type != 13
-            ) {
-                args = false;
-            }
+        if (args.get("channel").type != 2 &&args.get("channel").type != 13) {
+            action.reply(message, { content: `channel type \`${args.get("channel").type}\` of \`${args.get("requestedchannel")}\` is not a voice channel`, ephemeral: true })
+            return;
         }
         if (!args.get("channel")) {
             args._hoistedOptions.push({

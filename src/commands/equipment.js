@@ -233,7 +233,6 @@ const godroll = new SubCommand(
         }
         
         const processedEquipment = deepwokenequipment.calculateEquipmentStats(equipment, args.get("stars"), args.get("stat"));
-        console.log(processedEquipment)
         const processedMessage = equipmentDataToMessage(processedEquipment, args.get("stat"));
         action.reply(message, { content: processedMessage, ephemeral: true });
     }
