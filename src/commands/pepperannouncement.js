@@ -33,7 +33,7 @@ const command = new Command(
         );
         return args;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
         if (args.get("message")) {
             const embed = default_embed()
                 .setTitle(`IMPORTANT PEPPERBOT ANNOUNCEMENT`)
@@ -47,7 +47,7 @@ const command = new Command(
             );
 
             if (isInteraction) {
-                action.reply(message, { content: "sent!", ephemeral: true });
+                action.reply(message, { content: "sent!", ephemeral: gconfig.useEphemeralReplies });
             }
             action.deleteMessage(message);
             sent.crosspost();

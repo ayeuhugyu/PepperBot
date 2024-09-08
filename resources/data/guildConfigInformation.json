@@ -80,5 +80,11 @@
         "default": "p/",
         "cleanname": "prefix",
         "description": "the prefix used for text commands"
+    },
+    "useEphemeralReplies": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "use ephemeral replies",
+        "description": "whether or not to use ephemeral replies for slash commands"
     }
 }

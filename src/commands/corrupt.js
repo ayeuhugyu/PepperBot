@@ -158,8 +158,8 @@ const command = new Command(
         }
         return args;
     },
-    async function execute(message, args) {
-        let finalText = { ephemeral: true };
+    async function execute(message, args, isInteraction, gconfig) {
+        let finalText = { ephemeral: gconfig.useEphemeralReplies };
         let severity = 4;
         if (args.get("severity")) {
             severity = args.get("severity");

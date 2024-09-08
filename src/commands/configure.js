@@ -106,7 +106,7 @@ function refresh(sent, detailsEmbed, gconfig, gid) {
                 content: `this is your current guild config. use the buttons in the details embed or the command to change it.\n${translatedGuildConfig}`,
                 embeds: [detailsEmbed || activeConfigurators[gid].detailsEmbed],
                 components: [detailsActionRow],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         } else {
             log.warn("attempt to refresh gconfig message that doesn't exist");
@@ -119,7 +119,7 @@ function refresh(sent, detailsEmbed, gconfig, gid) {
         }configure indexNumber value\` to change it, or the internal name (listed in italics in the details embed below) instead of index number. the index number is the number in grey appearing next to the part of the guild config.\n${translatedGuildConfig}`,
         embeds: [detailsEmbed || activeConfigurators[gid].detailsEmbed],
         components: [detailsActionRow],
-        ephemeral: true,
+        ephemeral: gconfig.useEphemeralReplies,
     });
 }
 
@@ -172,14 +172,14 @@ function changeGuildConfig(
         if (!item) {
             action.reply(interaction, {
                 content: `invalid numeric index: ${parsedNumericKey}`,
-                ephemeral: true,
+                ephemeral: guildConfig.useEphemeralReplies,
             });
             return;
         }
         if (typeof guildConfig[item.key] === "undefined") {
             action.reply(interaction, {
                 content: `how did you even do that. somehow, you found a value inside of the item indexes that isn't a value inside of the guild config despite it being generated from it??? idfk how you even did that man wtf. ig if you wanna try to debug it, the item, guildConfig, and guildConfigItemsIndexes have been logged under the debug level, good fucking luck man.`,
-                ephemeral: true,
+                ephemeral: guildConfig.useEphemeralReplies,
             });
             log.debug(item, guildConfig, guildConfigItemsIndexes);
             return;
@@ -207,14 +207,14 @@ function changeGuildConfig(
             log.error(e);
             action.reply(interaction, {
                 content: "your value appears to be formatted incorrectly.",
-                ephemeral: true,
+                ephemeral: guildConfig.useEphemeralReplies,
             });
             return;
         }
         if (typeof parsedValue == "undefined") {
             action.reply(interaction, {
                 content: "your value appears to be formatted incorrectly.",
-                ephemeral: true,
+                ephemeral: guildConfig.useEphemeralReplies,
             });
             return;
         }
@@ -224,7 +224,7 @@ function changeGuildConfig(
                 action.reply(interaction, {
                     content:
                         "you can't disable the configure command as that would prevent you from changing it back",
-                    ephemeral: true,
+                    ephemeral: guildConfig.useEphemeralReplies,
                 });
                 return;
             }
@@ -233,7 +233,7 @@ function changeGuildConfig(
             if (interaction.author.id !== interaction.guild.ownerId) {
                 action.reply(interaction, {
                     content: "you must be the server owner to change this key",
-                    ephemeral: true,
+                    ephemeral: guildConfig.useEphemeralReplies,
                 });
                 return;
             }
@@ -243,22 +243,27 @@ function changeGuildConfig(
                 action.reply(interaction, {
                     content:
                         "you can't blacklist the channel you're configuring in from having commands used in it.",
-                    ephemeral: true,
+                    ephemeral: guildConfig.useEphemeralReplies,
                 });
                 return;
             }
         }
         if (interaction.deferUpdate) {
             interaction.deferUpdate();
-        } else {
+        } else if (interaction.react) {
             interaction.react("✅");
+        } else {
+            action.reply(interaction, {
+                content: "✅",
+                ephemeral: guildConfig.useEphemeralReplies,
+            });
         }
         guildConfig[guildConfigItemKey] = parsedValue;
         guildConfigs.write(interaction.guild.id, guildConfig);
     } else {
         action.reply(interaction, {
             content: "that key doesn't exist in the guild config",
-            ephemeral: true,
+            ephemeral: guildConfig.useEphemeralReplies,
         });
         return;
     }
@@ -356,7 +361,7 @@ const command = new Command(
         if (!message.guild) {
             action.reply(message, {
                 content: "this command can only be run in a guild",
-                ephemeral: true,
+                ephemeral: messageGuildConfig.useEphemeralReplies,
             });
             return;
         }
@@ -382,7 +387,7 @@ const command = new Command(
         }
         const translatedGuildConfigMessage = await action.reply(message, {
             content: `loading...`,
-            ephemeral: true,
+            ephemeral: messageGuildConfig.useEphemeralReplies,
         });
 
         const detailsEmbed = default_embed();
@@ -416,7 +421,7 @@ const command = new Command(
                 content: translatedGuildConfigMessage.content,
                 embeds: [detailsEmbed],
                 components: [detailsActionRow],
-                ephemeral: true,
+                ephemeral: messageGuildConfig.useEphemeralReplies,
             });
             activeConfigurators[message.guild.id] = {
                 message: translatedGuildConfigMessage,
@@ -442,7 +447,7 @@ const command = new Command(
             if (interaction.user.id !== message.author.id) {
                 action.reply(message, {
                     content: "you aint the right person",
-                    ephemeral: true,
+                    ephemeral: messageGuildConfig.useEphemeralReplies,
                 });
                 return;
             }
@@ -473,7 +478,7 @@ const command = new Command(
                     action.reply(interaction, {
                         content:
                             "this guild's configuration is locked to the server owner",
-                        ephemeral: true,
+                        ephemeral: messageGuildConfig.useEphemeralReplies,
                     });
                     return;
                 }
@@ -530,7 +535,7 @@ for arrays each ${chalk.blue(
                     )}, ${chalk.blue("west")}, ${chalk.blue("zest")}
 \`\`\`
                     `,
-                    ephemeral: true,
+                    ephemeral: messageGuildConfig.useEphemeralReplies,
                 });
             }
         });
@@ -547,141 +552,3 @@ for arrays each ${chalk.blue(
 );
 
 export default command;
-
-/*
-if (!message.guild) {
-            action.reply(message, {
-                content: "this command can only be run in a guild",
-                ephemeral: true,
-            });
-            return;
-        }
-        if (args.get("key") && !args.get("value")) {
-            action.reply(message, {
-                content: "you need to provide a value to set the key to",
-                ephemeral: true,
-            });
-            return;
-        }
-        if (!args.get("key") && args.get("value")) {
-            action.reply(message, {
-                content: "you need to provide a key and a value",
-                ephemeral: true,
-            });
-            return;
-        }
-        const guildConfig = guildConfigs.getGuildConfig(message.guild.id);
-        const sent = await action.reply(message, {
-            content: "loading guild config...",
-            ephemeral: true,
-            components: [],
-        });
-        activeConfigurators[message.guild.id] = sent;
-        await refresh(sent, guildConfig);
-        const collector = await sent.createMessageComponentCollector({
-            time: 240_000,
-        });
-        collector.on("collect", (interaction) => {
-            if (!interaction.user.id === message.author.id) {
-                action.reply(message, {
-                    content: "you aint the right person",
-                    ephemeral: true,
-                });
-                return;
-            }
-            if (interaction.customId === "changeGuildConfig") {
-                if (messageGuildConfig.configLockedToServerOwner && message.author.id !== message.guild.ownerId) {
-                    action.reply(interaction, {
-                        content: "this guild's configuration is locked to the server owner",
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                interaction.showModal(guildConfiguratorModal);
-                const filter = (interaction) => interaction.customId === "guildConfiguratorModal";
-                interaction.awaitModalSubmit({ filter, time: 120_000 }).then((interaction) => {
-                    const key = interaction.fields.getTextInputValue("key");
-                    const value = interaction.fields.getTextInputValue("value");
-                    changeGuildConfig(message, guildConfig, key, value);
-                });
-            }
-        });
-        collector
-            .on("end", () => {
-                delete activeConfigurators[message.guild.id];
-                action.editMessage(sent, {
-                    content: "collector expired",
-                    components: [],
-                });
-            })
-*/
-
-/*
-let parsedValue;
-    try {
-        parsedValue = JSON.parse(value);
-    } catch (error) {
-        action.reply(message, {
-            content: `invalid JSON format: \`\`\`${error}\`\`\``,
-            ephemeral: true,
-        });
-        return;
-    }
-    
-    if (!key || !value) {
-        action.reply(message, {
-            content: "you need to provide both a key and a value",
-            ephemeral: true,
-        });
-        return;
-    }
-    if (typeof gconfig[key] === 'undefined') {
-        action.reply(message, {
-            content: `that key doesn't exist in the guild config`,
-            ephemeral: true,
-        });
-        return;
-    }
-    if (typeof gconfig[key] !== typeof parsedValue) {
-        action.reply(message, {
-            content: `provided value mismatches key's type of \`${typeof gconfig[key]}\``,
-            ephemeral: true,
-        });
-        return;
-    }
-    // exceptions
-    if (key == "disabledCommands") {
-        if (value.includes("configure")) {
-            action.reply(message, {
-                content: "you can't disable the configure command as that would prevent you from changing it back",
-                ephemeral: true,
-            });
-            return;
-        }
-    }
-    if (key === "configLockedToServerOwner") {
-        if (message.author.id !== message.guild.ownerId) {
-            action.reply(message, {
-                content: "you must be the server owner to change this key",
-                ephemeral: true,
-            });
-            return;
-        }
-    }
-    if (key === "blacklistedCommandChannelIds") {
-        if (parsedValue.includes(message.channel.id)) {
-            action.reply(message, {
-                content: "you can't blacklist the channel you're configuring in from having commands used in it.",
-                ephemeral: true
-            })
-            return;
-        }
-    }
-    gconfig[key] = parsedValue;
-    guildConfigs.writeGuildConfig(message.guild.id, gconfig);
-    action.reply(message, {
-        content: `set \`${key}\` to \`${value}\``,
-        ephemeral: true,
-    });
-    refresh(sent, gconfig, message.guild.id);
-*/

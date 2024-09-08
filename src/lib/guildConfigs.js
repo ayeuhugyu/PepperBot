@@ -37,8 +37,8 @@ async function createGuildConfig(guildId) {
 
 function getGuildConfig(guildId) {
     if (!guildConfigs[guildId]) {
-        log.warn(`nonexistent guild config requested: ${guildId}`);
-        return;
+        log.warn(`nonexistent guild config requested: ${guildId}; returning default`);
+        return JSON.parse(JSON.stringify(defaultGuildConfig));
     }
     return guildConfigs[guildId];
 }

@@ -66,7 +66,7 @@ const command = new Command(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
         const memory = process.memoryUsage();
 
         let guilds = await message.client.shard.fetchClientValues(
@@ -102,7 +102,7 @@ const command = new Command(
                 },
                 {
                     name: "current shard id",
-                    value: `${message.guild.shardId}`,
+                    value: `${message.guild ? message.guild.shardId : "N/A"}`,
                     inline: true,
                 },
                 {
@@ -119,7 +119,7 @@ const command = new Command(
                 },
                 {
                     name: "ws latency",
-                    value: `${message.client.ws.ping}ms`,
+                    value: `${message.client ? message.client.ws.ping : "unknown "}ms`,
                     inline: true,
                 },
                 {
@@ -132,12 +132,12 @@ const command = new Command(
         if (isInteraction) {
             action.reply(message, {
                 embeds: [embed],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         } else {
             action.reply(message, {
                 embeds: [embed],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }

@@ -20,9 +20,9 @@ const command = new Command(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const stats = await statistics.toEmbed();
-        action.reply(message, { embeds: [stats], ephemeral: true });
+        action.reply(message, { embeds: [stats], ephemeral: gconfig.useEphemeralReplies });
     }
 );
 

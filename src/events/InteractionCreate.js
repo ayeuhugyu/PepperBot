@@ -16,8 +16,12 @@ async function chatInputCommand(interaction) {
     interaction.author = interaction.user;
     interaction.content = "";
     interaction.options.getOriginal = interaction.options.get;
+    interaction.options.quickReference = {};
     interaction.options.get = function (arg) {
         try {
+            if (interaction.options.quickReference[arg]) {
+                return interaction.options.quickReference[arg];
+            }
             if (arg === "_SUBCOMMAND") {
                 arg = "subcommand";
             }
@@ -32,10 +36,13 @@ async function chatInputCommand(interaction) {
             }
         } catch {
             log.warn(
-                "attempt to get undefined value || erorr getting option value"
+                "attempt to get undefined value || error getting option value"
             );
             return undefined;
         }
+    };
+    interaction.options.set = function (arg, value) {
+        interaction.options.quickReference[arg] = value;
     };
     let blackliststring = fs.readFileSync(
         "resources/data/blacklist.json",

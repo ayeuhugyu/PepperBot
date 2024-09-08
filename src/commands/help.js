@@ -44,9 +44,16 @@ async function listCommands(message, gconfig) {
         if (commandData.permissions && commandData.permissions.length > 0) {
             let doNotAdd = false;
             commandData.permissions.forEach((permission) => {
-                if (!message.member.permissions.has(permission)) {
-                    doNotAdd = true;
+                if (!message.member || !message.member.permissions || !message.member.permissions.has) {
+                    if (commandData.permissions && commandData.permissions.length > 0) {
+                        doNotAdd = true;
+                    }
+                } else {
+                    if (message.member.permissions.has(permission)) {
+                        doNotAdd = true;
+                    }
                 }
+                
             });
             if (doNotAdd) {
                 continue; // i do it like this because continue cannot cross the forEach
@@ -80,7 +87,7 @@ async function listCommands(message, gconfig) {
     );
     action.reply(message, {
         embeds: [embed],
-        ephemeral: true,
+        ephemeral: gconfig.useEphemeralReplies,
     });
     return;
 }
@@ -123,7 +130,7 @@ async function infoAboutCommandWithOptions(
     const sentMessage = await action.reply(message, {
         embeds: [menu.pages[menu.currentPage]],
         components: [menu.actionRow],
-        ephemeral: true,
+        ephemeral: gconfig.useEphemeralReplies,
     });
     if (!sentMessage) return;
     return menu.full.begin(sentMessage, 120_000, menu);
@@ -177,7 +184,7 @@ async function infoAboutCommand(
     } else {
         return action.reply(message, {
             embeds: [commandPage],
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 }
@@ -241,7 +248,7 @@ const command = new Command(
         if (!command && !commandAsSubCommand) {
             action.reply(message, {
                 content: `there's no command named ${requestedCommand}`,
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -255,7 +262,7 @@ const command = new Command(
             if (!subCommands || subCommands.length === 0) {
                 action.reply(message, {
                     content: `there's no subcommands for ${prefix}${command.data.name}`,
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
                 return;
             }
@@ -269,7 +276,7 @@ const command = new Command(
             if (!subCommand) {
                 action.reply(message, {
                     content: `there's no subcommand named "${requestedSubCommand}" for ${prefix}${command.data.name}`,
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
                 return;
             }

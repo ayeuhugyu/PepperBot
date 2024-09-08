@@ -38,11 +38,11 @@ const view = new SubCommand(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (blacklists.length == 0 || blacklists == undefined) {
             action.reply(message, {
                 content: "nobodys blacklisted (you are now LOL!!!!!/j)",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -55,7 +55,7 @@ const view = new SubCommand(
         const embed = default_embed()
             .setTitle("blacklisted users")
             .setDescription(text);
-        action.reply(message, { embeds: [embed], ephemeral: true });
+        action.reply(message, { embeds: [embed], ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
@@ -86,7 +86,7 @@ const remove = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("user")) {
             if (blacklists.includes(args.get("user"))) {
                 blacklists.splice(blacklists.indexOf(args.get("user")), 1);
@@ -103,20 +103,20 @@ const remove = new SubCommand(
                     content: `removed \`${args.get(
                         "user"
                     )}\` from the blacklist`,
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             } else {
                 action.reply(message, {
                     content: `user \`${args.get(
                         "user"
                     )}\` is not blacklisted, you baffoon!`,
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             }
         } else {
             action.reply(message, {
                 content: "provide a user to blacklist you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -151,7 +151,7 @@ const add = new SubCommand(
 
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("user")) {
             blacklists.push(args.get("user"));
             fs.writeFile(
@@ -165,12 +165,12 @@ const add = new SubCommand(
             );
             await action.reply(message, {
                 content: `blacklisted \`${args.get("user")}\``,
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         } else {
             await action.reply(message, {
                 content: "provide a user to blacklist you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -211,11 +211,11 @@ const command = new Command(
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("_SUBCOMMAND")) {
             action.reply(message, {
                 content: "please provide a valid subcommand",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }

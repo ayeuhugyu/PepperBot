@@ -52,7 +52,7 @@ const save = new SubCommand(
         args.set("content", files.fixFileName(argument));
         return args;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, "what tf am i supposed to save this as");
             return;
@@ -68,7 +68,7 @@ const save = new SubCommand(
         if (!embed) {
             action.reply(message, {
                 content: "you aint done shit",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -189,19 +189,19 @@ const restart = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let embed = embeds[message.author.id];
         if (!embed) {
             action.reply(message, {
                 content: "you aint created shit",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
         delete embeds[message.author.id];
         action.reply(message, {
             content: "removed current save of your embed",
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -234,11 +234,11 @@ const setImage = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an image",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -252,7 +252,7 @@ const setImage = new SubCommand(
             action.reply(message, {
                 content:
                     "something went wrong changing the image of your embed, the url probably isn't valid",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -260,7 +260,7 @@ const setImage = new SubCommand(
             content: `changed thumbnail of your embed to \`${args.get(
                 "content"
             )}\`. please note if this is not a valid url discord may have issues displaying it.`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -293,11 +293,11 @@ const setThumbnail = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a thumbnail",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -311,7 +311,7 @@ const setThumbnail = new SubCommand(
             action.reply(message, {
                 content:
                     "something went wrong changing the thumbnail of your embed, the url probably isn't valid",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -319,7 +319,7 @@ const setThumbnail = new SubCommand(
             content: `changed thumbnail of your embed to \`${args.get(
                 "content"
             )}\`. please note if this is not a valid url discord may have issues displaying it.`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -352,11 +352,11 @@ const setAuthor = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an author",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -364,7 +364,7 @@ const setAuthor = new SubCommand(
             action.reply(message, {
                 content:
                     "discord limits embed authors to 256 characters, please shorten your author.",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -377,7 +377,7 @@ const setAuthor = new SubCommand(
             content: `changed author of your embed to \`${args.get(
                 "content"
             )}\``,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -410,11 +410,11 @@ const setFooter = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a footer",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -422,7 +422,7 @@ const setFooter = new SubCommand(
             action.reply(message, {
                 content:
                     "discord limits embed footers to 2048 characters, please shorten your footer.",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -435,7 +435,7 @@ const setFooter = new SubCommand(
             content: `changed footer of your embed to \`${args.get(
                 "content"
             )}\``,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -472,18 +472,18 @@ const setColor = new SubCommand(
         args.set("content", content);
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a color",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
         if (!isHexColor(args.get("content"))) {
             action.reply(message, {
                 content: "that's not a valid hex color",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -496,7 +496,7 @@ const setColor = new SubCommand(
             content: `changed color of your embed to \`${args.get(
                 "content"
             )}\``,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -529,11 +529,11 @@ const setDescription = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a description",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -541,7 +541,7 @@ const setDescription = new SubCommand(
             action.reply(message, {
                 content:
                     "discord limits embed descriptions to 4096 characters, please shorten your description.",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -554,7 +554,7 @@ const setDescription = new SubCommand(
             content: `changed description of your embed to \`${args.get(
                 "content"
             )}\``,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -587,11 +587,11 @@ const setTitle = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a title",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -599,7 +599,7 @@ const setTitle = new SubCommand(
             action.reply(message, {
                 content:
                     "discord limits embed titles to 256 characters, please shorten your title.",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -612,7 +612,7 @@ const setTitle = new SubCommand(
             content: `changed title of your embed to \`${args.get(
                 "content"
             )}\``,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -630,12 +630,12 @@ const preview = new SubCommand(
     async function getArguments(message) {
         return undefined;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let embed = embeds[message.author.id];
         if (!embed) {
             action.reply(message, {
                 content: "you aint created shit",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -661,7 +661,7 @@ const preview = new SubCommand(
             action.reply(message, {
                 content:
                     "discord limits the length of all fields of an embed to not exceed 6000, please shorten some fields and then try again.",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -669,11 +669,11 @@ const preview = new SubCommand(
             action.reply(message, {
                 content:
                     "embeds are required to have at least 1 field containing data",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
-        action.reply(message, { embeds: [embed], ephemeral: true });
+        action.reply(message, { embeds: [embed], ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
@@ -684,18 +684,18 @@ sendData.setPermissions([]);
 sendData.setPermissionsReadable("");
 sendData.setWhitelist([]);
 sendData.setCanRunFromBot(true);
-
+sendData.setDisabledContexts(["dm"]);
 const send = new SubCommand(
     sendData,
     async function getArguments(message) {
         return undefined;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let embed = embeds[message.author.id];
         if (!embed) {
             action.reply(message, {
                 content: "you aint created shit",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -721,7 +721,7 @@ const send = new SubCommand(
             action.reply(message, {
                 content:
                     "discord limits the length of all fields of an embed to not exceed 6000, please shorten some fields and then try again.",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -729,12 +729,12 @@ const send = new SubCommand(
             action.reply(message, {
                 content:
                     "embeds are required to have at least 1 field containing data",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
         if (fromInteraction) {
-            action.reply(message, { content: "sent!", ephemeral: true });
+            action.reply(message, { content: "sent!", ephemeral: gconfig.useEphemeralReplies });
         }
         action.sendMessage(message.channel, { embeds: [embed] });
     }
@@ -794,7 +794,7 @@ const command = new Command(
         action.reply(message, {
             content:
                 `you need to supply a subcommand to do anything with this command. if you don't know any, use \`${prefix}help embed\`. also, you might have capitalized it by accident. don't capitalize it.`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     },
     [

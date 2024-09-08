@@ -4,6 +4,7 @@ import * as files from "./files.js";
 import * as globals from "./globals.js";
 import process from "node:process";
 import commonRegex from "./commonRegex.js";
+import * as util from "util";
 
 const config = globals.config;
 
@@ -81,7 +82,10 @@ export async function fixMsg(msg) {
 
 export async function sendMessage(channel, content) {
     try {
-        channel.sendTyping();
+        if (!channel) {
+            log.warn("attempt to send a message to a channel that does not exist");
+            return;
+        }
         const fixed = await fixMsg(content);
         const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
         const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
@@ -98,15 +102,16 @@ export async function sendMessage(channel, content) {
 export async function reply(message, content) {
     const channel = message.channel;
     if (!message.channel) {
-        log.warn("attempt to reply to a message without a channel");
-        return;
+        log.warn("replying to a message without a channel");
     }
     if (!message) {
         log.warn("attempt to reply to a message that does not exist");
         return;
     }
     if (!(typeof content === "string") && !content.ephemeral)
-        channel.sendTyping();
+        if (channel && channel.sendTyping) {
+            channel.sendTyping();
+        }
     let sent;
     const fixed = await fixMsg(content);
     const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;

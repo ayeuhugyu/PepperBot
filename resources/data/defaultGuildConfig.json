@@ -11,5 +11,6 @@
     "blacklistedCommandChannelIds": [],
     "disableGPTResponses": false,
     "blacklistedGPTResponseChannelIds": [],
-    "prefix": "p/"
+    "prefix": "p/",
+    "useEphemeralReplies": false
 }

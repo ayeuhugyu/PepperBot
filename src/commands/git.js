@@ -26,11 +26,11 @@ const graph = new SubCommand(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const sent = await action.reply(message, {
             content:
                 "fetching git data... (this may take a while if this command hasn't been used in a while)",
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
         const fetchout = await shell.exec(`sudo git fetch`, { silent: true });
         if (fetchout.stderr) {
@@ -88,7 +88,7 @@ const command = new Command(
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let content = "";
         if (args.get("_SUBCOMMAND")) {
             content += `${args.get(
@@ -99,7 +99,7 @@ const command = new Command(
             "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/";
         action.reply(message, {
             content: content,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     },
     [graph]

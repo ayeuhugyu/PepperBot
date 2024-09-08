@@ -39,7 +39,7 @@ const command = new Command(
 
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("query")) {
             action.reply(message, "provide a query, baffoon!");
             return;
@@ -60,7 +60,7 @@ const command = new Command(
                 .setURL(file.pageUrl);
             action.reply(message, {
                 embeds: [embed],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         } else if (cleanResult.length > 1) {
             const menu = new AdvancedPagedMenuBuilder();
@@ -81,7 +81,7 @@ const command = new Command(
             const sent = await action.reply(message, {
                 embeds: [menu.pages[menu.currentPage]],
                 components: [menu.actionRow.addComponents(button)],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             const collector = sent.createMessageComponentCollector({
                 time: 240_000,

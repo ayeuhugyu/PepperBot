@@ -33,7 +33,7 @@ const command = new Command(
         );
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, isInteraction, gconfig) {
         const sounds = await fs.readdirSync("resources/ytdl_cache");
         const gptdownloads = await fs.readdirSync("resources/gptdownloads");
         const logs = await fs.readdirSync("logs");
@@ -78,7 +78,7 @@ const command = new Command(
             content: `removed ${files.length} files, totaling ${Math.floor(
                 filesize
             )} MB`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );

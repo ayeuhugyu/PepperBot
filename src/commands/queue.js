@@ -549,7 +549,7 @@ const shuffle = new SubCommand(
     async function getArguments(message) {
         return undefined;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -564,12 +564,12 @@ const shuffle = new SubCommand(
         if (queue.queues.length < 2) {
             action.reply(message, {
                 content: "queue must have at least 2 songs to shuffle",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
         queue.shuffle();
-        action.reply(message, { content: "shuffled queue", ephemeral: true });
+        action.reply(message, { content: "shuffled queue", ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
@@ -951,7 +951,7 @@ const command = new Command(
 
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, isInteraction, gconfig) {
         let queue = queues[message.guild.id];
         if (!queue) {
             queue = new AudioPlayerQueueManager({
@@ -975,7 +975,7 @@ const command = new Command(
             } else {
                 action.reply(message, {
                     content: "invalid operation",
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             }
             return;
@@ -1043,7 +1043,7 @@ const command = new Command(
                     action.reply(interaction, {
                         content:
                             "how the hell did you manage to press an invalid button what the hell 😭😭😭",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                 }
             }

@@ -80,7 +80,7 @@ const retrieve = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("sound")) {
             const sounds = await fs.readdirSync("resources/sounds");
             const sound = await autocorrect(args.get("sound"));
@@ -98,7 +98,7 @@ const retrieve = new SubCommand(
                 action.editMessage(msg, {
                     content: "here ya go",
                     files: [`resources/sounds/${file}`],
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             } else {
                 action.reply(message, {
@@ -110,7 +110,7 @@ const retrieve = new SubCommand(
         } else {
             action.reply(message, {
                 content: "provide a sound to return you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -126,19 +126,19 @@ adddata.setCanRunFromBot(true);
 adddata.setAliases(["addsounds"]);
 adddata.setNormalAliases(["addsound"]);
 adddata.addAttachmentOption((option) =>
-    option.setName("sound").setDescription("the sound to add").setRequired(true)
+    option.setName("file").setDescription("the sound to add").setRequired(true)
 );
 const add = new SubCommand(
     adddata,
     async function getArguments(message, gconfig) {
         const args = new Collection();
-        args.set("sound", message.attachments.first());
+        args.set("file", message.attachments.first());
 
         return args;
     },
-    async function execute(message, args) {
-        if (args.get("sound")) {
-            const attachments = message.attachments || [args.get("sound")];
+    async function execute(message, args, fromInteraction, gconfig) {
+        if (args.get("file")) {
+            const attachments = message.attachments || [args.get("file")];
             attachments.forEach(async (attachment) => {
                 const filename = attachment.name;
                 if (
@@ -166,7 +166,7 @@ const add = new SubCommand(
                     action.reply(message, {
                         content:
                             "invalid format, only `mp3`, `wav`, `ogg`, `webm`, `m4a`, `mp4`, and `flac` are supported",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     return;
                 }
@@ -174,7 +174,7 @@ const add = new SubCommand(
         } else {
             action.reply(message, {
                 content: "provide a sound to add you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -216,7 +216,7 @@ const play = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("sound")) {
             // special cases
             if (args.get("sound") == "ls") {
@@ -234,13 +234,13 @@ const play = new SubCommand(
                     action.reply(message, {
                         content:
                             "you're not in a voice channel, and im not already in one. baffoon.",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     return;
                 }
                 action.reply(message, {
                     content: `joined <#${message.member.voice.channel.id}>`,
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             }
             if (!connection) {
@@ -248,7 +248,7 @@ const play = new SubCommand(
                 action.reply(message, {
                     content:
                         "you're not in a voice channel, and im not already in one. baffoon.",
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
                 return;
             }
@@ -272,7 +272,7 @@ const play = new SubCommand(
                     voice.playResource(resource, audioPlayer);
                     action.reply(message, {
                         content: `playing \`${value}\``,
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     break;
                 }
@@ -280,13 +280,13 @@ const play = new SubCommand(
             if (!hasPlayed) {
                 action.reply(message, {
                     content: "sound not found",
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             }
         } else {
             action.reply(message, {
                 content: "provide a sound to play you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -340,6 +340,9 @@ data.addStringOption((option) =>
         )
         .setRequired(false)
 );
+data.addAttachmentOption((option) =>
+    option.setName("file").setDescription("the sound to add").setRequired(false)
+);
 const command = new Command(
     data,
     async function getArguments(message, gconfig) {
@@ -347,18 +350,18 @@ const command = new Command(
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction, guildConfig) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("_SUBCOMMAND")) {
             action.reply(message, {
                 content: "invalid subcommand: " + args.get("_SUBCOMMAND"),
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
         action.reply(message, {
             content:
                 "this command does nothing if you don't supply a subcommand",
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     },
     [list, play, add, retrieve] // subcommands

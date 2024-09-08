@@ -11,16 +11,17 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+data.setIntegrationTypes([0, 1])
 const command = new Command(
     data,
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args) {
+    async function execute(message, args, isInteraction, gconfig) {
         const start = performance.now();
         const sent = await action.reply(message, {
             content: "awaiting response...",
+            ephemeral: gconfig.useEphemeralReplies,
         });
         action.editMessage(sent, {
             content: `response time: ${(performance.now() - start).toFixed(

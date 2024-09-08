@@ -41,7 +41,7 @@ const command = new Command(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         messages.replaceAll("\n", " ");
         const markovChain = markovChainGenerator(messages);
         const words = Object.keys(markovChain);
@@ -59,7 +59,7 @@ const command = new Command(
         }
         let results = result.split("\n");
         let randommessage = results[Math.floor(Math.random() * results.length)];
-        action.reply(message, { content: randommessage, ephemeral: true });
+        action.reply(message, { content: randommessage, ephemeral: gconfig.useEphemeralReplies });
     }
 );
 

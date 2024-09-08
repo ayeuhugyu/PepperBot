@@ -27,24 +27,24 @@ const leave = new SubCommand(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const connection = await voice.getVoiceConnection(message.guild.id);
         if (connection) {
             const channel = await message.guild.channels.fetch(connection.joinConfig.channelId)
             if (!voice.checkMemberPermissionsForVoiceChannel(message.member, channel)) {
-                return action.reply(message, { content: "you can't join this channel, so i won't let you force me to leave.", ephemeral: true})
+                return action.reply(message, { content: "you can't join this channel, so i won't let you force me to leave.", ephemeral: gconfig.useEphemeralReplies})
             }
             voice.leaveVoiceChannel(connection).catch((e) => {
                 log.error(e);
             });
             action.reply(message, {
                 content: `left voice channel <#${connection.joinConfig.channelId}>`,
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         } else {
             action.reply(message, {
                 content: "im not connected to a voice channel here mf",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -99,13 +99,13 @@ const join = new SubCommand(
         args.set("requestedchannel", requestedchannel);
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("channel")) {
-            action.reply(message, { content: `channel \`${args.get("requestedchannel")}\` does not exist`, ephemeral: true });
+            action.reply(message, { content: `channel \`${args.get("requestedchannel")}\` does not exist`, ephemeral: gconfig.useEphemeralReplies });
             return;
         }
         if (args.get("channel").type != 2 &&args.get("channel").type != 13) {
-            action.reply(message, { content: `channel type \`${args.get("channel").type}\` of \`${args.get("requestedchannel")}\` is not a voice channel`, ephemeral: true })
+            action.reply(message, { content: `channel type \`${args.get("channel").type}\` of \`${args.get("requestedchannel")}\` is not a voice channel`, ephemeral: gconfig.useEphemeralReplies })
             return;
         }
         if (!args.get("channel")) {
@@ -120,19 +120,19 @@ const join = new SubCommand(
             if (!voice.checkMemberPermissionsForVoiceChannel(message.member, args.get("channel"))) {
                 action.reply(message, {
                     content: "i won't join that voice channel because you don't have permissions to join it",
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
                 return;
             }
             voice.joinVoiceChannel(args.get("channel"));
             action.reply(message, {
                 content: `joined <#${args.get("channel").id}>`,
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         } else {
             action.reply(message, {
                 content: "specify or join a channel, you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -171,17 +171,17 @@ const command = new Command(
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction, guildConfig) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("_SUBCOMMAND")) {
             action.reply(message, {
                 content: "invalid subcommand: " + args.get("_SUBCOMMAND"),
-                ephemeral: true
+                ephemeral: gconfig.useEphemeralReplies
             })
             return;
         }
         action.reply(message, {
             content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: true
+            ephemeral: gconfig.useEphemeralReplies
         })
     },
     [join, leave] // subcommands

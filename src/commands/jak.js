@@ -139,7 +139,7 @@ const get = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("jak")) {
             if (args.get("jak") === "ls") {
                 list.execute(message, null, fromInteraction);
@@ -170,7 +170,7 @@ const get = new SubCommand(
         } else {
             action.reply(message, {
                 content: "provide a jak to get you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }
@@ -200,7 +200,7 @@ const add = new SubCommand(
 
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("jakfile")) {
             const attachments = message.attachments || [args.get("jakfile")];
             attachments.forEach(async (attachment) => {
@@ -245,7 +245,7 @@ const add = new SubCommand(
                     action.reply(message, {
                         content:
                             "invalid format, only `png`, `jpg`, `jpeg`, `gif`, `mp4`, `webm`, and `mov` are supported",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     return;
                 }
@@ -253,7 +253,7 @@ const add = new SubCommand(
         } else {
             action.reply(message, {
                 content: "provide a jak to add you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }

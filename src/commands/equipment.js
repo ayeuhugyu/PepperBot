@@ -204,7 +204,7 @@ const godroll = new SubCommand(
         args.set("stars", parseInt(message.content.split(" ")[3]));
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const equipment = deepwokenequipment.getEquipment(args.get("equipment").replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " "));
         if (!args.get("stat")) {
             args.set("stat", "health");
@@ -220,21 +220,21 @@ const godroll = new SubCommand(
             args.set("stat", statAliases[args.get("stat")]);
         }
         if (!deepwokenequipment.pips[args.get("stat")]) {
-            action.reply(message, { content: `invalid pip \`${args.get("stat")}\``, ephemeral: true });
+            action.reply(message, { content: `invalid pip \`${args.get("stat")}\``, ephemeral: gconfig.useEphemeralReplies });
             return;
         }
         if (args.get("stars") > 3 || args.get("stars") < 0 || Number.isInteger(args.get("stars")) === false) {
-            action.reply(message, { content: `invalid star count \`${args.get("stars")}\``, ephemeral: true });
+            action.reply(message, { content: `invalid star count \`${args.get("stars")}\``, ephemeral: gconfig.useEphemeralReplies });
             return;
         }
         if (!equipment) {
-            action.reply(message, { content: `could not find equipment \`${args.get("equipment").replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " ").replaceAll("'", "")}\``, ephemeral: true });
+            action.reply(message, { content: `could not find equipment \`${args.get("equipment").replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " ").replaceAll("'", "")}\``, ephemeral: gconfig.useEphemeralReplies });
             return;
         }
         
         const processedEquipment = deepwokenequipment.calculateEquipmentStats(equipment, args.get("stars"), args.get("stat"));
         const processedMessage = equipmentDataToMessage(processedEquipment, args.get("stat"));
-        action.reply(message, { content: processedMessage, ephemeral: true });
+        action.reply(message, { content: processedMessage, ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
@@ -252,12 +252,12 @@ const random = new SubCommand(
         const args = new Collection();
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const randomName = deepwokenequipment.getRandomEquipmentName();
         const equipment = deepwokenequipment.getEquipment(randomName);
         const processedEquipment = deepwokenequipment.calculateEquipmentStats(equipment);
         const processedMessage = equipmentDataToMessage(processedEquipment);
-        action.reply(message, { content: processedMessage, ephemeral: true });
+        action.reply(message, { content: processedMessage, ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
@@ -275,7 +275,7 @@ const list = new SubCommand(
         const args = new Collection();
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let lsmessage = "";
         let previousType = ""
         for (const [key, value] of Object.entries(deepwokenequipment.equipment)) {
@@ -298,7 +298,7 @@ const list = new SubCommand(
             lsmessage += `${key}: ${formattedResult}\n`;
         }
         const file = await files.textToFile(lsmessage, "equipmentlist");
-        action.reply(message, { content: "here's a list of all deepwoken equipment and their pips", ephemeral: true, files: [
+        action.reply(message, { content: "here's a list of all deepwoken equipment and their pips", ephemeral: gconfig.useEphemeralReplies, files: [
             {
                 name: "equipmentlist.txt",
                 attachment: file,
@@ -349,17 +349,17 @@ const command = new Command(
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction, guildConfig) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("_SUBCOMMAND")) {
             action.reply(message, {
                 content: "invalid subcommand: " + args.get("_SUBCOMMAND"),
-                ephemeral: true
+                ephemeral: gconfig.useEphemeralReplies
             })
             return;
         }
         action.reply(message, {
             content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: true
+            ephemeral: gconfig.useEphemeralReplies
         })
     },
     [random, godroll, list] // subcommands

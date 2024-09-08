@@ -104,7 +104,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
-data.setDMPermission(true);
+data.setDisabledContexts(["dm"]);
 data.setAliases(["prompt", "gptprompt", "sp"]);
 data.addStringOption((option) =>
     option.setName("prompt").setDescription("what to prompt").setRequired(true)

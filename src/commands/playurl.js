@@ -94,14 +94,14 @@ const command = new Command(
         );
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, isInteraction, gconfig) {
         if (args.get("sound")) {
             let connection = await voice.getVoiceConnection(message.guild.id);
             if (!connection) {
                 // join vc by default
                 if (!message.member.voice.channel) {
                     action.reply(message, {
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                         content:
                             "you're not in a voice channel, and im not already in one. baffoon.",
                     });
@@ -128,7 +128,7 @@ const command = new Command(
                 }
                 if (fs.existsSync(soundPath)) {
                     action.reply(message, {
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                         content: `playing \`${soundName}\``,
                     });
                 } else {
@@ -145,13 +145,13 @@ const command = new Command(
                 try {
                     let sentMSG = await action.reply(message, {
                         content: "retrieving video data...",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     if (!(await isExistingVideo(args.get("sound")))) {
                         action.editMessage(sentMSG, {
                             content:
                                 "that video does not appear to exist, please give me an actual video",
-                            ephemeral: true,
+                            ephemeral: gconfig.useEphemeralReplies,
                         });
                         return;
                     }
@@ -160,16 +160,16 @@ const command = new Command(
                         .catch((err) => {
                             if (err.statusCode === 410) {
                                 action.editMessage(sentMSG, {
-                                    ephemeral: true,
+                                    ephemeral: gconfig.useEphemeralReplies,
                                     content:
                                         'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.',
                                 });
                                 return;
                             } else {
                                 action.editMessage(sentMSG, {
-                                    ephemeral: true,
+                                    ephemeral: gconfig.useEphemeralReplies,
                                     content: {
-                                        ephemeral: true,
+                                        ephemeral: gconfig.useEphemeralReplies,
                                         content:
                                             "error while downloading url, see logs for more info",
                                     },
@@ -207,7 +207,7 @@ const command = new Command(
                     }
                     if (info.lengthSeconds > 60 * 120) {
                         action.editMessage(sentMSG, {
-                            ephemeral: true,
+                            ephemeral: gconfig.useEphemeralReplies,
                             content:
                                 "sound is too long, max length is 120 minutes. this is to prevent abuse.",
                         });
@@ -215,12 +215,12 @@ const command = new Command(
                     }
                     if (redownload) {
                         await action.editMessage(sentMSG, {
-                            ephemeral: true,
+                            ephemeral: gconfig.useEphemeralReplies,
                             content: `re-downloading improperly downloaded file \`${correctedFileName}.webm\`...`,
                         });
                     } else {
                         await action.editMessage(sentMSG, {
-                            ephemeral: true,
+                            ephemeral: gconfig.useEphemeralReplies,
                             content: `downloading \`${correctedFileName}.webm\`...`,
                         });
                     }
@@ -235,7 +235,7 @@ const command = new Command(
                         )
                         .on("finish", async () => {
                             action.editMessage(sentMSG, {
-                                ephemeral: true,
+                                ephemeral: gconfig.useEphemeralReplies,
                                 content: `playing \`${correctedFileName}.webm\``,
                             });
                             const resource = await voice.createAudioResource(
@@ -245,7 +245,7 @@ const command = new Command(
                         });
                 } catch (err) {
                     action.reply(message, {
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                         content:
                             "error while downloading url, see logs for more info",
                     });
@@ -253,7 +253,7 @@ const command = new Command(
                 }
             } else {
                 action.reply(message, {
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                     content:
                         "url not supported, currently only youtube is supported. others are more complicated to implement, and will be added soon.",
                 });

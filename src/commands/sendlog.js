@@ -85,7 +85,7 @@ const command = new Command(
         } else {
             action.reply(message, {
                 content: "provide a log to send you baffoon!",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
         }
     }

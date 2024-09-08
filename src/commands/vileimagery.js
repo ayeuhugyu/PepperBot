@@ -38,7 +38,7 @@ const command = new Command(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let file;
 
         if (args.get("image")) {
@@ -101,7 +101,7 @@ const command = new Command(
             if (message.reference) {
                 action.reply(message, {
                     content: "There's no such thing!",
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
                 return;
             }

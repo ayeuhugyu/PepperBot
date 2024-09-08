@@ -162,11 +162,11 @@ const which = new SubCommand(
     async function getArguments(message) {
         return new Collection();
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig, isButton) {
         const whichList = whichListForUser[message.author.id] || "main";
         action.reply(message, {
             content: `currently editing list "${whichList}"`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -200,11 +200,11 @@ const switchc = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction, isButton) {
+    async function execute(message, args, fromInteraction, gconfig, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply a list to switch to",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -220,7 +220,7 @@ const switchc = new SubCommand(
             );
             action.reply(message, {
                 files: [{ attachment: file, name: "todolists.txt" }],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -243,7 +243,7 @@ const switchc = new SubCommand(
         content += `switched to list "${args.get("content")}"`;
         action.reply(message, {
             content: content,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -280,7 +280,7 @@ const addTask = new SubCommand(
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an item to add to the list",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -301,7 +301,7 @@ const addTask = new SubCommand(
         }
         action.reply(message, {
             content: `added ${args.get("content")} to list "${whichList}"`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -338,7 +338,7 @@ const removeTask = new SubCommand(
         if (!args.get("content")) {
             action.reply(message, {
                 content: "you need to supply an item to remove from the list",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -349,7 +349,7 @@ const removeTask = new SubCommand(
         if (isNaN(taskIndex) || taskIndex < 1 || taskIndex > listLength) {
             action.reply(message, {
                 content: "invalid task index",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -362,7 +362,7 @@ const removeTask = new SubCommand(
         }
         action.reply(message, {
             content: `removed task #${taskIndex} from list "${whichList}": "${task.value}"`,
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -403,12 +403,12 @@ const checkOffTask = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args, fromInteraction, gConfig, isButton) {
+    async function execute(message, args, fromInteraction, gconfig, isButton) {
         if (!args.get("content")) {
             action.reply(message, {
                 content:
                     "you need to supply an item to check off from the list",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -420,7 +420,7 @@ const checkOffTask = new SubCommand(
         if (isNaN(taskIndex) || taskIndex < 1 || taskIndex > listLength) {
             action.reply(message, {
                 content: "invalid task index",
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
@@ -443,12 +443,12 @@ const checkOffTask = new SubCommand(
             message.deferUpdate();
             return;
         }
-        action.reply(message, { content: repl, ephemeral: true });
+        action.reply(message, { content: repl, ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
 const buttonFunctions = {
-    add: async function (interaction) {
+    add: async function (interaction, gconfig) {
         const modal = new ModalBuilder();
         modal.setTitle("Add Task");
         modal.setCustomId("add");
@@ -469,11 +469,11 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await addTask.execute(interaction, args, true, undefined, true);
+                await addTask.execute(interaction, args, true, gconfig, true);
             })
             .catch(log.error);
     },
-    remove: async function (interaction) {
+    remove: async function (interaction, gconfig) {
         const modal = new ModalBuilder();
         modal.setTitle("Remove Task");
         modal.setCustomId("remove");
@@ -498,13 +498,13 @@ const buttonFunctions = {
                     interaction,
                     args,
                     true,
-                    undefined,
+                    gconfig,
                     true
                 );
             })
             .catch(log.error);
     },
-    check: async function (interaction) {
+    check: async function (interaction, gconfig) {
         const modal = new ModalBuilder();
         modal.setTitle("Check Task");
         modal.setCustomId("check");
@@ -531,13 +531,14 @@ const buttonFunctions = {
                     interaction,
                     args,
                     true,
-                    undefined,
-                    true
+                    gconfig,
+                    true,
+                    gconfig
                 );
             })
             .catch(log.error);
     },
-    switch: async function (interaction) {
+    switch: async function (interaction, gconfig) {
         const modal = new ModalBuilder();
         modal.setTitle("Switch Lists");
         modal.setCustomId("switch");
@@ -560,21 +561,21 @@ const buttonFunctions = {
                 const args = new Collection();
                 args.set("content", input);
                 interaction.author = interaction.user;
-                await switchc.execute(interaction, args, true, undefined, true);
+                await switchc.execute(interaction, args, true, gconfig, true, gconfig);
             })
             .catch(log.error);
     },
 };
 
-function onComponentCollect(interaction) {
+function onComponentCollect(interaction, gconfig) {
     if (!interaction.isButton()) return;
     const button = interaction.customId;
     if (button in buttonFunctions) {
-        return buttonFunctions[button](interaction);
+        return buttonFunctions[button](interaction, gconfig);
     } else {
         return action.reply(interaction, {
             content: "how tf did you press an invalid button 😭😭",
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 }
@@ -628,7 +629,7 @@ const command = new Command(
         }
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const whichList = whichListForUser[message.author.id] || "main";
         const l = ensureList(message.author.id, whichList);
         const list = readList(message.author.id, whichList);
@@ -652,14 +653,16 @@ const command = new Command(
         const sent = await action.reply(message, {
             embeds: [embed],
             components: [ActionRow],
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
         sent.createMessageComponentCollector({
             ComponentType: ComponentType.Button,
             time: 360_000,
             filter: (interaction) => interaction.user.id === message.author.id,
         })
-            .on("collect", onComponentCollect)
+            .on("collect", (interaction) => {
+                onComponentCollect(interaction, gconfig);
+            })
             .on("end", () => {
                 if (latestEmbeds[message.author.id]) {
                     latestEmbeds[message.author.id].message = null;

@@ -56,7 +56,7 @@ const command = new Command(
             const result = await (async function () {
                 return await eval(args.get("code"));
             })();
-            if (result) {
+            if (result !== undefined) {
                 action.reply(message, `result: \`\`\`${result}\`\`\``);
                 return result;
             }

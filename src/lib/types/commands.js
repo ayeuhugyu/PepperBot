@@ -48,6 +48,10 @@ export class BaseCommandData {
         this.disabledContexts = disabledContexts;
         return this;
     }
+    setdisableExternalGuildUsage(disableExternalGuildUsage) {
+        this.disableExternalGuildUsage = disableExternalGuildUsage;
+        return this;
+    }
 }
 
 export class SubCommandData extends SlashCommandSubcommandBuilder {
@@ -71,6 +75,7 @@ export class SubCommandData extends SlashCommandSubcommandBuilder {
 export class CommandData extends SlashCommandBuilder {
     primarySubcommand = undefined;
     integration_types = [0, 1];
+    disableExternalGuildUsage = false;
     constructor() {
         super();
         for (const method of Object.getOwnPropertyNames(
@@ -80,6 +85,7 @@ export class CommandData extends SlashCommandBuilder {
                 this[method] = BaseCommandData.prototype[method];
             }
         }
+        this.setContexts([0, 1, 2]);
     }
     setPrimarySubcommand(primarySubcommand) {
         this.primarySubcommand = primarySubcommand;
@@ -102,10 +108,41 @@ export class Command {
                     return;
                 }
             }
+            this.inputType = `${fromInteraction ? "interaction" : "text"}`;
+            if (this.data.invalidInputTypes) {
+                if (this.data.invalidInputTypes.includes(this.inputType)) {
+                    action.reply(message, {
+                        content: `input type \`${this.inputType}\` is marked as invalid for this command`,
+                        ephemeral: true,
+                    });
+                    return;
+                }
+            }
+            this.inputContext = `${message.guild ? "guild" : "dm"}`;
+            if (this.data.disabledContexts) {
+                if (this.data.disabledContexts.includes(this.inputContext)) {
+                    action.reply(message, {
+                        content: `input context \`${this.inputContext}\` is marked as invalid for this command`,
+                        ephemeral: true,
+                    });
+                    return;
+                }
+            }
+            this.isExternalGuild = (message.appPermissions && !message.appPermissions.has("Administrator"))
+            if (this.data.disableExternalGuildUsage) {
+                if (this.isExternalGuild) {
+                    action.reply(message, {
+                        content: `this command is disabled for use in guilds the bot is not in`,
+                        ephemeral: true,
+                    });
+                    return;
+                }
+            }
+            console.log(`inputContext: ${this.inputContext}, disabledContexts: ${this.disabledContexts}`);
             let shouldNotRun = false;
             if (this.data.permissions && this.data.permissions.length > 0) {
                 for (let permission of this.data.permissions) {
-                    if (!message.member.permissions.has(permission)) {
+                    if (message.member && message.member.permissions && message.member.permissions.has && !message.member.permissions.has(permission)) {
                         if (!message.author.bot) {
                             message.content +=
                                 "**This user tried to use a command they don't have the permissions to use. Make fun of this user!**";
@@ -166,26 +203,6 @@ export class Command {
                             ephemeral: true,
                         });
                     }
-                    return;
-                }
-            }
-            this.inputType = `${fromInteraction ? "interaction" : "text"}`;
-            if (this.invalidInputTypes) {
-                if (this.invalidInputTypes.includes(this.inputType)) {
-                    action.reply(message, {
-                        content: `input type \`${this.inputType}\` is marked as invalid for this command`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
-            }
-            this.inputContext = `${message.guild ? "guild" : "dm"}`;
-            if (this.disabledContexts) {
-                if (this.disabledContexts.includes(this.inputContext)) {
-                    action.reply(message, {
-                        content: `input context \`${this.inputContext}\` is marked as invalid for this command`,
-                        ephemeral: true,
-                    });
                     return;
                 }
             }

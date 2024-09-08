@@ -3,6 +3,7 @@ import fs from "fs";
 import { tokenize, textify } from "../lib/tokenizer.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import * as globals from "../lib/globals.js";
+import { integrations } from "googleapis/build/src/apis/integrations/index.js";
 
 const config = globals.config;
 
@@ -91,8 +92,12 @@ const command = new Command(
     async function getArguments(message) {
         return null;
     },
-    async function execute(message, args) {
-        const wordsCount = random(1, 25); // this number is the max words
+    async function execute(message, args, isInteraction, gconfig) {
+        const wordsCount = Math.floor(Math.random() * 25) + 1;
+        const sentMessage = await action.reply(message, {
+            content: "processing...",
+            ephemeral: gconfig.useEphemeralReplies,
+        })
         const msg = await generate({ source: text, wordsCount: wordsCount });
         if (msg.replaceAll(" ", "") === "") {
             let newText = await generate({
@@ -115,10 +120,10 @@ const command = new Command(
                     break;
                 }
             }
-            action.reply(message, { content: newText, ephemeral: true });
+            action.editMessage(sentMessage, { content: newText, ephemeral: gconfig.useEphemeralReplies });
             return;
         }
-        action.reply(message, { content: msg, ephemeral: true });
+        action.editMessage(sentMessage, { content: msg, ephemeral: gconfig.useEphemeralReplies });
     }
 );
 

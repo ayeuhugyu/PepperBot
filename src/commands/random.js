@@ -116,6 +116,7 @@ rmessagedata.setPermissions([]);
 rmessagedata.setPermissionsReadable("");
 rmessagedata.setWhitelist([]);
 rmessagedata.setNormalAliases(["randommessage"]);
+rmessagedata.setdisableExternalGuildUsage(true)
 rmessagedata.setCanRunFromBot(true);
 const rmessage = new SubCommand(
     rmessagedata,
@@ -187,6 +188,8 @@ sounddata.setPermissionsReadable("");
 sounddata.setWhitelist([]);
 sounddata.setNormalAliases(["randomsound"]);
 sounddata.setCanRunFromBot(true);
+sounddata.setdisableExternalGuildUsage(true)
+sounddata.setDisabledContexts(["dm"])
 const sound = new SubCommand(
     sounddata,
     async function getArguments(message) {
@@ -288,7 +291,7 @@ const pepper = new SubCommand(
     async function getArguments(message) {
         return new Collection();
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const maxRan = pepperfiles.length;
         const randomnum = Math.floor(Math.random() * maxRan);
         const file = pepperfiles[randomnum];
@@ -299,7 +302,7 @@ const pepper = new SubCommand(
         action.reply(message, {
             embeds: [embed],
             files: [`resources/the_peppers/${file}`],
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -317,7 +320,7 @@ const freshie = new SubCommand(
     async function getArguments(message) {
         return new Collection();
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const freshie = createRandomFreshie();
         const embed = await default_embed();
         const boons = freshie.boonsAndFlaws.boons;
@@ -360,7 +363,7 @@ POINTS LEFT: ${freshie.pointsLeft}`);
             files: [
                 `resources/images/deepwokenRaces/${freshie.race}/${freshie.racialVariant}.png`,
             ],
-            ephemeral: true,
+            ephemeral: gconfig.useEphemeralReplies,
         });
     }
 );
@@ -380,7 +383,7 @@ const buildidea = new SubCommand(
         args.set("weighted", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         let buildIdea;
         const embed = default_embed();
         embed.setTitle("Random Build Idea");
@@ -394,7 +397,7 @@ OATH: ${buildIdea.oath}
 FOCUS: ${buildIdea.focus}
 `;
         embed.setDescription(text);
-        action.reply(message, { embeds: [embed], ephemeral: true });
+        action.reply(message, { embeds: [embed], ephemeral: gconfig.useEphemeralReplies });
     }
 );
 

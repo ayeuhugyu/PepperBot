@@ -32,6 +32,20 @@ p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 
 **actual content:**
 
+- USER. INSTALL. APPS.
+  - i believe i have fixed most bugs relating to it, however since i didn't design these commands like this was going to happen it's very unlikely they will all work first try.
+- new guild config option: useEphemeralReplies
+- all command replies are no longer ephemeral by default, and only the ones where it is supported will be ephemeral if you enable useEphemeralReplies in your guildConfiguration
+- many more commands can no longer be used in DMs (due to their functionality being useless or broken), here's the list:
+  - p/embed send
+  - p/force
+  - p/random sound
+  - p/setprompt
+- added BaseCommandData.disableExternalGuildUsage (controls whether the command can be used in a guild the bot is not currently in). here's the list of commands affected by this:
+  - p/force
+  - p/random message
+  - p/random sound
+
 **fixes/optimizations:**
 
 - updated node (v19.0.0 -> v22.0.0), npm, discord.js (v14.14.1 -> v14.16.1), and @distube/ytdl-core
@@ -40,3 +54,14 @@ p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 - p/vc join now differentiates between invalid vc type errors and nonreal channel errors
 - p/random jak & p/jak now have processing messages
 - commandData now has default values for everything
+- fixed p/eval saying nothing was returned if the result is falsy
+- messages without channels are now replied to, but a warning is still generated
+- p/chatbubble replies are no longer ephemeral
+- p/markov is no longer ephemeral
+- default guild config is now returned if a nonexistant guild config is fetched
+- interaction options now have a scuffed "set" function, this should fix many commands
+- fixed p/configure from slash commands
+- fixed a typo in one of the warnings 😨
+- fixed invalidInputTypes and invalidInputContexts
+- fixed missing arguments for p/addsound
+- partially rewrote README.md, haven't finished the rewrite yet but i've decided to make it contain info about how stuff works rather than how to make commands

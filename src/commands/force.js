@@ -24,6 +24,7 @@ replydata.setPermissionsReadable("");
 replydata.setWhitelist([]);
 replydata.setCanRunFromBot(true);
 replydata.setAliases([]);
+replydata.setDisabledContexts(["dm"])
 replydata.setNormalAliases(["reply"])
 replydata.addStringOption((option) =>
     option.setName("message").setDescription("id of the message to reply to").setRequired(true)
@@ -44,7 +45,7 @@ const reply = new SubCommand(
         }
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get('message')) {
             let didError = false
             try {
@@ -52,7 +53,7 @@ const reply = new SubCommand(
             } catch (e) {
                 action.reply(message, {
                     content: `invalid message: \`${args.get("message")}\``,
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
                 didError = true
             }
@@ -61,7 +62,7 @@ const reply = new SubCommand(
             if (!requestedMessage) {
                 action.reply(message, {
                     content: `invalid message: \`${args.get("message")}\``,
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
                 return;
             }
@@ -73,7 +74,7 @@ const reply = new SubCommand(
                     log.error(e)
                     action.reply(message, {
                         content: "an error occured while reacting to this message, the error has been logged.",
-                        ephemeral: true
+                        ephemeral: gconfig.useEphemeralReplies
                     })
                 }
                 if (didError) return
@@ -82,19 +83,19 @@ const reply = new SubCommand(
                 } else {
                     action.reply(message, {
                         content: "the deed is done.",
-                        ephemeral: true
+                        ephemeral: gconfig.useEphemeralReplies
                     })
                 }
             } else {
                 action.reply(message, {
                     content: "how tf am i supposed to reply with nothing baffoon...",
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
             }
         } else {
             action.reply(message, {
                 content: "supply a message you baffoon!",
-                ephemeral: true
+                ephemeral: gconfig.useEphemeralReplies
             })
         }
     },
@@ -110,6 +111,7 @@ reactdata.setWhitelist([]);
 reactdata.setCanRunFromBot(true);
 reactdata.setAliases([]);
 reactdata.setNormalAliases(["react"])
+reactdata.setDisabledContexts(["dm"])
 reactdata.addStringOption((option) =>
     option.setName("message").setDescription("id of the message to react to").setRequired(true)
 );
@@ -129,7 +131,7 @@ const react = new SubCommand(
         }
         return args;
     },
-    async function execute(message, args, fromInteraction) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get('message')) {
             let didError = false
             try {
@@ -137,7 +139,7 @@ const react = new SubCommand(
             } catch (e) {
                 action.reply(message, {
                     content: `invalid message: \`${args.get("message")}\``,
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
                 didError = true
             }
@@ -146,7 +148,7 @@ const react = new SubCommand(
             if (!requestedMessage) {
                 action.reply(message, {
                     content: `invalid message: \`${args.get("message")}\``,
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
                 return;
             }
@@ -157,7 +159,7 @@ const react = new SubCommand(
                     if (e.code === 10014) {
                         action.reply(message, {
                             content: `invalid emoji: \`${args.get("reaction")}\``,
-                            ephemeral: true
+                            ephemeral: gconfig.useEphemeralReplies
                         })
                         didError = true
                         return;
@@ -166,7 +168,7 @@ const react = new SubCommand(
                     log.error(e)
                     action.reply(message, {
                         content: "an error occured while reacting to this message, the error has been logged.",
-                        ephemeral: true
+                        ephemeral: gconfig.useEphemeralReplies
                     })
                 }
                 if (didError) return
@@ -175,19 +177,19 @@ const react = new SubCommand(
                 } else {
                     action.reply(message, {
                         content: "the deed is done.",
-                        ephemeral: true
+                        ephemeral: gconfig.useEphemeralReplies
                     })
                 }
             } else {
                 action.reply(message, {
                     content: "supply a reaction you baffoon!",
-                    ephemeral: true
+                    ephemeral: gconfig.useEphemeralReplies
                 })
             }
         } else {
             action.reply(message, {
                 content: "supply a message you baffoon!",
-                ephemeral: true
+                ephemeral: gconfig.useEphemeralReplies
             })
         }
     },
@@ -202,6 +204,7 @@ dmdata.setPermissionsReadable("");
 dmdata.setWhitelist([]);
 dmdata.setCanRunFromBot(false);
 dmdata.setAliases(["dmuser", "send"]);
+dmdata.setDisabledContexts(["dm"])
 dmdata.setNormalAliases(["dmuser", "dm", "send"])
 dmdata.addUserOption((option) =>
     option.setName("user").setDescription("who to dm").setRequired(true)
@@ -240,7 +243,10 @@ const dm = new SubCommand(
         }
         return args;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
+        if (args.get("text") && !args.get("message")) {
+            args.set("message", args.get("text"));
+        }
         if (args.get("user")) {
             if (args.get("message")) {
                 action.sendDM(args.get("user"), args.get("message"));
@@ -248,7 +254,7 @@ const dm = new SubCommand(
                 if (isInteraction) {
                     action.reply(message, {
                         content: "sent!",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                 }
             } else {
@@ -268,6 +274,7 @@ saydata.setPermissionsReadable("");
 saydata.setWhitelist([]);
 saydata.setNormalAliases(["say"])
 saydata.setCanRunFromBot(true);
+saydata.setDisabledContexts(["dm"])
 saydata.addStringOption((option) =>
     option.setName("message").setDescription("what to say").setRequired(true)
 );
@@ -300,6 +307,9 @@ const say = new SubCommand(
             action.reply(message, `bro really thought 😂😂😂`);
             return;
         }
+        if (!args.get("message") && args.get("text")) {
+            args.set("message", args.get("text"));
+        }
         if (args.get("message") || args.get("attachments")) {
             const obj = {};
             if (args.get("message")) {
@@ -325,7 +335,7 @@ const say = new SubCommand(
             if (fromInteraction) {
                 action.reply(message, {
                     content: "the deed is done.",
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
             }
             action.deleteMessage(message);
@@ -342,8 +352,9 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+data.setdisableExternalGuildUsage(true)
 data.setAliases(["sounds"]);
+data.setDisabledContexts(["dm"])
 data.addStringOption((option) =>
     option
         .setName("subcommand")
@@ -395,17 +406,17 @@ const command = new Command(
         args.set("_SUBCOMMAND", message.content.split(" ")[1]);
         return args;
     },
-    async function execute(message, args, fromInteraction, guildConfig) {
+    async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("_SUBCOMMAND")) {
             action.reply(message, {
                 content: "invalid subcommand: " + args.get("_SUBCOMMAND"),
-                ephemeral: true
+                ephemeral: gconfig.useEphemeralReplies
             })
             return;
         }
         action.reply(message, {
             content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: true
+            ephemeral: gconfig.useEphemeralReplies
         })
     },
     [say, dm, react, reply] // subcommands

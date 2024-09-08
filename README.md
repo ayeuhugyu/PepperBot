@@ -1,4 +1,4 @@
-finally got around to rewriting this
+finally got around to at least starting to rewrite this
 
 basically:\
 this is a discord bot\

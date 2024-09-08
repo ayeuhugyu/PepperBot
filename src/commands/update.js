@@ -37,7 +37,7 @@ const command = new Command(
         );
         return args;
     },
-    async function execute(message, args, isInteraction) {
+    async function execute(message, args, isInteraction, gconfig) {
         if (args.get("message")) {
             const persistent_data = await JSON.parse(
                 fs.readFileSync("resources/data/persistent_data.json")
@@ -80,7 +80,7 @@ const command = new Command(
             );
 
             if (isInteraction) {
-                action.reply(message, { content: "sent!", ephemeral: true });
+                action.reply(message, { content: "sent!", ephemeral: gconfig.useEphemeralReplies });
             }
             action.deleteMessage(message);
             sent.crosspost();

@@ -84,7 +84,6 @@ const command = new Command(
             action.reply(message, {
                 content:
                     "this image does not appear to have a valid height or width defined. please try again with a different image.",
-                ephemeral: true,
             });
             return;
         }
@@ -92,13 +91,11 @@ const command = new Command(
             action.reply(message, {
                 content:
                     "image too big, please try again with a smaller image.",
-                ephemeral: true,
             });
             return;
         }
 
         const sentReply = await action.reply(message, {
-            ephemeral: true,
             content: "processing...",
         });
         let inputImg;
@@ -118,7 +115,6 @@ const command = new Command(
         }
         if (errored) {
             action.editMessage(sentReply, {
-                ephemeral: true,
                 content:
                     "there was an error processing/fetching this image, see logs for more details",
             });
@@ -166,7 +162,7 @@ const command = new Command(
         if (replied) return;
         replied = true;
         action.editMessage(sentReply, {
-            content: "hewwo :3 here is your chat bubble pookie-wookie bear!",
+            content: "here is your Item Of Iterest:tm:",
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),
             ],

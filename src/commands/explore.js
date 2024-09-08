@@ -48,7 +48,7 @@ const command = new Command(
         );
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, fromInteraction, gconfig) {
         const embed = await default_embed();
         let guilds = await client.shard.fetchClientValues("guilds.cache");
         let hiddenGuilds = Object.entries(guildConfigs.guildConfigs)
@@ -77,7 +77,7 @@ const command = new Command(
                 }`
             );
             embed.setDescription(guildList);
-            action.reply(message, { embeds: [embed], ephemeral: true });
+            action.reply(message, { embeds: [embed], ephemeral: gconfig.useEphemeralReplies });
             return;
         }
         if (args.get("server")) {
@@ -86,7 +86,7 @@ const command = new Command(
                 action.reply(message, {
                     content:
                         "this server is hidden, so i can't display info for it",
-                    ephemeral: true,
+                    ephemeral: gconfig.useEphemeralReplies,
                 });
                 return;
             }
@@ -100,7 +100,7 @@ const command = new Command(
                 if (!guild) {
                     action.reply(message, {
                         content: "server not found",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     return;
                 }
@@ -129,7 +129,7 @@ const command = new Command(
             const response = await action.reply(message, {
                 embeds: [embed],
                 components: [actionRow],
-                ephemeral: true,
+                ephemeral: gconfig.useEphemeralReplies,
             });
             try {
                 const confirmation = await response.awaitMessageComponent({
@@ -138,7 +138,7 @@ const command = new Command(
                 if (confirmation.customId === "invite") {
                     confirmation.reply({
                         content: "creating invite... please wait...",
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                     const channel = guild.channels.cache.find(
                         (channel) => channel.type == 0
@@ -151,7 +151,7 @@ const command = new Command(
                     });
                     confirmation.editReply({
                         content: invite.url,
-                        ephemeral: true,
+                        ephemeral: gconfig.useEphemeralReplies,
                     });
                 }
             } catch (e) {
