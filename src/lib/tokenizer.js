@@ -1,3 +1,5 @@
+import * as log from "./log.js";
+
 const NEWLINE_PLACEHOLDER = "§";
 const newlinesRegex = /\n\s*/g;
 
@@ -16,10 +18,11 @@ function exists(entity) {
 }
 
 export function tokenize(text) {
-    return text
+    const tokenized = text
         .replaceAll(newlinesRegex, NEWLINE_PLACEHOLDER)
         .split(tokenizeRegex)
         .filter(exists);
+    return tokenized;
 }
 
 const PARAGRAPH_CHARACTER = " \n";

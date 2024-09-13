@@ -344,12 +344,12 @@ async function processOtherStuff(message) {
     const gconfig = guildConfigs.getGuildConfig(message.guild.id)
     if (gconfig.autoBuildPreview) {
         const buildLinkRegex = commonRegex.deepwokenBuildLink
-        const buildID = message.content.match(buildLinkRegex)[1];
+        const buildID = message.content.match(buildLinkRegex)?.[1];
         if (buildID) {
             const command = await import("../commands/preview.js")
             const args = new Collection()
-            args.set("messageid", message.id)
-            await command.execute(message, args, false)
+            args.set("buildid", buildID)
+            await command.default.execute(message, args, false)
         }
         
     }
@@ -365,7 +365,7 @@ export default {
             processDiabolicalEvent(message),
             processGPTResponse(message),
             processCommand(message),
-            processOtherStuff(message)
+            processOtherStuff(message),
         ]);
         logmessage(message);
     },

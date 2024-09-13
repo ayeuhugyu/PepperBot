@@ -34,7 +34,6 @@ export function buildReformatter(build) {
         },
         boons: [],
         flaws: [],
-        mantras: {},
         stats: {
             preshrine: build.preShrine,
             postshrine: build.postShrine || build.attributes,
@@ -58,8 +57,8 @@ export function cleanBuildToHumanReadable(build) {
     }
     let pages = [
         {
-            title: "Meta, Traits & Mantras",
-            description: `Name: ${build.meta.title}\nDescription: ${build.meta.description}\nAuthor: ${build.meta.author}\nOrigin: ${build.meta.origin}\nOath: ${build.meta.oath}\nOutfit: ${build.meta.outfit}\nRace: ${build.meta.race}\nMurmur: ${build.meta.murmur}\nResonance: ${build.meta.resonance}\nWeapon: ${build.weapon}`,
+            title: build.meta.title || "None",
+            description: `Name: ${build.meta.title || "None"}\nDescription: ${build.meta.description || "None"}\nAuthor: ${build.meta.author || "None"}\nOrigin: ${build.meta.origin}\nOath: ${build.meta.oath}\nOutfit: ${build.meta.outfit}\nRace: ${build.meta.race}\nMurmur: ${build.meta.murmur}\nResonance: ${build.meta.resonance}\nWeapon: ${build.weapon || "None"}`,
             fields: [
                 {
                     name: "Traits",
@@ -71,19 +70,11 @@ export function cleanBuildToHumanReadable(build) {
                     value: Object.entries(build.mantras).map(([key, value]) => `${key}`).join("\n") || "None",
                     inline: true
                 },
-            ]
-        },
-        {
-            title: "Boons & Flaws",
-            fields: [
                 {
-                    name: "Boons",
-                    value: build.boons.join("\n") || "None"
+                    name: "Boons & Flaws",
+                    value: `Boons: ${build.boons.join(", ") || "None"}\nFlaws: ${build.flaws.join(", ") || "None"}`,
+                    inline: true
                 },
-                {
-                    name: "Flaws",
-                    value: build.flaws.join("\n") || "None"
-                }
             ]
         },
         {

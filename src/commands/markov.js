@@ -63,8 +63,7 @@ function* generateChain(startText, transitions, sampleSize) {
 export function generate({ source, start = null, wordsCount = 100 } = {}) {
     const corpus = tokenize(String(source));
     const samples = sliceCorpus(corpus, wordsCount);
-    const transitions = collectTransitions(samples, wordsCount);
-
+    const transitions = collectTransitions(samples, 20);
     const generator = generateChain(start, transitions, wordsCount);
     const generatedTokens = [];
 
@@ -77,6 +76,9 @@ export function generate({ source, start = null, wordsCount = 100 } = {}) {
 const text = await fs
     .readFileSync(`logs/messages.log`, "utf-8")
     .replaceAll("\n", " \n");
+//const corpus = tokenize(text);
+//const samples = sliceCorpus(corpus, 20);
+//const transitions = collectTransitions(samples, 20);
 
 const data = new CommandData();
 data.setName("markov");
@@ -119,6 +121,13 @@ const command = new Command(
                 } else {
                     break;
                 }
+            }
+            if (newText.replaceAll(" ", "") === "") {
+                action.editMessage(sentMessage, {
+                    content: "generated message contained no content",
+                    ephemeral: gconfig.useEphemeralReplies,
+                });
+                return;
             }
             action.editMessage(sentMessage, { content: newText, ephemeral: gconfig.useEphemeralReplies });
             return;

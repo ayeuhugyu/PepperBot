@@ -36,7 +36,7 @@ const command = new Command(
         const args = new Collection();
         const prefix = gconfig.prefix || config.generic.prefix
         args.set(
-            "messageid",
+            "buildid",
             message.content
                 .slice(prefix.length + commandLength)
         );
@@ -49,20 +49,30 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("messageid")) {
-            return action.reply(message, "provide a message or reply, baffoon!");
-        }
         let fetchedMessage
-        try {
-            fetchedMessage = await message.channel.messages.fetch(args.get("messageid"));
-        } catch (e) {}
-        if (!fetchedMessage) {
-            return action.reply(message, `couldn't fetch \`${args.get('messageid')}\` in this channel`);
+        if (args.get("messageid")) {
+            try {
+                fetchedMessage = await message.channel.messages.fetch(args.get("messageid"));
+            } catch (e) {
+                // heres something so eslint doesn't get mad at me
+            }
+            if (!fetchedMessage) {
+                return action.reply(message, `couldn't fetch \`${args.get('messageid')}\` in this channel`);
+            }
+            const buildLinkRegex = commonRegex.deepwokenBuildLink
+            const buildID = fetchedMessage.content.match(buildLinkRegex)?.[1];
+            if (!buildID) {
+                return action.reply(message, `couldn't find a build in the message`);
+            }
+            args.set("buildid", buildID);
         }
-        const buildLinkRegex = commonRegex.deepwokenBuildLink
-        const buildID = fetchedMessage.content.match(buildLinkRegex)[1];
-        const response = await builderutil.fetchBuild(buildID);
-        //console.log(response)
+        if (!args.get("buildid")) {
+            return action.reply(message, `no build id provided`);
+        }
+        const response = await builderutil.fetchBuild(args.get("buildid"));
+        if (response.status === 'failed') {
+            return action.reply(message, `couldn't fetch build \`${args.get('buildid')}\``);
+        }
         const build = builderutil.buildReformatter(response.content);
         //console.log(build)
         const buildPages = builderutil.cleanBuildToHumanReadable(build);
@@ -79,13 +89,13 @@ const command = new Command(
             }
             menu.full.addPage(embed);
         });
-        const sent = await action.reply(fetchedMessage, {
+        const sent = await action.reply(fetchedMessage || message, {
             embeds: [menu.pages[menu.currentPage]],
             components: [menu.actionRow],
             ephemeral: gconfig.useEphemeralReplies,
         });
         menu.full.begin(sent, 240_000, menu)
-        if (fromInteraction) {
+        if (fromInteraction && fetchedMessage) {
             action.reply(message, `sent preview for \`${build.meta.title}\``);
         }
     },

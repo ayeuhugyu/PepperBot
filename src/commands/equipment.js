@@ -205,6 +205,10 @@ const godroll = new SubCommand(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
+        if (!args.get("equipment")) {
+            action.reply(message, { content: "no equipment specified", ephemeral: gconfig.useEphemeralReplies });
+            return;
+        }
         const equipment = deepwokenequipment.getEquipment(args.get("equipment").replaceAll("_", " ").replaceAll("-", " ").replaceAll("+", " "));
         if (!args.get("stat")) {
             args.set("stat", "health");
