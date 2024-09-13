@@ -12,5 +12,6 @@
     "disableGPTResponses": false,
     "blacklistedGPTResponseChannelIds": [],
     "prefix": "p/",
-    "useEphemeralReplies": false
+    "useEphemeralReplies": false,
+    "autoBuildPreview": false
 }

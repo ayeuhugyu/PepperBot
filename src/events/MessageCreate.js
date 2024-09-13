@@ -18,6 +18,7 @@ import fsExtra from "fs-extra";
 import cheerio from "cheerio";
 import guildConfigs from "../lib/guildConfigs.js";
 import { start } from "repl";
+import commonRegex from "../lib/commonRegex.js";
 
 async function fetchTitle(url) {
     try {
@@ -339,6 +340,21 @@ async function getIsDisgraceful(message) {
     return false;
 }
 
+async function processOtherStuff(message) {
+    const gconfig = guildConfigs.getGuildConfig(message.guild.id)
+    if (gconfig.autoBuildPreview) {
+        const buildLinkRegex = commonRegex.deepwokenBuildLink
+        const buildID = message.content.match(buildLinkRegex)[1];
+        if (buildID) {
+            const command = await import("../commands/preview.js")
+            const args = new Collection()
+            args.set("messageid", message.id)
+            await command.execute(message, args, false)
+        }
+        
+    }
+}
+
 export default {
     name: Events.MessageCreate,
     async execute(message) {
@@ -349,6 +365,7 @@ export default {
             processDiabolicalEvent(message),
             processGPTResponse(message),
             processCommand(message),
+            processOtherStuff(message)
         ]);
         logmessage(message);
     },

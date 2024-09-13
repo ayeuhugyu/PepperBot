@@ -11,57 +11,24 @@ shit on the todo list:
 [5] - p/todo pages if list length > 15
 [6] - peppersite statistics on most visited pages
 [7] - using p/queue while p/playurl is playing converts it to a queue system
-[8] - somehow fix p/queue only retrieving 50 playlist items despite the limit being set to 150 (its probably google's thing i likely can't do anything about it)
-[9] - peppersite resources viewer
-[10] - p/jak viewer
-[11] - reminder / scheduling capabilities
-[12] - p/notice multi-shard fix
-[13] - custom command aliases
-[14] - custom command permissions from gconfig
-[15] - p/queue play pauses instead of stopping
-[16] - p/info subcommands for other varieties of info
-[17] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
-[18] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
-[19] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
-[20] - logs page removes content at the bottom after you've scrolled wayy past it
-[21] - p/random jak processing message
+[8] - peppersite resources viewer
+[9] - p/jak viewer
+[10] - reminder / scheduling capabilities
+[11] - p/notice multi-shard fix
+[12] - custom command aliases
+[13] - custom command permissions from gconfig
+[14] - p/info subcommands for other varieties of info
+[15] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
+[16] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
+[17] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+[18] - logs page removes content at the bottom after you've scrolled wayy past it
+[19] - rewrite readme.md to include info about stuff like what the lib files do and the forking pattern
+[20] - make a better build previewer than aen does (cuz aen's is mid asf)
 
 to add to todo list:
 
 p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 
 **actual content:**
-
-- USER. INSTALL. APPS.
-  - i believe i have fixed most bugs relating to it, however since i didn't design these commands like this was going to happen it's very unlikely they will all work first try.
-- new guild config option: useEphemeralReplies
-- all command replies are no longer ephemeral by default, and only the ones where it is supported will be ephemeral if you enable useEphemeralReplies in your guildConfiguration
-- many more commands can no longer be used in DMs (due to their functionality being useless or broken), here's the list:
-  - p/embed send
-  - p/force
-  - p/random sound
-  - p/setprompt
-- added BaseCommandData.disableExternalGuildUsage (controls whether the command can be used in a guild the bot is not currently in). here's the list of commands affected by this:
-  - p/force
-  - p/random message
-  - p/random sound
-
+- p/preview, an upgraded version of aen's deepwoken build previewer
 **fixes/optimizations:**
-
-- updated node (v19.0.0 -> v22.0.0), npm, discord.js (v14.14.1 -> v14.16.1), and @distube/ytdl-core
-- made p/vc join much more reliable with slash commands
-- p/vc join now informs you of what vc was requested when it fails
-- p/vc join now differentiates between invalid vc type errors and nonreal channel errors
-- p/random jak & p/jak now have processing messages
-- commandData now has default values for everything
-- fixed p/eval saying nothing was returned if the result is falsy
-- messages without channels are now replied to, but a warning is still generated
-- p/chatbubble replies are no longer ephemeral
-- p/markov is no longer ephemeral
-- default guild config is now returned if a nonexistant guild config is fetched
-- interaction options now have a scuffed "set" function, this should fix many commands
-- fixed p/configure from slash commands
-- fixed a typo in one of the warnings 😨
-- fixed invalidInputTypes and invalidInputContexts
-- fixed missing arguments for p/addsound
-- partially rewrote README.md, haven't finished the rewrite yet but i've decided to make it contain info about how stuff works rather than how to make commands
