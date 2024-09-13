@@ -27,7 +27,7 @@ data.setCanRunFromBot(true);
 data.setAliases(["buildpreview", "build"]);
 data.setdisableExternalGuildUsage(true);
 data.addStringOption((option) =>
-    option.setName("messageid").setDescription("ID of the message w/ the build you want to preview").setRequired(true)
+    option.setName("buildid").setDescription("ID of the build you want to preview").setRequired(true)
 );
 const command = new Command(
     data,

@@ -30,5 +30,8 @@ to add to todo list:
 p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 
 **actual content:**
-- p/preview, an upgraded version of aen's deepwoken build previewer
+
+- p/preview, an upgraded version of aen's deepwoken build previewer embed
+- a new guild config that automatically runs p/preview on messages that contain builds
+
 **fixes/optimizations:**
