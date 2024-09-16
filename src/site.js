@@ -20,30 +20,6 @@ const blockedIps = {
 let requestCount = fs.readFileSync("resources/data/requestCount.txt", "utf-8");
 requestCount = parseInt(requestCount);
 
-const logRateLimit = (() => {
-    const ipLogTimes = {};
-    const logInterval = 120000;
-
-    return (ip) => {
-        const now = Date.now();
-        if (!ipLogTimes[ip] || now - ipLogTimes[ip] > logInterval) {
-            log.warn(`rate limit exceeded for ${ip}`);
-            ipLogTimes[ip] = now;
-        }
-    };
-})();
-
-const limiter = rateLimit({
-    windowMs: 2000,
-    max: 50,
-    handler: (req, res, next, options) => {
-        logRateLimit(req.ip);
-        req.socket.destroy(); // Note that this approach is quite aggressive. - Github Copilot
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
 const starts = {};
 
 const app = express();
@@ -119,13 +95,12 @@ app.use((req, res, next) => {
 });
 const dontAllowHostlessRequests = true;
 app.use((req, res, next) => {
-    if (!req.headers.host && dontAllowHostlessRequests) {
-        req.socket.destroy(); // Drop the connection if no host header is present
+    if ((!req.headers.host || !req.headers.host.startsWith("pepperbot.online")) && dontAllowHostlessRequests) {
+        res.status(400).send("Invalid host header");
         return;
     }
     next();
 });
-app.use(limiter);
 app.use((req, res, next) => {
     logAccess(req);
     next();

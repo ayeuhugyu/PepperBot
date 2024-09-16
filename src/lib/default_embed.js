@@ -19,7 +19,7 @@ export default function () {
         name: "PepperBot",
         iconURL:
             "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
-        url: "http://199.58.97.155"
+        url: "https://pepperbot.online"
     });
     return embed;
 }
