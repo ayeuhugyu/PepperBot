@@ -162,7 +162,7 @@ const command = new Command(
         if (replied) return;
         replied = true;
         action.editMessage(sentReply, {
-            content: "here is your Item Of Iterest:tm:",
+            content: "here is your Item Of Interest:tm:",
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),
             ],

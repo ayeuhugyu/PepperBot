@@ -25,7 +25,6 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setAliases(["buildpreview", "build"]);
-data.setdisableExternalGuildUsage(true);
 data.addStringOption((option) =>
     option.setName("buildid").setDescription("ID of the build you want to preview").setRequired(true)
 );

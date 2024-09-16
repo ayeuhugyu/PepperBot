@@ -138,7 +138,6 @@ export class Command {
                     return;
                 }
             }
-            console.log(`inputContext: ${this.inputContext}, disabledContexts: ${this.disabledContexts}`);
             let shouldNotRun = false;
             if (this.data.permissions && this.data.permissions.length > 0) {
                 for (let permission of this.data.permissions) {

@@ -18,10 +18,16 @@ data.setCanRunFromBot(true);
 data.setDMPermission(true);
 data.addStringOption((option) =>
     option
-        .setName("hostprocess")
-        .setDescription("whether or not to restart the host process")
+        .setName("process")
+        .setDescription("what process to restart")
         .setRequired(false)
+        .addChoices([
+            { name: "site", value: "site" },
+            { name: "sharder", value: "sharder" },
+            { name: "shard", value: "shard" },
+        ])
 );
+data.addIntegerOption((option) => option.setName("shardid").setDescription("shard id").setRequired(false));
 const command = new Command(
     data,
     async function getArguments(message, gconfig) {
@@ -36,7 +42,7 @@ const command = new Command(
         } // this is necessary because if there are no arguments supplied argument will be equal to undefined and trim() will not be a function and thus will error
         args.set("process", argument.split(" ")[0]);
         if (args.get("process") == "shard") {
-            args.set("shardId", argument.split(" ")[1]);
+            args.set("shardid", argument.split(" ")[1]);
         }
         return args;
     },
@@ -46,9 +52,9 @@ const command = new Command(
                 if (args.get("process") == "shard") {
                     await action.reply(
                         message,
-                        `restarting shard #${args.get("shardId")}...`
+                        `restarting shard #${args.get("shardid")}...`
                     );
-                    process.send({ action: "restart", process: args.get("process"), shardId: args.get("shardId") });
+                    process.send({ action: "restart", process: args.get("process"), shardId: args.get("shardid") });
                     return;
                 }
                 await action.reply(

@@ -139,7 +139,7 @@ function isImageFile(filename) {
 
 async function fixIncomingMessage(message) {
     let attachedMessage = "\n\n";
-    if (message.attachments.size > 0) {
+    if (message.attachments && message.attachments.size > 0) {
         for (let attachment of message.attachments.values()) {
             if (await isTextFile(attachment.name)) {
                 if (attachment.size <= "25000000") {

@@ -28,7 +28,7 @@ data.addStringOption((option) =>
             { name: "warn.log", value: "warn.log" },
             { name: "error.log", value: "error.log" },
             { name: "fatal.log", value: "fatal.log" },
-            { name: "messages.log", value: "messages.log" }
+            { name: "global.log", value: "global.log" }
         )
 );
 const command = new Command(

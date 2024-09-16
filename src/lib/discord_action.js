@@ -108,10 +108,6 @@ export async function reply(message, content) {
         log.warn("attempt to reply to a message that does not exist");
         return;
     }
-    if (!(typeof content === "string") && !content.ephemeral)
-        if (channel && channel.sendTyping) {
-            channel.sendTyping();
-        }
     let sent;
     const fixed = await fixMsg(content);
     const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;

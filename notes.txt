@@ -31,7 +31,15 @@ p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 
 **actual content:**
 
-- p/preview, an upgraded version of aen's deepwoken build previewer embed
-- a new guild config that automatically runs p/preview on messages that contain builds
+- added 1 new diabolical event
+- fixed a typo in p/chatbubble's response
+- removed a thing that was logging debug info for when i was fixing something (it was truly useless)
+- requests to the site without a host header are now dropped
+- updated p/sendlog's options to include global.log
+- fixed a rare error with a diablocal event (the image file was missing)
+- fixed gpt not responding to messages without an attachments object (actually happened previous patch, had to be done for p/ask to work from slash commands)
+- p/setprompt can be used in dm context now (also happened last patch)
+- p/preview can now be used in external guilds (also last patch)
+- entirely removed the whole "typing" thing, it didn't work half the time, was annoying, and worst of all allowed you to crash the bot super easily
 
 **fixes/optimizations:**

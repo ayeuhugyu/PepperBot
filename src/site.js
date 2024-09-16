@@ -117,6 +117,14 @@ app.use((req, res, next) => {
     }
     next();
 });
+const dontAllowHostlessRequests = true;
+app.use((req, res, next) => {
+    if (!req.headers.host && dontAllowHostlessRequests) {
+        req.socket.destroy(); // Drop the connection if no host header is present
+        return;
+    }
+    next();
+});
 app.use(limiter);
 app.use((req, res, next) => {
     logAccess(req);
@@ -197,6 +205,9 @@ app.get("/read-log", (req, res) => {
     const pretty = req.query.pretty || false;
     const startIndex = req.query.start;
     const endIndex = req.query.end;
+    if (endIndex - startIndex > 250) {
+        return res.status(400).send("too many lines requested");
+    }
     const logPath = `./logs/${logType}.log`;
     try {
         if (!fs.existsSync(logPath)) {
