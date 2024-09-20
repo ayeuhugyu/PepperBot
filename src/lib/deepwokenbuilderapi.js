@@ -77,7 +77,9 @@ export function cleanBuildToHumanReadable(build) {
                 },
             ]
         },
-        {
+    ];
+    if (build.preshrine && build.postshrine) {
+        pages.push({
             title: "Pre-Shrine Stats",
             fields: [
                 {
@@ -96,8 +98,8 @@ export function cleanBuildToHumanReadable(build) {
                     inline: true
                 }
             ]
-        },
-        {
+        });
+        pages.push({
             title: "Post-Shrine Stats",
             fields: [
                 {
@@ -116,8 +118,36 @@ export function cleanBuildToHumanReadable(build) {
                     inline: true
                 }
             ]
-        },
-    ];
+        })
+    } else {
+        if (build.stats.postshrine) {
+            pages.push({
+                title: "Post-Shrine Stats",
+                fields: [
+                    {
+                        name: "Base",
+                        value: Object.entries(build.stats.postshrine.base).map(([key, value]) => `${key}: ${value}`).join("\n"),
+                        inline: true
+                    },
+                    {
+                        name: "Attunement",
+                        value: Object.entries(build.stats.postshrine.attunement).map(([key, value]) => `${key}: ${value}`).join("\n"),
+                        inline: true
+                    },
+                    {
+                        name: "Weapon",
+                        value: Object.entries(build.stats.postshrine.weapon).map(([key, value]) => `${key}: ${value}`).join("\n"),
+                        inline: true
+                    }
+                ]
+            });
+        } else {
+            pages.push({
+                title: "error retrieving build stats",
+                description: "error retrieving build stats"
+            })
+        }
+    }
     return pages;
 }
 

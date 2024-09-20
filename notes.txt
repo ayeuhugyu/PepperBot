@@ -31,15 +31,8 @@ p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
 
 **actual content:**
 
-- added 1 new diabolical event
-- fixed a typo in p/chatbubble's response
-- removed a thing that was logging debug info for when i was fixing something (it was truly useless)
-- requests to the site without a host header are now dropped
-- updated p/sendlog's options to include global.log
-- fixed a rare error with a diablocal event (the image file was missing)
-- fixed gpt not responding to messages without an attachments object (actually happened previous patch, had to be done for p/ask to work from slash commands)
-- p/setprompt can be used in dm context now (also happened last patch)
-- p/preview can now be used in external guilds (also last patch)
-- entirely removed the whole "typing" thing, it didn't work half the time, was annoying, and worst of all allowed you to crash the bot super easily
+- fixed build preview throwing an error on builds that don't use shrine of order
+- there is now a very very very experimental and rudimentary oauth2 testing page, accessible using [this link](https://discord.com/oauth2/authorize?client_id=1209297323029565470&response_type=code&redirect_uri=https%3A%2F%2Fpepperbot.online%2Foauth2%2Flogin&scope=identify+guilds)
+- oauth2 doesn't currently do anything, in the future i plan to make a config UI as a p/configure alternative.
 
 **fixes/optimizations:**

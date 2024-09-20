@@ -79,7 +79,11 @@ const random = new SubCommand(
         }
         const randomJak = alljaks[Math.floor(Math.random() * alljaks.length)];
         const processing = await action.reply(message, { content: "processing..." });
-        action.editMessage(processing, { content: "here's your jak!", files: [`resources/images/jaks/${randomJak}`] });
+        action.editMessage(processing, { content: `here's your jak!\n❗❗ATTENTION: I DO NOT MODERATE THESE IMAGES. THERE IS A DECENT CHANCE IT WILL BE GOREY/NSFW.❗❗\nincase this provides any help, the jak is named \`${randomJak}\``, files: [{
+            attachment: `resources/images/jaks/${randomJak}`,
+            name: `SPOILER_${randomJak}`
+            }] 
+        });
     }
 );
 
@@ -166,7 +170,11 @@ const get = new SubCommand(
                 return;
             }
             const processing = await action.reply(message, { content: "processing..." });
-            action.editMessage(processing, { content: "here's your jak!", files: [`resources/images/jaks/${jak}`] });
+            action.editMessage(processing, { content: `here's your jak!\n❗❗ATTENTION: I DO NOT MODERATE THESE IMAGES. THERE IS A DECENT CHANCE IT WILL BE GOREY/NSFW.❗❗\nincase this provides any help, the jak is named \`${jak}\``, files: [{
+                attachment: `resources/images/jaks/${jak}`,
+                name: `SPOILER_${jak}`
+                }] 
+            });
         } else {
             action.reply(message, {
                 content: "provide a jak to get you baffoon!",

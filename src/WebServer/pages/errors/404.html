@@ -87,95 +87,20 @@
             </script>
         </div>
 
-        <div class="container" id="maintitle" style="left: 50%; top: 10%; transform: translateX(-50%) translateY(-50%)">
+        <div class="cardcontainer" id="maintitle" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
             <div class="sectionoutline" style="justify-content: center; align-items: center; text-align: center;">
-                <h2 class="sectionTitle">404 - not found</h2>
+                <h2 class="sectionTitle" id="titleTextContent">404 - not found</h2>
             </div>
         </div>
-        <div id="rightcontainer" class="container" style="right: 15%; top: 20%; transform: rotate(10deg)">
-            <div class="container" id="shouldthisexist" style="position: relative; padding-bottom: 15px">
-                <div class="sectionoutline">
-                    <div class="sectioncontent" style="max-width: 600px">
-                        <h2 class="sectionTitle">Should this exist?</h2>
-                        <p>very good question! probablyyy not</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="leftcontainer" class="container" style="left: 15%; top: 40%; transform: rotate(-10deg)">
-            <div class="container" id="willthisexist" style="position: relative; padding-bottom: 15px">
-                <div class="sectionoutline">
-                    <div class="sectioncontent" style="max-width: 600px">
-                        <h2 class="sectionTitle">Will this exist?</h2>
-                        <p>again, very good question! and also again, nahhhh probably not</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="rightcontainer2" class="container" style="right: 15%; top: 60%; transform: rotate(5deg)">
-            <div class="container" id="canimakeitexist" style="position: relative; padding-bottom: 15px">
-                <div class="sectionoutline">
-                    <div class="sectioncontent" style="max-width: 600px">
-                        <h2 class="sectionTitle">Can I make it exist?</h2>
-                        <p>well if you know what you're doing, feel free! its source is on <a href="https://github.com/ayeuhugyu/PepperBot/tree/main/src/WebServer" target="_blank">my github</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <script id="mobiledisplay">
-            function enableMobileMode() {
-                const shouldthisexist = document.getElementById("shouldthisexist");
-                const willthisexist = document.getElementById("willthisexist");
-                const canimakeitexist = document.getElementById("canimakeitexist");
-                shouldthisexist.style.display = "none";
-                willthisexist.style.display = "none";
-                canimakeitexist.style.display = "none";
-            }
-            function disableMobileMode() {
-                const shouldthisexist = document.getElementById("shouldthisexist");
-                const willthisexist = document.getElementById("willthisexist");
-                const canimakeitexist = document.getElementById("canimakeitexist");
-                shouldthisexist.style.display = "block";
-                willthisexist.style.display = "block";
-                canimakeitexist.style.display = "block";
-            }
-            let mobileMode = sessionStorage.getItem("mobileMode") === "true";
-            function toggleMobileMode() {
-                if (mobileMode) {
-                    disableMobileMode();
-                } else {
-                    enableMobileMode();
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const title = document.getElementById("titleTextContent");
+                const urlArgs = new URLSearchParams(window.location.search);
+                const error = urlArgs.get("error");
+                if (error) {
+                    title.innerText = error
                 }
-                mobileMode = !mobileMode;
-                sessionStorage.setItem("mobileMode", mobileMode);
-            }
-            if (/Mobi|Android/i.test(navigator.userAgent)) {
-                if (!mobileMode) {
-                    toggleMobileMode();
-                }
-            }
-            function checkMobileMode() {
-                if (window.matchMedia("(max-width: 768px)").matches) {
-                    if (!mobileMode) {
-                        toggleMobileMode();
-                    }
-                } else {
-                    if (mobileMode) {
-                        toggleMobileMode();
-                    }
-                }
-            }
-            const mobileModeOverrideBeforeCheck = sessionStorage.getItem("mobileMode") === "true";
-
-            // Initial check
-            checkMobileMode();
-            if (mobileModeOverrideBeforeCheck) {
-                enableMobileMode();
-                mobileMode = true
-            }
-
-            // Add event listener for screen size changes
-            window.addEventListener("resize", checkMobileMode);
+            })
         </script>
     </body>
 </html>

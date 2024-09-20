@@ -1,13 +1,17 @@
+import { config } from "dotenv";
+config();
 import express from "express";
 import fs from "fs";
 import prettyBytes from "pretty-bytes";
 import path from "node:path";
 import { stat } from "fs/promises";
-import rateLimit from "express-rate-limit";
 import * as log from "./lib/log.js";
 import * as files from "./lib/files.js"
 import process from "node:process";
 import commonRegex from "./lib/commonRegex.js";
+import url from "url";
+import https from "https";
+import http from "http";
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -95,8 +99,8 @@ app.use((req, res, next) => {
 });
 const dontAllowHostlessRequests = true;
 app.use((req, res, next) => {
-    if ((!req.headers.host || !req.headers.host.startsWith("pepperbot.online")) && dontAllowHostlessRequests) {
-        res.status(400).send("Invalid host header");
+    if ((!req.headers.host || (!req.headers.host.startsWith("pepperbot.online")) && !req.headers.host.startsWith("localhost")) && dontAllowHostlessRequests) {
+        res.status(400).send("Invalid host header; Please use https://pepperbot.online");
         return;
     }
     next();
@@ -277,14 +281,72 @@ app.get("/read-todo", (req, res) => {
     }
 });
 
+app.get(`/oauth2/login`, async (req, res) => {
+    const code = req.query.code;
+    if (!code) {
+        //return res.redirect("/error?error=400 Bad Request; OAuth2 code not provided");
+        return res.status(400).send("no code provided");
+    }
+    const data = new url.URLSearchParams({
+        'client_id': process.env.DISCORD_OAUTH_CLIENT_ID,
+        'client_secret': process.env.DISCORD_CLIENT_SECRET,
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': (process.env.IS_DEV == 'True') ? 'http://localhost:53134/oauth2/login' : 'https://pepperbot.online/oauth2/login',
+        'scope': 'identify',
+    });
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': process.env.DISCORD_TOKEN,
+    };
+    const response = await fetch(`https://discord.com/api/v10/oauth2/token`, {
+        method: 'POST',
+        body: data.toString(),
+        headers: headers,
+    });
+    const output = await response.json();
+    if (output.error) {
+        //return res.redirect(`/error?error=500 Internal Server Error; ${output.error}; ${output.error_description}`);
+        return res.status(500).send(`500: ${output.error}; ${output.error_description}`);
+    } else {
+        res.redirect(`/oauth2success?token=${output.access_token}&refreshToken=${output.refresh_token}&expires=${output.expires_in}`);
+    }
+})
+
+app.get(`/oauth2/getUserInfo`, async (req, res) => {
+    const token = req.query.token;
+    if (!token) {
+        return res.status(400).send("no oauth2 token provided");
+    }
+    const userinfoNonJSON = await fetch('https://discord.com/api/v10/users/@me', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const userinfo = await userinfoNonJSON.json();
+    res.send(userinfo);
+});
+
+app.get(`/oauth2/getGuilds`, async (req, res) => {
+    const token = req.query.token;
+    if (!token) {
+        return res.status(400).send("no oauth2 token provided");
+    }
+    const guildsNonJSON = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const guilds = await guildsNonJSON.json();
+    res.send(guilds);
+});
+
 app.use("/cgi-bin", (req, res, next) => {
     res.redirect("http://plaskinino.horse");
 });
 
 app.all("*", (req, res) => {
-    res.sendFile(`pages/errors/404.html`, {
-        root: rootPath,
-    });
+    res.sendFile("/pages/errors/404.html", { root: rootPath });
 }); // MAKE SURE THIS IS THE LAST ONE DEFINED
 
 export function setShardCount(count) {
@@ -294,9 +356,23 @@ export function setShardCount(count) {
 
 setTimeout(() => {
     try {
-        app.listen(53134, "0.0.0.0", () =>
-            log.info(`site listening at http://localhost:53134`)
-        );
+        if (process.env.IS_DEV == "True") {
+            console.log("dev environment detected");
+            app.listen(53134, "0.0.0.0", () =>
+                log.info(`site listening at http://localhost:53134`)
+            );
+        } else {
+            const privateKey = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/privkey.pem', 'utf8');
+            const certificate = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/cert.pem', 'utf8');
+            const ca = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/chain.pem', 'utf8');
+            const credentials = { key: privateKey, cert: certificate, ca: ca };
+
+            const httpServer = http.createServer(app);
+            const httpsServer = https.createServer(credentials, app);
+            httpsServer.listen(443);
+            httpServer.listen(53134);
+            log.info(`site listening at https://localhost:53134`);
+        }
         process.send({ action: "ready" });
     } catch (err) {
         log.fatal(`unable to listen to port: ${err}`);

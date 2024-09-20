@@ -1,7 +1,7 @@
 {
     "exploreVisible": {
         "type": "boolean",
-        "default": true,
+        "default": false,
         "cleanname": "explore visible",
         "description": "whether or not your server is hidden to the p/explore command"
     },

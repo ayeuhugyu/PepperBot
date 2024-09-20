@@ -3,7 +3,7 @@
     <head>
         <title>Pepper Site</title>
         <link rel="stylesheet" type="text/css" href="/newstyle.css" />
-        <link rel="icon" type="image/x-icon" href="./images/favicon.ico" />
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
         <meta content="ye" property="og:description" />
         <meta content="https://pepperbot.online" property="og:url" />
@@ -86,29 +86,48 @@
                 });
             </script>
         </div>
-        <div id="info">Hoi!</div>
-        <a id="login" style="display: none;" href="https://discord.com/oauth2/authorize?client_id=1209297323029565470&permissions=8&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A53134%2Foauth2&integration_type=0&scope=identify+applications.commands.permissions.update+applications.commands+bot+guilds+guilds.members.read+messages.read">Identify Yourself</a>
+        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
+            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
+                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
+                        <h2 class="sectionTitle">oauth2 successful login</h2>
+                        <p class="exampleusage"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
         <script>
-        window.onload = () => {
-            const fragment = new URLSearchParams(window.location.hash.slice(1));
-            const [accessToken, tokenType] = [fragment.get('access_token'), fragment.get('token_type')];
-
-            if (!accessToken) {
-			return (document.getElementById('login').style.display = 'block');
-		}
-
-		fetch('https://discord.com/api/users/@me', {
-			headers: {
-				authorization: `${tokenType} ${accessToken}`,
-			},
-		})
-			.then(result => result.json())
-			.then(response => {
-				const { username, discriminator } = response;
-				document.getElementById('info').innerText += ` ${username}#${discriminator}`;
-			})
-			.catch(console.error);
-            };
-    </script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const p = document.querySelector(".exampleusage");
+                const title = document.querySelector(".sectionTitle");
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get("token") || sessionStorage.getItem("token");
+                const refreshToken = urlParams.get("refreshToken") || sessionStorage.getItem("refreshToken");
+                const expires = urlParams.get("expires") || sessionStorage.getItem("expires");
+                if (token) {
+                    sessionStorage.setItem("token", token);
+                }
+                if (refreshToken) {
+                    sessionStorage.setItem("refreshToken", refreshToken);
+                }
+                if (expires) {
+                    sessionStorage.setItem("expires", expires);
+                }
+                if (token) {
+                    const userData = fetch("/oauth2/getUserInfo?token=" + token)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        p.innerHTML = `logged in as ${data.username} (${data.id})`;
+                        const guildData = fetch("/oauth2/getGuilds?token=" + token).then((response) => response.json()).then((data) => {
+                            p.innerHTML += ` with ${data.length} guilds`;
+                        });
+                    });
+                } else {
+                    p.innerHTML = "no token provided";
+                    title.innerHTML = "oauth2 login failed";
+                }
+                
+            });
+        </script>
     </body>
 </html>

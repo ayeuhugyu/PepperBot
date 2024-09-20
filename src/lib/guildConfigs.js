@@ -37,8 +37,14 @@ async function createGuildConfig(guildId) {
 
 function getGuildConfig(guildId) {
     if (!guildConfigs[guildId]) {
-        log.warn(`nonexistent guild config requested: ${guildId}; returning default`);
-        return JSON.parse(JSON.stringify(defaultGuildConfig));
+        if (!fs.existsSync(`resources/data/guildConfigs/${guildId}.json`)) {
+            log.warn(`nonexistent guild config requested: ${guildId}; returning default`);
+            return JSON.parse(JSON.stringify(defaultGuildConfig));
+        }
+        log.warn(`noncached guild config requested: ${guildId}`);
+        const data = fs.readFileSync(`resources/data/guildConfigs/${guildId}.json`, "utf8");
+        guildConfigs[guildId] = JSON.parse(data);
+        return guildConfigs[guildId]
     }
     return guildConfigs[guildId];
 }
