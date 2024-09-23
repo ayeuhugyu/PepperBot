@@ -101,17 +101,17 @@
                 const p = document.querySelector(".exampleusage");
                 const title = document.querySelector(".sectionTitle");
                 const urlParams = new URLSearchParams(window.location.search);
-                const token = urlParams.get("token") || sessionStorage.getItem("token");
-                const refreshToken = urlParams.get("refreshToken") || sessionStorage.getItem("refreshToken");
-                const expires = urlParams.get("expires") || sessionStorage.getItem("expires");
+                const token = urlParams.get("token") || localStorage.getItem("token");
+                const refreshToken = urlParams.get("refreshToken") || localStorage.getItem("refreshToken");
+                const expires = urlParams.get("expires") || localStorage.getItem("expires");
                 if (token) {
-                    sessionStorage.setItem("token", token);
+                    localStorage.setItem("token", token);
                 }
                 if (refreshToken) {
-                    sessionStorage.setItem("refreshToken", refreshToken);
+                    localStorage.setItem("refreshToken", refreshToken);
                 }
                 if (expires) {
-                    sessionStorage.setItem("expires", expires);
+                    localStorage.setItem("expires", expires);
                 }
                 if (token) {
                     const userData = fetch("/oauth2/getUserInfo?token=" + token)

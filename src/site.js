@@ -79,7 +79,7 @@ async function logAccess(req) {
         .padStart(2, "0")}`;
     fs.appendFile(
         "logs/access.log",
-        `${formattedDate} ACCESS FROM ${req.ip} AT ${req.path}\n`,
+        `${formattedDate} ACCESS FROM ${req.headers['cf-connecting-ip']} AT ${req.path}\n`,
         () => {}
     );
     requestCount++;
