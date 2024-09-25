@@ -162,7 +162,7 @@ async function infoAboutCommand(
         text += `PERMISSIONS: ${command.permissionsReadable}\n`;
     }
     if (command.whitelist && command.whitelist.length > 0) {
-        text += `WHITELIST: ${command.whitelist.toString()}\n`;
+        text += `WHITELIST: <@${command.whitelist.join("> <@")}>\n`;
     }
     if (command.disabledContexts) {
         text += `DISABLED CONTEXTS: ${command.disabledContexts.join(", ")}\n`
@@ -198,7 +198,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["commands"]);
 data.addStringOption((option) =>
     option

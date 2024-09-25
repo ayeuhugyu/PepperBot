@@ -182,12 +182,16 @@ const ipv4regex = commonRegex.ipv4regex
 app.get("/read-log", (req, res) => {
     const logType = req.query.level;
     const pretty = req.query.pretty || false;
-    const startIndex = req.query.start;
-    const endIndex = req.query.end;
+    const startIndex = req.query.start || 0;
+    const endIndex = req.query.end || startIndex + 250;
     if (endIndex - startIndex > 250) {
         return res.status(400).send("too many lines requested");
     }
-    const logPath = `./logs/${logType}.log`;
+    if (endIndex < startIndex) {
+        return res.status(400).send("end index is less than start index");
+    }
+    const sanitizedLogType = logType.split("..").join("");
+    const logPath = `./logs/${sanitizedLogType}.log`;
     try {
         if (!fs.existsSync(logPath)) {
             return res.status(404).send(`log "${logType}" not found`);
@@ -245,7 +249,8 @@ app.get("/get-log-length", (req, res) => {
 app.get("/read-update", (req, res) => {
     const logType = req.query.version;
     const pretty = req.query.pretty;
-    const logPath = `./resources/data/updates/${logType}.txt`;
+    const sanitizedLogType = logType.split("..").join("");
+    const logPath = `./resources/data/updates/${sanitizedLogType}.txt`; // test with https://pepperbot.online/read-log?level=../../../../../var/log/auth&start=0&end=-1
     try {
         if (!fs.existsSync(logPath)) {
             return res.status(404).send(`update "${logType}" not found`);

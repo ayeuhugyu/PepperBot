@@ -14,7 +14,7 @@ data.setAliases(["version", "setv", "vset"]);
 data.setPermissionsReadable("");
 data.setWhitelist(["440163494529073152"]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.addStringOption((option) =>
     option
         .setName("version")

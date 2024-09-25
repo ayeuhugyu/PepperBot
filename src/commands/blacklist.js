@@ -183,7 +183,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["bl"]);
 data.setPrimarySubcommand(view)
 data.addStringOption((option) =>

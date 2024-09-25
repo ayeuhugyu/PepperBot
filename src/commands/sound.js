@@ -318,7 +318,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["sounds"]);
 data.addStringOption((option) =>
     option

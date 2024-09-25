@@ -17,22 +17,40 @@ shit on the todo list:
 [11] - p/notice multi-shard fix
 [12] - custom command aliases
 [13] - custom command permissions from gconfig
-[14] - p/info subcommands for other varieties of info
-[15] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
-[16] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
-[17] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
-[18] - logs page removes content at the bottom after you've scrolled wayy past it
-[19] - rewrite readme.md to include info about stuff like what the lib files do and the forking pattern
-[20] - make a better build previewer than aen does (cuz aen's is mid asf)
+[14] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
+[15] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
+[16] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+[17] - logs page removes content at the bottom after you've scrolled wayy past it
+[18] - rewrite readme.md to include info about stuff like what the lib files do and the forking pattern
+[19] - so apparently the end event of collectors is called when the bot is removed from a server so that means you're gonna have to fix a bunch of collectors that rely upon guild ids to remove them from lists ✅
+[20] - add some sort of greeting message that tells people the features of the bot
+[21] - p/chatbubble can be used by replying, reference can be set with a p/setreference and used from right click > apps > thingy
+[22] - p/chatbubble warns you if the reply is ephemeral that favoriting it won't work ✅
 
 to add to todo list:
 
-p/update 100TH PEPPERBOT UPDATE 🎉🎉🎉🥳🥳🥳🌶🌶🌶
+p/update a lot of website changes
+
+**website changes:**
+
+- sidebar now has a source code button that takes you to the github page
+- sidebar can now be opened and closed by clicking the rightmost side of the screen, meaning it can be opened on mobile now
+- you can no longer input -1 to end index to read the entire log file (this feature is specifically made to prevent being able to read the whole file because that much data is enough to lag my internet significantly)
+- log & update types are now sanitized preventing file traversal
+- oauth2 page now has a redirect option, and by default will redirect to the homepage after 5 seconds
+- there are now errors for providing invalid tokens to the oauth2 page
 
 **actual content:**
 
-- fixed build preview throwing an error on builds that don't use shrine of order
-- there is now a very very very experimental and rudimentary oauth2 testing page, accessible using [this link](https://discord.com/oauth2/authorize?client_id=1209297323029565470&response_type=code&redirect_uri=https%3A%2F%2Fpepperbot.online%2Foauth2%2Flogin&scope=identify+guilds)
-- oauth2 doesn't currently do anything, in the future i plan to make a config UI as a p/configure alternative.
+- there are now slightly more detailed p/info subcommands for specific things, rather than a bunch of general stuff.
+- p/markovold has been merged into p/markov and made into p/markov old
+- p/help now does <@userid> when listing whitelists rather than just userid
+- new p/force respond allows you to force the bot to respond to your command with something, also this is the only p/force subcommand that isn't disabled in dm/external contexts
+- p/chatbubble now warns you that ephemeral replies will not work if favorited when the reply is ephemeral
+- added temporary user variables
+- added p/setreferencemessage, which sets a reference message object in your user variables that will be able to be used by commands 
 
 **fixes/optimizations:**
+
+- removed all instances of data.setDMPermission being used as it is deprecated
+- fixed a rare error caused by removing the bot from a server while a collector was active

@@ -318,7 +318,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["deepwokenequipment"]);
 data.addStringOption((option) =>
     option.setName("subcommand").setDescription("the subcommand to execute").setRequired(true)

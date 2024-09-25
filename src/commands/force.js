@@ -266,6 +266,45 @@ const dm = new SubCommand(
     }
 );
 
+const responddata = new SubCommandData();
+responddata.setName("respond");
+responddata.setDescription("make the bot respond to your command with something");
+responddata.setPermissions([]);
+responddata.setPermissionsReadable("");
+responddata.setWhitelist([]);
+responddata.setNormalAliases(["respond"])
+responddata.setCanRunFromBot(true);
+responddata.setDisabledContexts([])
+responddata.addStringOption((option) =>
+    option.setName("message").setDescription("what to say").setRequired(true)
+);
+const respond = new SubCommand(
+    responddata,
+    async function getArguments(message, gconfig) {
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
+        args.set(
+            "message",
+            message.content
+                .slice(prefix.length + commandLength)
+                .trim()
+        );
+        //args.set("attachments", message.attachments);
+        return args;
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        if (!args.get("message") && args.get("text")) {
+            args.set("message", args.get("text"));
+        }
+        if (args.get("message") || args.get("attachments")) {
+            action.reply(message.channel, { content: args.get("message"), ephemeral: gconfig.useEphemeralReplies });
+        } else {
+            action.reply(message, "provide a message to say you baffoon!");
+        }
+    }
+);
+
 const saydata = new SubCommandData();
 saydata.setName("say");
 saydata.setDescription("make the bot say something");

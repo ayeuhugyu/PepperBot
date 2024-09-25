@@ -247,7 +247,7 @@ data.setPermissions([PermissionFlagsBits.ManageRoles]);
 data.setPermissionsReadable("Manage Roles");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["rr"]);
 data.setDisabledContexts(["dm"])
 data.addStringOption((option) =>

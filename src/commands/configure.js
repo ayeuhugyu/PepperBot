@@ -326,7 +326,7 @@ data.setDescription("allows you to change a guild's configuration");
 data.setPermissions([PermissionFlagsBits.Administrator]);
 data.setPermissionsReadable("Administrator");
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["config", "cfg", "gconfig", "guildconfig", "serverconfig"]);
 data.setDisabledContexts(["dm"]);
 data.addStringOption((option) =>
@@ -423,13 +423,13 @@ const command = new Command(
                 components: [detailsActionRow],
                 ephemeral: messageGuildConfig.useEphemeralReplies,
             });
-            activeConfigurators[message.guild.id] = {
+            activeConfigurators[collectorID] = {
                 message: translatedGuildConfigMessage,
                 detailsEmbed: detailsEmbed,
             };
         }
         await refreshDetails();
-        activeConfigurators[message.guild.id] = {
+        activeConfigurators[collectorID] = {
             message: translatedGuildConfigMessage,
             detailsEmbed: detailsEmbed,
         };
@@ -439,6 +439,7 @@ const command = new Command(
             messageGuildConfig,
             message.guild.id
         );
+        const collectorID = message.guild.id;
         const collector =
             await translatedGuildConfigMessage.createMessageComponentCollector({
                 time: 240_000,
@@ -539,8 +540,9 @@ for arrays each ${chalk.blue(
                 });
             }
         });
+        
         collector.on("end", () => {
-            delete activeConfigurators[message.guild.id];
+            delete activeConfigurators[collectorID];
             action.editMessage(translatedGuildConfigMessage, {
                 content: translatedGuildConfigMessage.content,
                 embeds: [detailsEmbed],

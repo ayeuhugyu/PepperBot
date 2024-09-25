@@ -24,7 +24,16 @@
                         "_blank"
                     );
                 }
+                function showSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0.25";
+                }
+                function hideSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0";
+                }
             </script>
+            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
             <h2 class="sidebarTitle">NAVIGATION</h2>
             <div class="sidebarDivider"></div>
             <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
@@ -34,6 +43,8 @@
             <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
             <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
             <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+
+            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
             <script id="sidebarmain">
                 function toggleSidebar() {
                     document.querySelectorAll(".sidebar").forEach((element) => {

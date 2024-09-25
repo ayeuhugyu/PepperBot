@@ -1,9 +1,10 @@
 import * as action from "../lib/discord_action.js";
 import fs from "fs";
 import { tokenize, textify } from "../lib/tokenizer.js";
-import { Command, CommandData } from "../lib/types/commands.js";
+import { Command, CommandData, SubCommand, SubCommandData } from "../lib/types/commands.js";
 import * as globals from "../lib/globals.js";
 import { integrations } from "googleapis/build/src/apis/integrations/index.js";
+import { Collection } from "discord.js";
 
 const config = globals.config;
 
@@ -76,9 +77,64 @@ export function generate({ source, start = null, wordsCount = 100 } = {}) {
 const text = await fs
     .readFileSync(`logs/messages.log`, "utf-8")
     .replaceAll("\n", " \n");
+const messages = await fs.readFileSync(`logs/messages.log`, "utf-8").replaceAll("\n", " ");
 //const corpus = tokenize(text);
 //const samples = sliceCorpus(corpus, 20);
 //const transitions = collectTransitions(samples, 20);
+
+function markovChainGenerator(text) {
+    const textArr = text.split(" ");
+    const markovChain = {};
+    for (let i = 0; i < textArr.length; i++) {
+        let word = textArr[i].toLowerCase().replace(/[\W_]/, " ");
+        if (!markovChain[word]) {
+            markovChain[word] = [];
+        }
+        if (textArr[i + 1]) {
+            if (markovChain[word] && markovChain[word] instanceof Array)
+                markovChain[word].push(
+                    textArr[i + 1].toLowerCase().replace(/[\W_]/, " ")
+                );
+        }
+    }
+    return markovChain;
+}
+
+const olddata = new SubCommandData();
+olddata.setName("old");
+olddata.setDescription("make the bot say something #SPECIAL!!! but using the old algorithm");
+olddata.setPermissions([]);
+olddata.setPermissionsReadable("");
+olddata.setWhitelist([]);
+olddata.setCanRunFromBot(false);
+olddata.setNormalAliases([["markovold", "triggerold"]])
+olddata.setAliases(["trigger", "markovchain"]);
+const old = new SubCommand(
+    olddata,
+    async function getArguments(message) {
+        const args = new Collection();
+        return args;
+    },
+    async function execute(message, args, isInteraction, gconfig) {
+            const markovChain = markovChainGenerator(messages);
+            const words = Object.keys(markovChain);
+            let word = words[Math.floor(Math.random() * words.length)];
+            let result = "";
+            for (let i = 0; i < words.length; i++) {
+                result += word + " ";
+                let newWord =
+                markovChain[word][
+                        Math.floor(Math.random() * markovChain[word].length)
+                    ];
+                word = newWord;
+                if (!word || !(word in markovChain))
+                    word = words[Math.floor(Math.random() * words.length)];
+            }
+            let results = result.split("\n");
+            let randommessage = results[Math.floor(Math.random() * results.length)];
+            return action.reply(message, { content: randommessage, ephemeral: gconfig.useEphemeralReplies });
+    }
+);
 
 const data = new CommandData();
 data.setName("markov");
@@ -87,12 +143,27 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
-data.setDMPermission(true);
 data.setAliases(["trigger", "markovchain"]);
+data.addStringOption((option) =>
+    option
+        .setName("subcommand")
+        .setDescription("the subcommand to use")
+        .setRequired(false)
+        .addChoices(
+            { name: "old", value: "old" },
+        )    
+);
 const command = new Command(
     data,
     async function getArguments(message) {
-        return null;
+        const args = new Collection();
+        args.set(
+            "_SUBCOMMAND",
+            message.content
+                .slice(prefix.length + commandLength)
+                .trim()
+        );
+        return args;
     },
     async function execute(message, args, isInteraction, gconfig) {
         const wordsCount = Math.floor(Math.random() * 25) + 1;
@@ -133,7 +204,8 @@ const command = new Command(
             return;
         }
         action.editMessage(sentMessage, { content: msg, ephemeral: gconfig.useEphemeralReplies });
-    }
+    },
+    [old]
 );
 
 export default command;

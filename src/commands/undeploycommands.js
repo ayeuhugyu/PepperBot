@@ -16,7 +16,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist(["440163494529073152"]);
 data.setCanRunFromBot(false);
-data.setDMPermission(true);
+;
 data.setAliases(["undeploy"]);
 data.addStringOption((option) =>
     option

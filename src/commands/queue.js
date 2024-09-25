@@ -890,7 +890,6 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(false);
-data.setDMPermission(false);
 data.setDisabledContexts(["dm"])
 data.addStringOption((option) =>
     option

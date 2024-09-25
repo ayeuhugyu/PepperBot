@@ -1,12 +1,13 @@
 import prettyBytes from "pretty-bytes";
 import default_embed from "../lib/default_embed.js";
 import * as action from "../lib/discord_action.js";
-import { Command, CommandData } from "../lib/types/commands.js";
+import { Command, CommandData, SubCommand, SubCommandData } from "../lib/types/commands.js";
 import fs from "fs";
 import path from "path";
 import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
+import os from "os";
 
 const startedAtTimestamp = Date.now(); // too lazy to export from the sharder and deal with circular dependencies so this is close enough (it will be like 0.15 seconds off but i don't care)
 function padZero(number) {
@@ -24,14 +25,7 @@ const config = globals.config;
 const dirSize = async (directory) => {
     let files = await fs.readdirSync(directory);
     files = files.map((file) => path.join(directory, file));
-    const logs = await fs.readdirSync("logs");
-    for (const log of logs) {
-        if (log.endsWith(".log") && !(log == "messages.log")) {
-            files.push("logs/" + log);
-        }
-    } // lmao i just pasted this in here idec that its not valid for its function fuck you
     const stats = files.map((file) => stat(file));
-
     return (await Promise.all(stats)).reduce(
         (accumulator, { size }) => accumulator + size,
         0
@@ -52,23 +46,147 @@ async function convertMilisecondsToReadable(time) {
 }
 // will probably be useful at some point in time
 */
-
-const data = new CommandData();
-data.setName("info");
-data.setDescription("returns info about current bot instance");
-data.setPermissions([]);
-data.setPermissionsReadable("");
-data.setWhitelist([]);
-data.setCanRunFromBot(true);
-data.setDMPermission(true);
-const command = new Command(
-    data,
+const performancedata = new SubCommandData();
+performancedata.setName("performance");
+performancedata.setDescription("return info relating to the bot's performance");
+performancedata.setPermissions([]);
+performancedata.setPermissionsReadable("");
+performancedata.setWhitelist([]);
+performancedata.setNormalAliases();
+performancedata.setCanRunFromBot(true);
+const performance = new SubCommand(
+    performancedata,
     async function getArguments(message) {
-        return null;
+        return new Collection();
     },
-    async function execute(message, args, isInteraction, gconfig) {
-        const memory = process.memoryUsage();
+    async function execute(message, args, fromInteraction, gconfig) {
+        const embed = default_embed();
+        embed.setTitle("Performance Info");
+        //const memory = process.memoryUsage();
+        let memory = undefined;
+        let sent = undefined
+        process.once('message', (message) => {
+            if (message.action && message.action == "memoryResponse") {
+                memory = message.mem
+                embed.addFields({
+                    name: "process memory usage",
+                    value: `${prettyBytes(memory.rss)} memory usage, ${prettyBytes(memory.heapUsed)} / ${prettyBytes(memory.heapTotal)} heap usage`,
+                    inline: true,
+                })
+                sent = action.reply(message, {
+                    embeds: [embed],
+                    ephemeral: gconfig.useEphemeralReplies,
+                });
+            }
+        })
+        process.send("getMemoryUsage")
+        embed.addFields(
+            {
+                name: "approx. bot uptime",
+                value: `${formatTime(Math.floor((Date.now() - startedAtTimestamp) / 1000))}`,
+                inline: true,
+            },
+            {
+                name: "wasted space",
+                value: prettyBytes(await dirSize("./resources/ytdl_cache/")),
+                inline: true,
+            },
+            {
+                name: "websocket latency",
+                value: `${message.client ? message.client.ws.ping : "unknown "}ms`,
+                inline: true,
+            },
+            {
+                name: "system info",
+                value: `${process.platform} ${process.arch}`,
+                inline: true,
+            },
+            { 
+                name: "node version", 
+                value: process.version, 
+                inline: true 
+            },
+        )
+        setTimeout(() => {
+            if (!sent ||!memory) {
+                embed.addFields({
+                    name: "process memory usage",
+                    value: `reading memory usage of all processes exceeded time limit`,
+                    inline: true,
+                })
+                action.reply(message, {
+                    embeds: [embed],
+                    ephemeral: gconfig.useEphemeralReplies,
+                });
+            }
+        }, 2000)
+    }
+);
 
+const logsdata = new SubCommandData();
+logsdata.setName("logs");
+logsdata.setDescription("return info relating to the logs");
+logsdata.setPermissions([]);
+logsdata.setPermissionsReadable("");
+logsdata.setWhitelist([]);
+logsdata.setNormalAliases();
+logsdata.setCanRunFromBot(true);
+const logs = new SubCommand(
+    logsdata,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        let logfiles = fs.readFileSync("logs")
+        logfiles = logfiles.filter((file) => file !== "messages.log")
+        let totalSize = dirSize("logs");
+        let sizes = {};
+        let totalLength = 0;
+        let lengths = {};
+        logfiles.forEach((file) => {
+            const stat = stat(`logs/${file}`)
+            const fileContent = fs.readFileSync(`logs/${file}`)
+            const length = fileContent.split("\n").length
+            sizes[file] = stat.size
+            lengths[file] = length
+            totalLength += length
+        })
+        const embed = defualt_embed()
+        embed.setTitle("Log Info");
+        embed.setDescription(`files: ${logfiles.map((file) => `${file}`).join(", ")}`);
+        embed.addFields(
+            {
+                name: "File Size",
+                value: `Total: ${totalSize}\n${logfiles.map((file) => `${file}: ${sizes[file]}`).join("\n")}`,
+                inline: true
+            },
+            {
+                name: "Line Length",
+                value: `Total: ${totalLength}\n${logfiles.map((file) => `${file}: ${lengths[file]}`).join("\n")}`,
+                inline: true
+            }
+        );
+        action.reply(message, {
+            embeds: [embed],
+            ephemeral: gconfig.useEphemeralReplies,
+        });
+    }
+);
+
+const botdata = new SubCommandData();
+botdata.setName("bot");
+botdata.setDescription("return info relating to the bot");
+botdata.setPermissions([]);
+botdata.setPermissionsReadable("");
+botdata.setWhitelist([]);
+botdata.setNormalAliases();
+botdata.setCanRunFromBot(true);
+const bot = new SubCommand(
+    botdata,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
         let guilds = await message.client.shard.fetchClientValues(
             "guilds.cache.size"
         );
@@ -85,22 +203,6 @@ const command = new Command(
                     inline: true,
                 },
                 {
-                    name: "memory usage",
-                    value: `${prettyBytes(
-                        memory.rss
-                    )} memory usage, ${prettyBytes(
-                        memory.heapUsed
-                    )} / ${prettyBytes(memory.heapTotal)} heap usage`,
-                    inline: true,
-                },
-                {
-                    name: "approx. uptime",
-                    value: `${formatTime(
-                        Math.floor((Date.now() - startedAtTimestamp) / 1000)
-                    )}`,
-                    inline: true,
-                },
-                {
                     name: "current shard id",
                     value: `${message.guild ? message.guild.shardId : "N/A"}`,
                     inline: true,
@@ -109,38 +211,48 @@ const command = new Command(
                     name: "total running shards",
                     value: `${guilds.length}`,
                     inline: true,
-                },
-                {
-                    name: "wasted space",
-                    value: prettyBytes(
-                        await dirSize("./resources/ytdl_cache/")
-                    ),
-                    inline: true,
-                },
-                {
-                    name: "ws latency",
-                    value: `${message.client ? message.client.ws.ping : "unknown "}ms`,
-                    inline: true,
-                },
-                {
-                    name: "system info",
-                    value: `${process.platform} ${process.arch}`,
-                    inline: true,
-                },
-                { name: "node version", value: process.version, inline: true }
+                }
             );
-        if (isInteraction) {
-            action.reply(message, {
-                embeds: [embed],
-                ephemeral: gconfig.useEphemeralReplies,
-            });
-        } else {
-            action.reply(message, {
-                embeds: [embed],
-                ephemeral: gconfig.useEphemeralReplies,
-            });
-        }
+        action.reply(message, {
+            embeds: [embed],
+            ephemeral: gconfig.useEphemeralReplies,
+        });
     }
+);
+
+const data = new CommandData();
+data.setName("info");
+data.setDescription("returns info about current bot instance");
+data.setPermissions([]);
+data.setPermissionsReadable("");
+data.setWhitelist([]);
+data.setCanRunFromBot(true);
+data.setPrimarySubcommand(bot);
+data.addStringOption(option => 
+    option
+        .setName("subcommand")
+        .setDescription("the subcommand to use")
+        .setRequired(false)
+        .addChoices(
+            { name: "performance", value: "performance" },
+            { name: "logs", value: "logs" },
+            { name: "bot", value: "bot" }
+        )
+)
+const command = new Command(
+    data,
+    async function getArguments(message) {
+        const args = new Collection();
+        args.set("_SUBCOMMAND", message.content.split(" ")[1]);
+        return args;
+    },
+    async function execute(message, args, isInteraction, gconfig) {
+        action.reply(message, {
+            content: `invalid subcommand: ${args.get("_SUBCOMMAND")}`,
+            ephemeral: gconfig.useEphemeralReplies,
+        })
+    },
+    [logs, performance, bot]
 );
 
 export default command;

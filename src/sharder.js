@@ -58,6 +58,26 @@ process.on("message", (message) => {
         updateSiteStartTimes();
         return;
     }
+    if (message.action === "getMemoryUsage") {
+        const memory = process.memoryUsage();
+        let memResponse = {
+            rss: memory.rss,
+            heapUsed: memory.heapUsed,
+            heapTotal: memory.heapTotal,
+        }
+        manager.shards.forEach((shard) => {
+            const shardMemory = shard.process.memoryUsage();
+            memResponse.rss += shardMemory.rss
+            memResponse.heapUsed += shardMemory.heapUsed
+            memResponse.heapTotal += shardMemory.heapTotal
+        })
+        process.send({
+            action: "memoryResponse",
+            mem: memResponse,
+        });
+        
+        return;
+    }
 });
 
 process.on("uncaughtException", (err) => {

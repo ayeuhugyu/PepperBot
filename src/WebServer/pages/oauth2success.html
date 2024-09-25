@@ -24,7 +24,16 @@
                         "_blank"
                     );
                 }
+                function showSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0.25";
+                }
+                function hideSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0";
+                }
             </script>
+            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
             <h2 class="sidebarTitle">NAVIGATION</h2>
             <div class="sidebarDivider"></div>
             <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
@@ -34,6 +43,8 @@
             <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
             <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
             <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+
+            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
             <script id="sidebarmain">
                 function toggleSidebar() {
                     document.querySelectorAll(".sidebar").forEach((element) => {
@@ -90,8 +101,8 @@
             <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
                 <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
                     <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
-                        <h2 class="sectionTitle">oauth2 successful login</h2>
-                        <p class="exampleusage"></p>
+                        <h2 class="sectionTitle">awaiting API responses...</h2>
+                        <p class="exampleusage">awaiting API responses...</p>
                     </div>
                 </div>
             </div>
@@ -104,6 +115,7 @@
                 const token = urlParams.get("token") || localStorage.getItem("token");
                 const refreshToken = urlParams.get("refreshToken") || localStorage.getItem("refreshToken");
                 const expires = urlParams.get("expires") || localStorage.getItem("expires");
+                const redirect = urlParams.get("redirect") || "/";
                 if (token) {
                     localStorage.setItem("token", token);
                 }
@@ -117,9 +129,24 @@
                     const userData = fetch("/oauth2/getUserInfo?token=" + token)
                     .then((response) => response.json())
                     .then((data) => {
+                        if (data.username == undefined || data.id == undefined) {
+                            p.innerHTML = "failed to get user data";
+                            title.innerHTML = "oauth2 login failed";
+                            return;
+                        }
                         p.innerHTML = `logged in as ${data.username} (${data.id})`;
                         const guildData = fetch("/oauth2/getGuilds?token=" + token).then((response) => response.json()).then((data) => {
+                            if (data.length == 0 || data[0].id == undefined) {
+                                p.innerHTML = "failed to get guild data";
+                                title.innerHTML = "oauth2 login failed";
+                                return;
+                            }
                             p.innerHTML += ` with ${data.length} guilds`;
+                            title.innerHTML = "oauth2 login success"
+                            p.innerHTML += `<br>redirecting to ${redirect} in 5 seconds...`
+                            setTimeout(() => {
+                                window.location.href = redirect;
+                            }, 5000);
                         });
                     });
                 } else {

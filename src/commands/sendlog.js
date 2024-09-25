@@ -13,7 +13,7 @@ data.setPermissions([PermissionFlagsBits.Administrator]);
 data.setPermissionsReadable("Administrator");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["log", "getlog"]);
 data.addStringOption((option) =>
     option

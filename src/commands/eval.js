@@ -27,7 +27,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist(["440163494529073152"]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases();
 data.addStringOption((option) =>
     option.setName("code").setDescription("what to evaluate").setRequired(true)

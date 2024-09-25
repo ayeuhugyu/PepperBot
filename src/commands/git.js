@@ -72,7 +72,7 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setAliases(["github", "openpepper", "repo"]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.addStringOption((option) =>
     option
         .setName("subcommand")

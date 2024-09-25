@@ -16,7 +16,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setDMPermission(true);
+;
 data.setAliases(["christosquery", "csearch", "christossearch", "cq", "cs"]);
 data.addStringOption((option) =>
     option
