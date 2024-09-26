@@ -7,7 +7,7 @@ import path from "path";
 import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
-import os from "os";
+import { Collection } from "discord.js"
 
 const startedAtTimestamp = Date.now(); // too lazy to export from the sharder and deal with circular dependencies so this is close enough (it will be like 0.15 seconds off but i don't care)
 function padZero(number) {
@@ -46,6 +46,7 @@ async function convertMilisecondsToReadable(time) {
 }
 // will probably be useful at some point in time
 */
+
 const performancedata = new SubCommandData();
 performancedata.setName("performance");
 performancedata.setDescription("return info relating to the bot's performance");
@@ -65,21 +66,24 @@ const performance = new SubCommand(
         //const memory = process.memoryUsage();
         let memory = undefined;
         let sent = undefined
-        process.once('message', (message) => {
-            if (message.action && message.action == "memoryResponse") {
-                memory = message.mem
+
+        function memoryResponseListener(response) {
+            if (response.action && response.action === "memoryResponse" && !sent) {
+                memory = response.mem;
+                process.removeListener("message", memoryResponseListener)
                 embed.addFields({
                     name: "process memory usage",
                     value: `${prettyBytes(memory.rss)} memory usage, ${prettyBytes(memory.heapUsed)} / ${prettyBytes(memory.heapTotal)} heap usage`,
                     inline: true,
-                })
+                });
                 sent = action.reply(message, {
                     embeds: [embed],
                     ephemeral: gconfig.useEphemeralReplies,
                 });
             }
-        })
-        process.send("getMemoryUsage")
+        }
+        process.on('message', memoryResponseListener)
+        process.send({ action: "getMemoryUsage"})
         embed.addFields(
             {
                 name: "approx. bot uptime",
@@ -137,27 +141,29 @@ const logs = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        let logfiles = fs.readFileSync("logs")
+        let logfiles = fs.readdirSync("logs")
         logfiles = logfiles.filter((file) => file !== "messages.log")
-        let totalSize = dirSize("logs");
+        let totalSize = 0
         let sizes = {};
         let totalLength = 0;
         let lengths = {};
-        logfiles.forEach((file) => {
-            const stat = stat(`logs/${file}`)
-            const fileContent = fs.readFileSync(`logs/${file}`)
-            const length = fileContent.split("\n").length
-            sizes[file] = stat.size
-            lengths[file] = length
-            totalLength += length
-        })
-        const embed = defualt_embed()
+        await Promise.all(logfiles.map(async (file) => {
+            const filestat = await stat(`logs/${file}`);
+            const fileContent = fs.readFileSync(`logs/${file}`, "utf-8");
+            const length = fileContent.split("\n").length;
+            sizes[file] = filestat.size;
+            lengths[file] = length;
+            totalLength += length;
+            totalSize += filestat.size;
+        }));
+        console.log(sizes, lengths)
+        const embed = default_embed()
         embed.setTitle("Log Info");
         embed.setDescription(`files: ${logfiles.map((file) => `${file}`).join(", ")}`);
         embed.addFields(
             {
                 name: "File Size",
-                value: `Total: ${totalSize}\n${logfiles.map((file) => `${file}: ${sizes[file]}`).join("\n")}`,
+                value: `Total: ${prettyBytes(totalSize)}\n${logfiles.map((file) => `${file}: ${prettyBytes(sizes[file])}`).join("\n")}`,
                 inline: true
             },
             {
@@ -227,7 +233,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setPrimarySubcommand(bot);
+data.setPrimarySubcommand(performance);
 data.addStringOption(option => 
     option
         .setName("subcommand")

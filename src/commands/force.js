@@ -26,6 +26,7 @@ replydata.setCanRunFromBot(true);
 replydata.setAliases([]);
 replydata.setDisabledContexts(["dm"])
 replydata.setNormalAliases(["reply"])
+replydata.setdisableExternalGuildUsage(true);
 replydata.addStringOption((option) =>
     option.setName("message").setDescription("id of the message to reply to").setRequired(true)
 );
@@ -112,6 +113,7 @@ reactdata.setCanRunFromBot(true);
 reactdata.setAliases([]);
 reactdata.setNormalAliases(["react"])
 reactdata.setDisabledContexts(["dm"])
+reactdata.setdisableExternalGuildUsage(true);
 reactdata.addStringOption((option) =>
     option.setName("message").setDescription("id of the message to react to").setRequired(true)
 );
@@ -206,6 +208,7 @@ dmdata.setCanRunFromBot(false);
 dmdata.setAliases(["dmuser", "send"]);
 dmdata.setDisabledContexts(["dm"])
 dmdata.setNormalAliases(["dmuser", "dm", "send"])
+dmdata.setdisableExternalGuildUsage(true);
 dmdata.addUserOption((option) =>
     option.setName("user").setDescription("who to dm").setRequired(true)
 );
@@ -298,7 +301,7 @@ const respond = new SubCommand(
             args.set("message", args.get("text"));
         }
         if (args.get("message") || args.get("attachments")) {
-            action.reply(message.channel, { content: args.get("message"), ephemeral: gconfig.useEphemeralReplies });
+            action.reply(message, { content: args.get("message"), ephemeral: gconfig.useEphemeralReplies });
         } else {
             action.reply(message, "provide a message to say you baffoon!");
         }
@@ -313,6 +316,7 @@ saydata.setPermissionsReadable("");
 saydata.setWhitelist([]);
 saydata.setNormalAliases(["say"])
 saydata.setCanRunFromBot(true);
+saydata.setdisableExternalGuildUsage(true);
 saydata.setDisabledContexts(["dm"])
 saydata.addStringOption((option) =>
     option.setName("message").setDescription("what to say").setRequired(true)
@@ -391,9 +395,7 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-data.setdisableExternalGuildUsage(true)
-data.setAliases(["sounds"]);
-data.setDisabledContexts(["dm"])
+data.setAliases();
 data.addStringOption((option) =>
     option
         .setName("subcommand")
@@ -458,7 +460,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies
         })
     },
-    [say, dm, react, reply] // subcommands
+    [say, dm, react, reply, respond] // subcommands
 );
 
 export default command;

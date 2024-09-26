@@ -110,3 +110,18 @@ process.on("uncaughtException", (err, origin) => {
 process.on("exit", () => {
     log.info("exiting pepperbot");
 });
+
+process.on("message", function (message) {
+    if (message.action && message.action == "get_mem_usage") {
+        const memory = process.memoryUsage();
+        let memResponse = {
+            rss: memory.rss,
+            heapUsed: memory.heapUsed,
+            heapTotal: memory.heapTotal,
+        };
+        process.send({
+            action: "mem_response",
+            mem: memResponse,
+        });
+    }
+})

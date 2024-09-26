@@ -39,6 +39,7 @@ p/update a lot of website changes
 - log & update types are now sanitized preventing file traversal
 - oauth2 page now has a redirect option, and by default will redirect to the homepage after 5 seconds
 - there are now errors for providing invalid tokens to the oauth2 page
+- fixed missing html doctype on index page
 
 **actual content:**
 
@@ -47,10 +48,11 @@ p/update a lot of website changes
 - p/help now does <@userid> when listing whitelists rather than just userid
 - new p/force respond allows you to force the bot to respond to your command with something, also this is the only p/force subcommand that isn't disabled in dm/external contexts
 - p/chatbubble now warns you that ephemeral replies will not work if favorited when the reply is ephemeral
-- added temporary user variables
-- added p/setreferencemessage, which sets a reference message object in your user variables that will be able to be used by commands 
+- added user variables
+- added p/setreferencemessage, which sets a reference message object in your user variables that will be able to be used by commands when i get around to implementing it
 
 **fixes/optimizations:**
 
 - removed all instances of data.setDMPermission being used as it is deprecated
 - fixed a rare error caused by removing the bot from a server while a collector was active
+- memory usage displayed in p/info is now much more accurrate, including all shards & the sharder rather than just the current shard.

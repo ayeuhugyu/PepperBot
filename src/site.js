@@ -194,7 +194,7 @@ app.get("/read-log", (req, res) => {
     const logPath = `./logs/${sanitizedLogType}.log`;
     try {
         if (!fs.existsSync(logPath)) {
-            return res.status(404).send(`log "${logType}" not found`);
+            return res.status(404).send(`log "${sanitizedLogType}" not found`);
         }
         const logContent = files.readLinesBetween(logPath, startIndex, endIndex, (err, logContent) => {
             if (err) {
@@ -250,10 +250,10 @@ app.get("/read-update", (req, res) => {
     const logType = req.query.version;
     const pretty = req.query.pretty;
     const sanitizedLogType = logType.split("..").join("");
-    const logPath = `./resources/data/updates/${sanitizedLogType}.txt`; // test with https://pepperbot.online/read-log?level=../../../../../var/log/auth&start=0&end=-1
+    const logPath = `./resources/data/updates/${sanitizedLogType}.txt`;
     try {
         if (!fs.existsSync(logPath)) {
-            return res.status(404).send(`update "${logType}" not found`);
+            return res.status(404).send(`update "${sanitizedLogType}" not found`);
         }
         const logContent = fs.readFileSync(logPath, "utf8");
         if (pretty) {

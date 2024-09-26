@@ -13,6 +13,5 @@ export default {
         } else {
             log.debug(`existing guild config detected for (${guild.id})`);
         }
-        console.log(JSON.stringify((Object.values(gconfig).sort())), JSON.stringify((Object.values(guildConfigs.defaultGuildConfig).sort())));
     },
 };

@@ -17,6 +17,7 @@ import * as adobe from "../lib/adobe.js";
 import shell from "shelljs";
 import util from "node:util";
 import guildConfigs from "../lib/guildConfigs.js";
+import userVars from "../lib/uservariables.js";
 
 const config = globals.config;
 

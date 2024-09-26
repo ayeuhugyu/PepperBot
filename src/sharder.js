@@ -116,6 +116,31 @@ manager.spawn().then((shards) => {
                 shardHumanReadableDate = shardStartedAtDate.toLocaleString();
                 updateSiteStartTimes();
             }
+            if (message.action === "getMemoryUsage") {
+                const performance = process.memoryUsage()
+                let memResponse = performance;
+                Promise.all(manager.shards.map((shard) => {
+                    return new Promise((resolve, reject) => {
+                        shard.process.once("message", function(message) {
+                            const shardMemory = message.mem;
+                            memResponse.rss += shardMemory.rss;
+                            memResponse.heapUsed += shardMemory.heapUsed;
+                            memResponse.heapTotal += shardMemory.heapTotal;
+                            resolve(shardMemory);
+                        });
+                        shard.process.send({ action: "get_mem_usage" });
+                    });
+                })).then(() => {
+                    shard.send({
+                        action: "memoryResponse",
+                        mem: memResponse,
+                    });
+                }).catch((error) => {
+                    log.error("Error collecting memory usage from shards:", error);
+                });
+                
+                return;
+            }
             return message._result;
         });
     });

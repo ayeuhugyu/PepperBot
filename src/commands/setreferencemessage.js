@@ -45,8 +45,8 @@ const command = new Command(
         const messageID = args.get("message");
         const messageChannel = message.channel;
         let referenceMessage
-        try { // TODO: fix this to work if args.get("message") isn't a message id and is instead the actual message
-            if (typeof args.get("message") === String) {
+        try {
+            if (typeof args.get("message") === "string") {
                 referenceMessage = await messageChannel.messages.fetch(messageID);
             } else {
                 referenceMessage = args.get("message");
@@ -54,7 +54,7 @@ const command = new Command(
         } catch (err) {
             return action.reply(message, { content: `unable to fetch message`, ephemeral: gconfig.useEphemeralReplies });
         }
-        uservariables.setUserVariable(message.author.id, "referenceMessage", referenceMessage);
+        uservariables.set(message.author.id, "referenceMessage", referenceMessage);
         action.reply(message, { content: `reference message set to ${messageID}`, ephemeral: gconfig.useEphemeralReplies });
     },
     [] // subcommands

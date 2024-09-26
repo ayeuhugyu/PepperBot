@@ -5,6 +5,7 @@ import { Command, CommandData, SubCommand, SubCommandData } from "../lib/types/c
 import * as globals from "../lib/globals.js";
 import { integrations } from "googleapis/build/src/apis/integrations/index.js";
 import { Collection } from "discord.js";
+import { content } from "googleapis/build/src/apis/content/index.js";
 
 const config = globals.config;
 
@@ -77,7 +78,7 @@ export function generate({ source, start = null, wordsCount = 100 } = {}) {
 const text = await fs
     .readFileSync(`logs/messages.log`, "utf-8")
     .replaceAll("\n", " \n");
-const messages = await fs.readFileSync(`logs/messages.log`, "utf-8").replaceAll("\n", " ");
+const messages = await fs.readFileSync(`logs/messages.log`, "utf-8")
 //const corpus = tokenize(text);
 //const samples = sliceCorpus(corpus, 20);
 //const transitions = collectTransitions(samples, 20);
@@ -107,7 +108,7 @@ olddata.setPermissions([]);
 olddata.setPermissionsReadable("");
 olddata.setWhitelist([]);
 olddata.setCanRunFromBot(false);
-olddata.setNormalAliases([["markovold", "triggerold"]])
+olddata.setNormalAliases([["markovold"]])
 olddata.setAliases(["trigger", "markovchain"]);
 const old = new SubCommand(
     olddata,
@@ -116,23 +117,24 @@ const old = new SubCommand(
         return args;
     },
     async function execute(message, args, isInteraction, gconfig) {
-            const markovChain = markovChainGenerator(messages);
-            const words = Object.keys(markovChain);
-            let word = words[Math.floor(Math.random() * words.length)];
-            let result = "";
-            for (let i = 0; i < words.length; i++) {
-                result += word + " ";
-                let newWord =
+        messages.replaceAll("\n", " ")
+        const markovChain = markovChainGenerator(messages);
+        const words = Object.keys(markovChain);
+        let word = words[Math.floor(Math.random() * words.length)];
+        let result = "";
+        for (let i = 0; i < words.length; i++) {
+            result += word + " ";
+            let newWord =
                 markovChain[word][
-                        Math.floor(Math.random() * markovChain[word].length)
-                    ];
-                word = newWord;
-                if (!word || !(word in markovChain))
-                    word = words[Math.floor(Math.random() * words.length)];
-            }
-            let results = result.split("\n");
-            let randommessage = results[Math.floor(Math.random() * results.length)];
-            return action.reply(message, { content: randommessage, ephemeral: gconfig.useEphemeralReplies });
+                    Math.floor(Math.random() * markovChain[word].length)
+                ];
+            word = newWord;
+            if (!word || !(word in markovChain))
+                word = words[Math.floor(Math.random() * words.length)];
+        }
+        let results = result.split("\n");
+        let randommessage = results[Math.floor(Math.random() * results.length)];
+        action.reply(message, { content: randommessage, ephemeral: gconfig.useEphemeralReplies });
     }
 );
 
@@ -155,8 +157,10 @@ data.addStringOption((option) =>
 );
 const command = new Command(
     data,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
+        const commandLength = message.content.split(" ")[0].length - 1;
         args.set(
             "_SUBCOMMAND",
             message.content
@@ -166,6 +170,10 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, isInteraction, gconfig) {
+        if (args.get("_SUBCOMMAND")) {
+            action.reply(message, { content: `invalid subcommand: ${args.get("_SUBCOMMAND")}`, ephemeral: gconfig.useEphemeralReplies });
+            return
+        }
         const wordsCount = Math.floor(Math.random() * 25) + 1;
         const sentMessage = await action.reply(message, {
             content: "processing...",

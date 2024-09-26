@@ -129,9 +129,10 @@ export async function reply(message, content) {
             sent = await channel.send(fixed).catch(() => {});
         }
         if (!sent) {
-            log.error("fully failed to reply to a message");
+            log.error("fully failed to reply to a message; sent was undefined");
         }
     } catch (err) {
+        log.error(err);
         log.error("fully failed to reply to a message");
     }
     return sent;

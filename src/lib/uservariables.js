@@ -1,3 +1,5 @@
+import { get } from "node:http"
+
 let uservars = {}
 
 function setUserVariable(userId, key, value) {
@@ -25,15 +27,20 @@ function deleteUsersVariables(userId) {
     delete uservars[userId]
 }
 
-function getUserVariables(userId) {
+function getUsersVariables(userId) {
     return uservars[userId]
+}
+
+function setUsersVariables(userId, variables) {
+    uservars[userId] = variables
 }
 
 export default {
     uservars: uservars,
-    setUserVariable: setUserVariable,
-    getUserVariable: getUserVariable,
-    deleteUserVariable: deleteUserVariable,
-    deleteUsersVariables: deleteUsersVariables,
-    getUserVariables: getUserVariables
+    set: setUserVariable,
+    get: getUserVariable,
+    delete: deleteUserVariable,
+    deleteAll: deleteUsersVariables,
+    getAll: getUsersVariables,
+    setAll: setUsersVariables
 }

@@ -162,7 +162,7 @@ const command = new Command(
         if (replied) return;
         replied = true;
         action.editMessage(sentReply, {
-            content: "here is your Item Of Interest:tm:" + ((message.appPermissions && !message.appPermissions.has("Administrator")) ? "" : "\n⚠ EPHEMERAL (the \"only you can see this\") REPLIES WILL NOT WORK IF FAVORITED ⚠\ndiscord does not store these images and they will cease to work as soon as you hit \"dismiss message\"\nit will still work if you save the image though"),
+            content: "here is your Item Of Interest:tm:" + ((message.appPermissions && !message.appPermissions.has("Administrator")) ? "\n⚠ EPHEMERAL (the \"only you can see this\") REPLIES WILL NOT WORK IF FAVORITED ⚠\ndiscord does not store these images and they will cease to work as soon as you hit \"dismiss message\"\nit will still work if you save the image though" : ""),
             files: [
                 new AttachmentBuilder(outputImg, { name: "chatbubble.gif" }),
             ],
