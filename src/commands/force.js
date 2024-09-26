@@ -406,6 +406,7 @@ data.addStringOption((option) =>
             { name: "dm", value: "dm" },
             { name: "react", value: "react" },
             { name: "reply", value: "reply" },
+            { name: "respond", value: "respond" }
         )
 );
 data.addStringOption((option) =>
