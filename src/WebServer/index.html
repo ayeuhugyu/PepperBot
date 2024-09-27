@@ -121,7 +121,7 @@
                             const updversion =
                                 document.getElementById("textbox");
                             let ver;
-                            await fetch("/get-latest-update")
+                            await fetch("/api/get-latest-update")
                                 .then((response) => response.text())
                                 .then((text) => {
                                     updversion.value = text;
@@ -137,7 +137,7 @@
                         const version =
                             document.getElementById("textbox").value;
                         updatecontent.innerText = `reading ${version}.txt... `;
-                        fetch(`/read-update/?version=${version || givenver}`)
+                        fetch(`/api/read-update/?version=${version || givenver}`)
                             .then((response) => response.text())
                             .then((text) => {
                                 updatecontent.innerText = `VERSION ${
@@ -182,7 +182,7 @@
                             document.getElementById("todocontent");
                             todocontent.style.maxWidth = `${todocontent.offsetWidth}px`;
                             todocontent.innerText = `reading todo list...`;
-                        fetch(`/read-todo/`)
+                        fetch(`/api/read-todo`)
                             .then((response) => response.text())
                             .then((text) => {
                                 todocontent.innerText = parseTodoList(JSON.parse(text));

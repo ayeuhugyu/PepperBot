@@ -19,5 +19,7 @@ resources/data/todos
 resources/data/updates
 resources/data/requestCount.txt
 resources/images/jaks
+resources/data/webmessages.json
+resources/data/webusers.json
 server.cert
 server.key
