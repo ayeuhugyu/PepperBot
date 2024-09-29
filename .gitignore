@@ -21,5 +21,6 @@ resources/data/requestCount.txt
 resources/images/jaks
 resources/data/webmessages.json
 resources/data/webusers.json
+src/WebServer/socket.io
 server.cert
 server.key

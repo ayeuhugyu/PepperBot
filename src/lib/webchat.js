@@ -1,6 +1,8 @@
 import fs from "fs"
 import fsextra from "fs-extra"
 import * as log from "./log.js"
+import { Buffer } from "buffer"
+import exp from "constants"
 
 if (!fs.existsSync("resources/data/webmessages.json")) {
     fsextra.ensureFileSync("resources/data/webmessages.json")
@@ -43,28 +45,26 @@ export function generateMessageID() {
 }
 
 export class Message {
-    constructor(text, author) {
+    constructor(text, authorID) {
         this.id = generateMessageID()
         this.text = text
-        this.author = author
+        this.author = getUser(authorID)
         this.timestamp = Date.now()
     }
 }
 
 export class Author {
     constructor(id, username) {
-        this.username = id // change to username later
+        this.username = username || id
         this.id = id
     }
 }
 
-export function registerUser(username, ip) {
+export function registerUser(username) {
     let author = new Author(generateUID(), username)
     users[author.id] = author
     log.info(`registered user ${author.id}`)
     writeUsers()
-    usersips[ip] = author.id
-    writeUsersIPs()
     return author.id
 }
 
@@ -72,8 +72,8 @@ export function getUser(id) {
     return users[id]
 }
 
-export function postMessage(text, author) {
-    let message = new Message(text, author)
+export function postMessage(text, authorID) {
+    let message = new Message(text, authorID)
     messages[message.id] = message
     log.info(`posted message ${message.id}`)
     writeMessages()
@@ -89,4 +89,9 @@ export function getMessagesAbove(id, distance = 10) {
     let index = messageids.indexOf(id)
     if (index == -1) return []
     return messageids.slice(index - distance, index).map(id => messages[id])
+}
+
+export function getLatestMessages(count = 10) {
+    let messageids = Object.keys(messages)
+    return messageids.slice(-count).map(id => messages[id])
 }

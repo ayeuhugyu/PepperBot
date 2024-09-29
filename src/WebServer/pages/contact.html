@@ -39,6 +39,7 @@
             <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
             <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
             <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
+            <div class="sidebarButton" id="/chat" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Chat</div>
             <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
             <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
             <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
@@ -61,7 +62,7 @@
                     sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
                 }
                 document.addEventListener("keydown", (event) => {
-                    if (event.key === "k") {
+                    if (event.key === "k" && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") {
                         toggleSidebar();
                     }
                 });

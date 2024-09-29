@@ -12,6 +12,7 @@ import commonRegex from "./lib/commonRegex.js";
 import url from "url";
 import https from "https";
 import http from "http";
+import { Server } from "socket.io";
 import * as chat from "./lib/webchat.js"
 
 const blockedIps = {
@@ -28,6 +29,25 @@ requestCount = parseInt(requestCount);
 const starts = {};
 
 const app = express();
+
+const httpServer = http.createServer(app);
+let httpsServer
+if (process.env.IS_DEV !== "True") {
+    const privateKey = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/privkey.pem', 'utf8');
+    const certificate = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/cert.pem', 'utf8');
+    const ca = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/chain.pem', 'utf8');
+    const credentials = { key: privateKey, cert: certificate, ca: ca };
+    httpsServer = https.createServer(credentials, app);
+}
+
+let io
+if (process.env.IS_DEV == "True") {
+    console.log("using http for socket.io");
+    io = new Server(httpServer)
+} else {
+    io = new Server(httpsServer)
+}
+
 const siteStartedAt = Date.now();
 const startedAtDate = new Date(siteStartedAt);
 const humanReadableDate = startedAtDate.toLocaleString();
@@ -92,6 +112,12 @@ async function logAccess(req) {
     );
 }
 
+io.on("connection", (socket) => {
+    socket.on("chat message", (msg) => {
+        io.emit("chat message", msg);
+    });
+});
+
 app.use((req, res, next) => {
     if (blockedIps[req.ip]) {
         return res.send(blockedIps[req.ip]);
@@ -100,7 +126,7 @@ app.use((req, res, next) => {
 });
 const dontAllowHostlessRequests = true;
 app.use((req, res, next) => {
-    if ((!req.headers.host || (!req.headers.host.startsWith("pepperbot.online")) && !req.headers.host.startsWith("localhost")) && dontAllowHostlessRequests) {
+    if ((!req.headers.host || (!req.headers.host.startsWith("pepperbot.online")) && !req.headers.host.startsWith("localhost") && !req.headers.host === "192.168.4.31") && dontAllowHostlessRequests) {
         res.status(400).send("Invalid host header; Please use https://pepperbot.online");
         return;
     }
@@ -169,22 +195,32 @@ app.get("/api/chat/user", (req, res) => { // get a user by id
 });
 
 app.post("/api/chat/user", (req, res) => { // post a user
-    const username = req.query.username.slice(0, 32).trim();
+    const username = req.query.username.slice(0, 64).trim();
     if (!username) {
         return res.status(400).send("no username provided");
     }
     const id = chat.registerUser(username);
-    res.send(id); // todo: when page is made store this in a cookie/localstorage
+    res.send(JSON.stringify(chat.getUser(id)));
 });
 
 app.post("/api/chat/message", (req, res) => { // post a message
-    const text = req.query.text;
+    const text = req.query.text.slice(0, 2048).trim();
     const author = req.query.author;
     if (!text || !author) {
         return res.status(400).send("missing parameters");
     }
+    const user = chat.getUser(author);
+    if (!user) {
+        return res.status(400).send(`user ${author} not found`);
+    }
     const id = chat.postMessage(text, author);
+    io.emit("chat message", chat.getMessage(id));
     res.send(id);
+});
+
+app.get("/api/chat/latest", (req, res) => { // get the latest messages
+    const messages = chat.getLatestMessages(150);
+    res.send(messages);
 });
 
 app.get("/api/read-statistics", (req, res) => {
@@ -419,20 +455,12 @@ setTimeout(() => {
     try {
         if (process.env.IS_DEV == "True") {
             console.log("dev environment detected");
-            app.listen(53134, "0.0.0.0", () =>
-                log.info(`site listening at http://localhost:53134`)
-            );
-        } else {
-            const privateKey = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/privkey.pem', 'utf8');
-            const certificate = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/cert.pem', 'utf8');
-            const ca = fs.readFileSync('/etc/letsencrypt/live/pepperbot.online/chain.pem', 'utf8');
-            const credentials = { key: privateKey, cert: certificate, ca: ca };
-
-            const httpServer = http.createServer(app);
-            const httpsServer = https.createServer(credentials, app);
-            httpsServer.listen(443);
             httpServer.listen(53134);
-            log.info(`site listening at https://localhost:53134`);
+            log.info(`site listening at http://localhost:53134`)
+        } else {
+            httpServer.listen(53134);
+            httpsServer.listen(443);
+            log.info(`site listening at http://localhost:53134 & https://localhost:443`);
         }
         process.send({ action: "ready" });
     } catch (err) {
