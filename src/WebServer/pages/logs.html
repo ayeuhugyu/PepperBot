@@ -255,7 +255,7 @@
                     container.innerHTML = ""; // Clear existing content
                     startingIndex = 0
                     container.innerText = ``;
-                    startIndex = await fetch("/get-log-length?level=" + selectedLevel.toLowerCase()).then((response) => response.text()).then(async (data) => { return await parseInt(await data) }).catch((error) => console.error("Error:", error));
+                    startIndex = await fetch("/api/get-log-length?level=" + selectedLevel.toLowerCase()).then((response) => response.text()).then(async (data) => { return await parseInt(await data) }).catch((error) => console.error("Error:", error));
                 } else {
                     startIndex -= 150
                 }
@@ -263,7 +263,7 @@
                     isAtEnd = true
                 }
                 status.innerText = `reading ${selectedLevel.toLowerCase()}.log...`
-                await fetch(`/read-log?level=${selectedLevel.toLowerCase()}&end=${startIndex}&start=${startIndex - 150}`).then((response) => response.text()).then((data) => {
+                await fetch(`/api/read-log?level=${selectedLevel.toLowerCase()}&end=${startIndex}&start=${startIndex - 150}`).then((response) => response.text()).then((data) => {
                     const container = document.querySelector("#logFileContent");
                     if (selectedLevel == "GLOBAL") {
                         const levels = ["INFO", "DEBUG", "WARN", "ERROR", "FATAL"];

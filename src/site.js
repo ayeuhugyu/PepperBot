@@ -12,6 +12,7 @@ import commonRegex from "./lib/commonRegex.js";
 import url from "url";
 import https from "https";
 import http from "http";
+import * as chat from "./lib/webchat.js"
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -79,7 +80,7 @@ async function logAccess(req) {
         .padStart(2, "0")}`;
     fs.appendFile(
         "logs/access.log",
-        `${formattedDate} ACCESS FROM ${req.headers['cf-connecting-ip']} AT ${req.path}\n`,
+        `${formattedDate} ACCESS FROM ${req.headers['cf-connecting-ip'] || req.ip} AT ${req.path}\n`,
         () => {}
     );
     requestCount++;
@@ -131,7 +132,62 @@ app.get("/", (request, response) => {
 
 let shardCount = 0;
 
-app.get("/read-statistics", (req, res) => {
+app.get("/api/chat/messages", (req, res) => { // get 20 messages above a message id
+    const id = req.query.id;
+    if (!id) {
+        return res.status(400).send("no id provided");
+    }
+    const messages = chat.getMessagesAbove(id, 20);
+    if (messages.length <= 0) {
+        return res.status(404).send("no messages found");
+    }
+    res.send(messages);
+});
+
+app.get("/api/chat/message", (req, res) => { // get a message by id
+    const id = req.query.id;
+    if (!id) {
+        return res.status(400).send("no message id provided");
+    }
+    const message = chat.getMessage(id);
+    if (!message) {
+        return res.status(404).send("message not found");
+    }
+    res.send(message);
+});
+
+app.get("/api/chat/user", (req, res) => { // get a user by id
+    const id = req.query.id;
+    if (!id) {
+        return res.status(400).send("no user id provided");
+    }
+    const user = chat.getUser(id);
+    if (!user) {
+        return res.status(404).send("user not found");
+    }
+    res.send(user);
+});
+
+app.post("/api/chat/user", (req, res) => { // post a user
+    const username = req.query.username.slice(0, 32).trim();
+    if (!username) {
+        return res.status(400).send("no username provided");
+    }
+    const id = chat.registerUser(username);
+    res.send(id); // todo: when page is made store this in a cookie/localstorage
+});
+
+app.post("/api/chat/message", (req, res) => { // post a message
+    const text = req.query.text;
+    const author = req.query.author;
+    if (!text || !author) {
+        return res.status(400).send("missing parameters");
+    }
+    const id = chat.postMessage(text, author);
+    res.send(id);
+});
+
+app.get("/api/read-statistics", (req, res) => {
     fs.readFile(
         "./resources/data/statistics.json",
         "utf8",
@@ -179,7 +235,7 @@ app.get("/test", (req, res) => {
 
 const ipv4regex = commonRegex.ipv4regex
 
-app.get("/read-log", (req, res) => {
+app.get("/api/read-log", (req, res) => {
     const logType = req.query.level;
     const pretty = req.query.pretty || false;
     const startIndex = req.query.start || 0;
@@ -226,7 +282,7 @@ app.get("/read-log", (req, res) => {
     }
 });
 
-app.get("/get-log-length", (req, res) => {
+app.get("/api/get-log-length", (req, res) => {
     const logType = req.query.level;
     const logPath = `./logs/${logType}.log`;
     try {
@@ -246,7 +302,7 @@ app.get("/get-log-length", (req, res) => {
     }
 });
 
-app.get("/read-update", (req, res) => {
+app.get("/api/read-update", (req, res) => {
     const logType = req.query.version;
     const pretty = req.query.pretty;
     const sanitizedLogType = logType.split("..").join("");
@@ -266,13 +322,13 @@ app.get("/read-update", (req, res) => {
     }
 });
 
-app.get("/get-latest-update", (req, res) => {
+app.get("/api/get-latest-update", (req, res) => {
     const updates = fs.readdirSync("./resources/data/updates");
     const latestUpdate = updates.length;
     res.send(String(latestUpdate));
 });
 
-app.get("/read-todo", (req, res) => {
+app.get("/api/read-todo", (req, res) => {
     const path = `./resources/data/todos/440163494529073152/pepperbot_dev.json`;
     try {
         if (!fs.existsSync(path)) {
