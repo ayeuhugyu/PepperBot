@@ -201,38 +201,13 @@ async function processGPTResponse(message) {
 }
 
 async function processCommand(message) {
+    //console.log("processing command")
     const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
     const prefix = gconfig.prefix || config.generic.prefix;
     if (!message.content.toLowerCase().startsWith(prefix.toLowerCase())) {
+        //console.log("not a command")
         return;
     } // return if not a command
-
-    message.showModal = async function (modal) {
-        const openModal = new ButtonBuilder()
-            .setCustomId("openModal")
-            .setLabel("Open Modal Menu")
-            .setStyle(ButtonStyle.Success);
-        const actionRow = new ActionRowBuilder().addComponents(openModal);
-        const response = await action.reply(message, {
-            content:
-                "discord does not currently support showing modals directly from messages, so you'll have to click this button. This collector will expire after 2 minutes.",
-            components: [actionRow],
-        });
-        const collectorFilter = (i) => i.user.id === message.author.id;
-
-        try {
-            const confirmation = await response.awaitMessageComponent({
-                filter: collectorFilter,
-                time: 120_000,
-            });
-            if (confirmation.customId === "openModal") {
-                confirmation.showModal(modal);
-            }
-        } catch (e) {
-            return;
-        }
-    };
-    message.awaitModalSubmit = async function () {};
 
     let blackliststring = fs.readFileSync(
         "resources/data/blacklist.json",
@@ -240,6 +215,7 @@ async function processCommand(message) {
     );
     let blacklists = await JSON.parse(blackliststring);
     if (blacklists.includes(message.author.id)) {
+        //console.log("blacklisted")
         action.reply(message, `blacklisted lmfao`);
         return;
     }
@@ -250,6 +226,7 @@ async function processCommand(message) {
             .shift() || "".toLowerCase();
 
     if (!command) {
+        //console.log("command not found")
         action.reply(message, {
             content: "supply a command, baffon!",
         });
@@ -271,6 +248,7 @@ async function processCommand(message) {
         return;
     } // theoretically should never happen but im just being safe
     const startCommand = performance.now();
+    //console.log("executing message")
     commandFn(message, undefined, false)
         .catch((err) => log.error)
         .then((returned) => {
@@ -359,6 +337,7 @@ export default {
     name: Events.MessageCreate,
     async execute(message) {
         const DNI = await getIsDisgraceful(message);
+        //console.log(message, DNI)
         if (DNI) return;
         await Promise.allSettled([
             processDM(message),

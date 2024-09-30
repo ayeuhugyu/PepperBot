@@ -3,6 +3,8 @@ import fsextra from "fs-extra"
 import * as log from "./log.js"
 import { Buffer } from "buffer"
 import exp from "constants"
+import { EventEmitter } from "events"
+import process from "process"
 
 if (!fs.existsSync("resources/data/webmessages.json")) {
     fsextra.ensureFileSync("resources/data/webmessages.json")
@@ -44,6 +46,80 @@ export function generateMessageID() {
     return Buffer.from(`${word1}-${word2}-${word3}-${word4}-${word5}`).toString("base64")
 }
 
+export class WebSpoofMessage {
+    constructor(text, authorID) {
+        this.id = generateMessageID()
+        this.author = getUser(authorID)
+        this.author.globalName = this.author.username
+        this.author.displayName = this.author.username
+        this.reply = (message) => {
+            const localIP = process.env.IsDev === "True" ? "192.168.4.31:53134" : "192.168.4.30:53134"
+            let replyMessage;
+            if (message.content) {
+                replyMessage = message.content;
+            } else if (message.embeds && message.embeds[0] && message.embeds[0].description) {
+                replyMessage = message.embeds[0].description;
+            } else {
+                replyMessage = message;
+            }
+            console.log(replyMessage, message)
+            fetch(`http://${localIP}/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
+            return new Promise((resolve) => {
+                resolve({ id: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                }), content: replyMessage, author: { id: "1209297323029565470", username: "PepperBot" }, timestamp: Date.now(), edit: (message) => {
+                    let replyMessage;
+                    if (message.content) {
+                        replyMessage = message.content;
+                    } else if (message.embeds) {
+                        replyMessage = message.embeds[0].description;
+                    } else {
+                        replyMessage = message;
+                    }
+                    console.log(replyMessage, message)
+                    fetch(`http://${localIP}/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
+                    return new Promise((resolve) => {
+                        resolve({ id: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                            return v.toString(16);
+                        }), content: replyMessage, author: { id: "1209297323029565470", username: "PepperBot" }, timestamp: Date.now() })
+                    })
+                } })
+            })
+        }
+        this.author.send = this.reply
+        this.author.discriminator = "0"
+        this.edit = this.reply
+        this.delete = () => {}
+        this.timestamp = Date.now()
+        this.content = text
+        this.cleanContent = text
+        this.mentions = new Map();
+        this.mentions = new Map();
+        const mentionPattern = /<@!?(\d+)>/g;
+        let match;
+        while ((match = mentionPattern.exec(text)) !== null) {
+            const userID = match[1];
+            this.mentions.set(userID, getUser(userID));
+        }
+        this.reference = {}
+        this.react = (emoji) => {}
+        this.guild = {
+            id: "0",
+            name: "webchat",
+            members: new Map(),
+            channels: new Map(),
+            roles: new Map(),
+            ownerID: "0",
+        }
+        this.reply = this.reply.toString()
+        this.react = this.react.toString()
+        this.delete = this.delete.toString()
+        this.edit = this.reply
+    }
+}
+
 export class Message {
     constructor(text, authorID) {
         this.id = generateMessageID()
@@ -54,14 +130,15 @@ export class Message {
 }
 
 export class Author {
-    constructor(id, username) {
+    constructor(id, username, bot = false) {
         this.username = username || id
         this.id = id
+        this.bot = bot
     }
 }
 
-export function registerUser(username) {
-    let author = new Author(generateUID(), username)
+export function registerUser(username, bot = false, id = generateUID()) {
+    let author = new Author(id, username, bot)
     users[author.id] = author
     log.info(`registered user ${author.id}`)
     writeUsers()

@@ -4,7 +4,14 @@ import * as log from "./lib/log.js";
 
 log.info("forking processes..");
 
-function handleSiteRequests(message) {}
+function handleSiteRequests(message) {
+    if (message.action) {
+        if (message.action == "messageCreate") {
+            //console.log(message)
+            sharder.send({ action: "messageCreate", message: message.message });
+        }
+    }
+}
 function handleSharderRequests(message) {
     if (message.action && message.action == "updateStartedAt") {
         site.send({

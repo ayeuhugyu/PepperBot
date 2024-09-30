@@ -124,4 +124,19 @@ process.on("message", function (message) {
             mem: memResponse,
         });
     }
+    if (message.action && message.action == "messageCreate") {
+        //console.log(message)
+        const event = import(`./events/MessageCreate.js`).then((event) => {
+            //console.log(event)
+            message.message.reply = new Function(`return ${message.message.reply}`)();
+            message.message.react = new Function(`return ${message.message.react}`)();
+            message.message.delete = new Function(`return ${message.message.delete}`)();
+            message.message.edit = new Function(`return ${message.message.reply}`)();
+            message.message.guild.members = new Map();
+            message.message.guild.channels = new Map();
+            message.message.guild.roles = new Map();
+            message.message.guild.ownerID = "0";
+            event.default.execute(message.message);
+        });
+    }
 })

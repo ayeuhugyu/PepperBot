@@ -38,7 +38,6 @@ async function createGuildConfig(guildId) {
 function getGuildConfig(guildId) {
     if (!guildConfigs[guildId]) {
         if (!fs.existsSync(`resources/data/guildConfigs/${guildId}.json`)) {
-            log.warn(`nonexistent guild config requested: ${guildId}; returning default`);
             return JSON.parse(JSON.stringify(defaultGuildConfig));
         }
         log.warn(`noncached guild config requested: ${guildId}`);

@@ -113,6 +113,7 @@ async function logAccess(req) {
 }
 
 io.on("connection", (socket) => {
+    io.emit("chat message", { text: "user connected to websocket", author: { system: true, username: "SYSTEM" } });
     socket.on("chat message", (msg) => {
         io.emit("chat message", msg);
     });
@@ -203,6 +204,8 @@ app.post("/api/chat/user", (req, res) => { // post a user
     res.send(JSON.stringify(chat.getUser(id)));
 });
 
+let messageCreate
+
 app.post("/api/chat/message", (req, res) => { // post a message
     const text = req.query.text.slice(0, 2048).trim();
     const author = req.query.author;
@@ -214,6 +217,12 @@ app.post("/api/chat/message", (req, res) => { // post a message
         return res.status(400).send(`user ${author} not found`);
     }
     const id = chat.postMessage(text, author);
+    const webSpoofMessage = new chat.WebSpoofMessage(text, author);
+    try {
+        process.send({ action: "messageCreate", message: webSpoofMessage });
+    } catch (err) {
+        log.error(err);
+    }
     io.emit("chat message", chat.getMessage(id));
     res.send(id);
 });

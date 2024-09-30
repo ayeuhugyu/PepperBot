@@ -78,6 +78,10 @@ process.on("message", (message) => {
         
         return;
     }
+    if (message.action && message.action == "messageCreate") {
+        //console.log(message)
+        manager.shards.get(0).send({ action: "messageCreate", message: message.message });
+    }
 });
 
 process.on("uncaughtException", (err) => {

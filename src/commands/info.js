@@ -156,7 +156,7 @@ const logs = new SubCommand(
             totalLength += length;
             totalSize += filestat.size;
         }));
-        console.log(sizes, lengths)
+        //console.log(sizes, lengths)
         const embed = default_embed()
         embed.setTitle("Log Info");
         embed.setDescription(`files: ${logfiles.map((file) => `${file}`).join(", ")}`);

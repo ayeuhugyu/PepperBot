@@ -133,6 +133,10 @@
                         author.classList.add("errorAuthor");
                         authorName = "ERROR";
                         break;
+                    case "bot":
+                        author.classList.add("botAuthor");
+                        authorName = "BOT";
+                        break;
                     default: 
                         author.classList.add("author");
                         authorName = message.author.username;
@@ -140,6 +144,20 @@
                             authorName = `${message.author.username} (ID: ${message.author.id})`;
                         }
                         break;
+                }
+                if (message.author) {
+                    if (message.author.bot) {
+                        author.classList.add("botAuthor");
+                        authorName = message.author.username;
+                    }
+                    if (message.author.system) {
+                        author.classList.add("systemAuthor");
+                        authorName = message.author.username;
+                    }
+                    if (message.author.error) {
+                        author.classList.add("errorAuthor");
+                        authorName = message.author.username;
+                    }
                 }
                 author.innerText = `<${authorName}>: `;
                 const text = document.createElement("span");
@@ -197,6 +215,10 @@
                 const systemMessage = formatMessage({ text: message }, "system");
                 appendMessage(systemMessage);
             }
+            function sendBotMessage(message) {
+                const botMessage = formatMessage({ text: message }, "bot");
+                appendMessage(botMessage);
+            }
             const commands = {
                 "nick": () => {
                     setAuthor()
@@ -205,6 +227,7 @@
                 "test": () => {
                     sendSystemMessage("test");
                     sendError("test");
+                    sendBotMessage("test");
                     appendMessage(formatMessage({ text: "test", id: "test", author: { username: "test", id: "test" } }));
                 },
                 "toggledev": () => {
@@ -226,6 +249,7 @@
             }
             function postMessage() {
                 const message = document.getElementById("messageInput").value;
+                document.getElementById("messageInput").value = "";
                 if (!message) {
                     sendError("message cannot be empty");
                     return;
@@ -252,7 +276,6 @@
             document.getElementById('messageInput').addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     postMessage();
-                    document.getElementById("messageInput").value = "";
                 }
             });
             socket.on("chat message", (message) => {
