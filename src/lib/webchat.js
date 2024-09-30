@@ -53,17 +53,23 @@ export class WebSpoofMessage {
         this.author.globalName = this.author.username
         this.author.displayName = this.author.username
         this.reply = (message) => {
-            const localIP = process.env.IsDev === "True" ? "192.168.4.31:53134" : "192.168.4.30:53134"
             let replyMessage;
             if (message.content) {
                 replyMessage = message.content;
-            } else if (message.embeds && message.embeds[0] && message.embeds[0].description) {
-                replyMessage = message.embeds[0].description;
             } else {
+                replyMessage = message.embeds[0].description;
+            } 
+            if ((!replyMessage || typeof replyMessage !== "string") && typeof message === "string") {
                 replyMessage = message;
             }
-            console.log(replyMessage, message)
-            fetch(`http://${localIP}/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
+            if (!typeof replyMessage == String) {
+                console.log(replyMessage)
+                replyMessage = "error getting message content; replyMessage has been logged.";
+            }
+            if (!replyMessage) {
+                replyMessage = "error getting message content; replyMessage was undefined";
+            }
+            fetch(`http://127.0.0.1:53134/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
             return new Promise((resolve) => {
                 resolve({ id: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                     const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -72,13 +78,20 @@ export class WebSpoofMessage {
                     let replyMessage;
                     if (message.content) {
                         replyMessage = message.content;
-                    } else if (message.embeds) {
-                        replyMessage = message.embeds[0].description;
                     } else {
+                        replyMessage = message.embeds[0].description;
+                    } 
+                    if ((!replyMessage || typeof replyMessage !== "string") && typeof message === "string") {
                         replyMessage = message;
                     }
-                    console.log(replyMessage, message)
-                    fetch(`http://${localIP}/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
+                    if (!typeof replyMessage == String) {
+                        console.log(replyMessage)
+                        replyMessage = "error getting message content; replyMessage has been logged.";
+                    }
+                    if (!replyMessage) {
+                        replyMessage = "error getting message content; replyMessage was undefined";
+                    }
+                    fetch(`http://127.0.0.1:53134/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
                     return new Promise((resolve) => {
                         resolve({ id: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                             const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -95,7 +108,6 @@ export class WebSpoofMessage {
         this.timestamp = Date.now()
         this.content = text
         this.cleanContent = text
-        this.mentions = new Map();
         this.mentions = new Map();
         const mentionPattern = /<@!?(\d+)>/g;
         let match;
@@ -134,13 +146,14 @@ export class Author {
         this.username = username || id
         this.id = id
         this.bot = bot
+        this.createdAt = Date.now()
     }
 }
 
 export function registerUser(username, bot = false, id = generateUID()) {
     let author = new Author(id, username, bot)
     users[author.id] = author
-    log.info(`registered user ${author.id}`)
+    log.info(`registered user ${author.username}`)
     writeUsers()
     return author.id
 }

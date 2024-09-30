@@ -33,26 +33,16 @@ p/update a lot of website changes
 
 **website changes:**
 
-- sidebar now has a source code button that takes you to the github page
-- sidebar can now be opened and closed by clicking the rightmost side of the screen, meaning it can be opened on mobile now
-- you can no longer input -1 to end index to read the entire log file (this feature is specifically made to prevent being able to read the whole file because that much data is enough to lag my internet significantly)
-- log & update types are now sanitized preventing file traversal
-- oauth2 page now has a redirect option, and by default will redirect to the homepage after 5 seconds
-- there are now errors for providing invalid tokens to the oauth2 page
-- fixed missing html doctype on index page
+- somewhat redid index.html using flexboxes; it should be significantly better for weirdly sized screens (also you can scroll now)
+- updated some of the information on index.html
+- chat page now displays message timestamp
+- chat page no longer sends your user id or displays it, making it significantly harder to spoof someone's messages perfectly. 
+- chat page now supports links
+- chat page now verifies your stored user id and registers a new user if it is invalid
 
 **actual content:**
 
-- there are now slightly more detailed p/info subcommands for specific things, rather than a bunch of general stuff.
-- p/markovold has been merged into p/markov and made into p/markov old
-- p/help now does <@userid> when listing whitelists rather than just userid
-- new p/force respond allows you to force the bot to respond to your command with something, also this is the only p/force subcommand that isn't disabled in dm/external contexts
-- p/chatbubble now warns you that ephemeral replies will not work if favorited when the reply is ephemeral
-- added user variables
-- added p/setreferencemessage, which sets a reference message object in your user variables that will be able to be used by commands when i get around to implementing it
+
 
 **fixes/optimizations:**
 
-- removed all instances of data.setDMPermission being used as it is deprecated
-- fixed a rare error caused by removing the bot from a server while a collector was active
-- memory usage displayed in p/info is now much more accurrate, including all shards & the sharder rather than just the current shard.

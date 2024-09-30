@@ -104,7 +104,7 @@
                     <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
                         <h2 class="sectionTitle">chat</h2>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <input type="text" id="messageInput" class="outlined" style="width: calc(100% - 100px); height: 30px; margin-right: 0px; padding: 5px; box-sizing: border-box;" placeholder="enter message text; type /help for commands" />
+                            <input type="text" id="messageInput" class="outlined" style="width: calc(100% - 100px); height: 30px; margin-right: 0px; padding: 5px; box-sizing: border-box;" placeholder="enter message text; type /help for commands; use p/ for pepperbot's commands (WARNING: THESE WILL BE EXTREMELY BUGGY)" />
                             <button class="outlined" style="width: 120px; height: 30px; padding: 5px; box-sizing: border-box;" onclick="postMessage()" onmouseenter="">send</button>
                         </div>
                         <div class="logFileContentContainer" style="width: calc(100% - 3px); flex-grow: 1; overflow: hidden;">
@@ -117,6 +117,13 @@
         <script src="/socket.io/socket.io.js"></script>
         <script>
             const socket = io();
+
+            function formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                const pad = (num) => num.toString().padStart(2, '0');
+                const formattedDate = `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear().toString().slice(-2)} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} `;
+                return formattedDate;
+            }
 
             function formatMessage(message, type) {
                 console.log(message);
@@ -141,7 +148,7 @@
                         author.classList.add("author");
                         authorName = message.author.username;
                         if (dev) {
-                            authorName = `${message.author.username} (ID: ${message.author.id})`;
+                            authorName = `${message.author.username}`;
                         }
                         break;
                 }
@@ -163,9 +170,17 @@
                 const text = document.createElement("span");
                 text.classList.add("text");
                 text.innerText = message.text;
+                text.innerHTML = text.innerHTML.replace(/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/g,"<a href='$1' target='_blank'>$1</a>")
                 if (dev) {
                     text.innerText = `(TYPE: ${type || "message"}; ID: ${message.id}) ${message.text}`;
                 }
+                const timestamp = document.createElement("span");
+                timestamp.classList.add("timestamp");
+                if (!message.timestamp) {
+                    message.timestamp = Date.now();
+                }
+                timestamp.innerText = dev ? `${message.timestamp} ` : formatTimestamp(message.timestamp);
+                messageitem.appendChild(timestamp);
                 messageitem.appendChild(author);
                 messageitem.appendChild(text);
                 return messageitem;
@@ -194,6 +209,11 @@
                     }
                 })
             }
+            fetch("/api/chat/user?id=" + author)
+                .then((response) => response.json())
+                .catch((data) => {
+                    setAuthor();
+                });
             function fetchLatestMessages() {
                 fetch("/api/chat/latest")
                     .then((response) => response.json())
@@ -276,12 +296,61 @@
             document.getElementById('messageInput').addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     postMessage();
+                } else {
+                    socket.emit("typing", author);
                 }
             });
             socket.on("chat message", (message) => {
                 const formattedMessage = formatMessage(message);
                 appendMessage(formattedMessage);
             });
+        </script>
+        <script id="mobiledisplay">
+            const chatcontainer = document.getElementById("logscontainer");
+            function enableMobileMode() {
+
+            }
+
+            function disableMobileMode() {
+                
+            }
+            let mobileMode = sessionStorage.getItem("mobileMode") === "true";
+            function toggleMobileMode() {
+                if (mobileMode) {
+                    disableMobileMode();
+                } else {
+                    enableMobileMode();
+                }
+                mobileMode = !mobileMode;
+                sessionStorage.setItem("mobileMode", mobileMode);
+            }
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                if (!mobileMode) {
+                    toggleMobileMode();
+                }
+            }
+            function checkMobileMode() {
+                if (window.matchMedia("(max-width: 1280px)").matches) {
+                    if (!mobileMode) {
+                        toggleMobileMode();
+                    }
+                } else {
+                    if (mobileMode) {
+                        toggleMobileMode();
+                    }
+                }
+            }
+            const mobileModeOverrideBeforeCheck = sessionStorage.getItem("mobileMode") === "true";
+
+            // Initial check
+            checkMobileMode();
+            if (mobileModeOverrideBeforeCheck) {
+                enableMobileMode();
+                mobileMode = true
+            }
+
+            // Add event listener for screen size changes
+            window.addEventListener("resize", checkMobileMode);
         </script>
     </body>
 </html>

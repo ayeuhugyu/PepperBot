@@ -117,6 +117,11 @@ io.on("connection", (socket) => {
     socket.on("chat message", (msg) => {
         io.emit("chat message", msg);
     });
+    socket.on("typing", (user, stop) => {
+        const processedUser = chat.getUser(user);
+        delete processedUser.id
+        io.emit("typing", processedUser);
+    })
 });
 
 app.use((req, res, next) => {
@@ -180,6 +185,7 @@ app.get("/api/chat/message", (req, res) => { // get a message by id
     if (!message) {
         return res.status(404).send("message not found");
     }
+    delete message.author.id;
     res.send(message);
 });
 

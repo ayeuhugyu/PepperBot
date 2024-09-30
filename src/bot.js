@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials, Collection } from "discord.js";
 import * as log from "./lib/log.js";
 import util from "util";
 import prettyBytes from "pretty-bytes";
@@ -132,9 +132,10 @@ process.on("message", function (message) {
             message.message.react = new Function(`return ${message.message.react}`)();
             message.message.delete = new Function(`return ${message.message.delete}`)();
             message.message.edit = new Function(`return ${message.message.reply}`)();
-            message.message.guild.members = new Map();
-            message.message.guild.channels = new Map();
-            message.message.guild.roles = new Map();
+            message.message.guild.members = new Collection();
+            message.message.guild.channels = new Collection();
+            message.message.guild.roles = new Collection();
+            message.message.attachments = new Collection();
             message.message.guild.ownerID = "0";
             event.default.execute(message.message);
         });

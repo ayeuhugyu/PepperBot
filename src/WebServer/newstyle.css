@@ -19,6 +19,12 @@ body {
     color: white;
     word-wrap: break-word;
 }
+.scaled {
+    transform: scale(2);
+    width: 25%;
+    height: 25%;
+    transform-origin: 0 0;
+}
 
 /* Sidebar */
 .sidebar {
@@ -87,6 +93,13 @@ body {
     justify-content: center;
 }
 
+.flexcontainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 #mobiledisplay {
     width: fit-content;
     height: 100%;
@@ -125,6 +138,10 @@ body {
 .botAuthor {
     color: #5e81d1;
     font-weight: bold;
+}
+.timestamp {
+    color: #7d848e;
+    font-size: 0.8em;
 }
 
 /* Text */
