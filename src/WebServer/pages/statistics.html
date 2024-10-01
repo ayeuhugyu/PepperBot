@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Pepper Site</title>
-        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <title>Statistics</title>
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
         <meta content="ye" property="og:description" />
@@ -99,66 +99,160 @@
             </script>
         </div>
         <pre id="fileContents" style="position: absolute"></pre>
-        <h1 id="mainTitle">Statistics</h1>
-        <div id="chartContainer"></div>
-        <div id="statsContainer"></div>
-        <script>
-            window.onload = function () {
-                const mainTitle = document.getElementById("mainTitle");
-                const chartContainer =
-                    document.getElementById("chartContainer");
-                const statsContainer =
-                    document.getElementById("statsContainer");
-
-                if (mainTitle && chartContainer && statsContainer) {
-                    const mainTitleBottom =
-                        mainTitle.offsetTop + mainTitle.offsetHeight;
-                    chartContainer.style.top = `${mainTitleBottom + 5}px`;
-                    const maxHeight = window.innerHeight - mainTitleBottom;
-                    chartContainer.style.height = `0px`;
-                    chartContainer.style.position = "absolute";
-                    statsContainer.style.position = "absolute";
-                    statsContainer.style.bottom = "5px";
-                }
-            };
-        </script>
+        <div class="cardcontainer" id="maintitle" style="margin-left: 50%; margin-top: 15px; width: fit-content; transform: translateX(-50%); position: relative;">
+            <div class="sectionoutline" style="justify-content: center; align-items: center; text-align: center;">
+                <h2 class="sectionTitle">Statistics</h2>
+            </div>
+        </div>
+        <div class="flexcontainer" style="margin-top: 15px;">
+            <div class="container" id="chart" style="position: relative; padding-bottom: 15px">
+                <div class="sectionoutline">
+                    <div class="flexcontainer" style="padding: 5px; flex-direction: column; width: calc(100vw - 50px);">
+                        <h2 class="sectionTitle">CHARTS</h2>
+                        <div id="information" class="flexcontainer" style="justify-content: space-between; width: 100%;">
+                            <div id="selections" class="flexcontainer">
+                                <span id="label">category: </span>
+                                <div class="dropdown-wrapper" id="category">
+                                    <select class="logLevelDropdown" id="categoryType">
+                                        <option value="USAGE">USAGE</option>
+                                        <option value="INFO">EXECUTION TIME</option>
+                                        <option value="HOURLY_USAGE">HOURLY USAGE</option>
+                                    </select>
+                                </div>
+                                <span id="label"> display type: </span>
+                                <div class="dropdown-wrapper" id="display">
+                                    <select class="logLevelDropdown" id="displayType">
+                                        <option value="HORIZONTAL">HORIZONTAL</option>
+                                        <option value="VERTICAL">VERTICAL</option>
+                                    </select>
+                                </div>
+                                <span id="label"> value type: </span>
+                                <div class="dropdown-wrapper" id="value">
+                                    <select class="logLevelDropdown" id="valueType">
+                                        <option value="PERCENTAGE">PERCENTAGE</option>
+                                        <option value="INTEGER">INTEGER</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="status" style="text-align: right;">awaiting input...</div>
+                        </div>
+                        <pre class="outlined" id="chartcontent" style="width: 100%; min-height: 300px; max-height: 300px; overflow: scroll; text-align: left;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="container" id="info" style="position: relative; padding-bottom: 15px;"></div>
+                <div class="sectionoutline" style="width: calc(100vw - 40px);">
+                    <div class="flexcontainer" style="padding: 5px; flex-direction: column; width: calc(100vw - 50px);">
+                        <h2 class="sectionTitle">INFO</h2>
+                        <pre class="outlined" id="statsContainer" style="width: 100%; height: 300px; overflow: scroll; text-align: left;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
         <script>
             fetch("/api/read-statistics")
-                .then((response) => response.text())
-                .then((data) => {
-                    const jsonData = JSON.parse(data);
-                    const usageArray = Object.entries(
-                        jsonData.usage["Command Usage"]
-                    );
-                    usageArray.sort((a, b) => b[1] - a[1]);
+                .then((response) => response.json())
+                .then((jsonData) => {
+                    const chartContent = document.getElementById("chartcontent");
+                    //chartContent.innerText = JSON.stringify(jsonData, null, 2);
 
-                    const chartContainer =
-                        document.getElementById("chartContainer");
-                    const totalUsage = usageArray.reduce(
-                        (total, [command, count]) => total + count,
-                        0
-                    );
-                    usageArray.forEach(([command, count]) => {
-                        const bar = document.createElement("div");
-                        bar.classList.add("bar");
-                        const highestCount = usageArray[0][1];
-                        const roundedHighestCount =
-                            Math.ceil(highestCount / 50) * 50;
-                        bar.style.width = `${
-                            (count / roundedHighestCount) * 100
-                        }%`;
-                        bar.textContent = `${command}: ${count} (${(
-                            (count / totalUsage) *
-                            100
-                        ).toFixed(2)}%)`;
-                        bar.style.backgroundColor = "#cca1db"; // Replace with desired background color
-                        bar.style.whiteSpace = "nowrap";
-                        bar.style.paddingLeft = "10px";
-                        bar.style.paddingBottom = "2px";
-                        bar.style.paddingTop = "2px";
-                        bar.style.outline = "1px solid black";
-                        chartContainer.appendChild(bar);
-                    });
+                    const statistics = jsonData.statistics;
+                    const totalUsage = Object.values(statistics.commandUsage).reduce((total, value) => total + value, 0);
+                    let averageExecutionTimes = {};
+                    for (const [command, executionTimes] of Object.entries(statistics.executionTime)) {
+                        const averageExecutionTime = executionTimes.reduce((total, value) => total + value, 0) / executionTimes.length;
+                        averageExecutionTimes[command] = averageExecutionTime;
+                    }
+                    const hourlyUsage = statistics.hourlyUsage;
+                    const commandUsage = statistics.commandUsage;
+
+                    let category = document.getElementById("categoryType").value;
+                    let displayType = document.getElementById("displayType").value;
+                    let valueType = document.getElementById("valueType").value;
+
+                    const status = document.getElementById("status");
+
+                    function generateHorizontalChart(data, valueType, vertical) {
+                        // sort the data highest to lowest
+                        status.innerText = "sorting data...."
+                        const total = Object.values(data).reduce((total, value) => total + value, 0);
+                        const sortedData = Object.entries(data).sort((a, b) => b[1] - a[1]);
+                        status.innerText = "generating chart...."
+                        const bars = document.createElement("div");
+                        bars.style.display = "flex";
+                        bars.style.flexDirection = "row";
+                        bars.style.justifyContent = "space-between";
+                        bars.style.width = "100%";
+                        bars.style.height = "100%";
+                        bars.style.alignItems = "flex-end";
+                        for (const [key, value] of sortedData) {
+                            const bar = document.createElement("div");
+                            bar.style.height = `${(value / sortedData[0][1]) * 100}%`;
+                            bar.style.width = "20px";
+                            bar.style.backgroundColor = "blue";
+                            bar.style.outline = "1px solid black";
+                            bar.style.color = "white";
+                            bar.style.textAlign = "center";
+                            bar.style.lineHeight = "20px";
+                            bar.style.display = "flex";
+                            bar.style.flexDirection = "column-reverse";
+                            bar.style.alignItems = "center";
+                            bar.style.justifyContent = "space-between";
+
+                            bars.appendChild(bar);
+                            const nameObject = document.createElement("div");
+                            nameObject.style.width = "fit-content";
+                            nameObject.style.height = "fit-content";
+                            nameObject.style.textAlign = "center";
+                            nameObject.textContent = `${key}`;
+                            bar.appendChild(nameObject);
+                            const valueObject = document.createElement("div");
+                            valueObject.style.width = "fit-content";
+                            valueObject.style.height = "fit-content";
+                            valueObject.style.textAlign = "center";
+                            valueObject.textContent = `${value}`;
+                            bar.appendChild(valueObject);
+                        }
+                        chartContent.innerHTML = "";
+                        chartContent.appendChild(bars);
+                        status.innerText = "chart generated";
+                    }
+
+                    function generateChartGivenCategory(data, displayType, valueType) {
+                        status.innerText = "switching displayType...."
+                        switch (displayType) {
+                            case "HORIZONTAL":
+                                generateHorizontalChart(data, valueType);
+                                break;
+                            case "VERTICAL":
+                                generateHorizontalChart(data, valueType, true);
+                                break;
+                            default:
+                                chartContent.textContent = "invalid display type: " + displayType;
+                                break;
+                        }
+                    }
+
+                    function generateChart() {
+                        category = document.getElementById("categoryType").value;
+                        displayType = document.getElementById("displayType").value;
+                        valueType = document.getElementById("valueType").value;
+                        status.textContent = `generating chart for category: ${category}, display type: ${displayType}, value type: ${valueType}`;
+                        switch (category) {
+                            case "USAGE":
+                                generateChartGivenCategory(commandUsage, displayType, valueType);
+                                break;
+                            case "INFO":
+                                generateChartGivenCategory(averageExecutionTimes, displayType, valueType);
+                                break;
+                            case "HOURLY_USAGE":
+                                generateChartGivenCategory(hourlyUsage, displayType, valueType);
+                                break;
+                            default:
+                                chartContent.textContent = "invalid category: " + category;
+                                break;
+                        }
+                    }
                     function formatTime(seconds) {
                         const hours = Math.floor(seconds / 3600);
                         const minutes = Math.floor((seconds % 3600) / 60);
@@ -171,37 +265,35 @@
                     function padZero(number) {
                         return number.toString().padStart(2, "0");
                     }
-                    const statsContainer =
+                    const stats =
                         document.getElementById("statsContainer");
-                    const stats = document.createElement("pre");
-                    stats.textContent = `
-                    version: ${jsonData.version}
-                    system: ${jsonData.system}
-                    memory usage: ${jsonData.mem}
-                    wasted space: ${jsonData.wasted_space}
-                    total GPT messages: ${jsonData.usage["GPT Messages"]}
-                    total commands used: ${totalUsage}
-                    total running shards: ${jsonData.shardCount}
-                    total request count: ${jsonData.requestCount}
+                    stats.textContent = `version: ${jsonData.version}
+system: ${jsonData.system}
+memory usage: ${jsonData.mem}
+wasted space: ${jsonData.wasted_space}
+total GPT messages: ${statistics.gpt}
+total commands used: ${totalUsage}
+total running shards: ${jsonData.shardCount}
+total request count: ${jsonData.requestCount}
 
-                    site started at: ${jsonData.starts.site.startedAt}
-                    bot started at: ${jsonData.starts.bot.startedAt}
-                    shard started at: ${jsonData.starts.shard.startedAt}
-                    site uptime: ${formatTime(
+site started at: ${jsonData.starts.site.startedAt}
+bot started at: ${jsonData.starts.bot.startedAt}
+shard started at: ${jsonData.starts.shard.startedAt}
+site uptime: ${formatTime(
                         Math.floor(
                             (Date.now() -
                                 jsonData.starts.site.startedAtTimestamp) /
                                 1000
                         )
                     )}
-                    bot uptime: ${formatTime(
+bot uptime: ${formatTime(
                         Math.floor(
                             (Date.now() -
                                 jsonData.starts.bot.startedAtTimestamp) /
                                 1000
                         )
                     )}
-                    shard uptime: ${formatTime(
+shard uptime: ${formatTime(
                         Math.floor(
                             (Date.now() -
                                 jsonData.starts.shard.startedAtTimestamp) /
@@ -210,14 +302,16 @@
                     )}
 
                     `;
-                    statsContainer.appendChild(stats);
-
-                    document.body.appendChild(chartContainer);
-
-                    //document.getElementById("fileContents").innerHTML =
-                    //JSON.stringify(jsonData, null, 4);
+                    const categoryObject = document.getElementById("categoryType");
+                    const displayObject = document.getElementById("displayType");
+                    const valueObject = document.getElementById("valueType");
+                
+                    categoryObject.addEventListener("change", generateChart);
+                    displayObject.addEventListener("change", generateChart);
+                    valueObject.addEventListener("change", generateChart);
+                    generateChart();
                 })
-                .catch((error) => console.error("Error:", error));
+                .catch((error) => {console.error("Error:", error); document.getElementById("status").innerText = error + error.stack;});
         </script>
     </body>
 </html>

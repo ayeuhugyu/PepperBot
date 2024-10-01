@@ -115,6 +115,8 @@
             </div>
         </div>
         <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.4/dist/purify.min.js"></script>
         <script>
             const socket = io();
 
@@ -127,6 +129,9 @@
 
             function formatMessage(message, type) {
                 console.log(message);
+                marked.use({
+                    gfm: true,
+                })
                 const messageitem = document.createElement("div");
                 messageitem.classList.add("message");
                 const author = document.createElement("span");
@@ -172,8 +177,7 @@
                 author.innerText = `<${dev ? `${authorName} (CREATED AT: ${(message.author && message.author.createdAt) ? `${formatTimestamp(message.author.createdAt)}(${message.author.createdAt})` : "DATE UNKNOWN"})` : authorName}>: `;
                 const text = document.createElement("span");
                 text.classList.add("text");
-                text.innerText = message.text;
-                text.innerHTML = text.innerHTML.replace(/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/g,"<a href='$1' target='_blank'>$1</a>")
+                text.innerHTML = DOMPurify.sanitize(marked.parseInline(message.text));
                 if (dev) {
                     text.innerText = `(TYPE: ${type || "message"}; ID: ${message.id || "INVALID; CLIENT MESSAGE"}) ${message.text}`;
                 }

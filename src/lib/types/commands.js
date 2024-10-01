@@ -206,8 +206,6 @@ export class Command {
                 }
             }
             if (!shouldNotRun) {
-                if (!this.isSubCommand)
-                    statistics.addCommandStat(this.data.name, 1);
                 const guildConfig = await guildConfigs.getGuildConfig(
                     message.guildId
                 );

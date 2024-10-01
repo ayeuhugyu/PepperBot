@@ -17,8 +17,8 @@ import process from "node:process";
 import fsExtra from "fs-extra";
 import cheerio from "cheerio";
 import guildConfigs from "../lib/guildConfigs.js";
-import { start } from "repl";
 import commonRegex from "../lib/commonRegex.js";
+import statistics from "../lib/statistics.js";
 
 async function fetchTitle(url) {
     try {
@@ -257,6 +257,7 @@ async function processCommand(message) {
             ).toFixed(3)}ms from: ${message.author.username} (${
                 message.author
             }) `;
+            statistics.logCommandUsage(command, performance.now() - startCommand);
             if (message.channel) {
                 if (message.channel.type === 1) {
                     logmsg += `in DM `;

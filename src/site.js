@@ -14,6 +14,7 @@ import https from "https";
 import http from "http";
 import { Server } from "socket.io";
 import * as chat from "./lib/webchat.js"
+import statistics from "./lib/statistics.js";
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -275,7 +276,7 @@ app.get("/api/read-statistics", (req, res) => {
                         startedAtTimestamp: siteStartedAt,
                     },
                 },
-                usage: JSON.parse(data),
+                statistics: JSON.parse(data),
                 shardCount: shardCount,
                 requestCount: requestCount,
             };

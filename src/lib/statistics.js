@@ -10,15 +10,8 @@ const statistics = await JSON.parse(
 
 export default {
     statistics: statistics,
-    async addCommandStat(stat, amount) {
+    async writeStatistics() {
         return new Promise((resolve, reject) => {
-            if (!statistics["Command Usage"]) {
-                statistics["Command Usage"] = {};
-            }
-            if (!statistics["Command Usage"][stat]) {
-                statistics["Command Usage"][stat] = 0;
-            }
-            statistics["Command Usage"][stat] += amount;
             fs.writeFile(
                 `resources/data/statistics.json`,
                 JSON.stringify(statistics, null, 2),
@@ -27,17 +20,48 @@ export default {
             resolve();
         });
     },
+    async logCommandUsage(commandName, executionTime) {
+        return new Promise((resolve, reject) => {
+            if (statistics.commandUsage) {
+                if (statistics.commandUsage[commandName]) {
+                    statistics.commandUsage[commandName]++;
+                } else {
+                    statistics.commandUsage[commandName] = 1;
+                }
+            } else {
+                log.warn(`commandUsage missing from statistics; likely old version`);
+            }
+            if (statistics.hourlyUsage) {
+                const date = new Date();
+                const hour = date.getHours();
+                if (statistics.hourlyUsage[hour]) {
+                    statistics.hourlyUsage[hour]++;
+                } else {
+                    statistics.hourlyUsage[hour] = 1;
+                }
+            } else {
+                log.warn(`hourlyUsage missing from statistics; likely old version`);
+            }
+            if (statistics.executionTime) {
+                if (statistics.executionTime[commandName]) {
+                    statistics.executionTime[commandName].push(executionTime);
+                } else {
+                    statistics.executionTime[commandName] = [executionTime];
+                }
+            } else {
+                log.warn(`executionTime missing from statistics; likely old version`);
+            }
+            this.writeStatistics();
+            resolve();
+        });
+    },
     async addGptStat(amount) {
         return new Promise((resolve, reject) => {
-            if (!statistics["GPT Messages"]) {
-                statistics["GPT Messages"] = 0;
+            if (!statistics.gpt) {
+                statistics.gpt = 0;
             }
-            statistics["GPT Messages"] += amount;
-            fs.writeFile(
-                `resources/data/statistics.json`,
-                JSON.stringify(statistics, null, 2),
-                () => {}
-            );
+            statistics.gpt += amount;
+            this.writeStatistics();
             resolve();
         });
     },
