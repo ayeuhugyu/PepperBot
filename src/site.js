@@ -119,8 +119,9 @@ io.on("connection", (socket) => {
     });
     socket.on("typing", (user, stop) => {
         const processedUser = chat.getUser(user);
-        delete processedUser.id
-        io.emit("typing", processedUser);
+        const cloneOfProcessedUser = { ...processedUser };
+        delete cloneOfProcessedUser.id;
+        io.emit("typing", cloneOfProcessedUser);
     })
 });
 
@@ -185,8 +186,9 @@ app.get("/api/chat/message", (req, res) => { // get a message by id
     if (!message) {
         return res.status(404).send("message not found");
     }
-    delete message.author.id;
-    res.send(message);
+    const cloneOfMessage = { ...message };
+    delete cloneOfMessage.author.id;
+    res.send(cloneOfMessage);
 });
 
 app.get("/api/chat/user", (req, res) => { // get a user by id
@@ -229,13 +231,21 @@ app.post("/api/chat/message", (req, res) => { // post a message
     } catch (err) {
         log.error(err);
     }
-    io.emit("chat message", chat.getMessage(id));
+    const message = chat.getMessage(id);
+    const cloneOfMessage = { ...message };
+    delete cloneOfMessage.author.id;
+    io.emit("chat message", cloneOfMessage);
     res.send(id);
 });
 
 app.get("/api/chat/latest", (req, res) => { // get the latest messages
     const messages = chat.getLatestMessages(150);
-    res.send(messages);
+    const cloneOfMessages = messages.map((message) => {
+        const cloneOfMessage = { ...message };
+        delete cloneOfMessage.author.id;
+        return cloneOfMessage;
+    });
+    res.send(cloneOfMessages);
 });
 
 app.get("/api/read-statistics", (req, res) => {

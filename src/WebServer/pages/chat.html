@@ -156,30 +156,33 @@
                     if (message.author.bot) {
                         author.classList.add("botAuthor");
                         authorName = message.author.username;
+                        type = "bot";
                     }
                     if (message.author.system) {
                         author.classList.add("systemAuthor");
                         authorName = message.author.username;
+                        type = "system";
                     }
                     if (message.author.error) {
                         author.classList.add("errorAuthor");
                         authorName = message.author.username;
+                        type = "error";
                     }
                 }
-                author.innerText = `<${authorName}>: `;
+                author.innerText = `<${dev ? `${authorName} (CREATED AT: ${(message.author && message.author.createdAt) ? `${formatTimestamp(message.author.createdAt)}(${message.author.createdAt})` : "DATE UNKNOWN"})` : authorName}>: `;
                 const text = document.createElement("span");
                 text.classList.add("text");
                 text.innerText = message.text;
                 text.innerHTML = text.innerHTML.replace(/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/g,"<a href='$1' target='_blank'>$1</a>")
                 if (dev) {
-                    text.innerText = `(TYPE: ${type || "message"}; ID: ${message.id}) ${message.text}`;
+                    text.innerText = `(TYPE: ${type || "message"}; ID: ${message.id || "INVALID; CLIENT MESSAGE"}) ${message.text}`;
                 }
                 const timestamp = document.createElement("span");
                 timestamp.classList.add("timestamp");
                 if (!message.timestamp) {
                     message.timestamp = Date.now();
                 }
-                timestamp.innerText = dev ? `${message.timestamp} ` : formatTimestamp(message.timestamp);
+                timestamp.innerText = dev ? `${formatTimestamp(message.timestamp)}(${message.timestamp}) ` : formatTimestamp(message.timestamp);
                 messageitem.appendChild(timestamp);
                 messageitem.appendChild(author);
                 messageitem.appendChild(text);
@@ -248,7 +251,7 @@
                     sendSystemMessage("test");
                     sendError("test");
                     sendBotMessage("test");
-                    appendMessage(formatMessage({ text: "test", id: "test", author: { username: "test", id: "test" } }));
+                    appendMessage(formatMessage({ text: "test", author: { username: "test", id: "test" } }));
                 },
                 "toggledev": () => {
                     dev = !dev;

@@ -39,10 +39,12 @@ p/update a lot of website changes
 - chat page no longer sends your user id or displays it, making it significantly harder to spoof someone's messages perfectly. 
 - chat page now supports links
 - chat page now verifies your stored user id and registers a new user if it is invalid
+- /toggledev on chat page displays even more information
 
 **actual content:**
 
-
+- default GPT has been swapped from 3.5-turbo to 4o-mini
+- new p/gpt allows you to do several things relating to gpt: set the prompt (using normalAliases, your usage of this command will not change), change to using the old model, and get the JSON of your current conversation (used for debugging mostly)
 
 **fixes/optimizations:**
 
