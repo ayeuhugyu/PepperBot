@@ -142,16 +142,18 @@ export class Message {
 }
 
 export class Author {
-    constructor(id, username, bot = false) {
+    constructor(id, username, bot = false, system = false, error = false) {
         this.username = username || id
         this.id = id
         this.bot = bot
+        this.system = system
+        this.error = error
         this.createdAt = Date.now()
     }
 }
 
-export function registerUser(username, bot = false, id = generateUID()) {
-    let author = new Author(id, username, bot)
+export function registerUser(username, bot = false, id = generateUID(), system = false, error = false) {
+    let author = new Author(id, username, bot, system, error)
     users[author.id] = author
     log.info(`registered user ${author.username}`)
     writeUsers()
