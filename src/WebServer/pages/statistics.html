@@ -107,7 +107,7 @@
         <div class="flexcontainer" style="margin-top: 15px;">
             <div class="container" id="chart" style="position: relative; padding-bottom: 15px">
                 <div class="sectionoutline">
-                    <div class="flexcontainer" style="padding: 5px; flex-direction: column; width: calc(100vw - 50px);">
+                    <div class="flexcontainer" id="chartsCardContainer" style="padding: 5px; flex-direction: column; width: calc(100vw - 50px); height: 410px;">
                         <h2 class="sectionTitle">CHARTS</h2>
                         <div id="information" class="flexcontainer" style="justify-content: space-between; width: 100%;">
                             <div id="selections" class="flexcontainer">
@@ -115,7 +115,7 @@
                                 <div class="dropdown-wrapper" id="category">
                                     <select class="logLevelDropdown" id="categoryType">
                                         <option value="USAGE">USAGE</option>
-                                        <option value="INFO">EXECUTION TIME</option>
+                                        <option value="EXECUTION_TIME">EXECUTION TIME</option>
                                         <option value="HOURLY_USAGE">HOURLY USAGE</option>
                                     </select>
                                 </div>
@@ -136,7 +136,7 @@
                             </div>
                             <div id="status" style="text-align: right;">awaiting input...</div>
                         </div>
-                        <pre class="outlined" id="chartcontent" style="width: 100%; min-height: 300px; max-height: 300px; overflow: scroll; text-align: left;"></pre>
+                        <pre class="outlined" id="chartcontent" style="width: 100%; overflow: scroll; text-align: left; flex-grow: 1;"></pre>
                     </div>
                 </div>
             </div>
@@ -150,9 +150,20 @@
             </div>
         </div>
         <script>
+            function hourToHumanReadable(hour) {
+                if (hour < 12) {
+                    return `${hour} AM`;
+                } else if (hour === 12) {
+                    return `${hour} PM`;
+                } else {
+                    return `${hour - 12} PM`;
+                }
+            }
+
             fetch("/api/read-statistics")
                 .then((response) => response.json())
                 .then((jsonData) => {
+                    const chartsCardContainer = document.getElementById("chartsCardContainer");
                     const chartContent = document.getElementById("chartcontent");
                     //chartContent.innerText = JSON.stringify(jsonData, null, 2);
 
@@ -172,7 +183,7 @@
 
                     const status = document.getElementById("status");
 
-                    function generateHorizontalChart(data, valueType, vertical) {
+                    function createChart(data, valueType, vertical, category) {
                         // sort the data highest to lowest
                         status.innerText = "sorting data...."
                         const total = Object.values(data).reduce((total, value) => total + value, 0);
@@ -181,51 +192,103 @@
                         const bars = document.createElement("div");
                         bars.style.display = "flex";
                         bars.style.flexDirection = "row";
-                        bars.style.justifyContent = "space-between";
                         bars.style.width = "100%";
                         bars.style.height = "100%";
                         bars.style.alignItems = "flex-end";
                         for (const [key, value] of sortedData) {
+                            const barHolder = document.createElement("div");
+                            barHolder.style.width = "20px";
+                            barHolder.style.height = "100%";
+                            barHolder.style.outline = "1px solid #cca1db";
+                            barHolder.style.position = "relative";
+                            barHolder.style.marginRight = "5px";
+                            if (vertical) {
+                                barHolder.style.width = barHolder.style.height
+                                barHolder.style.height = barHolder.style.width
+                                barHolder.style.marginRight = "0px";
+                                barHolder.style.marginBottom = "5px";
+                            }
+                            bars.appendChild(barHolder);
+
                             const bar = document.createElement("div");
                             bar.style.height = `${(value / sortedData[0][1]) * 100}%`;
                             bar.style.width = "20px";
-                            bar.style.backgroundColor = "blue";
-                            bar.style.outline = "1px solid black";
+                            bar.style.backgroundColor = "#2a1d3e";
                             bar.style.color = "white";
-                            bar.style.textAlign = "center";
-                            bar.style.lineHeight = "20px";
-                            bar.style.display = "flex";
-                            bar.style.flexDirection = "column-reverse";
-                            bar.style.alignItems = "center";
-                            bar.style.justifyContent = "space-between";
+                            bar.style.position = "absolute"; // Add this line
+                            bar.style.bottom = "0"; // Add this line to align the bar to the bottom
+                            if (vertical) {
+                                bar.style.width = `${(value / sortedData[0][1]) * 100}%`
+                                bar.style.height = "100%"
+                            }
 
-                            bars.appendChild(bar);
+                            const labelHolder = document.createElement("div");
+                            labelHolder.style.display = "flex";
+                            labelHolder.style.flexDirection = "column";
+                            labelHolder.style.justifyContent = "space-around";
+                            labelHolder.style.alignItems = "center";
+                            labelHolder.style.width = "20px";
+                            labelHolder.style.height = "calc(100% - 15px)";
+                            labelHolder.style.position = "absolute"; // Add this line
+                            labelHolder.style.top = "0"; // Add this line to align the labelHolder to the top
+                            labelHolder.style.paddingBottom = "15px"
+                            if (vertical) {
+                                labelHolder.style.width = "100%"
+                                labelHolder.style.height = "100%"
+                                labelHolder.style.flexDirection = "row";
+                                labelHolder.style.paddingBottom = "0px"
+                            }
+                            
+                            barHolder.appendChild(bar);
+                            barHolder.appendChild(labelHolder);
                             const nameObject = document.createElement("div");
                             nameObject.style.width = "fit-content";
-                            nameObject.style.height = "fit-content";
-                            nameObject.style.textAlign = "center";
-                            nameObject.textContent = `${key}`;
-                            bar.appendChild(nameObject);
+                            nameObject.style.height = "20px";
+                            nameObject.style.textAlign = "right";
+                            nameObject.style.color = "lightgray";
+                            nameObject.textContent = `${(category == "USAGE" || category == "EXECUTION_TIME") ? "p/" : ""}${key}`;
+                            if (category == "HOURLY_USAGE") {
+                                nameObject.textContent = hourToHumanReadable(key);
+                            }
+                            nameObject.style.transform = "rotate(-90deg)";
                             const valueObject = document.createElement("div");
                             valueObject.style.width = "fit-content";
-                            valueObject.style.height = "fit-content";
-                            valueObject.style.textAlign = "center";
-                            valueObject.textContent = `${value}`;
-                            bar.appendChild(valueObject);
+                            valueObject.style.height = "20px";
+                            valueObject.style.textAlign = "left";
+                            valueObject.style.color = "lightgray";
+                            valueObject.textContent = `${valueType === "PERCENTAGE" ? `${((value/total)*100).toFixed(2)}%`: value.toFixed(1)}${(category == "EXECUTION_TIME" && valueType !== "PERCENTAGE") ? "ms" : ""}`;
+                            valueObject.style.transform = "rotate(-90deg)";
+                            if (vertical) {
+                                nameObject.style.transform = "rotate(0deg)";
+                                valueObject.style.transform = "rotate(0deg)";
+                            }
+                            labelHolder.appendChild(valueObject);
+                            labelHolder.appendChild(nameObject);
                         }
                         chartContent.innerHTML = "";
                         chartContent.appendChild(bars);
+                        if (displayType === "VERTICAL") {
+                            chartContent.style.flexDirection = "column";
+                            chartsCardContainer.style.height = "1500px";
+                            bars.style.flexDirection = "column";
+                            bars.style.alignItems = "flex-start";
+                        } else {
+                            chartContent.style.flexDirection = "row";
+                            chartsCardContainer.style.height = "410px";
+                            bars.style.flexDirection = "row";
+                            bars.style.alignItems = "flex-end";
+                        }
                         status.innerText = "chart generated";
                     }
 
-                    function generateChartGivenCategory(data, displayType, valueType) {
+                    function generateChartGivenCategory(data, displayType, valueType, category) {
                         status.innerText = "switching displayType...."
                         switch (displayType) {
                             case "HORIZONTAL":
-                                generateHorizontalChart(data, valueType);
+                                createChart(data, valueType, false, category);
                                 break;
                             case "VERTICAL":
-                                generateHorizontalChart(data, valueType, true);
+                                createChart(data, valueType, true, category);
                                 break;
                             default:
                                 chartContent.textContent = "invalid display type: " + displayType;
@@ -240,13 +303,13 @@
                         status.textContent = `generating chart for category: ${category}, display type: ${displayType}, value type: ${valueType}`;
                         switch (category) {
                             case "USAGE":
-                                generateChartGivenCategory(commandUsage, displayType, valueType);
+                                generateChartGivenCategory(commandUsage, displayType, valueType, category);
                                 break;
-                            case "INFO":
-                                generateChartGivenCategory(averageExecutionTimes, displayType, valueType);
+                            case "EXECUTION_TIME":
+                                generateChartGivenCategory(averageExecutionTimes, displayType, valueType, category);
                                 break;
                             case "HOURLY_USAGE":
-                                generateChartGivenCategory(hourlyUsage, displayType, valueType);
+                                generateChartGivenCategory(hourlyUsage, displayType, valueType, category);
                                 break;
                             default:
                                 chartContent.textContent = "invalid category: " + category;
@@ -306,12 +369,71 @@ shard uptime: ${formatTime(
                     const displayObject = document.getElementById("displayType");
                     const valueObject = document.getElementById("valueType");
                 
-                    categoryObject.addEventListener("change", generateChart);
+                    const defaultValueTypeForCategory = {
+                        "USAGE": "PERCENTAGE",
+                        "EXECUTION_TIME": "INTEGER",
+                        "HOURLY_USAGE": "INTEGER"
+                    }
+
+                    categoryObject.addEventListener("change", () => {
+                        valueObject.value = defaultValueTypeForCategory[categoryObject.value];
+                        generateChart();
+                    });
                     displayObject.addEventListener("change", generateChart);
                     valueObject.addEventListener("change", generateChart);
                     generateChart();
                 })
                 .catch((error) => {console.error("Error:", error); document.getElementById("status").innerText = error + error.stack;});
+        </script>
+        <script id="mobiledisplay">
+            const displayObjectMobile = document.getElementById("displayType");
+            function enableMobileMode() {
+                displayObjectMobile.value = "VERTICAL";
+                const event = new Event('change');
+                displayObjectMobile.dispatchEvent(event);
+            }
+            function disableMobileMode() {
+                displayObjectMobile.value = "HORIZONTAL";
+                const event = new Event('change');
+                displayObjectMobile.dispatchEvent(event);
+            }
+            let mobileMode = sessionStorage.getItem("mobileMode") === "true";
+            function toggleMobileMode() {
+                if (mobileMode) {
+                    disableMobileMode();
+                } else {
+                    enableMobileMode();
+                }
+                mobileMode = !mobileMode;
+                sessionStorage.setItem("mobileMode", mobileMode);
+            }
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                if (!mobileMode) {
+                    toggleMobileMode();
+                }
+            }
+            function checkMobileMode() {
+                if (window.matchMedia("(max-width: 1280px)").matches) {
+                    if (!mobileMode) {
+                        toggleMobileMode();
+                    }
+                } else {
+                    if (mobileMode) {
+                        toggleMobileMode();
+                    }
+                }
+            }
+            const mobileModeOverrideBeforeCheck = sessionStorage.getItem("mobileMode") === "true";
+
+            // Initial check
+            checkMobileMode();
+            if (mobileModeOverrideBeforeCheck) {
+                enableMobileMode();
+                mobileMode = true
+            }
+
+            // Add event listener for screen size changes
+            window.addEventListener("resize", checkMobileMode);
         </script>
     </body>
 </html>

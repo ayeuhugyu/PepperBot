@@ -21,8 +21,9 @@ const command = new Command(
         return null;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const stats = await statistics.toEmbed();
-        action.reply(message, { embeds: [stats], ephemeral: gconfig.useEphemeralReplies });
+        return action.reply(message, { content: "this command is temporarily disabled until i get around to remaking it using the new statistics system", ephemeral: gconfig.useEphemeralReplies });
+        //const stats = await statistics.toEmbed();
+        //action.reply(message, { embeds: [stats], ephemeral: gconfig.useEphemeralReplies });
     }
 );
 

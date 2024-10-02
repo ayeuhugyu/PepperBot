@@ -29,17 +29,13 @@ shit on the todo list:
 
 to add to todo list:
 
-p/update a lot of website changes
+p/update Statistical:tm:
 
-**website changes:**
+- statistics page has been entirely remade
+- statistics system has been overhauled to include more data than just the amount that commands are used
+- p/statistics has been temporarily disabled because i dont feel like designing the embed right now
 
-- somewhat redid index.html using flexboxes; it should be significantly better for weirdly sized screens (also you can scroll now)
-- updated some of the information on index.html
-- chat page now displays message timestamp
-- chat page no longer sends your user id or displays it, making it significantly harder to spoof someone's messages perfectly. 
-- chat page now supports links
-- chat page now verifies your stored user id and registers a new user if it is invalid
-- /toggledev on chat page displays even more information
+note: the overhauled statistics is currently lacking a significant portion of data, i kept as much as possible but the new stuff has zero data whatsoever.
 
 **actual content:**
 

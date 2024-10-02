@@ -114,7 +114,6 @@ async function logAccess(req) {
 }
 
 io.on("connection", (socket) => {
-    io.emit("chat message", { text: "user connected to websocket", author: { system: true, username: "SYSTEM" } });
     socket.on("chat message", (msg) => {
         io.emit("chat message", msg);
     });
