@@ -4,6 +4,7 @@ import * as log from "../lib/log.js";
 import * as action from "../lib/discord_action.js";
 import commandsObject from "../lib/commands.js";
 import * as globals from "../lib/globals.js";
+import statistics from "../lib/statistics.js";
 
 const config = globals.config;
 
@@ -66,6 +67,8 @@ async function chatInputCommand(interaction) {
     const startCommand = performance.now()
     commandFn(interaction, interaction.options, true).catch((err) => {log.error(err)}).then((returned) => {
         let logmsg = `command received: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${interaction.author.username} (${interaction.author}) `;
+        statistics.logCommandUsage(command, performance.now() - startCommand);
+        log.info("wrote statistic to " + command)
         if (interaction.channel) {
             if (interaction.channel.type === 1) {
                 logmsg += `in DM `;

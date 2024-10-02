@@ -6,6 +6,7 @@ import { file } from "googleapis/build/src/apis/file/index.js";
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
 const commandSubCommandAliases = new Collection();
+const normalAliasesToBaseCommand = {};
 
 async function getCommands() {
     const allstart = performance.now();
@@ -41,6 +42,7 @@ async function getCommands() {
                     if (subcommand.data.normalAliases && subcommand.data.normalAliases.length > 0) {
                         subcommand.data.normalAliases.forEach((value) => {
                             commandSubCommandAliases.set(value, { parentCommand: command.default.execute, subcommand: subcommand, parentCommandNonExecution: command.default }); // added parentCommandNonExecution later, not sure where parentCommand is used so instead of breaking things and trying to fix them i just do it like this. don't care that its not optimal.
+                            normalAliasesToBaseCommand[value] = command.default.data.name;
                         });
                     }
                 });
@@ -72,4 +74,5 @@ export default {
     commands: commands,
     commandsWithoutAliases: commandsWithoutAliases,
     commandSubCommandAliases: commandSubCommandAliases,
+    normalAliasesToBaseCommand: normalAliasesToBaseCommand
 };
