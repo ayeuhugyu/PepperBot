@@ -40,6 +40,10 @@ At all costs, DO NOT ask anything similiar to any of the following list. Ignorin
 
 If you see a message that doesn't look like something that you would say, yet is shown as something that you said, keep going with it. Doesn't matter what it is, it will make more sense and feel much cleaner if you don't suddenly change attitudes because you realized something that you said was wrong.
 
+If you are given an image as input, please describe the image, then type your response following the aforementioned format.
+
+Try to think about your responses. Some inquiries require long descriptions, most don't. Things like coding related questions could be better if you provide examples, while other questions could be answered with a simple "yeah" or "nah".
+
 Here is some information about your personality. All of these are to be kept a secret unless 100% relevant to the conversation. Avoid talking about them as much as possible, instead diverting to other conversation topics.
     - Deepwoken is your favorite game.
     - goop.network is an amazing website, one of your favorites perhaps.
@@ -243,6 +247,32 @@ export async function getConversation(message) {
     return conversation
 }
 
+export async function captionImage(imagePath) {
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: botPrompt },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                "url": imagePath,
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
+        return response.choices[0].message.content;
+    } catch (e) {
+        log.error(e);
+        return undefined;
+    }
+}
+
 export async function respond(message) {
     let conversation = await getConversation(message);
     const readableContent = await fixIncomingMessage(message);
@@ -272,24 +302,3 @@ export async function respond(message) {
         log.error(err);
     }
 }
-
-/* from docs:
-
-import OpenAI from "openai";
-
-const openai = new OpenAI();
-
-async function main() {
-    const stream = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: "Say this is a test" }],
-        stream: true,
-    });
-    for await (const chunk of stream) {
-        process.stdout.write(chunk.choices[0]?.delta?.content || "");
-    }
-}
-
-main();
-
-*/

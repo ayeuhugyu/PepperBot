@@ -215,6 +215,12 @@ app.post("/api/chat/user", (req, res) => { // post a user
 let messageCreate
 
 app.post("/api/chat/message", (req, res) => { // post a message
+    if (!req.query.text) {
+        return res.status(400).send("no text provided");
+    }
+    if (!req.query.author) {
+        return res.status(400).send("no author provided");
+    }
     const text = req.query.text.slice(0, 2048).trim();
     const author = req.query.author;
     if (!text || !author) {

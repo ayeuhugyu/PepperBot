@@ -116,7 +116,7 @@
         </div>
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.4/dist/purify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js"></script>
         <script>
             const socket = io();
 
@@ -125,6 +125,15 @@
                 const pad = (num) => num.toString().padStart(2, '0');
                 const formattedDate = `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear().toString().slice(-2)} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} `;
                 return formattedDate;
+            }
+
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
             }
 
             function formatMessage(message, type) {
@@ -177,7 +186,7 @@
                 author.innerText = `<${dev ? `${authorName} (CREATED AT: ${(message.author && message.author.createdAt) ? `${formatTimestamp(message.author.createdAt)}(${message.author.createdAt})` : "DATE UNKNOWN"})` : authorName}>: `;
                 const text = document.createElement("span");
                 text.classList.add("text");
-                text.innerHTML = DOMPurify.sanitize(marked.parseInline(message.text));
+                text.innerHTML = filterXSS(marked.parseInline(escapeHtml(message.text)));
                 if (dev) {
                     text.innerText = `(TYPE: ${type || "message"}; ID: ${message.id || "INVALID; CLIENT MESSAGE"}) ${message.text}`;
                 }
@@ -216,8 +225,9 @@
                     }
                 })
             }
+            let yourAuthor
             fetch("/api/chat/user?id=" + author)
-                .then((response) => response.json())
+                .then((response) => response.json()).then((json) => { yourAuthor = json })
                 .catch((data) => {
                     setAuthor();
                 });
@@ -267,16 +277,15 @@
             function commandHandler(command) {
                 if (command.startsWith("/")) {
                     const commandName = command.slice(1);
-                    if (commands[commandName]) {
+                    if (commandName && commands[commandName.slice(" ")[0]]) {
                         commands[commandName]();
                     } else {
                         sendError(`command not found: "/${commandName}"`);
                     }
                 }
             }
-            function postMessage() {
+            function postMessage(clientOnly) {
                 const message = document.getElementById("messageInput").value;
-                document.getElementById("messageInput").value = "";
                 if (!message) {
                     sendError("message cannot be empty");
                     return;
@@ -290,6 +299,11 @@
                     commandHandler(message);
                     return;
                 }
+                if (clientOnly) {
+                    formatMessage({ text: message, author: yourAuthor })
+                    return;
+                }
+                document.getElementById("messageInput").value = "";
                 fetch(`/api/chat/message?text=${message}&author=${author}`, {
                     method: "POST",
                 }).then((response) => {

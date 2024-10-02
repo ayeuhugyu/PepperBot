@@ -142,7 +142,7 @@ export class Message {
 }
 
 export class Author {
-    constructor(id, username, bot = false, system = false, error = false) {
+    constructor(id, username, {bot = false, system = false, error = false}, displayName) {
         this.username = username || id
         this.id = id
         this.bot = bot
@@ -152,8 +152,8 @@ export class Author {
     }
 }
 
-export function registerUser(username, bot = false, id = generateUID(), system = false, error = false) {
-    let author = new Author(id, username, bot, system, error)
+export function registerUser(username, id = generateUID(), {bot = false, system = false, error = false}, displayName = username) {
+    let author = new Author(id, username, {bot: bot, system: system, error: error}, displayName)
     users[author.id] = author
     log.info(`registered user ${author.username}`)
     writeUsers()
@@ -162,6 +162,10 @@ export function registerUser(username, bot = false, id = generateUID(), system =
 
 export function getUser(id) {
     return users[id]
+}
+
+export function getUserByName(username) {
+    return Object.values(users).find(user => user.username == username)
 }
 
 export function postMessage(text, authorID) {

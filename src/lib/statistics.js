@@ -64,42 +64,7 @@ export default {
             this.writeStatistics();
             resolve();
         });
-    },
-    async toEmbed() {
-        const embed = await default_embed().setTitle("Statistics");
-        let text = `GPT messages: ${statistics["GPT Messages"]}\ncommand usage:`;
-        let fieldsText = {
-            [1]: "",
-            [2]: "",
-            [3]: "",
-        };
-        let currentField = 1;
-        for (const stat in statistics["Command Usage"]) {
-            fieldsText[
-                currentField
-            ] += `${stat}: ${statistics["Command Usage"][stat]}\n`;
-            currentField = (currentField % 3) + 1;
-        }
-        embed.addFields(
-            {
-                name: "​",
-                value: fieldsText[1],
-                inline: true,
-            },
-            {
-                name: "​",
-                value: fieldsText[2],
-                inline: true,
-            },
-            {
-                name: "​",
-                value: fieldsText[3],
-                inline: true,
-            }
-        );
-        embed.setDescription(text);
-        return embed;
-    },
+    }
 };
 
 log.info(`cached statistics in ${(performance.now() - start).toFixed(3)}ms`);

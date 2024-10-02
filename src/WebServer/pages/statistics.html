@@ -213,7 +213,7 @@
                             const bar = document.createElement("div");
                             bar.style.height = `${(value / sortedData[0][1]) * 100}%`;
                             bar.style.width = "20px";
-                            bar.style.backgroundColor = "#2a1d3e";
+                            bar.style.backgroundColor = "#6a499c";
                             bar.style.color = "white";
                             bar.style.position = "absolute"; // Add this line
                             bar.style.bottom = "0"; // Add this line to align the bar to the bottom
@@ -256,7 +256,7 @@
                             valueObject.style.height = "20px";
                             valueObject.style.textAlign = "left";
                             valueObject.style.color = "lightgray";
-                            valueObject.textContent = `${valueType === "PERCENTAGE" ? `${((value/total)*100).toFixed(2)}%`: value.toFixed(1)}${(category == "EXECUTION_TIME" && valueType !== "PERCENTAGE") ? "ms" : ""}`;
+                            valueObject.textContent = `${valueType === "PERCENTAGE" ? `${((value/total)*100).toFixed(2)}%`: value}${(category == "EXECUTION_TIME" && valueType !== "PERCENTAGE") ? "ms" : ""}`;
                             valueObject.style.transform = "rotate(-90deg)";
                             if (vertical) {
                                 nameObject.style.transform = "rotate(0deg)";
