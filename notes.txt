@@ -41,3 +41,4 @@ p/update
 - fixed html injection in chat page
 - fixed markdown not working in chat page
 - fixed an error caused by attempting to post a message with no text or author
+- p/restart and p/eval are no longer logged to the statistics file as both of them cause issues

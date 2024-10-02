@@ -14,20 +14,7 @@ import default_embed from "../lib/default_embed.js";
 
 const config = globals.config;
 
-async function download(url, filename) {
-    return new Promise((resolve, reject) => {
-        const fixedFileName = filename
-        fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
-        fetch(url).then((res) => {
-            const ws = fs.createWriteStream(
-                `resources/gptdownloads/${fixedFileName}`
-            );
-            stream.Readable.fromWeb(res.body).pipe(ws);
-            ws.on("finish", () => resolve(true));
-            ws.on("error", (err) => reject(err));
-        });
-    });
-}
+const supportedFileTypes = ['png', 'jpeg', 'gif', 'webp']
 
 const data = new CommandData();
 data.setName("describe");
@@ -38,33 +25,70 @@ data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setAliases();
 data.addAttachmentOption((option) =>
-    option.setName("request").setDescription("what to describe").setRequired(true)
+    option.setName("request").setDescription("the image to describe").setRequired(false)
 );
+data.addStringOption((option) => 
+    option.setName("url").setDescription("url of the image to describe").setRequired(false)
+)
 const command = new Command(
     data,
     async function getArguments(message, gconfig) {
+        const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
         args.set(
             "request",
             message.attachments.first()
         );
+        args.set("url", message.content
+            .slice(prefix.length + commandLength)
+            .trim())
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("request")) {
+        if (!args.get("request") && !args.get("url")) {
             return action.reply(message, "no request provided");
         }
+        if (args.get("request")) {
+            if (args.get("request").size >= 20000000) {
+                return action.reply(message, "image too large; openAI enforces a maximum of 20 MB.");
+            }
+            if (!supportedFileTypes.includes(args.get("request").name.split('.').pop())) {
+                return action.reply(message, "unsupported file type; only png, jpeg, gif, and webp are supported by openAI.");
+            }
+        }
+        
+        if (args.get("url")) {
+            if (args.get("url").length >= 2000) {
+                return action.reply(message, "url too long; openAI enforces a maximum of 2000 characters.");
+            }
+            if (!args.get("url").startsWith("http")) {
+                return action.reply(message, "invalid url; make sure to include the protocol (http/https).");
+            }
+        }
+        let url = args.get("url");
+        if (args.get("request") && args.get("url")) {
+            url = false;
+        }
+
         const ephemeral = gconfig.useEphemeralReplies || gconfig.disableGPTResponses || (gconfig.blacklistedGPTResponseChannelIds && message.channel && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id))
         const processingMessage = await action.reply(message, { content: "processing...", ephemeral: ephemeral });
-        const caption = await gpt.captionImage(args.get("request").url)
-        if (!caption) {
-            return action.editReply(processingMessage, "error processing image");
+        try {
+            const caption = await gpt.captionImage(url || args.get("request").url, message.author.id);
+            if (typeof caption == "object" && caption.error) {
+                return action.editMessage(processingMessage, { content: `there was an error processing your image: \`\`\`${caption.error.message}\`\`\``, ephemeral: ephemeral });
+            }
+            if (!caption) {
+                return action.editReply(processingMessage, "error processing image");
+            }
+            const embed = default_embed()
+                .setTitle(args.get("request") ? args.get("request").name : url.split('/').pop().split('?')[0])
+                .setDescription(caption)
+                .setImage(args.get("request") ? args.get("request").url : url);
+            return action.editMessage(processingMessage, { content: "heres your description!", embeds: [embed], ephemeral: ephemeral });
+        } catch (err) {
+            log.error(err)
         }
-        const embed = default_embed()
-            .setTitle(args.get("request").name)
-            .setDescription(caption)
-            .setImage(args.get("request").url);
-        return action.editMessage(processingMessage, { embeds: [embed], ephemeral: ephemeral });
     },
     [] // subcommands
 );

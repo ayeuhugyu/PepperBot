@@ -4,7 +4,7 @@ import * as log from "./log.js";
 
 const start = performance.now();
 
-const statistics = await JSON.parse(
+let statistics = await JSON.parse(
     fs.readFileSync(`resources/data/statistics.json`, "utf-8")
 );
 
@@ -17,6 +17,15 @@ export default {
                 JSON.stringify(statistics, null, 2),
                 () => {}
             );
+            resolve();
+        });
+    },
+    async recacheStatistics() {
+        return new Promise((resolve, reject) => {
+            this.statistics = JSON.parse(
+                fs.readFileSync(`resources/data/statistics.json`, "utf-8")
+            );
+            statistics = this.statistics;
             resolve();
         });
     },

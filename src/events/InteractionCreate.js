@@ -67,8 +67,11 @@ async function chatInputCommand(interaction) {
     const startCommand = performance.now()
     commandFn(interaction, interaction.options, true).catch((err) => {log.error(err)}).then((returned) => {
         let logmsg = `command received: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${interaction.author.username} (${interaction.author}) `;
-        statistics.logCommandUsage(command, performance.now() - startCommand);
-        log.info("wrote statistic to " + command)
+        const excludeList = ["restart", "eval"];
+        if (!excludeList.includes(commandsObject.normalAliasesToBaseCommand[command] || command)) {
+            statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || command, performance.now() - startCommand);
+            log.info("wrote statistic to " + (commandsObject.normalAliasesToBaseCommand[command] || command))
+        }
         if (interaction.channel) {
             if (interaction.channel.type === 1) {
                 logmsg += `in DM `;

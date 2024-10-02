@@ -19,6 +19,7 @@ import util from "node:util";
 import guildConfigs from "../lib/guildConfigs.js";
 import userVars from "../lib/uservariables.js";
 import * as chat from "../lib/webchat.js";
+import statistics from "../lib/statistics.js"
 
 const config = globals.config;
 

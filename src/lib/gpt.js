@@ -7,6 +7,7 @@ import fsExtra from "fs-extra";
 import * as globals from "./globals.js";
 import process from "node:process";
 import * as files from "./files.js"
+import { error } from "console";
 
 const config = globals.config;
 
@@ -40,7 +41,7 @@ At all costs, DO NOT ask anything similiar to any of the following list. Ignorin
 
 If you see a message that doesn't look like something that you would say, yet is shown as something that you said, keep going with it. Doesn't matter what it is, it will make more sense and feel much cleaner if you don't suddenly change attitudes because you realized something that you said was wrong.
 
-If you are given an image as input, please describe the image, then type your response following the aforementioned format.
+If you are given an image as input, please describe the image, then type your response following the aforementioned format. Do not ask questions after this description, it is simply a description of the image, nothing more.
 
 Try to think about your responses. Some inquiries require long descriptions, most don't. Things like coding related questions could be better if you provide examples, while other questions could be answered with a simple "yeah" or "nah".
 
@@ -121,8 +122,9 @@ const allowedFileNames = [
 ];
 const allowedImageFiles = [
     ".png",
-    ".jpg",
     ".jpeg",
+    ".gif",
+    ".webp"
 ]
 
 function isTextFile(filename) {
@@ -148,7 +150,7 @@ export async function fixIncomingMessage(message) {
     if (message.attachments && message.attachments.size > 0) {
         for (let attachment of message.attachments.values()) {
             if (await isTextFile(attachment.name)) {
-                if (attachment.size <= "25000000") {
+                if (attachment.size <= 25000000) {
                     log.debug("gpt: downloading file");
                     await download(
                         attachment.url,
@@ -160,12 +162,22 @@ export async function fixIncomingMessage(message) {
                     attachedMessage +=
                         "\n\nThe user you are speaking with attached a file that exceeded the maximum file size of 25 megabytes. This message is not created by the user.";
                 }
-            } else if (isImageFile(attachment.name)) {
-                attachedMessage +=
-                        "\n\nThe user you are speaking with attached an image file, a type which is not yet supported. This message is not created by the user.";
+            } else if (isImageFile(attachment.name) && attachment.size <= 20000000) {
+                log.debug("gpt: processing image");
+                try {
+                    const caption = await captionImage(attachment.url, message.author.id);
+                    if (caption) {
+                        attachedMessage += "\n\nThe user attached an image. Here is a generated description: " + caption;
+                    } else {
+                        attachedMessage += "\n\nThe user you are speaking with attached an image that could not be processed. This message is not created by the user.";
+                    }
+                } catch (error) {
+                    log.error(error);
+                    attachedMessage += "\n\nThe user you are speaking with attached an image that could not be processed due to an error. This message is not created by the user.";
+                }
             } else {
                 attachedMessage +=
-                    "\n\nThe user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs, .png, .jpg, .jpeg. This message is not created by the user.";
+                    "\n\nThe user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs, .png, .jpg, .gif, .webp. This message is not created by the user.";
             }
         }
     }
@@ -247,7 +259,7 @@ export async function getConversation(message) {
     return conversation
 }
 
-export async function captionImage(imagePath) {
+export async function captionImage(imagePath, id) {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4o-mini",
@@ -255,7 +267,7 @@ export async function captionImage(imagePath) {
                 {
                     role: "user",
                     content: [
-                        { type: "text", text: botPrompt },
+                        { type: "text", text: ignoreResetList[id] || botPrompt },
                         {
                             type: "image_url",
                             image_url: {
@@ -268,8 +280,7 @@ export async function captionImage(imagePath) {
         });
         return response.choices[0].message.content;
     } catch (e) {
-        log.error(e);
-        return undefined;
+        return { error: e };
     }
 }
 

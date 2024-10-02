@@ -19,7 +19,7 @@ function hourToHumanReadable(hour) {
 }
 
 function splitTextToThreeFields(text) {
-    const fields = [{ name: "", inline: true }, { name: "", inline: true }, { name: "", inline: true }];
+    const fields = [{ name: "​", inline: true }, { name: "​", inline: true }, { name: "​", inline: true }]; // names are zero width spaces
     const lines = text.split("\n");
     let currentFieldId = 0;
     for (const line of lines) {
@@ -63,28 +63,28 @@ const command = new Command(
             "GPT Messages: " + gpt
         );
         const commandUsageHumanReadable = Object.keys(commandUsage).map((commandName) => {
-            return `${commandName}: ${commandUsage[commandName]}\n`;
+            return `${commandName}: ${commandUsage[commandName]}`;
         });
-        const commandUsageFields = splitTextToThreeFields(commandUsageHumanReadable)
-        commandUsageEmbed.addFields(...commandUsageFields);
+        const commandUsageFields = splitTextToThreeFields(commandUsageHumanReadable.join("\n"))
+        commandUsageEmbed.addFields(commandUsageFields[0], commandUsageFields[1], commandUsageFields[2]);
 
         const hourlyUsageEmbed = default_embed();
         hourlyUsageEmbed.setTitle("Hourly Usage");
         const hourlyUsageHumanReadable = Object.keys(hourlyUsage).map((hour) => {
-            return `${hourToHumanReadable(hour)}: ${hourlyUsage[hour]}\n`;
+            return `${hourToHumanReadable(hour)}: ${hourlyUsage[hour]}`;
         });
-        const hourlyUsageFields = splitTextToThreeFields(hourlyUsageHumanReadable)
-        hourlyUsageEmbed.addFields(...hourlyUsageFields);
+        const hourlyUsageFields = splitTextToThreeFields(hourlyUsageHumanReadable.join("\n"))
+        hourlyUsageEmbed.addFields(hourlyUsageFields[0], hourlyUsageFields[1], hourlyUsageFields[2]);
         
         const executionTimeEmbed = default_embed();
         executionTimeEmbed.setTitle("Execution Time");
         const executionTimeHumanReadable = Object.keys(executionTime).map((commandName) => {
             const times = executionTime[commandName];
             const average = times.reduce((a, b) => a + b, 0) / times.length;
-            return `${commandName}: ${average.toFixed(2)}ms\n`;
+            return `${commandName}: ${average.toFixed(2)}ms`;
         });
-        const executionTimeFields = splitTextToThreeFields(executionTimeHumanReadable)
-        executionTimeEmbed.addFields(...executionTimeFields);
+        const executionTimeFields = splitTextToThreeFields(executionTimeHumanReadable.join("\n"));
+        executionTimeEmbed.addFields(executionTimeFields[0], executionTimeFields[1], executionTimeFields[2]);
 
         const menu = new AdvancedPagedMenuBuilder();
         menu.full.addPage(commandUsageEmbed);

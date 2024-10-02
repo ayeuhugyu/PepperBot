@@ -256,7 +256,7 @@
                             valueObject.style.height = "20px";
                             valueObject.style.textAlign = "left";
                             valueObject.style.color = "lightgray";
-                            valueObject.textContent = `${valueType === "PERCENTAGE" ? `${((value/total)*100).toFixed(2)}%`: value}${(category == "EXECUTION_TIME" && valueType !== "PERCENTAGE") ? "ms" : ""}`;
+                            valueObject.textContent = `${valueType === "PERCENTAGE" ? `${((value/total)*100).toFixed(2)}%`: `${category === "EXECUTION_TIME" ? value.toFixed(3) : value}`}${(category == "EXECUTION_TIME" && valueType !== "PERCENTAGE") ? "ms" : ""}`;
                             valueObject.style.transform = "rotate(-90deg)";
                             if (vertical) {
                                 nameObject.style.transform = "rotate(0deg)";
