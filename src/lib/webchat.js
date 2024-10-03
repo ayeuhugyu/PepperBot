@@ -53,20 +53,30 @@ export class WebSpoofMessage {
         this.author.globalName = this.author.username
         this.author.displayName = this.author.username
         this.reply = (message) => {
-            let replyMessage;
+            let replyMessage = "";
             if (message.content) {
                 replyMessage = message.content;
-            } else {
-                replyMessage = message.embeds[0].description;
-            } 
-            if ((!replyMessage || typeof replyMessage !== "string") && typeof message === "string") {
-                replyMessage = message;
+            } else if (message.embeds && message.embeds[0] && message.embeds[0].data) {
+                if (message.embeds[0].data.description) {
+                    replyMessage = message.embeds[0].data.description;
+                } if (message.embeds[0].data.fields) {
+                    let fieldText = ""
+                    message.embeds[0].data.fields.forEach(field => {
+                        fieldText += `${field.value} \n`
+                    })
+                    replyMessage += fieldText
+                }
+            }
+            if (replyMessage == "") {
+                replyMessage = undefined
             }
             if (!typeof replyMessage == String) {
                 console.log(replyMessage)
+                console.log(message)
                 replyMessage = "error getting message content; replyMessage has been logged.";
             }
             if (!replyMessage) {
+                console.log(message)
                 replyMessage = "error getting message content; replyMessage was undefined";
             }
             fetch(`http://127.0.0.1:53134/api/chat/message?text=${replyMessage}&author=6f3a9020ea31502b6c6b40ed480fe70a`, { method: "POST" }).then(response => response.text());
