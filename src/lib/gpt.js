@@ -124,7 +124,8 @@ const allowedImageFiles = [
     ".png",
     ".jpeg",
     ".gif",
-    ".webp"
+    ".webp",
+    ".jpg"
 ]
 
 function isTextFile(filename) {

@@ -14,7 +14,7 @@ import default_embed from "../lib/default_embed.js";
 
 const config = globals.config;
 
-const supportedFileTypes = ['png', 'jpeg', 'gif', 'webp']
+const supportedFileTypes = ['png', 'jpeg', 'gif', 'webp', "jpg"]
 
 const data = new CommandData();
 data.setName("describe");
