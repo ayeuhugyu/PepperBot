@@ -112,37 +112,44 @@ async function download(url, queueManager) {
             fsextra.ensureFileSync(
                 `resources/ytdl_cache/${correctedFileName}.webm`
             );
-            await ytdl(url, { filter: "audioonly" })
-                .pipe(
-                    fs.createWriteStream(
-                        `resources/ytdl_cache/${correctedFileName}.webm`
+            try {
+                await ytdl(url, { filter: "audioonly" })
+                    .pipe(
+                        fs.createWriteStream(
+                            `resources/ytdl_cache/${correctedFileName}.webm`
+                        )
                     )
-                )
-                .on("finish", async () => {
-                    action.editMessage(
-                        sentMSG,
-                        `playing \`${correctedFileName}.webm\``
-                    );
-                    resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
-                })
-                .on("error", (err) => {
-                    log.error(err);
-                    if (err.statusCode === 410) {
+                    .on("finish", async () => {
                         action.editMessage(
                             sentMSG,
-                            'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
+                            `playing \`${correctedFileName}.webm\``
                         );
-                    } else {
+                        resolve(`resources/ytdl_cache/${correctedFileName}.webm`);
+                    }).on("error", (err) => {
+                        log.error(err);
                         action.editMessage(
                             sentMSG,
                             "error while downloading url, see logs for more info"
                         );
-                    }
-                    fs.unlinkSync(
-                        `resources/ytdl_cache/${correctedFileName}.webm`
+                        fs.unlinkSync(`resources/ytdl_cache/${correctedFileName}.webm`);
+                        queueManager.next();
+                    });
+            } catch (err) {
+                log.error(err);
+                if (err.statusCode === 410) {
+                    action.editMessage(
+                        sentMSG,
+                        'attempt to download returned status code "GONE", this is usually a result of the video being age restricted. due to current library-related limitations, its not* possible to download age restricted videos.'
                     );
-                    reject();
-                });
+                } else {
+                    action.editMessage(
+                        sentMSG,
+                        "error while downloading url, see logs for more info"
+                    );
+                }
+                fs.unlinkSync(`resources/ytdl_cache/${correctedFileName}.webm`);
+                reject();
+            }
         });
     } catch (err) {
         log.error(err);

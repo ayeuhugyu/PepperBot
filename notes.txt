@@ -33,12 +33,12 @@ p/update
 
 **actual content:**
 
-- p/statistics embed has been entirely remade
-- p/describe allows you to describe an image
+- fixed statistics page hourly usage hours being offset by one
+- statistics page hourly usage now always displays all 24 hours
+- statistics page hourly usage is now sorted by hours instead of by value
+- fixed p/joinvc always trying to join `guild.channels.cache.first()`
+- all uses of ytdl-core are now in a try catch (didnt fix shit i just gave up trying)
+- adjusted gpt prompt to hopefully stop him from trying to use LaTeX and inform him that he can use markdown
 
 **fixes/optimizations:**
 
-- fixed html injection in chat page
-- fixed markdown not working in chat page
-- fixed an error caused by attempting to post a message with no text or author
-- p/restart and p/eval are no longer logged to the statistics file as both of them cause issues

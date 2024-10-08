@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Physics</title>
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
+        <meta content="physics testing" property="og:title" />
+        <meta content="extremely buggy, extremely unoptimized, semi interesting" property="og:description" />
+        <meta content="https://pepperbot.online" property="og:url" />
+        <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
+    </head>
+    <body>
+        <div class="sidebar">
+            <script id="definesidebarfunctions">
+                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
+                function redirectTo(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    window.location.href = url;
+                }
+                function openInNewTab(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    let win = window.open(
+                        url,
+                        "_blank"
+                    );
+                }
+                function showSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0.25";
+                }
+                function hideSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0";
+                }
+            </script>
+            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
+            <h2 class="sidebarTitle">NAVIGATION</h2>
+            <div class="sidebarDivider"></div>
+            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
+            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
+            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
+            <div class="sidebarButton" id="/chat" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Chat</div>
+            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
+            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
+            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
+            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+
+            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
+            <script id="sidebarmain">
+                function toggleSidebar() {
+                    document.querySelectorAll(".sidebar").forEach((element) => {
+                        void element.offsetWidth;
+
+                        if (sidebarIsOpen) {
+                            element.style.animation = "slideOpen 0.5s forwards";
+                        } else {
+                            element.style.animation =
+                                "slideClose 0.5s forwards";
+                        }
+                    });
+                    sidebarIsOpen = !sidebarIsOpen;
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                }
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "k" && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") {
+                        toggleSidebar();
+                    }
+                });
+                document
+                    .querySelectorAll(".sidebarButton")
+                    .forEach((button) => {
+                        button.style.transition = "transform 0.25s ease-in-out";
+                        button.addEventListener("mouseover", () => {
+                            button.style.backgroundColor = "#13131d";
+                            button.style.transform = "translateX(-100px)";
+                        });
+                        button.addEventListener("mouseout", () => {
+                            button.style.backgroundColor = "#1E1E2E";
+                            button.style.transform = "translateX(0px)";
+                        });
+                        button.addEventListener("mousedown", () => {
+                            button.style.backgroundColor = "#616187";
+                        });
+                        button.addEventListener("mouseup", () => {
+                            button.style.backgroundColor = "#616187";
+                        });
+                    });
+                document.addEventListener("DOMContentLoaded", function () {
+                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
+                    if (sidebarIsOpen) {
+                        document
+                            .querySelectorAll(".sidebar")
+                            .forEach((element) => {
+                                element.style.animation =
+                                    "slideClose 0s forwards";
+                            });
+                    }
+                });
+            </script>
+        </div>
+        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
+            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
+                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
+                        <h2 class="sectionTitle">physics testing</h2>
+                        <div class="flexcontainer" id="simulationholder" style="flex-direction: row; width: 100%; flex-grow: 1; align-items: center; justify-items: left;">
+                            <div id="simulation" class="outlined" style="margin-right: 5px; height: 100%; flex-grow: 0.95">
+                                <div id="simulationBounds" style="width: calc(100% - 10px); height: calc(100% - 10px); border: 1px solid #42e599; margin-top: 5px; margin-left: 5px; position: relative">
+
+                                </div>
+                            </div>
+                            <div id="settings" class="outlined" style="flex-grow: 0.05; height: 100%; overflow: scroll;">
+                                <h2 class="sectionTitle">settings</h2>
+                                <div class="flexcontainer" style="flex-direction: column; align-items: flex-start; padding-left: 5px;">
+                                    <button type="button" id="restartSimulation" onclick="start()" >regenerate particles</button>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>particle size</span>
+                                        <input type="range" id="particleSize" value="15">
+                                        <span id="particleSizeValue"></span>
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>particle count</span>
+                                        <input type="range" id="particleCount" min="1" max="250" value="50">
+                                        <span id="particleCountValue"></span>
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>boundary damping</span>
+                                        <input type="range" id="collisionDamping" min="0" max="1" step="0.01" value="0.5">
+                                        <span id="collisionDampingValue"></span>
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>particle damping</span>
+                                        <input type="range" id="particleDamping" min="0" max="1" step="0.01" value="0.99">
+                                        <span id="particleDampingValue"></span>
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>max momentum</span>
+                                        <input type="range" id="maxMomentum" min="0" max="1" step="0.01" value="0.05">
+                                        <span id="maxMomentumValue"></span>
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>update rate</span>
+                                        <input type="range" id="updateRate" min="1" max="240" step="1" value="60">
+                                        <span id="updateRateValue"></span>
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>enable gravity</span>
+                                        <input type="checkbox" id="enableGravity">
+                                    </div>
+                                    <div class="flexcontainer" style="flex-direction: row; align-items: center; justify-items: center;">
+                                        <span>enable collision</span>
+                                        <input type="checkbox" id="enableCollision">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            const simulationDiv = document.getElementById("simulation")
+            const simulationBounds = document.getElementById("simulationBounds")
+            const settingsDiv = document.getElementById("settings")
+
+            let regenerateSettings = ["randomDistribution"]
+
+            let settings = {
+                particleCount: 50,
+                particleSize: 15,
+                randomDistribution: true,
+                enableGravity: false,
+                maxMomentum: 0.05,
+                collisionDamping: 0.5,
+                particleDamping: 0.99,
+                updateRate: 60,
+                enableCollision: false,
+                boundsX: 60,
+                boundsY: 60,
+            }
+            let particles = []
+
+            class Particle {
+                x = 0
+                y = 0
+                element = undefined;
+                movement = {
+                    x: 0,
+                    y: 0,
+                }
+                acceleration = {
+                    x: 0,
+                    y: 0,
+                }
+                constructor() {
+                    this.element = document.createElement("div")
+                    this.element.style.width = `${settings.particleSize}px`
+                    this.element.style.height = `${settings.particleSize}px`
+                    this.element.style.backgroundColor = "lightblue"
+                    this.element.style.position = "absolute"
+                    this.element.style.borderRadius = "50%"
+                    this.element.style.transform = "translate(-50%, -50%)"
+                    simulationBounds.appendChild(this.element)
+                }
+                update() {
+                    this.movement.x += this.acceleration.x
+                    this.movement.y += this.acceleration.y
+                    if (settings.enableGravity) {
+                        this.movement.y += 0.0005
+                    }
+                    if (this.movement.x > settings.maxMomentum) {
+                        this.movement.x = settings.maxMomentum
+                    }
+                    if (this.movement.y > settings.maxMomentum) {
+                        this.movement.y = settings.maxMomentum
+                    }
+                    
+                    this.x += this.movement.x
+                    this.y += this.movement.y
+                    this.element.style.left = (this.x * 100) + "%"
+                    this.element.style.top = (this.y * 100) + "%"
+                }
+            }
+
+            const settingsElements = {
+                particleSize: document.getElementById("particleSize"),
+                particleCount: document.getElementById("particleCount"),
+                //randomDistribution: document.getElementById("randomDistribution"),
+                enableGravity: document.getElementById("enableGravity"),
+                collisionDamping: document.getElementById("collisionDamping"),
+                maxMomentum: document.getElementById("maxMomentum"),
+                updateRate: document.getElementById("updateRate"),
+                //boundsX: document.getElementById("boundsX"),
+                //boundsY: document.getElementById("boundsY"),
+                enableCollision: document.getElementById("enableCollision"),
+                particleDamping: document.getElementById("particleDamping"),
+            }
+            Object.values(settingsElements).forEach((element) => {
+                element.addEventListener("input", () => {
+                    settings[element.id] = element.type === "checkbox" ? element.checked : element.value
+                    const valueDisplayElement = document.getElementById(`${element.id}Value`)
+                    if (valueDisplayElement) {
+                        valueDisplayElement.innerText = (element.id === "boundsXValue" || element.id === "boundsYValue") ? `${element.id === "boundsXValue" ?  simulationBounds.clientWidth - element.value : simulationBounds.clientHeight - element.value}` : element.value
+                    } else {
+                        console.log("no value display element found")
+                    }
+                    if (regenerateSettings.includes(element.id)) {
+                        start()
+                    }
+                    if (element.id === "particleSize") {
+                        particles.forEach((particle) => {
+                            particle.element.style.width = `${settings.particleSize}px`
+                            particle.element.style.height = `${settings.particleSize}px`
+                        })
+                    }
+                    if (element.id === "particleCount") {
+                        if (settings.particleCount > particles.length) {
+                            for (let i = particles.length; i < settings.particleCount; i++) {
+                                createParticle()
+                            }
+                        } else {
+                            for (let i = particles.length; i > settings.particleCount; i--) {
+                                particles.pop().element.remove()
+                            }
+                        }
+                    }
+                    if (element.id === "updateRate") {
+                        clearInterval(simulationInterval)
+                        simulationInterval = setInterval(simulationStep, 1000 / settings.updateRate);
+                    }
+                    if (element.id === "boundsX" || element.id === "boundsY") {
+                        simulationBounds.style.width = `calc(100% - ${settings.boundsX * 2}px)`
+                        simulationBounds.style.height = `calc(100% - ${settings.boundsY * 2}px)`
+                        simulationBounds.style.marginTop = `${settings.boundsY}px`
+                        simulationBounds.style.marginLeft = `${settings.boundsX}px`
+                    }
+                })
+                const valueDisplayElement = document.getElementById(`${element.id}Value`)
+                if (valueDisplayElement) {
+                    valueDisplayElement.innerText = (element.id === "boundsXValue" || element.id === "boundsYValue") ? `${element.id === "boundsXValue" ?  simulationBounds.clientWidth - element.value : simulationBounds.clientHeight - element.value}` : element.value
+                } else {
+                    console.log("no value display element found")
+                }
+            })
+            let simulationIteration = 0;
+            function simulationStep() {
+                simulationIteration++
+                let i = 0
+                particles.forEach((particle) => {
+                    const particleSizePercentage = settings.particleSize / simulationBounds.clientWidth;
+                    if (particle.y > 1 - particleSizePercentage || particle.y < particleSizePercentage) {
+                        particle.movement.y = -particle.movement.y;
+                        particle.movement.y *= 1 - settings.collisionDamping;
+                    }
+                    if (particle.x > 1 - particleSizePercentage || particle.x < particleSizePercentage) {
+                        particle.movement.x = -particle.movement.x;
+                        particle.movement.x *= 1 - settings.collisionDamping;
+                    }
+                    if (particle.y > 1 - particleSizePercentage) {
+                        particle.y = 1 - particleSizePercentage
+                    }
+                    if (particle.y < particleSizePercentage) {
+                        particle.y = particleSizePercentage
+                    }
+                    if (particle.x > 1 - particleSizePercentage/2) {
+                        particle.x = 1 - particleSizePercentage/2
+                    }
+                    if (particle.x < particleSizePercentage/2) {
+                        particle.x = particleSizePercentage/2
+                    }
+
+                    // Particle-particle collision detection and handling
+                    if (settings.enableCollision) {
+                        for (let j = i + 1; j < particles.length; j++) {
+                        const otherParticle = particles[j];
+                        const dx = otherParticle.x - particle.x;
+                        const dy = otherParticle.y - particle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const minDistance = particleSizePercentage;
+
+                        if (distance < minDistance) {
+                            console.log("Collision detected")
+                            particle.element.style.outline = "2px solid red";
+                            otherParticle.element.style.outline = "2px solid red";
+                            setTimeout(() => {
+                                particle.element.style.outline = "none";
+                                otherParticle.element.style.outline = "none";
+                            }, 250);
+                            const overlap = (minDistance - distance);
+                            const offsetX = (overlap) * (dx / distance);
+                            const offsetY = (overlap) * (dy / distance);
+
+                            particle.x -= offsetX;
+                            particle.y -= offsetY;
+                            otherParticle.x += offsetX;
+                            otherParticle.y += offsetY;
+                            const angle = Math.atan2(dy, dx);
+                            const targetX = particle.x + Math.cos(angle) * minDistance * 2;
+                            const targetY = particle.y + Math.sin(angle) * minDistance * 2;
+                            const ax = ((targetX - otherParticle.x) + Math.random() * 0.001) * (1 - settings.particleDamping);
+                            const ay = ((targetY - otherParticle.y) + Math.random() * 0.001) * (1 - settings.particleDamping);
+                            console.log(ax, ay)
+                            particle.movement.x -= ax;
+                            particle.movement.y -= ay;
+                            otherParticle.movement.x += ax;
+                            otherParticle.movement.y += ay;
+                        }
+                    }
+                    }
+                    const momentum = Math.sqrt(particle.movement.x ** 2 + particle.movement.y ** 2);
+                    const maxMomentum = settings.maxMomentum;
+                    const colorIntensity = momentum / maxMomentum;
+                    let r, g, b;
+
+                    if (colorIntensity < 0.25) {
+                        // Light blue to green
+                        r = 0;
+                        g = Math.floor(255 * (colorIntensity / 0.25));
+                        b = 255;
+                    } else if (colorIntensity < 0.5) {
+                        // Green to yellow
+                        r = Math.floor(255 * ((colorIntensity - 0.25) / 0.25));
+                        g = 255;
+                        b = 255 - r;
+                    } else if (colorIntensity < 0.75) {
+                        // Yellow to orange
+                        r = 255;
+                        g = Math.floor(255 * (1 - (colorIntensity - 0.5) / 0.25));
+                        b = 0;
+                    } else {
+                        // Orange to red
+                        r = 255;
+                        g = Math.floor(255 * (0.25 - (colorIntensity - 0.75)) / 0.25);
+                        b = 0;
+                    }
+
+                    particle.element.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    i++
+                    particle.update()
+                })
+            }
+            function createParticle() {
+                const particle = new Particle()
+                if (settings.randomDistribution) {
+                    particle.x = Math.random()
+                    particle.y = Math.random()
+                } else {
+                    particle.x = particles.length / settings.particleCount
+                    particle.y = 0.5
+                }
+                particle.update()
+                particles.push(particle)
+            }
+            function start() {
+                simulationBounds.innerHTML = ""
+                particles = []
+                for (let i = 0; i < settings.particleCount; i++) {
+                    createParticle()
+                }
+                simulationIteration = 0
+            }
+            start();
+            let simulationInterval = setInterval(simulationStep, 1000 / settings.updateRate);
+        </script>
+    </body>
+</html>

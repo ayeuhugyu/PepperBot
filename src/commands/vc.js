@@ -79,9 +79,11 @@ const join = new SubCommand(
             ) {
                 args.set("channel", await message.guild.channels.fetch(message.content.slice(prefix.length + commandLength).trim()));
             } else {
-                const channel = message.guild.channels.cache.find((channel) => channel.name.toLowerCase().startsWith(message.content.slice(prefix.length + commandLength).trim().toLowerCase()));
-                if (channel) {
-                    args.set("channel", channel);
+                if (message.content.slice(prefix.length + commandLength).trim().toLowerCase() !== "") {
+                    const channel = message.guild.channels.cache.find((channel) => channel.name.toLowerCase().startsWith(message.content.slice(prefix.length + commandLength).trim().toLowerCase()));
+                    if (channel) {
+                        args.set("channel", channel);
+                    }
                 }
             }
         }
@@ -101,20 +103,15 @@ const join = new SubCommand(
     },
     async function execute(message, args, fromInteraction, gconfig) {
         if (!args.get("channel")) {
+            args.set("channel", message.member.voice.channel);
+        }
+        if (!args.get("channel")) {
             action.reply(message, { content: `channel \`${args.get("requestedchannel")}\` does not exist`, ephemeral: gconfig.useEphemeralReplies });
             return;
         }
         if (args.get("channel").type != 2 &&args.get("channel").type != 13) {
             action.reply(message, { content: `channel type \`${args.get("channel").type}\` of \`${args.get("requestedchannel")}\` is not a voice channel`, ephemeral: gconfig.useEphemeralReplies })
             return;
-        }
-        if (!args.get("channel")) {
-            args._hoistedOptions.push({
-                name: "channel",
-                type: 7,
-                value: message.member.voice.channel,
-                channel: message.member.voice.channel,
-            });
         }
         if (args.get("channel")) {
             if (!voice.checkMemberPermissionsForVoiceChannel(message.member, args.get("channel"))) {

@@ -155,7 +155,9 @@ const command = new Command(
                         });
                         return;
                     }
-                    const info = await ytdl
+                    let info
+                    try {
+                        const info = await ytdl
                         .getInfo(args.get("sound"))
                         .catch((err) => {
                             if (err.statusCode === 410) {
@@ -178,6 +180,14 @@ const command = new Command(
                                 return;
                             }
                         });
+                    } catch (e) {
+                        log.error(e);
+                        action.editMessage(sentMSG, {
+                            ephemeral: gconfig.useEphemeralReplies,
+                            content:
+                                "error while downloading url, see logs for more info",
+                        });
+                    }
                     if (!info) return;
                     const sounds = await fs.readdirSync("resources/ytdl_cache");
                     const correctedFileName = files.fixFileName(
@@ -227,22 +237,30 @@ const command = new Command(
                     fsextra.ensureFileSync(
                         `resources/ytdl_cache/${correctedFileName}.webm`
                     );
-                    await ytdl(args.get("sound"), { filter: "audioonly" })
-                        .pipe(
-                            fs.createWriteStream(
-                                `resources/ytdl_cache/${correctedFileName}.webm`
+                    try {
+                        await ytdl(args.get("sound"), { filter: "audioonly" })
+                            .pipe(
+                                fs.createWriteStream(
+                                    `resources/ytdl_cache/${correctedFileName}.webm`
+                                )
                             )
-                        )
-                        .on("finish", async () => {
-                            action.editMessage(sentMSG, {
-                                ephemeral: gconfig.useEphemeralReplies,
-                                content: `playing \`${correctedFileName}.webm\``,
+                            .on("finish", async () => {
+                                action.editMessage(sentMSG, {
+                                    ephemeral: gconfig.useEphemeralReplies,
+                                    content: `playing \`${correctedFileName}.webm\``,
+                                });
+                                const resource = await voice.createAudioResource(
+                                    `resources/ytdl_cache/${correctedFileName}.webm`
+                                );
+                                audioPlayer.play(resource);
                             });
-                            const resource = await voice.createAudioResource(
-                                `resources/ytdl_cache/${correctedFileName}.webm`
-                            );
-                            audioPlayer.play(resource);
+                    } catch (err) {
+                        action.editMessage(sentMSG, {
+                            ephemeral: gconfig.useEphemeralReplies,
+                            content: "error while downloading url, see logs for more info",
                         });
+                        log.error(err);
+                    }
                 } catch (err) {
                     action.reply(message, {
                         ephemeral: gconfig.useEphemeralReplies,

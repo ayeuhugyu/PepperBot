@@ -151,6 +151,7 @@
         </div>
         <script>
             function hourToHumanReadable(hour) {
+                hour = parseInt(hour) + 1;
                 if (hour < 12) {
                     return `${hour} AM`;
                 } else if (hour === 12) {
@@ -186,8 +187,26 @@
                     function createChart(data, valueType, vertical, category) {
                         // sort the data highest to lowest
                         status.innerText = "sorting data...."
+                        if (category == "HOURLY_USAGE") { 
+                            for (let i = 0; i < 24; i++) {
+                                if (!data[i]) {
+                                    data[i] = 0;
+                                }
+                            }
+                        }
+                        
                         const total = Object.values(data).reduce((total, value) => total + value, 0);
-                        const sortedData = Object.entries(data).sort((a, b) => b[1] - a[1]);
+                        console.log(total, data)
+                        let sortedData
+                        let highestValue = 0;
+                        if (category == "HOURLY_USAGE") {
+                            sortedData = Object.entries(data).sort((a, b) => parseInt(a)[0] - parseInt(b)[0]);
+                            highestValue = sortedData.reduce((max, value) => Math.max(max, value[1]), 0);
+                        } else {
+                            sortedData = Object.entries(data).sort((a, b) => b[1] - a[1]);
+                            highestValue = sortedData[0][1];
+                        }
+                        console.log(sortedData)
                         status.innerText = "generating chart...."
                         const bars = document.createElement("div");
                         bars.style.display = "flex";
@@ -211,14 +230,14 @@
                             bars.appendChild(barHolder);
 
                             const bar = document.createElement("div");
-                            bar.style.height = `${(value / sortedData[0][1]) * 100}%`;
+                            bar.style.height = `${(value / highestValue) * 100}%`;
                             bar.style.width = "20px";
                             bar.style.backgroundColor = "#6a499c";
                             bar.style.color = "white";
                             bar.style.position = "absolute"; // Add this line
                             bar.style.bottom = "0"; // Add this line to align the bar to the bottom
                             if (vertical) {
-                                bar.style.width = `${(value / sortedData[0][1]) * 100}%`
+                                bar.style.width = `${(value / highestValue) * 100}%`
                                 bar.style.height = "100%"
                             }
 
