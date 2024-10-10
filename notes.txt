@@ -41,6 +41,9 @@ p/update
 - adjusted gpt prompt to hopefully stop him from trying to use LaTeX and inform him that he can use markdown
 - fixed p/patch from slash commands
 - chat page responses now contain message content, embed description AND field content
+- rigid body simulation has been moved to /sims/rigid
+- new fluid simulation at /sims/fluid
+- new /simulations which just lists simulations
 
 **fixes/optimizations:**
 

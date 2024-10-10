@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Physics</title>
+        <title>Fluids</title>
         <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="physics testing" property="og:title" />
@@ -104,16 +104,20 @@
                     <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
                         <h2 class="sectionTitle">fluid physics testing</h2>
                         <div class="flexcontainer" id="simulationholder" style="flex-direction: row; width: 100%; flex-grow: 1; align-items: center; justify-items: left;">
-                            <div id="simulation" class="outlined" style="margin-right: 5px; height: 100%; flex-grow: 0.95">
-                                <div id="simulationBounds" style="width: calc(100% - 10px); height: calc(100% - 10px); border: 1px solid #42e599; margin-top: 5px; margin-left: 5px; position: relative">
+                            <div id="simulation" class="outlined" style="margin-right: 5px; height: 100%; flex-grow: 0.95; display: flex;">
+                                <div id="simulationBounds" style="width: 100%; height: 100%; border: 1px solid #42e599; margin: auto auto; margin: auto; position: relative;">
 
                                 </div>
                             </div>
                             <div id="settings" class="outlined" style="flex-grow: 0.05; height: 100%; overflow: scroll;">
                                 <h2 class="sectionTitle">settings</h2>
                                 <div class="flexcontainer" style="flex-direction: column; align-items: flex-start; padding-left: 5px;">
-                                    <button type="button" id="restartSimulation" onclick="start()" >regenerate particles</button>
+                                    <div>
+                                        <button type="button" id="restartSimulation" onclick="start()" >regenerate particles</button>
+                                        <button type="button" id="resetSettings" onclick="resetSettings()" >reset settings</button>
+                                    </div>
                                     
+                                    <span id="density" style="bottom: 30px; position: absolute"></span>
                                 </div>
                             </div>
                         </div>
@@ -126,7 +130,12 @@
             const simulationBounds = document.getElementById("simulationBounds")
             const settingsDiv = document.getElementById("settings")
 
-            function exposeSetting(name, type, min, max, step, defaultValue) {
+            let runChangedOnLoad = ["boundsSizeX", "boundsSizeY"]
+
+            let defaults = {}
+
+            function exposeSetting(name, type, min, max, step, defaultValue, suffix, onChanged) {
+                defaults[name] = defaultValue
                 const holder = document.createElement("div")
                 holder.className = "flexcontainer"
                 holder.style.flexDirection = "row"
@@ -140,24 +149,173 @@
                 input.min = min
                 input.max = max
                 input.step = step
-                input.value = defaultValue
+                input.value = sessionStorage.getItem(name) || defaultValue
                 const valueSpan = document.createElement("span")
                 valueSpan.id = name + "Value"
-                valueSpan.innerText = defaultValue
+                valueSpan.innerText = (sessionStorage.getItem(name) || defaultValue) + suffix
+                if (type === "checkbox") {
+                    input.checked = sessionStorage.getItem(name) === "true" || defaultValue === true;
+                    valueSpan.innerText = "";
+                }
                 holder.appendChild(label)
                 holder.appendChild(input)
                 holder.appendChild(valueSpan)
                 settingsDiv.appendChild(holder)
                 input.addEventListener("input", () => {
-                    valueSpan.innerText = input.value
+                    valueSpan.innerText = input.value + suffix
+                    sessionStorage.setItem(name, input.value)
+                    if (type === "checkbox") {
+                        sessionStorage.setItem(name, input.checked)
+                        valueSpan.innerText = "";
+                    }
+                    let value = input.value
+                    if (type === "checkbox") {
+                        value = input.checked
+                    }
+                    onChanged(value)
                 })
+                if (runChangedOnLoad.includes(name)) {
+                    let value = input.value
+                    if (type === "checkbox") {
+                        value = input.checked
+                    }
+                    onChanged(value)
+                }
                 return input
             }
-            let vl = exposeSetting("value", "range", 0, 1, 0.01, 0.1)
+            // to use this function, do this
+            // let foo = exposeSetting("value", "range", 0, 1, 0.01, 0.1, " this is a suffix!", (value) => {}); args go in this order: name, type, min, max, step, defaultValue, suffix, onChanged
+            // to access the value, use foo.value
+            function smoothingFunction(dst) {
+                const radius = settings.smoothingRadius.value;
+                const volume = Math.PI * Math.pow(radius, 8) / 4;
+                const value = Math.max(0, radius - dst);
+                console.log(`volume: ${volume}, value: ${value}, dst: ${dst}, radius: ${radius}`)
+                return (value * value * value) / volume;
+            }
+            
+            function calculateDensity(samplePoint) {
+                let density = 0;
+                const mass = 1;
+
+                particles.forEach((particle) => {
+                    const dx = particle.position.x - samplePoint.x;
+                    const dy = particle.position.y - samplePoint.y;
+                    const dst = Math.sqrt(dx * dx + dy * dy);
+                    const influence = smoothingFunction(dst);
+                    density += mass * influence;
+                });
+
+                return density;
+            }
+
             setInterval(() => {
-                simulationBounds.innerHTML = ""
-                simulationBounds.innerText = vl.value
+                const density = calculateDensity({ x: 0.5, y: 0.5 })
+                document.getElementById("density").innerText = `Density: ${density}`
+            }, 250)
+            let settings = {}
+            settings.particleCount = exposeSetting("particleCount", "range", 1, 1000, 1, 1, "", (value) => {
+                // unfinished
             })
+            settings.particleSpacing = exposeSetting("particleSpacing", "range", 1, 100, 1, 1, "px", (value) => {
+                // unfinished
+            })
+            settings.particleSize = exposeSetting("particleSize", "range", 1, 100, 1, 15, "px", (value) => {
+                particles.forEach((particle) => {
+                    particle.element.width = value
+                    particle.element.height = value
+                })
+            })
+            settings.boundsSizeX = exposeSetting("boundsSizeX", "range", 1, 100, 1, 100, "%", (value) => {
+                simulationBounds.style.width = value + "%"
+            })
+            settings.boundsSizeY = exposeSetting("boundsSizeY", "range", 1, 100, 1, 100, "%", (value) => {
+                simulationBounds.style.height = value + "%"
+            })
+            settings.smoothingRadius = exposeSetting("smoothingRadius", "range", 1, 100, 1, 1, "px", (value) => {
+                particles.forEach((particle) => {
+                    if (settings.visualizeSmoothingRadius.checked) {
+                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
+                    } else {
+                        particle.element.style.border = "none"
+                    }
+                })
+            })
+            settings.visualizeSmoothingRadius = exposeSetting("visualizeSmoothingRadius", "checkbox", 0, 1, 1, 0, "", (value) => {
+                particles.forEach((particle) => {
+                    console.log(value)
+                    if (value) {
+                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
+                    } else {
+                        particle.element.style.border = "none"
+                    }
+                })
+            })
+
+            function resetSettings() {
+                for (const key in defaults) {
+                    sessionStorage.setItem(key, defaults[key])
+                    document.getElementById(key).value = defaults[key]
+                    document.getElementById(key + "Value").innerText = defaults[key]
+                    document.getElementById(key).dispatchEvent(new Event('input'))
+                    settings[key] = defaults[key]
+                }
+            }
+            class Particle {
+                position = { x: 0, y: 0 }
+                velocity = { x: 0, y: 0 }
+                acceleration = { x: 0, y: 0 }
+                element = null
+                constructor(x, y) {
+                    this.position.x = x
+                    this.position.y = y
+                    this.element = document.createElement("div")
+                    this.element.style.width = `${settings.particleSize.value}px`
+                    this.element.style.height = `${settings.particleSize.value}px`
+                    this.element.style.backgroundColor = "lightblue"
+                    this.element.style.position = "absolute"
+                    this.element.style.borderRadius = "50%"
+                    this.element.style.transform = "translate(-50%, -50%)"
+                    if (settings.visualizeSmoothingRadius.checked) {
+                        this.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
+                    } else {
+                        this.element.style.border = "none"
+                    }
+                }
+                update() {
+                    this.element.style.left = `${this.position.x * simulationBounds.clientWidth}px`
+                    this.element.style.top = `${this.position.y * simulationBounds.clientHeight}px`
+                }
+            }
+            let particles = []
+            function createParticle() {
+                //const particlesPerRow = Math.floor(Math.sqrt(settings.particleCount.value))
+                //const particlesPerColumn = (settings.particleCount.value - 1) / particlesPerRow + 1
+                //const spacing = settings.particleSize.value * 2 + settings.particleSpacing.value
+                const i = particles.length
+                //const x = (i % particlesPerRow - particlesPerRow / 2 + 0.5) + spacing
+                //const y = (i / particlesPerRow - particlesPerColumn / 2 + 0.5) + spacing
+                const x = Math.random()
+                const y = Math.random()
+                console.log(`creating particle ${i} at ${x}, ${y}`)
+                const particle = new Particle()
+                particle.position.x = x
+                particle.position.y = y
+                simulationBounds.appendChild(particle.element)
+                particle.update()
+                particles.push(particle)
+            }
+            function start() {
+                console.log("starting")
+                simulationBounds.innerHTML = ""
+                console.log("deleted all particles")
+                particles = []
+                console.log(`creating ${settings.particleCount.value} new particles`)
+                for (let i = 0; i < settings.particleCount.value; i++) {
+                    createParticle()
+                }
+            }
+            start()
         </script>
     </body>
 </html>
