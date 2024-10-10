@@ -150,7 +150,10 @@ app.use((err, req, res, next) => {
     res.status(500).send("problem? yeah :/");
 });
 
-const pages = fs.readdirSync(`${rootPath}/pages`);
+let pages = fs.readdirSync(`${rootPath}/pages`);
+let simulations = fs.readdirSync(`${rootPath}/pages/sims`);
+simulations = simulations.map((simulation) => `sims/${simulation}`);
+pages = pages.concat(simulations);
 for (const page of pages) {
     const pageName = page.split(".")[0];
     app.get(`/${pageName}`, (req, res) => {

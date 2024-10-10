@@ -227,7 +227,7 @@
             }
             let yourAuthor
             fetch("/api/chat/user?id=" + author)
-                .then((response) => response.json()).then((json) => { yourAuthor = json })
+                .then((response) => response.json()).then((response) => response.json()).then((json) => { yourAuthor = json })
                 .catch((data) => {
                     setAuthor();
                 });

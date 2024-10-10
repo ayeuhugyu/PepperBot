@@ -39,6 +39,8 @@ p/update
 - fixed p/joinvc always trying to join `guild.channels.cache.first()`
 - all uses of ytdl-core are now in a try catch (didnt fix shit i just gave up trying)
 - adjusted gpt prompt to hopefully stop him from trying to use LaTeX and inform him that he can use markdown
+- fixed p/patch from slash commands
+- chat page responses now contain message content, embed description AND field content
 
 **fixes/optimizations:**
 

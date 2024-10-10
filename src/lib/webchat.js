@@ -55,11 +55,13 @@ export class WebSpoofMessage {
         this.reply = (message) => {
             let replyMessage = "";
             if (message.content) {
-                replyMessage = message.content;
-            } else if (message.embeds && message.embeds[0] && message.embeds[0].data) {
+                replyMessage += message.content;
+            }  
+            if (message.embeds && message.embeds[0] && message.embeds[0].data) {
                 if (message.embeds[0].data.description) {
-                    replyMessage = message.embeds[0].data.description;
-                } if (message.embeds[0].data.fields) {
+                    replyMessage += message.embeds[0].data.description;
+                } 
+                if (message.embeds[0].data.fields) {
                     let fieldText = ""
                     message.embeds[0].data.fields.forEach(field => {
                         fieldText += `${field.value} \n`
@@ -85,12 +87,25 @@ export class WebSpoofMessage {
                     const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                     return v.toString(16);
                 }), content: replyMessage, author: { id: "1209297323029565470", username: "PepperBot" }, timestamp: Date.now(), edit: (message) => {
-                    let replyMessage;
+                    let replyMessage = "";
                     if (message.content) {
-                        replyMessage = message.content;
-                    } else {
-                        replyMessage = message.embeds[0].description;
-                    } 
+                        replyMessage += message.content;
+                    }  
+                    if (message.embeds && message.embeds[0] && message.embeds[0].data) {
+                        if (message.embeds[0].data.description) {
+                            replyMessage += message.embeds[0].data.description;
+                        } 
+                        if (message.embeds[0].data.fields) {
+                            let fieldText = ""
+                            message.embeds[0].data.fields.forEach(field => {
+                                fieldText += `${field.value} \n`
+                            })
+                            replyMessage += fieldText
+                        }
+                    }
+                    if (replyMessage == "") {
+                        replyMessage = undefined
+                    }
                     if ((!replyMessage || typeof replyMessage !== "string") && typeof message === "string") {
                         replyMessage = message;
                     }

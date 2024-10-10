@@ -32,10 +32,10 @@ const command = new Command(
                 .slice(prefix.length + commandLength)
                 .trim()
         );
-        args.set("patch", true);
         return args;
     },
     async function execute(message, args, isInteraction) {
+        args.set("patch", true);
         if (args.get("message")) {
             update.execute(message, args, isInteraction);
         } else {
