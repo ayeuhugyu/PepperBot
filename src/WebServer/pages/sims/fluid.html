@@ -186,35 +186,44 @@
             // to use this function, do this
             // let foo = exposeSetting("value", "range", 0, 1, 0.01, 0.1, " this is a suffix!", (value) => {}); args go in this order: name, type, min, max, step, defaultValue, suffix, onChanged
             // to access the value, use foo.value
-            function smoothingFunction(dst) {
-                const radius = settings.smoothingRadius.value;
-                const volume = Math.PI * Math.pow(radius, 8) / 4;
-                const value = Math.max(0, radius - dst);
-                console.log(`volume: ${volume}, value: ${value}, dst: ${dst}, radius: ${radius}`)
-                return (value * value * value) / volume;
-            }
-            
-            function calculateDensity(samplePoint) {
-                let density = 0;
-                const mass = 1;
 
-                particles.forEach((particle) => {
-                    const dx = particle.position.x - samplePoint.x;
-                    const dy = particle.position.y - samplePoint.y;
-                    const dst = Math.sqrt(dx * dx + dy * dy);
-                    const influence = smoothingFunction(dst);
-                    density += mass * influence;
+            function calculateDistance(point1, point2) {
+                return Math.sqrt(
+                    Math.pow(point1.x - point2.x, 2) +
+                    Math.pow(point1.y - point2.y, 2)
+                );
+            }
+
+            // Smoothing function (example: Gaussian)
+            function smoothingFunction(distance, radius) {
+                const h = radius;
+                const q = distance / h;
+                if (q >= 0 && q <= 1) {
+                    return (1 - q) * (1 - q);
+                }
+                return 0;
+            }
+
+            function calculateDensity(samplePoint, particles, radius) {
+                let density = 0;
+                const mass = 1; // Assuming each particle has a mass of 1 unit
+
+                particles.forEach(particle => {
+                    const distance = calculateDistance(samplePoint, particle.position);
+                    if (distance < radius) {
+                        density += mass * smoothingFunction(distance, radius);
+                    }
                 });
 
                 return density;
             }
 
             setInterval(() => {
-                const density = calculateDensity({ x: 0.5, y: 0.5 })
+                const density = calculateDensity({ x: 0.5, y: 0.5 }, particles, settings.smoothingRadius.value)
                 document.getElementById("density").innerText = `Density: ${density}`
             }, 250)
             let settings = {}
-            settings.particleCount = exposeSetting("particleCount", "range", 1, 1000, 1, 1, "", (value) => {
+            settings.particleCount = exposeSetting("particleCount", "range", 1, 1000, 1, 50, "", (value) => {
                 // unfinished
             })
             settings.particleSpacing = exposeSetting("particleSpacing", "range", 1, 100, 1, 1, "px", (value) => {
@@ -232,7 +241,7 @@
             settings.boundsSizeY = exposeSetting("boundsSizeY", "range", 1, 100, 1, 100, "%", (value) => {
                 simulationBounds.style.height = value + "%"
             })
-            settings.smoothingRadius = exposeSetting("smoothingRadius", "range", 1, 100, 1, 1, "px", (value) => {
+            settings.smoothingRadius = exposeSetting("smoothingRadius", "range", 1, 250, 1, 35, "px", (value) => {
                 particles.forEach((particle) => {
                     if (settings.visualizeSmoothingRadius.checked) {
                         particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
