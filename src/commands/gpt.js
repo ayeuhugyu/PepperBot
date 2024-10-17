@@ -147,8 +147,17 @@ cleardata.addStringOption((option) =>
 )
 const clear = new SubCommand(
     cleardata,
-    async function getArguments(message) {
-        return null;
+    async function getArguments(message, gconfig) {
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
+        args.set(
+            "context",
+            message.content
+                .slice(prefix.length + commandLength)
+                .trim()
+        );
+        return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
         let conversation = await gpt.getConversation(message);
