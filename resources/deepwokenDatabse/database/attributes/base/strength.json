@@ -1,0 +1,6 @@
+{
+    "name": "strength",
+    "description": "Your raw physical strength. Increases armor PEN and Carry Load.",
+    "shortform": "STR",
+    "category": "base"
+}

@@ -1,0 +1,9 @@
+{
+    "name": "",
+    "dialogue": [
+        "##classes/dialogueOption"
+    ],
+    "quests": [
+        "##classes/quest"
+    ]
+}

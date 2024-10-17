@@ -1,0 +1,10 @@
+{
+    "name": "",
+    "description": "",
+    "rarity": "##enums/talentRarity",
+    "requirements": "##classes/requirements",
+    "quests": [
+        "##classes/quest"
+    ],
+    "echo": false
+}

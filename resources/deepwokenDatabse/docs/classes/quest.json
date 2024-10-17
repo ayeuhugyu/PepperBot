@@ -1,0 +1,8 @@
+{
+    "name": "",
+    "description": "",
+    "npc": "##classes/npc",
+    "rewards": [
+        "##classes/questReward"
+    ]
+}

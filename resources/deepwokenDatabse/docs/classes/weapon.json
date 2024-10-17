@@ -1,0 +1,17 @@
+{
+    "name": "",
+    "description": "",
+    "requirements": "##classes/requirements",
+    "stats": {
+        "damage": 0,
+        "penetration": 0,
+        "chip": 0,
+        "scaling": "##classes/statDistribution",
+        "weight": 0,
+        "range": 0,
+        "speed": 0,
+        "endlag": 0
+    },
+    "type": "##enums/weaponType",
+    "rarity": "##enums/itemRarity"
+}
