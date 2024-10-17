@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Cool Sites</title>
-        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
         <meta content="ye" property="og:description" />
@@ -44,6 +44,9 @@
             <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
             <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
             <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+            <div class="sidebarButton" id="/simulations" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Simulations</div>
+            <div class="sidebarButton" id="/todo" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Todo</div>
+            <div class="sidebarButton" id="/updates" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Updates</div>
 
             <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
             <script id="sidebarmain">
@@ -98,12 +101,21 @@
                 });
             </script>
         </div>
-
-        <h1 id="mainTitle">Cool / Otherwise Interesting or Funny Websites</h1>
-        <pre id="credits" style="position: absolute; top: 75px; left: 75px">
-<a id="creditsanchor" href="https://reidlab.online" target="_blank">reidlab.online</a>
-<a id="creditsanchor" href="https://goop.network" target="_blank">goopNET</a>
-<a id="creditsanchor" href="https://spax.zone/tests/horse" target="_blank">The Horse Button</a>
-</pre>
+        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
+            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
+                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
+                        <h2 class="sectionTitle">Cool / Otherwise Interesting or Funny Websites</h2>
+                        <pre>
+<a href="https://reidlab.pink" target="_blank">reidlab.pink</a> - website of a friend of mine
+<a href="https://goop.network" target="_blank">goopNET</a> - the goop network; made by a friend of mine
+<a href="https://spax.zone/tests/horse" target="_blank">The Horse Button</a> - sends you to a random ".horse" website
+<a href="https://corru.observer" target="_blank">corru.observer</a> - interesting little html game
+<a href="https://deepwoken.co/builder" target="_blank">Deepwoken Builder</a> - a tool for making deepwoken builds
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

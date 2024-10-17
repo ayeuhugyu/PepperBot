@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Contact</title>
-        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
         <meta content="ye" property="og:description" />
@@ -44,6 +44,9 @@
             <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
             <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
             <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+            <div class="sidebarButton" id="/simulations" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Simulations</div>
+            <div class="sidebarButton" id="/todo" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Todo</div>
+            <div class="sidebarButton" id="/updates" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Updates</div>
 
             <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
             <script id="sidebarmain">
@@ -98,14 +101,21 @@
                 });
             </script>
         </div>
-
-        <h1 id="mainTitle">Contact</h1>
-        <pre id="credits" style="position: absolute; top: 75px; left: 75px">
+        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
+            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
+                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
+                        <h2 class="sectionTitle">Contact</h2>
+                        <pre>
 discord: anti_pepperphobes
 discord server (that which i own): <a id="creditsanchor" href="https://discord.gg/8vq3j6Q">https://discord.gg/8vq3j6Q</a>
 email: <a href="mailto:planetaryrotationwastaken1@gmail.com">planetaryrotationwastaken1@gmail.com</a> (i don't check this often due to the amount of spam i recieve)
-
+                            
 i would like to add more ways to contact me to this list, but that would result in them getting spammed and i'd rather not have that happen. if you need to contact me, please use discord
-</pre>
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

@@ -11,6 +11,7 @@ import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import * as gpt from "../lib/gpt.js";
 import uservariables from "../lib/uservariables.js";
+import { channel } from "diagnostics_channel";
 
 const config = globals.config;
 
@@ -46,10 +47,11 @@ const command = new Command(
         const messageChannel = message.channel;
         let referenceMessage
         try {
-            if (typeof args.get("message") === "string") {
-                referenceMessage = await messageChannel.messages.fetch(messageID);
-            } else {
-                referenceMessage = args.get("message");
+            referenceMessage = {
+                message: await messageChannel.messages.fetch(messageID),
+                channel: messageChannel,
+                messageID: messageID,
+                channelID: messageChannel.id
             }
         } catch (err) {
             return action.reply(message, { content: `unable to fetch message`, ephemeral: gconfig.useEphemeralReplies });

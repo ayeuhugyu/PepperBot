@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Shame</title>
+        <title>Todo</title>
         <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
@@ -105,16 +105,35 @@
             <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
                 <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
                     <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
-                        <h2 class="sectionTitle">Shame</h2>
-                        <pre>
-173.12.11.240 - dossing me (and so now there is a rate limiter (and they are blocked))
-36.139.5.209 - who is in lanzhou china trying to dos me 😭😭
-71.59.235.207 - :trollFaceDirective:
-150.213.157.212 - Rate Limit Exceeded (okay mr switzerland)
-                        </pre>
+                        <h2 class="sectionTitle">todo list</h2>
+                        <div class="logFileContentContainer" style="width: calc(100% - 3px); flex-grow: 1; overflow: hidden;">
+                            <pre class="outlined" id="todocontent" style="width: 100%; height: 100%; overflow: scroll; text-align: left;"></pre>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <script id="todoreader">
+            function parseTodoList(list) {
+                let text = "";
+                list.forEach((item, index) => {
+                text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${item.completed ? "~~" : ""}\n`;
+                });
+                return text;
+            }
+            function updateTodo() {
+                const todocontent =
+                    document.getElementById("todocontent");
+                    todocontent.style.maxWidth = `${todocontent.offsetWidth}px`;
+                    todocontent.innerText = `reading todo list...`;
+                fetch(`/api/read-todo`)
+                    .then((response) => response.text())
+                    .then((text) => {
+                        todocontent.innerText = parseTodoList(JSON.parse(text));
+                    });
+            }
+            document.addEventListener("DOMContentLoaded", updateTodo);
+        </script>
+    </div>
     </body>
 </html>

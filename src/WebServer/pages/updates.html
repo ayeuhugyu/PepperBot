@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Shame</title>
+        <title>Updates</title>
         <link rel="stylesheet" type="text/css" href="/newstyle.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="ze peppersite" property="og:title" />
@@ -105,16 +105,58 @@
             <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
                 <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
                     <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
-                        <h2 class="sectionTitle">Shame</h2>
-                        <pre>
-173.12.11.240 - dossing me (and so now there is a rate limiter (and they are blocked))
-36.139.5.209 - who is in lanzhou china trying to dos me 😭😭
-71.59.235.207 - :trollFaceDirective:
-150.213.157.212 - Rate Limit Exceeded (okay mr switzerland)
-                        </pre>
+                        <h2 class="sectionTitle">update viewer</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <input type="text" id="textbox" placeholder="version #"/>
+                                <button type="button" onclick="readUpdate();">Submit</button>
+                            </div>
+                            <div id="status" style="text-align: right;">awaiting input...</div>
+                        </div>
+                        <div class="logFileContentContainer" style="width: calc(100% - 3px); flex-grow: 1; overflow: hidden;">
+                            <pre class="outlined" id="updatecontent" style="width: 100%; height: 100%; overflow: scroll; text-align: left;"></pre>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <script id="updatereader">
+            document.addEventListener(
+                "DOMContentLoaded",
+                async function () {
+                    const updversion =
+                        document.getElementById("textbox");
+                    let ver;
+                    await fetch("/api/get-latest-update")
+                        .then((response) => response.text())
+                        .then((text) => {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const versionParam = urlParams.get('version');
+                            const idParam = urlParams.get('id');
+                            updversion.value = versionParam || idParam || text;
+                            ver = versionParam || idParam || text;
+                        });
+                    readUpdate(ver);
+                }
+            );
+            function readUpdate(givenver) {
+                const updatecontent =
+                    document.getElementById("updatecontent");
+                updatecontent.style.maxWidth = `${updatecontent.offsetWidth}px`;
+                const version =
+                    document.getElementById("textbox").value;
+                const status = document.getElementById("status");
+                status.innerText = `reading ${version}.txt... `;
+                fetch(`/api/read-update/?version=${version || givenver}`)
+                    .then((response) => response.text())
+                    .then((text) => {
+                        updatecontent.innerText = `VERSION ${
+                            version || givenver
+                        }\n\n${text}`;
+                        status.innerText = `awaiting input...`;
+                    });
+            }
+        </script>
+    </div>
     </body>
 </html>

@@ -44,6 +44,9 @@
             <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
             <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
             <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+            <div class="sidebarButton" id="/simulations" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Simulations</div>
+            <div class="sidebarButton" id="/todo" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Todo</div>
+            <div class="sidebarButton" id="/updates" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Updates</div>
 
             <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
             <script id="sidebarmain">
@@ -101,7 +104,7 @@
         <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
             <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
                 <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
-                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: scroll; max-height: calc(100% - 18px); position: relative;">
                         <h2 class="sectionTitle">fluid physics testing</h2>
                         <div class="flexcontainer" id="simulationholder" style="flex-direction: row; width: 100%; flex-grow: 1; align-items: center; justify-items: left;">
                             <div id="simulation" class="outlined" style="margin-right: 5px; height: 100%; flex-grow: 0.95; display: flex;">
@@ -109,7 +112,7 @@
 
                                 </div>
                             </div>
-                            <div id="settings" class="outlined" style="flex-grow: 0.05; height: 100%; overflow: scroll;">
+                            <div id="settings" class="outlined" style="flex-grow: 0.05; height: 100%; max-height: 100%; overflow: auto; overflow-y: auto;">
                                 <h2 class="sectionTitle">settings</h2>
                             </div>
                         </div>
@@ -136,11 +139,15 @@
             const simulationDiv = document.getElementById("simulation")
             const simulationBounds = document.getElementById("simulationBounds")
             const settingsDiv = document.getElementById("settings")
+            settingsDiv.style.overflowY = "auto"
 
             let runChangedOnLoad = ["boundsSizeX", "boundsSizeY"]
 
             let defaults = {}
             let categories = {}
+            
+            
+            //document.head.appendChild(x)
 
             function createCategory(name, parent) {
                 const categoryContainer = document.createElement("div");
@@ -202,7 +209,7 @@
             startSimulationButton.id = "startSimulation";
             startSimulationButton.innerText = "start simulation";
             startSimulationButton.onclick = () => {
-                setInterval(step, 1000 / 30)
+                setInterval(step, 1000 / 60)
             };
 
             const resetButton = document.createElement("button");
@@ -221,32 +228,53 @@
             const boundsCategory = createCategory("Bounds", settingsDiv)
             const smoothingCategory = createCategory("Smoothing", settingsDiv)
             const forcesCategory = createCategory("Forces", settingsDiv)
+            const liquidCategory = createCategory("Liquid", settingsDiv)
 
             class Vector2 {
                 x = 0
                 y = 0
                 constructor(x, y) {
-                    this.x = x
-                    this.y = y
+                    this.x = x || 0
+                    this.y = y || x || 0
                 }
                 add(vector) {
+                    if (typeof vector === "number") {
+                        this.x += vector
+                        this.y += vector
+                        return this
+                    }
                     this.x += vector.x
                     this.y += vector.y
                     return this
                 }
                 subtract(vector) {
+                    if (typeof vector === "number") {
+                        this.x -= vector
+                        this.y -= vector
+                        return this
+                    }
                     this.x -= vector.x
                     this.y -= vector.y
                     return this
                 }
                 multiply(scalar) {
-                    this.x *= scalar
-                    this.y *= scalar
+                    if (typeof scalar === "number") {
+                        this.x *= scalar
+                        this.y *= scalar
+                        return this
+                    }
+                    this.x *= scalar.x
+                    this.y *= scalar.y
                     return this
                 }
                 divide(scalar) {
-                    this.x /= scalar
-                    this.y /= scalar
+                    if (typeof scalar === "number") {
+                        this.x /= scalar
+                        this.y /= scalar
+                        return this
+                    }
+                    this.x /= scalar.x
+                    this.y /= scalar.y
                     return this
                 }
 
@@ -269,7 +297,7 @@
                     return new Vector2(1, 0);
                 }
             }
-
+            let particles = []
             class Particle {
                 position = Vector2.zero
                 velocity = Vector2.zero
@@ -283,12 +311,14 @@
                     this.element = document.createElement("div")
                     this.element.style.width = `${settings.particleSize.value}px`
                     this.element.style.height = `${settings.particleSize.value}px`
-                    this.element.style.backgroundColor = "lightblue"
+                    this.element.style.backgroundColor = "rgb(0, 0, 255)"
                     this.element.style.position = "absolute"
                     this.element.style.borderRadius = "50%"
                     this.element.style.transform = "translate(-50%, -50%)"
+                    this.element.style.backgroundClip = "padding-box"
+                    this.element.style.webkitBackgroundClip = "padding-box"
                     if (settings.visualizeSmoothingRadius.checked) {
-                        this.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
+                        this.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid rgba(100, 100, 255, 0.1)`
                     } else {
                         this.element.style.border = "none"
                     }
@@ -361,8 +391,8 @@
             const mass = 1;
 
             function calculateDensityToPressure(density) {
-                const densityError = density - targetDensity
-                const pressure = densityError * parseFloat(settings.pressureMultiplier.value * 0.001)
+                const densityError = density - parseFloat(settings.targetDensity.value)
+                const pressure = densityError * parseFloat(settings.pressureMultiplier.value)
                 console.log(`density: ${density} targetDensity: ${targetDensity} densityError: ${densityError} pressure: ${pressure}`)
                 return pressure
             }
@@ -434,18 +464,32 @@
 
                 return pressureForce;
             }
-            function calculatePressureForce(particleIndex) {
-                return Vector2.zero;
+            function calculatePressureForce(particle, density) {
+                let pressureForce = Vector2.zero;
+                particles.forEach((otherParticle) => {
+                    if (otherParticle.index === particle.index) {
+                        return;
+                    }
+                    const distance = calculateDistance(particle.position, otherParticle.position);
+                    if (distance < parseInt(settings.smoothingRadius.value)) {
+                        const direction = Vector2.zero;
+                        direction.x = (particle.position.x - otherParticle.position.x) / distance;
+                        direction.y = (particle.position.y - otherParticle.position.y) / distance;
+                        const slope = smoothingFunctionDerivative(distance, parseInt(settings.smoothingRadius.value));
+                        pressureForce.add(direction.multiply(-calculateDensityToPressure(density) * slope * (mass / density)));
+                    }
+                });
+                return pressureForce;
             }
             let settings = {}
-            settings.particleCount = exposeSetting("particleCount", "range", 1, 1000, 1, 50, "", "Particles", (value) => {
+            settings.particleCount = exposeSetting("particleCount", "range", 1, 1000, 1, 25, "", "Particles", (value) => {
                 // unfinished
             })
             let particleSizePercentage = 0
             settings.particleSize = exposeSetting("particleSize", "range", 1, 100, 1, 15, "px", "Particles", (value) => {
                 particles.forEach((particle) => {
-                    particle.element.width = value
-                    particle.element.height = value
+                    particle.element.width = `${value}px`
+                    particle.element.height = `${value}px`
                 })
                 particleSizePercentage = settings.particleSize.value / simulationBounds.clientWidth
             })
@@ -458,10 +502,10 @@
                 simulationBounds.style.height = value + "%"
                 particleSizePercentage = settings.particleSize.value / simulationBounds.clientWidth
             })
-            settings.smoothingRadius = exposeSetting("smoothingRadius", "range", 1, 250, 1, 60, "px", "Smoothing", (value) => {
+            settings.smoothingRadius = exposeSetting("smoothingRadius", "range", 1, 1000, 1, 250, "px", "Smoothing", (value) => {
                 particles.forEach((particle) => {
                     if (settings.visualizeSmoothingRadius.checked) {
-                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
+                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid rgba(100, 100, 255, 0.1)`
                     } else {
                         particle.element.style.border = "none"
                     }
@@ -471,7 +515,7 @@
                 particles.forEach((particle) => {
                     console.log(value)
                     if (value) {
-                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid blue`
+                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid rgba(100, 100, 255, 0.1)`
                     } else {
                         particle.element.style.border = "none"
                     }
@@ -481,8 +525,14 @@
             settings.gravity = exposeSetting("gravity", "range", -0.005, 0.005, 0.0005, 0, "", "Forces", (value) => {
                 gravity.y = parseFloat(value)
             })
+            settings.maxMomentum = exposeSetting("maxMomentum", "range", 0.1, 1, 0.1, 0.1, "", "Forces", (value) => {
+                gravity.y = parseFloat(value)
+            })
             gravity.y = parseFloat(settings.gravity.value)
-            settings.pressureMultiplier = exposeSetting("pressureMultiplier", "range", 0, 0.1, 0.0001, 0.0001, "", "Forces", (value) => {
+            settings.pressureMultiplier = exposeSetting("pressureMultiplier", "range", 0, 10, 0.1, 0.1, "", "Liquid", (value) => {
+                // unfinished
+            })
+            settings.targetDensity = exposeSetting("targetDensity", "range", 0, 100, 1, 25, "", "Liquid", (value) => {
                 // unfinished
             })
 
@@ -495,7 +545,6 @@
                     settings[key] = defaults[key]
                 }
             }
-            let particles = []
             function createParticle() {
                 //const particlesPerRow = Math.floor(Math.sqrt(settings.particleCount.value))
                 //const particlesPerColumn = (settings.particleCount.value - 1) / particlesPerRow + 1
@@ -545,9 +594,50 @@
                     particle.velocity.add(gravity)
                     particle.velocity.add(particle.acceleration)
                     particle.position.add(particle.velocity)
+                    if (particle.velocity.x > parseFloat(settings.maxMomentum.value)) {
+                        particle.velocity.x = parseFloat(settings.maxMomentum.value)
+                    }
+                    if (particle.velocity.y > parseFloat(settings.maxMomentum.value)) {
+                        particle.velocity.y = parseFloat(settings.maxMomentum.value)
+                    }
                     // important to note: acceleration is added to velocity BEFORE velocity is added to position
-                    const pressureForce = calculatePressureForce(particle.index);
+                    const usedParticles = particles // todo: grid optimization
+                    const density = calculateDensity(particle.position, usedParticles, settings.smoothingRadius.value);
+                    const pressureForce = calculatePressureForce(particle, density);
+                    particle.acceleration = pressureForce;
                     resolveCollisions(particle)
+
+                    // color:
+
+                    const momentum = Math.sqrt(particle.velocity.x ** 2 + particle.velocity.y ** 2);
+                    const maxMomentum = parseFloat(settings.maxMomentum.value);
+                    const colorIntensity = momentum / maxMomentum;
+                    let r, g, b;
+
+                    if (colorIntensity < 0.25) {
+                        // Light blue to green
+                        r = 0;
+                        g = Math.floor(255 * (colorIntensity / 0.25));
+                        b = 255;
+                    } else if (colorIntensity < 0.5) {
+                        // Green to yellow
+                        r = Math.floor(255 * ((colorIntensity - 0.25) / 0.25));
+                        g = 255;
+                        b = 255 - r;
+                    } else if (colorIntensity < 0.75) {
+                        // Yellow to orange
+                        r = 255;
+                        g = Math.floor(255 * (1 - (colorIntensity - 0.5) / 0.25));
+                        b = 0;
+                    } else {
+                        // Orange to red
+                        r = 255;
+                        g = Math.floor(255 * (0.25 - (colorIntensity - 0.75)) / 0.25);
+                        b = 0;
+                    }
+
+                    particle.element.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
                     particle.update()
                 })
             }

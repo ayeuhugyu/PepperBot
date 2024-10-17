@@ -5,45 +5,52 @@ to test:
 shit on the todo list:
 
 [1] - add p/corrupt image support
-[2] - ai image processing
-[3] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
-[4] - fix p/queue (and future stuff) editing the message twice when collector stops
-[5] - p/todo pages if list length > 15
-[6] - peppersite statistics on most visited pages
-[7] - using p/queue while p/playurl is playing converts it to a queue system
-[8] - peppersite resources viewer
-[9] - p/jak viewer
-[10] - reminder / scheduling capabilities
-[11] - p/notice multi-shard fix
-[12] - custom command aliases
-[13] - custom command permissions from gconfig
-[14] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
-[15] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
-[16] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
-[17] - logs page removes content at the bottom after you've scrolled wayy past it
-[18] - rewrite readme.md to include info about stuff like what the lib files do and the forking pattern
-[19] - so apparently the end event of collectors is called when the bot is removed from a server so that means you're gonna have to fix a bunch of collectors that rely upon guild ids to remove them from lists ✅
-[20] - add some sort of greeting message that tells people the features of the bot
-[21] - p/chatbubble can be used by replying, reference can be set with a p/setreference and used from right click > apps > thingy
-[22] - p/chatbubble warns you if the reply is ephemeral that favoriting it won't work ✅
+[2] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
+[3] - fix p/queue (and future stuff) editing the message twice when collector stops
+[4] - p/todo pages if list length > 15
+[5] - peppersite statistics on most visited pages
+[6] - using p/queue while p/playurl is playing converts it to a queue system
+[7] - peppersite resources viewer
+[8] - p/jak viewer
+[9] - reminder / scheduling capabilities
+[10] - p/notice multi-shard fix
+[11] - custom command aliases
+[12] - custom command permissions from gconfig
+[13] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
+[14] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
+[15] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+[16] - logs page removes content at the bottom after you've scrolled wayy past it
+[17] - rewrite readme.md to include info about stuff like what the lib files do and the forking pattern
+[18] - so apparently the end event of collectors is called when the bot is removed from a server so that means you're gonna have to fix a bunch of collectors that rely upon guild ids to remove them from lists
+[19] - add some sort of greeting message that tells people the features of the bot
+[20] - p/chatbubble can be used by replying, reference can be set with a p/setreference and used from right click > apps > thingy
+[22] - projects page
+[23] - triangulation page that would be similar to sebastian lague's intro thingy, just cuz its interesting idk. similar to the physics experiment.
+[26] - update deepwoken equipment w/ all the new changes
 
 to add to todo list:
 
 p/update
 
-**actual content:**
+**website changes:**
 
 - fixed statistics page hourly usage hours being offset by one
 - statistics page hourly usage now always displays all 24 hours
 - statistics page hourly usage is now sorted by hours instead of by value
-- fixed p/joinvc always trying to join `guild.channels.cache.first()`
-- all uses of ytdl-core are now in a try catch (didnt fix shit i just gave up trying)
-- adjusted gpt prompt to hopefully stop him from trying to use LaTeX and inform him that he can use markdown
-- fixed p/patch from slash commands
 - chat page responses now contain message content, embed description AND field content
-- rigid body simulation has been moved to /sims/rigid
-- new fluid simulation at /sims/fluid
+- rigid body simulation has been moved to /sims/rigid (still shitty)
+- new fluid simulation at /sims/fluid (not done yet)
 - new /simulations which just lists simulations
+- /coolsites, /credits, /shame, and /contact now use the new style, old stylesheet has *finally* been deleted 
+- added /updates and /todo, for less convoluted reading of the updates and the todo list
+
+**actual content:**
+
+- added new p/gpt clear, allows you to clear your conversation OR just reset the prompt
+- adjusted gpt prompt to hopefully stop him from trying to use LaTeX and inform him that he can use markdown
 
 **fixes/optimizations:**
 
+- fixed p/joinvc always trying to join `guild.channels.cache.first()`
+- all uses of ytdl-core are now in a try catch (didnt fix shit i just gave up trying)
+- fixed p/patch from slash commands

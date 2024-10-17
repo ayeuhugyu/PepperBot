@@ -127,6 +127,46 @@ const getconversation = new SubCommand(
     }
 );
 
+const cleardata = new SubCommandData();
+cleardata.setName("clear");
+cleardata.setDescription("deletes your current conversation data, alternatively can just reset the prompt");
+cleardata.setPermissions([]);
+cleardata.setPermissionsReadable("");
+cleardata.setWhitelist([]);
+cleardata.setCanRunFromBot(true);
+cleardata.setAliases(["get", "conversation"]);
+cleardata.setDisabledContexts()
+cleardata.addStringOption((option) => 
+    option.setName("context")
+        .setDescription("what to clear")
+        .setRequired(true)
+        .addChoices(
+            { name: "prompt", value: "prompt" },
+            { name: "conversation", value: "conversation" }
+        )
+)
+const clear = new SubCommand(
+    cleardata,
+    async function getArguments(message) {
+        return null;
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        let conversation = await gpt.getConversation(message);
+        if (args.get("context") == "prompt") {
+            if (conversation) {
+                conversation.messages[0].content = gpt.botPrompt;
+                action.reply(message, { content: "your prompt has been reset, your current conversation now uses the default prompt.", ephemeral: gconfig.useEphemeralReplies });
+            }
+        } else if (args.get("context") == "conversation" || !args.get("context")) {
+            delete gpt.conversations[message.author.id];
+            action.reply(
+                message,
+                { content: "your conversation has been cleared, your next conversation will be a new one.", ephemeral: gconfig.useEphemeralReplies }
+            );
+        }
+    }
+);
+
 const setpromptdata = new SubCommandData();
 setpromptdata.setName("setprompt");
 setpromptdata.setDescription("adjusts the prompt for the next conversation");
@@ -211,7 +251,8 @@ data.addStringOption((option) =>
         .addChoices(
             { name: "old", value: "old" },
             { name: "setprompt", value: "setprompt" },
-            { name: "getconversation", value: "getconversation" }
+            { name: "getconversation", value: "getconversation" },
+            { name: "clear", value: "clear" }
         )
 );
 data.addStringOption((option) =>
@@ -220,6 +261,15 @@ data.addStringOption((option) =>
         .setDescription("the prompt to use")
         .setRequired(false)
 );
+cleardata.addStringOption((option) => 
+    option.setName("context")
+        .setDescription("what to clear")
+        .setRequired(false)
+        .addChoices(
+            { name: "prompt", value: "prompt" },
+            { name: "conversation", value: "conversation" }
+        )
+)
 const command = new Command(
     data,
     async function getArguments(message, gconfig) {
@@ -240,7 +290,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies
         })
     },
-    [old, setprompt, getconversation] // subcommands
+    [old, setprompt, getconversation, clear] // subcommands
 );
 
 export default command;
