@@ -119,7 +119,7 @@ io.on("connection", (socket) => {
     });
     socket.on("typing", (user, stop) => {
         const processedUser = chat.getUser(user);
-        const cloneOfProcessedUser = { ...processedUser };
+        const cloneOfProcessedUser = JSON.parse(JSON.stringify(processedUser));
         delete cloneOfProcessedUser.id;
         io.emit("typing", cloneOfProcessedUser);
     })
@@ -189,7 +189,7 @@ app.get("/api/chat/message", (req, res) => { // get a message by id
     if (!message) {
         return res.status(404).send("message not found");
     }
-    const cloneOfMessage = { ...message };
+    const cloneOfMessage = JSON.parse(JSON.stringify(message));
     delete cloneOfMessage.author.id;
     res.send(cloneOfMessage);
 });
@@ -211,11 +211,9 @@ app.post("/api/chat/user", (req, res) => { // post a user
     if (!username) {
         return res.status(400).send("no username provided");
     }
-    const id = chat.registerUser(username);
+    const id = chat.registerUser(username, { bot: false, system: false, error: false }, username);
     res.send(JSON.stringify(chat.getUser(id)));
 });
-
-let messageCreate
 
 app.post("/api/chat/message", (req, res) => { // post a message
     if (!req.query.text) {
@@ -241,7 +239,7 @@ app.post("/api/chat/message", (req, res) => { // post a message
         log.error(err);
     }
     const message = chat.getMessage(id);
-    const cloneOfMessage = { ...message };
+    const cloneOfMessage = JSON.parse(JSON.stringify(message));
     delete cloneOfMessage.author.id;
     io.emit("chat message", cloneOfMessage);
     res.send(id);
@@ -250,7 +248,7 @@ app.post("/api/chat/message", (req, res) => { // post a message
 app.get("/api/chat/latest", (req, res) => { // get the latest messages
     const messages = chat.getLatestMessages(150);
     const cloneOfMessages = messages.map((message) => {
-        const cloneOfMessage = { ...message };
+        const cloneOfMessage = JSON.parse(JSON.stringify(message));
         delete cloneOfMessage.author.id;
         return cloneOfMessage;
     });

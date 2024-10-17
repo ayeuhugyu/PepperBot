@@ -177,7 +177,8 @@ export class Author {
     }
 }
 
-export function registerUser(username, id = generateUID(), {bot = false, system = false, error = false}, displayName = username) {
+export function registerUser(username, {bot = false, system = false, error = false}, displayName = username) {
+    const id = generateUID()
     let author = new Author(id, username, {bot: bot, system: system, error: error}, displayName)
     users[author.id] = author
     log.info(`registered user ${author.username}`)
