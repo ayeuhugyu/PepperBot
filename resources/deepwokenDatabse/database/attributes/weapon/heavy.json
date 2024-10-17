@@ -1,5 +1,6 @@
 {
     "name": "heavy",
+    "rich_name": "Heavy Wep.",
     "description": "Your ability to wield Heavy Weapons such as Greataxes, Greatswords, and Greathammers. Increases damage dealt with these weapons.",
     "shortform": "HVY",
     "category": "weapon"

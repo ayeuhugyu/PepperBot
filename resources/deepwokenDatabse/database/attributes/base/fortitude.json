@@ -1,5 +1,6 @@
 {
     "name": "fortitude",
+    "rich_name": "Fortitude",
     "description": "Your ability to reisst damage and disease. Increases health slightly.",
     "shortform": "FTD",
     "category": "base"

@@ -1,0 +1,7 @@
+{
+    "name": "rythm",
+    "rich_name": "Rythm",
+    "description": "An application of the Song that enables the user to percieve the subtle Murmur emanating from all things. Press G while crouched.",
+    "requirements": null,
+    "murmurGiver": "kadrivus_entomolius_auditan"
+}

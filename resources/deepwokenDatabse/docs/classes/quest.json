@@ -1,7 +1,8 @@
 {
-    "name": "",
-    "description": "",
-    "npc": "##classes/npc",
+    "name": "quest_name",
+    "rich_name": "Quest Rich Name",
+    "description": "quest_description",
+    "questgiver": "npc_name",
     "rewards": [
         "##classes/questReward"
     ]

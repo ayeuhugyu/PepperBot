@@ -1,5 +1,6 @@
 {
-    "name": "",
+    "name": "npc_name",
+    "rich_name": "Npc Rich Name",
     "dialogue": [
         "##classes/dialogueOption"
     ],

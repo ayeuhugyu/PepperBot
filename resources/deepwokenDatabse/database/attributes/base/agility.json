@@ -1,5 +1,6 @@
 {
     "name": "agility",
+    "rich_name": "Agility",
     "description": "Your slight of hand and nimbleness. Improves Parkour and Stealth.",
     "shortform": "AGL",
     "category": "base"

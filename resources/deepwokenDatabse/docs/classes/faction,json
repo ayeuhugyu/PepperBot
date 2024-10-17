@@ -1,0 +1,7 @@
+{
+    "name": "faction_name",
+    "rich_name": "Faction Rich Name",
+    "territories": [
+        "location_name"
+    ]
+}

@@ -1,8 +1,11 @@
 {
-    "name": "",
-    "description": "",
+    "name": "talent_name",
+    "rich_name": "Talent Rich Name",
+    "description": "talent_description",
     "rarity": "##enums/talentRarity",
     "requirements": "##classes/requirements",
+    "category": "talentCategory_name",
+    "prerequisites": "##classes/prerequisites",
     "quests": [
         "##classes/quest"
     ],

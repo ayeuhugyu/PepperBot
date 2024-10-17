@@ -1,0 +1,16 @@
+{
+    "talents": [
+        "talent_name"
+    ],
+    "mantras": [
+        "mantra_name"
+    ],
+    "oath": "oath_name",
+    "murmur": "murmur_name",
+    "resonance": "resonance_name",
+    "weapon": "weapon_name",
+    "weaponType": "##enums/weaponType",
+    "quests": [
+        "quest_name"
+    ]
+}

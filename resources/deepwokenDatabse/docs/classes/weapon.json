@@ -1,6 +1,7 @@
 {
-    "name": "",
-    "description": "",
+    "name": "weapon_name",
+    "rich_name": "Weapon Rich Name",
+    "description": "weapon_description",
     "requirements": "##classes/requirements",
     "stats": {
         "damage": 0,

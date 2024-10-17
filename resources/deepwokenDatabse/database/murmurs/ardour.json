@@ -1,0 +1,7 @@
+{
+    "name": "ardour",
+    "rich_name": "Ardour",
+    "description": "An application of the Song that enables one to channel the Murmur into raw strength. Press H.",
+    "requirements": null,
+    "murmurGiver": "old_stranger"
+}
