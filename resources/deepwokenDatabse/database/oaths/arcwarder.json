@@ -91,6 +91,36 @@
             "mantras": [
                 "arc_suit"
             ]
-        } // TODO: FINISH
+        },
+        {
+            "level": 1,
+            "talents": [
+                "arc_module_eject"
+            ],
+            "mantras": []
+        },
+        {
+            "level": 2,
+            "talents": [],
+            "mantras": [
+                "arc_wave"
+            ]
+        },
+        {
+            "level": 3,
+            "talents": [
+                "arc_module_guard"
+            ],
+            "mantras": []
+        },
+        {
+            "level": 4,
+            "talents": [
+                "arc_module_null"
+            ],
+            "mantras": [
+                "arc_beam"
+            ]
+        }
     ]
 }
