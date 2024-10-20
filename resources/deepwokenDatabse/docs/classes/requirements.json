@@ -1,4 +1,10 @@
 {
     "character": "##classes/characterStats",
-    "stats": "##classes/statDistribution"
+    "stats": "##classes/statDistribution",
+    "talents": [
+        "talent_name"
+    ],
+    "mantras": [
+        "mantra_name"
+    ]
 }

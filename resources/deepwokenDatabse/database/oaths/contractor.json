@@ -1,7 +1,7 @@
 {
-    "name": "arcwarder",
-    "rich_name": "Arcwarder",
-    "description": "You vow to be a shield for your comrades, to wear your regalia with pride and serve the greater collective. From each according to their ability, to each according to their needs.",
+    "name": "contractor",
+    "rich_name": "Contractor",
+    "description": "Your heart is forever now eternally tied to Zi'eer, the 4th Prophet of the Ministry. You swear to serve under his will, no matter the cost.",
     "requirements": {
         "character": {
             "level": 0,
@@ -14,7 +14,7 @@
             "weapon_type": null,
             "murmur": null,
             "oath": null,
-            "resonance": null,
+            "resonance": "any",
             "penetration": {
                 "melee": 0,
                 "mantra": 0
@@ -40,9 +40,9 @@
         },
         "stats": {
             "attunement": {
-                "flamecharm": 20,
+                "flamecharm": 0,
                 "frostdraw": 0,
-                "thundercall": 20,
+                "thundercall": 0,
                 "galebreathe": 0,
                 "shadowcast": 0,
                 "ironsing": 0
@@ -54,7 +54,7 @@
             },
             "base": {
                 "strength": 0,
-                "fortitude": 20,
+                "fortitude": 0,
                 "agility": 0,
                 "intelligence": 0,
                 "willpower": 0,
@@ -64,65 +64,52 @@
         "talents": [],
         "mantras": []
     },
-    "oathgiver": "delta",
+    "oathgiver": "the_lord_regent",
     "mantraSlots": {
         "combat": 2,
         "mobility": 0,
         "support": 0,
-        "wildcard": 1
+        "wildcard": 0
     },
     "talents": [
-        "arc_module_leap",
-        "arc_module_dash",
-        "arc_module_eject",
-        "arc_module_guard",
-        "arc_module_null"
+        "hidden_tendril",
+        "string_trick"
     ],
     "mantras": [
-        "arc_suit",
-        "arc_wave",
-        "arc_beam"
+        "judgement",
+        "lords_slice",
+        "equalizer"
     ],
     "progression": [
         {
             "level": 0,
-            "talents": [
-                "arc_module_leap",
-                "arc_module_dash"
-            ],
-            "mantras": [
-                "arc_suit"
-            ]
+            "talents": [],
+            "mantras": []
         },
         {
             "level": 1,
             "talents": [
-                "arc_module_eject"
+                "hidden_tendril"
             ],
-            "mantras": []
+            "mantras": [
+                "lords_slice"
+            ]
         },
         {
             "level": 2,
             "talents": [],
             "mantras": [
-                "arc_wave"
+                "equalizer"
             ]
         },
         {
             "level": 3,
             "talents": [
-                "arc_module_guard"
-            ],
-            "mantras": []
-        },
-        {
-            "level": 4,
-            "talents": [
-                "arc_module_null"
+                "string_trick"
             ],
             "mantras": [
-                "arc_beam"
+                "judgement"
             ]
         }
     ]
-}
+} // TODO: reputation requirements

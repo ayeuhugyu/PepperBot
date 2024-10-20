@@ -9,5 +9,6 @@
     "quests": [
         "##classes/quest"
     ],
-    "echo": false
+    "echo": false,
+    "passives": "##classes/requirements"
 }

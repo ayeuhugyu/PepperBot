@@ -1,7 +1,7 @@
 {
-    "name": "arcwarder",
-    "rich_name": "Arcwarder",
-    "description": "You vow to be a shield for your comrades, to wear your regalia with pride and serve the greater collective. From each according to their ability, to each according to their needs.",
+    "name": "blindseer",
+    "rich_name": "Blindseer",
+    "description": "You vow to not let the horrors of the world pierce your tightly fastened blindfold. Everything is simply as we choose to percieve it.",
     "requirements": {
         "character": {
             "level": 0,
@@ -40,9 +40,9 @@
         },
         "stats": {
             "attunement": {
-                "flamecharm": 20,
+                "flamecharm": 0,
                 "frostdraw": 0,
-                "thundercall": 20,
+                "thundercall": 0,
                 "galebreathe": 0,
                 "shadowcast": 0,
                 "ironsing": 0
@@ -54,74 +54,73 @@
             },
             "base": {
                 "strength": 0,
-                "fortitude": 20,
+                "fortitude": 0,
                 "agility": 0,
                 "intelligence": 0,
-                "willpower": 0,
+                "willpower": 40,
                 "charisma": 0
             }
         },
-        "talents": [],
+        "talents": [
+            "breathing_exercise",
+            "conquer_your_fears",
+            "disbelief",
+            "blinded"
+        ],
         "mantras": []
     },
-    "oathgiver": "delta",
+    "oathgiver": "???",
     "mantraSlots": {
-        "combat": 2,
+        "combat": 0,
         "mobility": 0,
-        "support": 0,
+        "support": 1,
         "wildcard": 1
     },
     "talents": [
-        "arc_module_leap",
-        "arc_module_dash",
-        "arc_module_eject",
-        "arc_module_guard",
-        "arc_module_null"
+        "all_seeing_eye"
     ],
     "mantras": [
-        "arc_suit",
-        "arc_wave",
-        "arc_beam"
+        "mindsoothe",
+        "tranquil_circle",
+        "sightless_beam"
     ],
     "progression": [
         {
             "level": 0,
-            "talents": [
-                "arc_module_leap",
-                "arc_module_dash"
-            ],
-            "mantras": [
-                "arc_suit"
-            ]
+            "talents": [],
+            "mantras": []
         },
         {
             "level": 1,
-            "talents": [
-                "arc_module_eject"
-            ],
-            "mantras": []
+            "talents": [],
+            "mantras": [
+                "mindsoothe"
+            ]
         },
         {
             "level": 2,
             "talents": [],
-            "mantras": [
-                "arc_wave"
-            ]
+            "mantras": []
         },
         {
             "level": 3,
-            "talents": [
-                "arc_module_guard"
-            ],
-            "mantras": []
+            "talents": [],
+            "mantras": [
+                "tranquil_circle"
+            ]
         },
         {
             "level": 4,
             "talents": [
-                "arc_module_null"
+                "all_seeing_eye"
             ],
+            "mantras": []
+        },
+        {
+            "level": 5,
+            "talents": [],
             "mantras": [
-                "arc_beam"
+                "sightless_beam"
             ]
         }
     ]
