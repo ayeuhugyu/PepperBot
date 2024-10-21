@@ -1,7 +1,0 @@
-{
-    "name": "stat_name",
-    "rich_name": "Stat Rich Name",
-    "description": "stat_description",
-    "shortform": "stat_shortform",
-    "category": "##enums/statCategory"
-}

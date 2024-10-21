@@ -1,8 +1,0 @@
-{
-    "name": "resonance_name",
-    "rich_name": "Resonance Rich Name",
-    "description": "resonance_description",
-    "rarity": "##enums/resonanceRarity",
-    "corrupted": false,
-    "corruptionDownside": "##enums/corruptionDownside"
-}

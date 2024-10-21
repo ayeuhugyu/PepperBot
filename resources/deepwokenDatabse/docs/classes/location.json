@@ -1,7 +1,0 @@
-{
-    "name": "location_name",
-    "rich_name": "Location Rich Name",
-    "description": "location_description",
-    "majorPlace": "island_name",
-    "territoryOf": "faction_name"
-}

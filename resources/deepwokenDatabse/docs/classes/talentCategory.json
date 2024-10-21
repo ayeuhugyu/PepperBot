@@ -1,8 +1,0 @@
-{
-    "name": "talentCategory_name",
-    "rich_name": "Talent Category Rich Name",
-    "mystic": "mystic_dialogue",
-    "talents": [
-        "talent_name"
-    ]
-}

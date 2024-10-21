@@ -270,7 +270,7 @@ data.addStringOption((option) =>
         .setDescription("the prompt to use")
         .setRequired(false)
 );
-cleardata.addStringOption((option) => 
+data.addStringOption((option) => 
     option.setName("context")
         .setDescription("what to clear")
         .setRequired(false)

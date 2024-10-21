@@ -1,4 +1,5 @@
 export const CorruptionDownside = {
+    NONE: "none",
     POISON: "poison",
     WITHER: "wither",
     BLEED: "bleed",
@@ -61,3 +62,17 @@ export const WeaponType = {
     GREATSWORD: "greatsword",
     GREATHAMMER: "greathammer"
 };
+
+export const ItemType = {
+    EQUIPMENT: "equipment",
+    RESOURCE: "resource",
+    CONSUMABLE: "consumable",
+    WEAPON: "weapon",
+    OUTFIT: "outfit"
+}
+
+export const MantraType = {
+    COMBAT: "combat",
+    MOBILITY: "mobility",
+    SUPPORT: "support"
+}

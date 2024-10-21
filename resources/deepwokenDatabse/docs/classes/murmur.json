@@ -1,7 +1,0 @@
-{
-    "name": "murmur_name",
-    "rich_name": "Murmur Rich Name",
-    "description": "murmur_description",
-    "requirements": "##classes/requirements",
-    "murmurGiver": "npc_name"
-}
