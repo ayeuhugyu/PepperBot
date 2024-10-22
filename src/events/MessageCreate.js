@@ -259,7 +259,7 @@ async function processCommand(message) {
             }) `;
             const excludeList = ["restart", "eval"];
             if (!excludeList.includes(commandsObject.normalAliasesToBaseCommand[command] || command)) {
-                statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || command, performance.now() - startCommand);
+                statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || commandsObject.commandAliasesToBaseCommand[command] || command, performance.now() - startCommand);
                 log.info("wrote statistic to " + (commandsObject.normalAliasesToBaseCommand[command] || command))
             }
             if (message.channel) {

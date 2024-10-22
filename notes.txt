@@ -34,23 +34,8 @@ p/update
 
 **website changes:**
 
-- fixed statistics page hourly usage hours being offset by one
-- statistics page hourly usage now always displays all 24 hours
-- statistics page hourly usage is now sorted by hours instead of by value
-- chat page responses now contain message content, embed description AND field content
-- rigid body simulation has been moved to /sims/rigid (still shitty)
-- new fluid simulation at /sims/fluid (not done yet)
-- new /simulations which just lists simulations
-- /coolsites, /credits, /shame, and /contact now use the new style, old stylesheet has *finally* been deleted 
-- added /updates and /todo, for less convoluted reading of the updates and the todo list
-
 **actual content:**
-
-- added new p/gpt clear, allows you to clear your conversation OR just reset the prompt
-- adjusted gpt prompt to hopefully stop him from trying to use LaTeX and inform him that he can use markdown
 
 **fixes/optimizations:**
 
-- fixed p/joinvc always trying to join `guild.channels.cache.first()`
-- all uses of ytdl-core are now in a try catch (didnt fix shit i just gave up trying)
-- fixed p/patch from slash commands
+- fixed command aliases being logged separately in the statistics object

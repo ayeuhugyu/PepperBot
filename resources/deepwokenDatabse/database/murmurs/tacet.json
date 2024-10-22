@@ -1,7 +1,0 @@
-{
-    "name": "tacet",
-    "rich_name": "Tacet",
-    "description": "An application of the Song that enables the user to suppress their own Murmur. Press T while crouched.",
-    "requirements": null,
-    "murmurGiver": "cestis"
-}

@@ -1,8 +1,43 @@
 import * as Enum from "./enumDefinitions.js"
 
+function mergeObjects(target, source) {
+    for (let key in source) {
+        if (source.hasOwnProperty(key)) {
+            if (source[key] instanceof Object && !(source[key] instanceof Array)) {
+                target[key] = target[key] || {};
+                mergeObjects(target[key], source[key]);
+            } else {
+                target[key] = source[key];
+            }
+        }
+    }
+}
+
+export class Base {
+    constructor(object) {
+        for (let key in object) {
+            if (object.hasOwnProperty(key) && this.hasOwnProperty(key)) {
+                if (object[key] instanceof Object && !(object[key] instanceof Array)) {
+                    // If the property is an object, recursively merge its properties
+                    this[key] = this[key] || {};
+                    mergeObjects(this[key], object[key]);
+                } else {
+                    // If the property is not an object, set it directly
+                    this[key] = object[key];
+                }
+            } else {
+                console.error(`Key ${key} is not a valid key for ${this.constructor.name}; ignoring.`);
+            }
+        }
+    }
+}
+
 // Data Structures
 
-export class statDistribution {
+export class statDistribution extends Base {
+    constructor(object) {
+        super(object)
+    }
     attunement = {
         flamecharm: 0,
         frostdraw: 0,
@@ -26,14 +61,20 @@ export class statDistribution {
     }
 }
 
-export class mantraSlots {
+export class mantraSlots extends Base {
+    constructor(object) {
+        super(object)
+    }
     "combat" = 0
     "mobility" = 0
     "support" = 0
     "wildcard" = 0
 }
 
-export class characterStats {
+export class characterStats extends Base {
+    constructor(object) {
+        super(object)
+    }
     "level" = 0
     "health" = 0
     "ether" = 0
@@ -62,9 +103,15 @@ export class characterStats {
         "iron": 0
     }
     "mantra_slots" = new mantraSlots()
+    "reputation" = { // 0 = neutral, 1 to 149 = friendly, 150 to 299 = allied, 300 = hero. -1 to -149 = enemy, -150 to -299 = hunted, -300 = villan
+        "faction_name": 0
+    } // TODO: expand this to always include all factions, rather than doing it like this.
 }
 
-export class characterData { // previously named requirements, is used for requirements & passives & other things etc.
+export class characterData extends Base { // previously named requirements, is used for requirements & passives & other things etc.
+    constructor(object) {
+        super(object)
+    }
     "character" = new characterStats()
     "stats" = new statDistribution()
     "talents" = [
@@ -80,7 +127,10 @@ export class characterData { // previously named requirements, is used for requi
 
 // Real Things
 
-export class talentCategory {
+export class talentCategory extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "talentCategory_name"
     "rich_name" = "Talent Category Rich Name"
     "mystic" = "mystic_dialogue"
@@ -89,7 +139,10 @@ export class talentCategory {
     ]
 }
 
-export class talent {
+export class talent extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "talent_name"
     "rich_name" = "Talent Rich Name"
     "description" = "talent_description"
@@ -103,7 +156,10 @@ export class talent {
     "passives" = new characterData()
 }
 
-export class weapon {
+export class weapon extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "weapon_name"
     "rich_name" = "Weapon Rich Name"
     "description" = "weapon_description"
@@ -122,7 +178,10 @@ export class weapon {
     "rarity" = Enum.ItemRarity.COMMON
 }
 
-export class stat {
+export class stat extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "stat_name"
     "rich_name" = "Stat Rich Name"
     "description" = "stat_description"
@@ -130,7 +189,10 @@ export class stat {
     "category" = Enum.StatCategory.BASE
 }
 
-export class resonance {
+export class resonance extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "resonance_name"
     "rich_name" = "Resonance Rich Name"
     "description" = "resonance_description"
@@ -139,12 +201,18 @@ export class resonance {
     "corruptionDownside" = Enum.CorruptionDownside.NONE
 }
 
-export class questReward {
+export class questReward extends Base {
+    constructor(object) {
+        super(object)
+    }
     "type" = "##enums/questRewardType"
     "value" = {} // TODO: finish this
 }
 
-export class quest {
+export class quest extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "quest_name"
     "rich_name" = "Quest Rich Name"
     "description" = "quest_description"
@@ -154,7 +222,10 @@ export class quest {
     ]
 }
 
-export class oathProgression {
+export class oathProgression extends Base {
+    constructor(object) {
+        super(object)
+    }
     "level" = 0
     "talents" = [
         "talent_name"
@@ -164,7 +235,10 @@ export class oathProgression {
     ]
 }
 
-export class oath {
+export class oath extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "oath_name"
     "rich_name" = "Oath Rich Name"
     "description" = "oath_description"
@@ -182,13 +256,19 @@ export class oath {
     ]
 }
 
-export class dialogue {
+export class dialogue extends Base {
+    constructor(object) {
+        super(object)
+    }
     "id" = 0
     "text" = "dialogue_text"
     "next" = 0
 }
 
-export class npc {
+export class npc extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "npc_name"
     "rich_name" = "NPC Rich Name"
     "dialogue" = [
@@ -201,7 +281,10 @@ export class npc {
     "murmur" = "murmur_name"
 }
 
-export class murmur {
+export class murmur extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "murmur_name"
     "rich_name" = "Murmur Rich Name"
     "description" = "murmur_description"
@@ -209,7 +292,10 @@ export class murmur {
     "murmurGiver" = "npc_name"
 }
 
-export class mantra {
+export class mantra extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "mantra_name"
     "rich_name" = "Mantra Rich Name"
     "description" = "mantra_description"
@@ -217,7 +303,10 @@ export class mantra {
     "mantra_type" = Enum.MantraType.COMBAT
 }
 
-export class location {
+export class location extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "location_name"
     "rich_name" = "Location Rich Name"
     "description" = "location_description"
@@ -225,10 +314,14 @@ export class location {
     "territoryOf" = "faction_name"
 }
 
-export class faction {
+export class faction extends Base {
+    constructor(object) {
+        super(object)
+    }
     "name" = "faction_name"
     "rich_name" = "Faction Rich Name"
     "territories" = [
         "location_name"
     ]
 }
+

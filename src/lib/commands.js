@@ -6,7 +6,8 @@ import { file } from "googleapis/build/src/apis/file/index.js";
 const commands = new Collection();
 const commandsWithoutAliases = new Collection();
 const commandSubCommandAliases = new Collection();
-const normalAliasesToBaseCommand = {};
+let normalAliasesToBaseCommand = {};
+let commandAliasesToBaseCommand = {};
 
 async function getCommands() {
     const allstart = performance.now();
@@ -35,6 +36,7 @@ async function getCommands() {
             ) {
                 command.default.data.aliases.forEach((value) => {
                     commands.set(value, command.default);
+                    commandAliasesToBaseCommand[value] = command.default.data.name;
                 });
             }
             if (command.default.subcommands && command.default.subcommands.length > 0) {
@@ -74,5 +76,6 @@ export default {
     commands: commands,
     commandsWithoutAliases: commandsWithoutAliases,
     commandSubCommandAliases: commandSubCommandAliases,
-    normalAliasesToBaseCommand: normalAliasesToBaseCommand
+    normalAliasesToBaseCommand: normalAliasesToBaseCommand,
+    commandAliasesToBaseCommand: commandAliasesToBaseCommand,
 };
