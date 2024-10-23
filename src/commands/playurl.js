@@ -157,7 +157,7 @@ const command = new Command(
                     }
                     let info
                     try {
-                        const info = await ytdl
+                        info = await ytdl
                         .getInfo(args.get("sound"))
                         .catch((err) => {
                             if (err.statusCode === 410) {
