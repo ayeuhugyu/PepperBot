@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Triangulation</title>
+        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
+        <meta content="physics testing" property="og:title" />
+        <meta content="extremely buggy, extremely unoptimized, semi interesting" property="og:description" />
+        <meta content="https://pepperbot.online" property="og:url" />
+        <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
+    </head>
+    <body>
+        <div class="sidebar">
+            <script id="definesidebarfunctions">
+                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
+                function redirectTo(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    window.location.href = url;
+                }
+                function openInNewTab(url) {
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                    let win = window.open(
+                        url,
+                        "_blank"
+                    );
+                }
+                function showSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0.25";
+                }
+                function hideSidebarToggler() {
+                    const sidebarToggler = document.querySelector(".sidebarToggler");
+                    sidebarToggler.style.opacity = "0";
+                }
+            </script>
+            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
+            <h2 class="sidebarTitle">NAVIGATION</h2>
+            <div class="sidebarDivider"></div>
+            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
+            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
+            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
+            <div class="sidebarButton" id="/chat" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Chat</div>
+            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
+            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
+            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
+            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
+            <div class="sidebarButton" id="/simulations" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Simulations</div>
+            <div class="sidebarButton" id="/todo" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Todo</div>
+            <div class="sidebarButton" id="/updates" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Updates</div>
+
+            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
+            <script id="sidebarmain">
+                function toggleSidebar() {
+                    document.querySelectorAll(".sidebar").forEach((element) => {
+                        void element.offsetWidth;
+
+                        if (sidebarIsOpen) {
+                            element.style.animation = "slideOpen 0.5s forwards";
+                        } else {
+                            element.style.animation =
+                                "slideClose 0.5s forwards";
+                        }
+                    });
+                    sidebarIsOpen = !sidebarIsOpen;
+                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
+                }
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "k" && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") {
+                        toggleSidebar();
+                    }
+                });
+                document
+                    .querySelectorAll(".sidebarButton")
+                    .forEach((button) => {
+                        button.style.transition = "transform 0.25s ease-in-out";
+                        button.addEventListener("mouseover", () => {
+                            button.style.backgroundColor = "#13131d";
+                            button.style.transform = "translateX(-100px)";
+                        });
+                        button.addEventListener("mouseout", () => {
+                            button.style.backgroundColor = "#1E1E2E";
+                            button.style.transform = "translateX(0px)";
+                        });
+                        button.addEventListener("mousedown", () => {
+                            button.style.backgroundColor = "#616187";
+                        });
+                        button.addEventListener("mouseup", () => {
+                            button.style.backgroundColor = "#616187";
+                        });
+                    });
+                document.addEventListener("DOMContentLoaded", function () {
+                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
+                    if (sidebarIsOpen) {
+                        document
+                            .querySelectorAll(".sidebar")
+                            .forEach((element) => {
+                                element.style.animation =
+                                    "slideClose 0s forwards";
+                            });
+                    }
+                });
+            </script>
+        </div>
+        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
+            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
+                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
+                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: scroll; max-height: calc(100% - 18px); position: relative;">
+                        <h2 class="sectionTitle">triangle thing</h2>
+                        <div class="flexcontainer" id="simulationholder" style="flex-direction: row; width: 100%; flex-grow: 1; align-items: center; justify-items: left;">
+                            <div id="simulation" class="outlined" style="margin-right: 5px; height: 100%; flex-grow: 0.95; display: flex;">
+                                <div id="simulationBounds" style="width: 100%; height: 100%; border: 1px solid #42e599; margin: auto auto; margin: auto; position: relative;">
+
+                                </div>
+                            </div>
+                            <div id="settings" class="outlined" style="flex-grow: 0.05; height: 100%; max-height: 100%; overflow: auto; overflow-y: auto;">
+                                <h2 class="sectionTitle">settings</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            /*
+                                    <div class="categoryContainer">
+                                        <div class="categoryButton">
+                                            <span class="categoryLabel">Category Name</span>
+                                            <span class="categoryArrow">▲</span>
+                                        </div>
+                                        <pre class="categoryContent">
+                                            this is some content
+                                            it will need more
+                                            yeah
+                                            epic
+                                            amazing
+                                        </pre>
+                                    </div>
+            */
+            const simulationDiv = document.getElementById("simulation")
+            const simulationBounds = document.getElementById("simulationBounds")
+            const settingsDiv = document.getElementById("settings")
+            settingsDiv.style.overflowY = "auto"
+
+            let runChangedOnLoad = ["boundsSizeX", "boundsSizeY"]
+
+            let defaults = {}
+            let categories = {}
+            
+            
+            //document.head.appendChild(x)
+
+            function createCategory(name, parent) {
+                const categoryContainer = document.createElement("div");
+                categoryContainer.className = "categoryContainer";
+                categoryContainer.id = name;
+
+                const categoryButton = document.createElement("div");
+                categoryButton.className = "categoryButton";
+
+                const categoryLabel = document.createElement("span");
+                categoryLabel.className = "categoryLabel";
+                categoryLabel.innerText = name;
+
+                const categoryContent = document.createElement("pre");
+                categoryContent.className = "categoryContent";
+
+                const categoryArrow = document.createElement("span");
+                categoryArrow.className = "categoryArrow";
+                categoryArrow.innerText = "▲";
+                //categoryArrow.style.right = "0";
+
+                categoryButton.onclick = () => {
+                    categoryContent.style.display = categoryContent.style.display === "none" ? "block" : "none";
+                    categoryArrow.innerText = (categoryArrow.innerText === "▲") ? "▼" : "▲";
+                }
+                categoryButton.appendChild(categoryLabel);
+                categoryButton.appendChild(categoryArrow);
+                categoryContainer.appendChild(categoryButton);
+                categoryContainer.appendChild(categoryContent);
+
+                parent.appendChild(categoryContainer);
+                categories[name] = categoryContent;
+                return categoryContainer;
+            }
+
+            const controlsCategory = createCategory("Controls", settingsDiv)
+            const controlsContent = controlsCategory.querySelector(".categoryContent");
+
+            const controlsContainer = document.createElement("div");
+            controlsContainer.className = "flexcontainer";
+            controlsContainer.style.flexDirection = "column";
+            controlsContainer.style.alignItems = "flex-start";
+            controlsContainer.style.paddingLeft = "5px";
+
+            const buttonsContainer = document.createElement("div");
+            buttonsContainer.className = "flexcontainer";
+            buttonsContainer.style.flexDirection = "row";
+            buttonsContainer.style.justifyContent = "space-between";
+            buttonsContainer.style.width = "100%";
+
+            const restartButton = document.createElement("button");
+            restartButton.type = "button";
+            restartButton.id = "restartSimulation";
+            restartButton.innerText = "regenerate particles";
+            restartButton.onclick = start;
+
+            const startSimulationButton = document.createElement("button");
+            startSimulationButton.type = "button";
+            startSimulationButton.id = "startSimulation";
+            startSimulationButton.innerText = "start simulation";
+            startSimulationButton.onclick = () => {
+                setInterval(step, 1000 / 60)
+            };
+
+            const resetButton = document.createElement("button");
+            resetButton.type = "button";
+            resetButton.id = "resetSettings";
+            resetButton.innerText = "reset settings";
+            resetButton.onclick = resetSettings;
+
+            buttonsContainer.appendChild(restartButton);
+            buttonsContainer.appendChild(startSimulationButton);
+            buttonsContainer.appendChild(resetButton);
+            controlsContainer.appendChild(buttonsContainer);
+            controlsContent.appendChild(controlsContainer);
+
+            const particleCategory = createCategory("Particles", settingsDiv)
+            const boundsCategory = createCategory("Bounds", settingsDiv)
+            const smoothingCategory = createCategory("Smoothing", settingsDiv)
+            const forcesCategory = createCategory("Forces", settingsDiv)
+            const liquidCategory = createCategory("Liquid", settingsDiv)
+
+            class Vector2 {
+                x = 0
+                y = 0
+                constructor(x, y) {
+                    this.x = x || 0
+                    this.y = y || x || 0
+                }
+                add(vector) {
+                    if (typeof vector === "number") {
+                        this.x += vector
+                        this.y += vector
+                        return this
+                    }
+                    this.x += vector.x
+                    this.y += vector.y
+                    return this
+                }
+                subtract(vector) {
+                    if (typeof vector === "number") {
+                        this.x -= vector
+                        this.y -= vector
+                        return this
+                    }
+                    this.x -= vector.x
+                    this.y -= vector.y
+                    return this
+                }
+                multiply(scalar) {
+                    if (typeof scalar === "number") {
+                        this.x *= scalar
+                        this.y *= scalar
+                        return this
+                    }
+                    this.x *= scalar.x
+                    this.y *= scalar.y
+                    return this
+                }
+                divide(scalar) {
+                    if (typeof scalar === "number") {
+                        this.x /= scalar
+                        this.y /= scalar
+                        return this
+                    }
+                    this.x /= scalar.x
+                    this.y /= scalar.y
+                    return this
+                }
+
+                static get zero() {
+                    return new Vector2(0, 0);
+                }
+                static get one() {
+                    return new Vector2(1, 1);
+                }
+                static get up() {
+                    return new Vector2(0, 1);
+                }
+                static get down() {
+                    return new Vector2(0, -1);
+                }
+                static get left() {
+                    return new Vector2(-1, 0);
+                }
+                static get right() {
+                    return new Vector2(1, 0);
+                }
+            }
+            let particles = []
+            let triangles = []
+            class Particle {
+                position = Vector2.zero
+                velocity = Vector2.zero
+                acceleration = Vector2.zero
+                element = null
+                index = 0
+                constructor(x, y) {
+                    this.position.x = x
+                    this.position.y = y
+                    this.element = document.createElement("div")
+                    this.element.style.width = `${settings.particleSize.value}px`
+                    this.element.style.height = `${settings.particleSize.value}px`
+                    this.element.style.backgroundColor = "rgb(0, 0, 255)"
+                    this.element.style.position = "absolute"
+                    this.element.style.borderRadius = "50%"
+                    this.element.style.transform = "translate(-50%, -50%)"
+                    this.element.style.backgroundClip = "padding-box"
+                    this.element.style.webkitBackgroundClip = "padding-box"
+                    if (settings.visualizeSmoothingRadius.checked) {
+                        this.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid rgba(100, 100, 255, 0.1)`
+                    } else {
+                        this.element.style.border = "none"
+                    }
+                }
+                update() {
+                    this.element.style.left = `${this.position.x * simulationBounds.clientWidth}px`
+                    this.element.style.top = `${this.position.y * simulationBounds.clientHeight}px`
+                }
+            }
+
+            class Triangle {
+                particles = [
+                    new Particle(0, 0),
+                    new Particle(0, 0),
+                    new Particle(0, 0)
+                ]
+                element = null
+                constructor(p1, p2, p3) {
+                    this.particles[0] = p1
+                    this.particles[1] = p2
+                    this.particles[2] = p3
+                    this.element = document.createElement("div")
+                    this.element.style.width = `100%`
+                    this.element.style.height = `100%`
+                    this.element.style.backgroundColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`
+                    this.element.style.position = "absolute"
+                    this.element.style.clipPath = `polygon(${p1.position.x * simulationBounds.clientWidth}px ${p1.position.y * simulationBounds.clientWidth}px, ${p2.position.x * simulationBounds.clientWidth}px ${p2.position.y * simulationBounds.clientWidth}px, ${p3.position.x * simulationBounds.clientWidth}px ${p3.position.y * simulationBounds.clientWidth}px)`
+                    this.element.style.backgroundClip = "padding-box"
+                    this.element.style.webkitBackgroundClip = "padding-box"
+                }
+                update() {
+                    const p1 = this.particles[0]
+                    const p2 = this.particles[1]
+                    const p3 = this.particles[2]
+                    this.element.style.clipPath = `polygon(${p1.position.x * simulationBounds.clientWidth}px ${p1.position.y * simulationBounds.clientWidth}px, ${p2.position.x * simulationBounds.clientWidth}px ${p2.position.y * simulationBounds.clientWidth}px, ${p3.position.x * simulationBounds.clientWidth}px ${p3.position.y * simulationBounds.clientWidth}px)`
+                }
+            }
+
+            function exposeSetting(name, type, min, max, step, defaultValue, suffix, category, onChanged) {
+                defaults[name] = defaultValue
+                const holder = document.createElement("div")
+                holder.className = "flexcontainer"
+                holder.style.flexDirection = "row"
+                holder.style.alignItems = "center"
+                holder.style.justifyContent = "space-between"
+                const label = document.createElement("span")
+                label.innerText = name
+                const input = document.createElement("input")
+                input.style.margin = "0 auto"
+                input.type = type
+                input.id = name
+                input.min = min
+                input.max = max
+                input.step = step
+                input.value = sessionStorage.getItem(name) || defaultValue
+                const valueSpan = document.createElement("span")
+                valueSpan.style.width = "50px"
+                valueSpan.id = name + "Value"
+                valueSpan.innerText = (sessionStorage.getItem(name) || defaultValue) + suffix
+                if (type === "checkbox") {
+                    input.checked = sessionStorage.getItem(name) === "true" || defaultValue === true;
+                    valueSpan.innerText = "";
+                }
+                holder.appendChild(label)
+                holder.appendChild(input)
+                holder.appendChild(valueSpan)
+                if (category) {
+                    categories[category].appendChild(holder)
+                } else {
+                    settingsDiv.appendChild(holder)
+                }
+                input.addEventListener("input", () => {
+                    valueSpan.innerText = input.value + suffix
+                    sessionStorage.setItem(name, input.value)
+                    if (type === "checkbox") {
+                        sessionStorage.setItem(name, input.checked)
+                        valueSpan.innerText = "";
+                    }
+                    let value = input.value
+                    if (type === "checkbox") {
+                        value = input.checked
+                    }
+                    onChanged(value)
+                })
+                if (runChangedOnLoad.includes(name)) {
+                    let value = input.value
+                    if (type === "checkbox") {
+                        value = input.checked
+                    }
+                    onChanged(value)
+                }
+                return input
+            }
+            // to use this function, do this
+            // let foo = exposeSetting("value", "range", 0, 1, 0.01, 0.1, " this is a suffix!", (value) => {}); args go in this order: name, type, min, max, step, defaultValue, suffix, onChanged
+            // to access the value, use foo.value
+            let settings = {}
+            settings.particleCount = exposeSetting("particleCount", "range", 1, 999, 3, 30, "", "Particles", (value) => {
+                // unfinished
+            })
+            let particleSizePercentage = 0
+            settings.particleSize = exposeSetting("particleSize", "range", 1, 100, 1, 15, "px", "Particles", (value) => {
+                particles.forEach((particle) => {
+                    particle.element.width = `${value}px`
+                    particle.element.height = `${value}px`
+                })
+                particleSizePercentage = settings.particleSize.value / simulationBounds.clientWidth
+            })
+            particleSizePercentage = settings.particleSize.value / simulationBounds.clientWidth
+            settings.boundsSizeX = exposeSetting("boundsSizeX", "range", 1, 100, 1, 100, "%", "Bounds", (value) => {
+                simulationBounds.style.width = value + "%"
+                particleSizePercentage = settings.particleSize.value / simulationBounds.clientWidth
+            })
+            settings.boundsSizeY = exposeSetting("boundsSizeY", "range", 1, 100, 1, 100, "%", "Bounds", (value) => {
+                simulationBounds.style.height = value + "%"
+                particleSizePercentage = settings.particleSize.value / simulationBounds.clientWidth
+            })
+            settings.smoothingRadius = exposeSetting("smoothingRadius", "range", 1, 1000, 1, 250, "px", "Smoothing", (value) => {
+                particles.forEach((particle) => {
+                    if (settings.visualizeSmoothingRadius.checked) {
+                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid rgba(100, 100, 255, 0.1)`
+                    } else {
+                        particle.element.style.border = "none"
+                    }
+                })
+            })
+            settings.visualizeSmoothingRadius = exposeSetting("visualizeSmoothingRadius", "checkbox", 0, 1, 1, 0, "", "Smoothing", (value) => {
+                particles.forEach((particle) => {
+                    console.log(value)
+                    if (value) {
+                        particle.element.style.border = `${settings.smoothingRadius.value - settings.particleSize.value}px solid rgba(100, 100, 255, 0.1)`
+                    } else {
+                        particle.element.style.border = "none"
+                    }
+                })
+            })
+            let gravity = Vector2.zero
+            settings.gravity = exposeSetting("gravity", "range", -0.005, 0.005, 0.0005, 0, "", "Forces", (value) => {
+                gravity.y = parseFloat(value)
+            })
+            settings.maxMomentum = exposeSetting("maxMomentum", "range", 0.1, 1, 0.1, 0.1, "", "Forces", (value) => {
+                gravity.y = parseFloat(value)
+            })
+            gravity.y = parseFloat(settings.gravity.value)
+            settings.pressureMultiplier = exposeSetting("pressureMultiplier", "range", 0, 10, 0.1, 0.1, "", "Liquid", (value) => {
+                // unfinished
+            })
+            settings.targetDensity = exposeSetting("targetDensity", "range", 0, 100, 1, 25, "", "Liquid", (value) => {
+                // unfinished
+            })
+
+            function resetSettings() {
+                for (const key in defaults) {
+                    sessionStorage.setItem(key, defaults[key])
+                    document.getElementById(key).value = defaults[key]
+                    document.getElementById(key + "Value").innerText = defaults[key]
+                    document.getElementById(key).dispatchEvent(new Event('input'))
+                    settings[key] = defaults[key]
+                }
+            }
+            function createParticle() {
+                const particlesPerRow = Math.floor(Math.sqrt(settings.particleCount.value));
+                const spacing = 1 / particlesPerRow;
+                const i = particles.length;
+                const x = (i % particlesPerRow) * spacing + spacing / 2;
+                const y = Math.floor(i / particlesPerRow) * spacing + spacing / 2;
+                console.log(`creating particle ${i} at ${x}, ${y}`);
+                const particle = new Particle();
+                particle.position.x = x;
+                particle.position.y = y;
+                simulationBounds.appendChild(particle.element);
+                particle.index = i;
+                particle.update();
+                particles.push(particle);
+                return particle;
+            }
+
+            function resolveCollisions(particle) {
+                const bounds = {
+                    minX: particleSizePercentage,
+                    maxX: 1 - particleSizePercentage,
+                    minY: particleSizePercentage,
+                    maxY: 1 - particleSizePercentage
+                };
+
+                if (particle.position.x < bounds.minX) {
+                    particle.position.x = bounds.minX;
+                    particle.velocity.x = -particle.velocity.x;
+                } else if (particle.position.x > bounds.maxX) {
+                    particle.position.x = bounds.maxX;
+                    particle.velocity.x = -particle.velocity.x;
+                }
+
+                if (particle.position.y < bounds.minY) {
+                    particle.position.y = bounds.minY;
+                    particle.velocity.y = -particle.velocity.y;
+                } else if (particle.position.y > bounds.maxY) {
+                    particle.position.y = bounds.maxY;
+                    particle.velocity.y = -particle.velocity.y;
+                }
+            }
+
+            function step() {
+                particles.forEach((particle) => {
+                    particle.velocity.add(gravity)
+                    resolveCollisions(particle)
+                    particle.velocity.add(particle.acceleration)
+                    particle.position.add(particle.velocity)
+                    if (particle.velocity.x > parseFloat(settings.maxMomentum.value)) {
+                        particle.velocity.x = parseFloat(settings.maxMomentum.value)
+                    }
+                    if (particle.velocity.y > parseFloat(settings.maxMomentum.value)) {
+                        particle.velocity.y = parseFloat(settings.maxMomentum.value)
+                    }
+                    particle.update()
+                })
+                triangles.forEach((triangle) => {
+                    triangle.update()
+                })
+            }
+
+            function start() {
+                console.log("starting")
+                simulationBounds.innerHTML = ""
+                console.log("deleted all particles")
+                particles = []
+                console.log(`creating ${settings.particleCount.value} new particles`)
+                let trianglePositions = []
+                for (let i = 0; i < settings.particleCount.value; i++) {
+                    const particle = createParticle()
+                    trianglePositions[i % 3] = particle
+                    if (i % 3 === 2) {
+                        const triangle = new Triangle(trianglePositions[0], trianglePositions[1], trianglePositions[2]);
+                        simulationBounds.appendChild(triangle.element);
+                        triangles.push(triangle);
+                    }
+                }
+            }
+            //start()
+
+            const testParticles = [
+                new Particle(0.5, 0.5), new Particle(0.5, -0.5), new Particle(0.6, 0.5)
+            ]
+            const testTriangle = new Triangle(testParticles[0], testParticles[1], testParticles[2])
+            testParticles.forEach((particle) => {
+                simulationBounds.appendChild(particle.element)
+            })
+            simulationBounds.appendChild(testTriangle.element)
+            
+        </script>
+    </body>
+</html>

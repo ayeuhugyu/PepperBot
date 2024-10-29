@@ -242,6 +242,7 @@ export class oath extends Base {
     "name" = "oath_name"
     "rich_name" = "Oath Rich Name"
     "description" = "oath_description"
+    "cumulative_stats" = false
     "requirements" = new characterData()
     "oathgiver" = "npc_name"
     "mantraSlots" = new mantraSlots()
@@ -324,4 +325,3 @@ export class faction extends Base {
         "location_name"
     ]
 }
-
