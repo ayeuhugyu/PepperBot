@@ -376,19 +376,26 @@ buildideadata.setPermissionsReadable("");
 buildideadata.setWhitelist([]);
 buildideadata.setNormalAliases(["randombuildidea"]);
 buildideadata.setCanRunFromBot(true);
+buildideadata.addBooleanOption((option) =>
+    option.setName("weighted").setDescription("affects whether or not the random build will be weighted").setRequired(false)
+);
+buildideadata.addBooleanOption((option) =>
+    option.setName("possible").setDescription("performs checks to make sure the build is actually possible; this is always done when weighted").setRequired(false)
+);
 const buildidea = new SubCommand(
     buildideadata,
     async function getArguments(message) {
         let args = new Collection();
         args.set("weighted", message.content.split(" ")[1]);
+        args.set("possible", message.content.split(" ")[2]);
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
         let buildIdea;
         const embed = default_embed();
         embed.setTitle("Random Build Idea");
-        if (!args.get("weighted")) buildIdea = randomUnbiasedBuildIdea();
-        else buildIdea = randomBiasedBuildIdea();
+        if (!args.get("weighted")) buildIdea = randomUnbiasedBuildIdea(args.get("possible"));
+        else buildIdea = randomBiasedBuildIdea(args.get("possible"));
         let text = `
 WEAPON: ${buildIdea.weapon}
 ATTUNEMENTS: ${buildIdea.attunements.join(", ")}
@@ -441,6 +448,9 @@ data.addBooleanOption((option) =>
             "affects whether or not the random build will be weighted"
         )
         .setRequired(false)
+);
+data.addBooleanOption((option) =>
+    option.setName("possible").setDescription("performs checks to make sure the build is actually possible; this is always done when weighted").setRequired(false)
 );
 const command = new Command(
     data,

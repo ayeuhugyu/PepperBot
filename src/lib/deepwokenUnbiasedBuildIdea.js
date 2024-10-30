@@ -97,6 +97,14 @@ export const attunements = [
     "Ironsing",
     "Shadowcast",
 ];
+export const attunedWeapons = {
+    Flamecharm: ["Hero Blade of Flame", "Ysley's Pyre Keeper"],
+    Thundercall: ["Hero Blade of Lightning", "Stormseye"],
+    Frostdraw: ["Hero Blade of Frost", "Gran Sudaruska"],
+    Galebreathe: ["Hero Blade of Wind", "Curved Blade of the Winds"],
+    Shadowcast: ["Hero Blade of Shadow", "Crypt Blade", "Deepspindle"],
+    Ironsing: ["Ignition Deepcrusher"],
+};
 
 export class Idea {
     weapon = "";
@@ -148,14 +156,50 @@ export function getRandomFocus() {
     return focuses[randomIndex];
 }
 
-export function randomBuildIdea() {
-    let idea = new Idea({
-        weapon: getRandomWeapon(),
-        attunements: getRandomAttunement(),
-        armor: getRandomArmor(),
-        oath: getRandomOath(),
-        focus: getRandomFocus(),
-    });
+export function fixImpossibleIdea(idea) {
+    let weaponIsAttuned = false;
+    let weaponAttunement = "";
+    for (let attunement of Object.keys(attunedWeapons)) {
+        if (attunedWeapons[attunement].includes(idea.weapon)) {
+            weaponIsAttuned = true;
+            weaponAttunement = attunement;
+        }
+    }
+    if (idea.attunements.includes("Attunement-less")) {
+        if (weaponIsAttuned) {
+            idea.attunements = idea.attunements.filter(
+                (attunement) => attunement !== "Attunement-less"
+            );
+        } else {
+            idea.attunements = ["Attunement-less"];
+        }
+    }
+    if (weaponIsAttuned) {
+        if (!idea.attunements.includes(weaponAttunement)) {
+            idea.attunements.push(weaponAttunement);
+        }
+    }
+    if (idea.oath == "Arcwarder") {
+        if (!idea.attunements.includes("Thundercall")) {
+            idea.attunements.push("Thundercall");
+        }
+        if (!idea.attunements.includes("Flamecharm")) {
+            idea.attunements.push("Flamecharm");
+        }
+    }
+    return idea;
+}
 
+export function randomBuildIdea(avoidImpossible = false) {
+    let idea = new Idea({
+        weapon: getRandomWeapon(avoidImpossible),
+        attunements: getRandomAttunement(avoidImpossible),
+        armor: getRandomArmor(avoidImpossible),
+        oath: getRandomOath(avoidImpossible),
+        focus: getRandomFocus(avoidImpossible),
+    });
+    if (avoidImpossible) {
+        idea = fixImpossibleIdea(idea);
+    }
     return idea;
 }
