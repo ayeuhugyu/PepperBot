@@ -392,6 +392,7 @@ const command = new Command(
 
         const detailsEmbed = default_embed();
         detailsEmbed.setTitle("loading...");
+        const collectorID = message.guild.id;
         function refreshDetails() {
             guildConfigItemsIndexes = [];
             for (const [key, value] of Object.entries(messageGuildConfig)) {
@@ -439,7 +440,6 @@ const command = new Command(
             messageGuildConfig,
             message.guild.id
         );
-        const collectorID = message.guild.id;
         const collector =
             await translatedGuildConfigMessage.createMessageComponentCollector({
                 time: 240_000,
