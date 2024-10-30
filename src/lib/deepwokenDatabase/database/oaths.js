@@ -261,6 +261,7 @@ export default {
         "name": "bladeharper",
         "rich_name": "Bladeharper",
         "description": "You vow to carry your blade as an instrument, to lend yourself to any cause it guides you to. Collapse the infinite number of possibilities ahead of you into just one. The blade keeps you as much as you keep it.",
+        "cumulative_stats": true,
         "requirements": new classes.characterData({
             "character": new classes.characterStats({
                 "level": 0,
@@ -494,6 +495,7 @@ export default {
         "name": "chainwarden",
         "rich_name": "Chainwarden",
         "description": "You vow to be the chain that binds the wicked and drags them back where they belong. There are those in this world who should not be free.",
+        "cumulative_stats": true,
         "requirements": new classes.characterData({
             "character": new classes.characterStats({
                 "level": 0,
@@ -928,4 +930,668 @@ export default {
             })
         ]
     }), // TODO: verify progression
+    linkstrider: new classes.oath({
+        "name": "linkstrider",
+        "rich_name": "Linkstrider",
+        "description": "The Entropy Catalyst generated enough force to fundementally change your state of existence. You now exist between two states, your newfound clarity making the imperceptible Bonds between all souls malleable to you.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 0,
+                "health": 0,
+                "ether": 0,
+                "sanity": 0,
+                "posture": 0,
+                "carry_load": 0,
+                "dvm": 0,
+                "weapon_type": null,
+                "murmur": null,
+                "oath": null,
+                "resonance": "any",
+                "penetration": {
+                    "melee": 0,
+                    "mantra": 0
+                },
+                "resistance": {
+                    "physical": 0,
+                    "slash": 0,
+                    "blunt": 0,
+                    "elemental": 0,
+                    "fire": 0,
+                    "ice": 0,
+                    "lightning": 0,
+                    "wind": 0,
+                    "shadow": 0,
+                    "iron": 0
+                },
+                "mantra_slots": {
+                    "combat": 0,
+                    "mobility": 0,
+                    "support": 0,
+                    "wildcard": 0
+                },
+                "reputation": {}
+            }),
+            "stats": new classes.statDistribution({
+                "attunement": {
+                    "flamecharm": 0,
+                    "frostdraw": 0,
+                    "thundercall": 0,
+                    "galebreathe": 0,
+                    "shadowcast": 0,
+                    "ironsing": 0
+                },
+                "weapon": {
+                    "light": 0,
+                    "medium": 0,
+                    "heavy": 0
+                },
+                "base": {
+                    "strength": 0,
+                    "fortitude": 0,
+                    "agility": 0,
+                    "intelligence": 0,
+                    "willpower": 0,
+                    "charisma": 0
+                }
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "oathgiver": "the_entropy_catalyst",
+        "mantraSlots": {
+            "combat": 0,
+            "mobility": 0,
+            "support": 2,
+            "wildcard": 1
+        },
+        "talents": [
+            "entropy_link",
+            "symbiotic_link"
+        ],
+        "mantras": [
+            "symbiotic_sustain",
+            "parasitic_leech",
+        ],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [
+                    "entropy_link"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 2,
+                "talents": [
+                    "symbiotic_link"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 3,
+                "talents": [],
+                "mantras": [
+                    "symbiotic_sustain"
+                ]
+            }),
+            new classes.oathProgression({
+                "level": 4,
+                "talents": [],
+                "mantras": [
+                    "parasitic_leech"
+                ]
+            })
+        ]
+    }),
+    oathless: new classes.oath({
+        "name": "oathless",
+        "rich_name": "Oathless",
+        "description": "You vow to never be bound to any oath; to live your life free of restraint. If free will is an illusion, why not make it a convincing one?",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 0,
+                "health": 0,
+                "ether": 0,
+                "sanity": 0,
+                "posture": 0,
+                "carry_load": 0,
+                "dvm": 0,
+                "weapon_type": null,
+                "murmur": null,
+                "oath": null,
+                "resonance": "any",
+                "penetration": {
+                    "melee": 0,
+                    "mantra": 0
+                },
+                "resistance": {
+                    "physical": 0,
+                    "slash": 0,
+                    "blunt": 0,
+                    "elemental": 0,
+                    "fire": 0,
+                    "ice": 0,
+                    "lightning": 0,
+                    "wind": 0,
+                    "shadow": 0,
+                    "iron": 0
+                },
+                "mantra_slots": {
+                    "combat": 0,
+                    "mobility": 0,
+                    "support": 0,
+                    "wildcard": 0
+                },
+                "reputation": {}
+            }),
+            "stats": new classes.statDistribution({
+                "attunement": {
+                    "flamecharm": 0,
+                    "frostdraw": 0,
+                    "thundercall": 0,
+                    "galebreathe": 0,
+                    "shadowcast": 0,
+                    "ironsing": 0
+                },
+                "weapon": {
+                    "light": 0,
+                    "medium": 0,
+                    "heavy": 0
+                },
+                "base": {
+                    "strength": 0,
+                    "fortitude": 0,
+                    "agility": 0,
+                    "intelligence": 0,
+                    "willpower": 0,
+                    "charisma": 0
+                }
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "oathgiver": "cerulean",
+        "mantraSlots": {
+            "combat": 0,
+            "mobility": 0,
+            "support": 0,
+            "wildcard": 2
+        },
+        "talents": [],
+        "mantras": [],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [],
+                "mantras": []
+            }),
+        ]
+    }),
+    saltchemist: new classes.oath({
+        "name": "saltchemist",
+        "rich_name": "Saltchemist",
+        "description": "You vow to dedicate body and mind to the furthering of the Material Arts. Your body is a conduit through which true knowledge shall be siphoned. Knowledge is power, and you shall be its vessel.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 0,
+                "health": 0,
+                "ether": 0,
+                "sanity": 0,
+                "posture": 0,
+                "carry_load": 0,
+                "dvm": 0,
+                "weapon_type": null,
+                "murmur": null,
+                "oath": null,
+                "resonance": "any",
+                "penetration": {
+                    "melee": 0,
+                    "mantra": 0
+                },
+                "resistance": {
+                    "physical": 0,
+                    "slash": 0,
+                    "blunt": 0,
+                    "elemental": 0,
+                    "fire": 0,
+                    "ice": 0,
+                    "lightning": 0,
+                    "wind": 0,
+                    "shadow": 0,
+                    "iron": 0
+                },
+                "mantra_slots": {
+                    "combat": 0,
+                    "mobility": 0,
+                    "support": 0,
+                    "wildcard": 0
+                },
+                "reputation": {}
+            }),
+            "stats": new classes.statDistribution({
+                "attunement": {
+                    "flamecharm": 0,
+                    "frostdraw": 0,
+                    "thundercall": 0,
+                    "galebreathe": 0,
+                    "shadowcast": 0,
+                    "ironsing": 0
+                },
+                "weapon": {
+                    "light": 0,
+                    "medium": 0,
+                    "heavy": 0
+                },
+                "base": {
+                    "strength": 0,
+                    "fortitude": 0,
+                    "agility": 0,
+                    "intelligence": 75,
+                    "willpower": 0,
+                    "charisma": 0
+                }
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "oathgiver": "adrofalis",
+        "mantraSlots": {
+            "combat": 0,
+            "mobility": 0,
+            "support": 1,
+            "wildcard": 1
+        },
+        "talents": [
+            "perpetual_distillery",
+            "biotic_salts",
+            "aromatic_salts",
+            "antithetic_salts"
+        ],
+        "mantras": [
+            "lethal_injection"
+        ],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [
+                    "perpetual_distillery",
+                ],
+                "mantras": [
+                    "lethal_injection"
+                ]
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [
+                    "biotic_salts",
+                    "aromatic_salts",
+                    "antithetic_salts"
+                ],
+                "mantras": []
+            }),
+        ]
+    }),
+    silentheart: new classes.oath({ // TODO: ALTERNATE STATS!!!!!!!
+        "name": "silentheart",
+        "rich_name": "Silentheart",
+        "description": "You vow to reject the Words of the Song, denying yourself if mantras in pursuit of your own path to true strength, no matter the cost. You can wield weapons with half the usual requirements.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 0,
+                "health": 0,
+                "ether": 0,
+                "sanity": 0,
+                "posture": 0,
+                "carry_load": 0,
+                "dvm": 0,
+                "weapon_type": null,
+                "murmur": null,
+                "oath": null,
+                "resonance": "any",
+                "penetration": {
+                    "melee": 0,
+                    "mantra": 0
+                },
+                "resistance": {
+                    "physical": 0,
+                    "slash": 0,
+                    "blunt": 0,
+                    "elemental": 0,
+                    "fire": 0,
+                    "ice": 0,
+                    "lightning": 0,
+                    "wind": 0,
+                    "shadow": 0,
+                    "iron": 0
+                },
+                "mantra_slots": {
+                    "combat": 0,
+                    "mobility": 0,
+                    "support": 0,
+                    "wildcard": 0
+                },
+                "reputation": {}
+            }),
+            "stats": new classes.statDistribution({
+                "attunement": {
+                    "flamecharm": 0,
+                    "frostdraw": 0,
+                    "thundercall": 0,
+                    "galebreathe": 0,
+                    "shadowcast": 0,
+                    "ironsing": 0
+                },
+                "weapon": {
+                    "light": 75,
+                    "medium": 75,
+                    "heavy": 75
+                },
+                "base": {
+                    "strength": 25,
+                    "fortitude": 0,
+                    "agility": 25,
+                    "intelligence": 0,
+                    "willpower": 0,
+                    "charisma": 25
+                }
+            }),
+            "talents": [
+                "ankle_cutter", 
+                "dread_fighter", 
+                "flow_state", 
+                "mayhem", 
+                "merciless_blade", 
+                "relentless_hunt", 
+                "rising_star", 
+                "true_vantage", 
+                "unmatched_dexterity", 
+                "vengeful_pursuit"
+            ],
+            "mantras": []
+        }),
+        "oathgiver": "the_dreadstar",
+        "mantraSlots": {
+            "combat": 0,
+            "mobility": 0,
+            "support": 0,
+            "wildcard": 0
+        },
+        "talents": [],
+        "mantras": [],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 2,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 3,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 4,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 5,
+                "talents": [],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 6,
+                "talents": [],
+                "mantras": []
+            }),
+        ]
+    }), // TODO: discover silentheart progression
+    starkindred: new classes.oath({
+        "name": "starkindred",
+        "rich_name": "Starkindred",
+        "description": "You vow to feel the knowledge of all that is, all at once. Your heart beats with the world itself, as the Stars above watch over you.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 0,
+                "health": 0,
+                "ether": 0,
+                "sanity": 0,
+                "posture": 0,
+                "carry_load": 0,
+                "dvm": 0,
+                "weapon_type": null,
+                "murmur": null,
+                "oath": null,
+                "resonance": "any",
+                "penetration": {
+                    "melee": 0,
+                    "mantra": 0
+                },
+                "resistance": {
+                    "physical": 0,
+                    "slash": 0,
+                    "blunt": 0,
+                    "elemental": 0,
+                    "fire": 0,
+                    "ice": 0,
+                    "lightning": 0,
+                    "wind": 0,
+                    "shadow": 0,
+                    "iron": 0
+                },
+                "mantra_slots": {
+                    "combat": 0,
+                    "mobility": 0,
+                    "support": 0,
+                    "wildcard": 0
+                },
+                "reputation": {}
+            }),
+            "stats": new classes.statDistribution({
+                "attunement": {
+                    "flamecharm": 0,
+                    "frostdraw": 0,
+                    "thundercall": 0,
+                    "galebreathe": 0,
+                    "shadowcast": 0,
+                    "ironsing": 0
+                },
+                "weapon": {
+                    "light": 0,
+                    "medium": 0,
+                    "heavy": 0
+                },
+                "base": {
+                    "strength": 40,
+                    "fortitude": 0,
+                    "agility": 0,
+                    "intelligence": 0,
+                    "willpower": 0,
+                    "charisma": 0
+                }
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "oathgiver": "samael",
+        "mantraSlots": {
+            "combat": 2,
+            "mobility": 0,
+            "support": 0,
+            "wildcard": 0
+        },
+        "talents": [
+            "death_from_above"
+        ],
+        "mantras": [
+            "ascension",
+            "sinister_halo",
+            "celestial_assault"
+        ],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [
+                    "death_from_above"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [],
+                "mantras": [
+                    "ascension"
+                ]
+            }),
+            new classes.oathProgression({
+                "level": 2,
+                "talents": [],
+                "mantras": [
+                    "sinister_halo"
+                ]
+            }),
+            new classes.oathProgression({
+                "level": 3,
+                "talents": [],
+                "mantras": [
+                    "celestial_assault"
+                ]
+            }),
+        ]
+    }),
+    visionshaper: new classes.oath({
+        "name": "visionshaper",
+        "rich_name": "Visionshaper",
+        "description": "You vow to see only that which you wish to see. Reality itself is malleable, pliable to your deft hands.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 0,
+                "health": 0,
+                "ether": 0,
+                "sanity": 0,
+                "posture": 0,
+                "carry_load": 0,
+                "dvm": 0,
+                "weapon_type": null,
+                "murmur": null,
+                "oath": null,
+                "resonance": "any",
+                "penetration": {
+                    "melee": 0,
+                    "mantra": 0
+                },
+                "resistance": {
+                    "physical": 0,
+                    "slash": 0,
+                    "blunt": 0,
+                    "elemental": 0,
+                    "fire": 0,
+                    "ice": 0,
+                    "lightning": 0,
+                    "wind": 0,
+                    "shadow": 0,
+                    "iron": 0
+                },
+                "mantra_slots": {
+                    "combat": 0,
+                    "mobility": 0,
+                    "support": 0,
+                    "wildcard": 0
+                },
+                "reputation": {}
+            }),
+            "stats": new classes.statDistribution({
+                "attunement": {
+                    "flamecharm": 0,
+                    "frostdraw": 0,
+                    "thundercall": 0,
+                    "galebreathe": 0,
+                    "shadowcast": 0,
+                    "ironsing": 0
+                },
+                "weapon": {
+                    "light": 0,
+                    "medium": 0,
+                    "heavy": 0
+                },
+                "base": {
+                    "strength": 0,
+                    "fortitude": 0,
+                    "agility": 0,
+                    "intelligence": 0,
+                    "willpower": 0,
+                    "charisma": 50
+                }
+            }),
+            "talents": [
+                "cheap_trick"
+            ],
+            "mantras": [
+                "illusory_servants",
+                "illusory_counter",
+                "mirror_illusion"
+            ]
+        }),
+        "oathgiver": "the_nestmind",
+        "mantraSlots": {
+            "combat": 2,
+            "mobility": 0,
+            "support": 1,
+            "wildcard": 0
+        },
+        "talents": [],
+        "mantras": [],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [
+                    "death_from_above"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [],
+                "mantras": [
+                    "illusory_servants"
+                ],
+            }),
+            new classes.oathProgression({
+                "level": 2,
+                "talents": [],
+                "mantras": [
+                    "illusory_counter"
+                ]
+            }),
+            new classes.oathProgression({
+                "level": 3,
+                "talents": [
+                    "cheap_trick"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 4,
+                "talents": [],
+                "mantras": [
+                    "mirror_illusion"
+                ]
+            }),
+        ]
+    }),
 }
