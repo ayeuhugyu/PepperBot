@@ -84,7 +84,7 @@ const reply = new SubCommand(
                 } else {
                     action.reply(message, {
                         content: "the deed is done.",
-                        ephemeral: gconfig.useEphemeralReplies
+                        ephemeral: true
                     })
                 }
             } else {
@@ -179,7 +179,7 @@ const react = new SubCommand(
                 } else {
                     action.reply(message, {
                         content: "the deed is done.",
-                        ephemeral: gconfig.useEphemeralReplies
+                        ephemeral: true
                     })
                 }
             } else {
@@ -378,7 +378,7 @@ const say = new SubCommand(
             if (fromInteraction) {
                 action.reply(message, {
                     content: "the deed is done.",
-                    ephemeral: gconfig.useEphemeralReplies,
+                    ephemeral: true,
                 });
             }
             action.deleteMessage(message);

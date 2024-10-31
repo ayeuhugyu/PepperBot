@@ -15,13 +15,14 @@ import {
     ButtonStyle,
     TextInputStyle,
     embedLength,
+    messageLink,
 } from "discord.js";
 import fs from "fs";
 import chalk from "chalk";
 import * as log from "../lib/log.js";
 import guildConfigs from "../lib/guildConfigs.js";
 import * as globals from "../lib/globals.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import { androidpublisher } from "googleapis/build/src/apis/androidpublisher/index.js";
 import { datastream } from "googleapis/build/src/apis/datastream/index.js";
 
@@ -248,6 +249,45 @@ function changeGuildConfig(
                 return;
             }
         }
+        if (guildConfigItemKey === "autoCrosspostChannels") {
+            let shouldreturn = false;
+            parsedValue.forEach((channelId) => {
+                try {
+                    interaction.guild.channels.fetch(channelId).then((channel) => {
+                        if (!channel.type == 5) {
+                            action.reply(interaction, {
+                                content: `the channel with the ID ${channelId} is not an announcement channel`,
+                                ephemeral: guildConfig.useEphemeralReplies,
+                            });
+                            shouldreturn = true;
+                        }
+                    })
+                } catch (e) {
+                    action.reply(interaction, {
+                        content: `the channel with the ID ${channelId} doesn't exist or I can't see it`,
+                        ephemeral: guildConfig.useEphemeralReplies,
+                    });
+                    shouldreturn = true;
+                }
+                if (shouldreturn) {
+                    return;
+                }
+            });
+            if (shouldreturn) {
+                return;
+            }
+        }
+        if (guildConfigItemKey === "theme") {
+            if (!theme.themes[parsedValue.toUpperCase().replaceAll(" ", "_")]) {
+                action.reply(interaction, {
+                    content: `the theme ${parsedValue.toUpperCase} doesn't exist`,
+                    ephemeral: guildConfig.useEphemeralReplies,
+                });
+                return;
+            } else {
+                parsedValue = theme.themes[parsedValue.toUpperCase().replaceAll(" ", "_")];
+            }
+        }
         if (interaction.deferUpdate) {
             interaction.deferUpdate();
         } else if (interaction.react) {
@@ -390,7 +430,7 @@ const command = new Command(
             ephemeral: messageGuildConfig.useEphemeralReplies,
         });
 
-        const detailsEmbed = default_embed();
+        const detailsEmbed = theme.createThemeEmbed(messageGuildConfig.theme || theme.themes.CURRENT);
         detailsEmbed.setTitle("loading...");
         const collectorID = message.guild.id;
         function refreshDetails() {

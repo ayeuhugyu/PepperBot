@@ -3,7 +3,7 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import fsextra from "fs-extra";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -36,7 +36,7 @@ const command = new Command(
     },
     async function execute(message, args, isInteraction, gconfig) {
         if (args.get("message")) {
-            const embed = default_embed().setDescription(args.get("message"));
+            const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT).setDescription(args.get("message"));
             const sent = await action.sendMessage(
                 message.client.channels.cache.get("1171660137946157146"),
                 {

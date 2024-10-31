@@ -1,5 +1,5 @@
 import * as action from "../lib/discord_action.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import {
     Command,
     CommandData,
@@ -71,7 +71,7 @@ async function getDuration(url) {
     }
 }
 
-async function refresh(queue, interaction, args, row, sentMessage) {
+async function refresh(queue, interaction, args, row, sentMessage, gconfig) {
     let text;
     if (!sentMessage) {
         log.warn("returned from refresh due to sentMessage");
@@ -81,7 +81,7 @@ async function refresh(queue, interaction, args, row, sentMessage) {
         log.warn("returned from refresh due to interaction");
         return;
     }
-    const embed = default_embed();
+    const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
     if (queuePageBuilders[interaction.channel.id]) {
         const builder = queuePageBuilders[interaction.channel.id];
         builder.stop(builder);
@@ -119,7 +119,7 @@ async function refresh(queue, interaction, args, row, sentMessage) {
         if (chunks.length > 1 && queue.readableQueue.length > 15) {
             const Menu = new AdvancedPagedMenuBuilder(queue.currentEmbedPage);
             chunks.forEach((chunks, index) => {
-                const newEmbed = default_embed();
+                const newEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
                 newEmbed.setTitle(title);
                 newEmbed.setDescription(chunks);
                 Menu.full.addPage(newEmbed);
@@ -276,7 +276,10 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
         if (input.endsWith(">")) {
             input = input.slice(0, -1);
         }
-        if (input.startsWith("file://")) {
+        if (input.startsWith("file://") || !args.get("sound").startsWith("http")) {
+            if (!input.startsWith("file://")) {
+                input = `file://${input}`;
+            }
             const filePath = input.slice(7);
             const sounds = fs.readdirSync("resources/sounds")
             const sound = await autocorrect(filePath);
@@ -1053,9 +1056,9 @@ const command = new Command(
                 queue.emitter.off("update", onUpdate);
                 return;
             }
-            refresh(queue, message, args, row, sentMessage);
+            refresh(queue, message, args, row, sentMessage, gconfig);
         }
-        refresh(queue, message, args, row, sentMessage);
+        refresh(queue, message, args, row, sentMessage, gconfig);
         queue.emitter.on("update", onUpdate);
         collector.on("end", () => {
             if (!sentMessage) return;

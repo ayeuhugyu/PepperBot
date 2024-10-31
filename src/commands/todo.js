@@ -21,7 +21,7 @@ import fsextra from "fs-extra";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import * as files from "../lib/files.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 
 const config = globals.config;
 
@@ -106,7 +106,7 @@ const ActionRow = new ActionRowBuilder().addComponents(
     buttons.switch
 );
 
-function refresh(authorId, fromInteraction) {
+function refresh(authorId, fromInteraction, gconfig) {
     const latestEmbed = latestEmbeds[authorId];
     if (!latestEmbed) return;
     let message = latestEmbed.message;
@@ -120,7 +120,7 @@ function refresh(authorId, fromInteraction) {
     const whichList = whichListForUser[authorId] || "main";
     const l = ensureList(authorId, whichList);
     const list = readList(authorId, whichList);
-    const embed = default_embed().setTitle(
+    const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT).setTitle(
         `${latestEmbed.executedMessage.author.username}'s "${whichList}"`
     );
     let text = "";
@@ -239,7 +239,7 @@ const switchc = new SubCommand(
 
         whichListForUser[message.author.id] = args.get("content");
         ensureList(message.author.id, args.get("content"));
-        refresh(message.author.id);
+        refresh(message.author.id, gconfig);
         content += `switched to list "${args.get("content")}"`;
         action.reply(message, {
             content: content,
@@ -294,7 +294,7 @@ const addTask = new SubCommand(
             args.get("content"),
             false
         );
-        refresh(message.author.id);
+        refresh(message.author.id, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -355,7 +355,7 @@ const removeTask = new SubCommand(
         }
         const task = readList(message.author.id, whichList)[taskIndex - 1];
         removeListItem(message.author.id, whichList, taskIndex - 1);
-        refresh(message.author.id);
+        refresh(message.author.id, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -438,7 +438,7 @@ const checkOffTask = new SubCommand(
             task.value,
             setTaskCompleted
         );
-        refresh(message.author.id);
+        refresh(message.author.id, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -633,7 +633,7 @@ const command = new Command(
         const whichList = whichListForUser[message.author.id] || "main";
         const l = ensureList(message.author.id, whichList);
         const list = readList(message.author.id, whichList);
-        const embed = default_embed().setTitle(
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT).setTitle(
             `${message.author.username}'s "${whichList}"`
         );
 

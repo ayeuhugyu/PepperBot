@@ -13,5 +13,7 @@
     "blacklistedGPTResponseChannelIds": [],
     "prefix": "p/",
     "useEphemeralReplies": false,
-    "autoBuildPreview": false
+    "autoBuildPreview": false,
+    "autoCrosspostChannels": [],
+    "theme": "CURRENT"
 }

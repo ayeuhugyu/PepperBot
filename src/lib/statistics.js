@@ -1,5 +1,5 @@
 import fs, { stat } from "fs";
-import default_embed from "./default_embed.js";
+import default_embed from "./theme.js";
 import * as log from "./log.js";
 
 const start = performance.now();
@@ -70,6 +70,20 @@ export default {
                 statistics.gpt = 0;
             }
             statistics.gpt += amount;
+            this.writeStatistics();
+            resolve();
+        });
+    },
+    async addCommandTypeStat(type) {
+        return new Promise((resolve, reject) => {
+            if (!statistics.commandTypeUsage) {
+                statistics.commandTypeUsage = {};
+            }
+            if (statistics.commandTypeUsage[type]) {
+                statistics.commandTypes[type]++;
+            } else {
+                statistics.commandTypeUsage[type] = 1;
+            }
             this.writeStatistics();
             resolve();
         });

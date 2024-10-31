@@ -1,4 +1,4 @@
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
@@ -23,7 +23,7 @@ const command_option_types = {
 };
 
 async function listCommands(message, gconfig) {
-    const embed = default_embed();
+    const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
     const prefix = gconfig.prefix || config.generic.prefix
     embed.setDescription(`run ${prefix}help [command] for more info`);
     let fieldsText = {
@@ -122,7 +122,7 @@ async function infoAboutCommandWithOptions(
         } else {
             titleText = `${prefix}${command.name}: ${option.name}`;
         }
-        const optionEmbed = default_embed();
+        const optionEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         optionEmbed.setTitle(titleText);
         optionEmbed.setDescription(optionToText(option));
         menu.full.addPage(optionEmbed);
@@ -146,7 +146,7 @@ async function infoAboutCommand(
     const originalCommand = command;
     const prefix = gconfig.prefix || config.generic.prefix
     command = originalCommand.data;
-    const commandPage = default_embed();
+    const commandPage = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
     let title = "";
     if (isSubCommand) {
         title = `${prefix}${parentCommandName} ${command.name}`;

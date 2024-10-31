@@ -1,6 +1,6 @@
 import * as action from "../lib/discord_action.js";
 import { Collection } from "discord.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import * as textfiles from "../lib/files.js";
 import fs from "fs";
 import { Command, CommandData } from "../lib/types/commands.js";
@@ -75,7 +75,7 @@ const command = new Command(
                 }
             } // basically just autocorrect
         }
-        const embed = default_embed();
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         if (file && args.get("image")) {
             // if the file they wanted exists
             if (message.reference) {

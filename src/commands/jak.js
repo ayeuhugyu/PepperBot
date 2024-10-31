@@ -6,7 +6,7 @@ import {
     SubCommandData,
 } from "../lib/types/commands.js";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import { Collection } from "discord.js";
 import fs from "fs";
 import fsExtra from "fs-extra";

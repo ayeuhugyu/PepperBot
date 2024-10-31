@@ -8,7 +8,7 @@ import {
 import { Collection } from "discord.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import * as globals from "../lib/globals.js";
 
 const config = globals.config;
@@ -52,7 +52,7 @@ const view = new SubCommand(
             text += `<@${user}> (${user})\n`;
         }
 
-        const embed = default_embed()
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
             .setTitle("blacklisted users")
             .setDescription(text);
         action.reply(message, { embeds: [embed], ephemeral: gconfig.useEphemeralReplies });

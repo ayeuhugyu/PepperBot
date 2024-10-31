@@ -113,7 +113,10 @@ const command = new Command(
             }
             const audioPlayer = await voice.createAudioPlayer(message.guild.id);
             connection.subscribe(audioPlayer);
-            if (args.get("sound").startsWith("file://")) {
+            if (args.get("sound").startsWith("file://") || !args.get("sound").startsWith("http")) {
+                if (!args.get("sound").startsWith("file://")) {
+                    args.set("sound", `file://${args.get("sound")}`);
+                }
                 const filePath = args.get("sound").slice(7);
                 const sounds = fs.readdirSync("resources/sounds")
                 const sound = await autocorrect(filePath);

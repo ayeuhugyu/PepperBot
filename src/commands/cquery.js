@@ -3,7 +3,7 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { ButtonBuilder, ButtonStyle, Collection } from "discord.js";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import * as adobe from "../lib/adobe.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import chatbubble from "./chatbubble.js";
 import * as globals from "../lib/globals.js";
 
@@ -54,7 +54,7 @@ const command = new Command(
         const cleanResult = await adobe.cleanupSearchResults(result);
         if (cleanResult.length === 1) {
             const file = cleanResult[0];
-            const embed = default_embed()
+            const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
                 .setTitle(`[1/1] - ${file.title}`)
                 .setImage(file.url)
                 .setURL(file.pageUrl);
@@ -66,7 +66,7 @@ const command = new Command(
             const menu = new AdvancedPagedMenuBuilder();
             const totalResults = cleanResult.length;
             cleanResult.forEach((file, index) => {
-                const embed = default_embed()
+                const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
                     .setTitle(`[${index + 1}/${totalResults}] - ${file.title}`)
                     .setImage(file.url)
                     .setURL(file.pageUrl);

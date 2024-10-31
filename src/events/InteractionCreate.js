@@ -70,6 +70,7 @@ async function chatInputCommand(interaction) {
         const excludeList = ["restart", "eval"];
         if (!excludeList.includes(commandsObject.normalAliasesToBaseCommand[command] || command)) {
             statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || commandsObject.commandAliasesToBaseCommand[command] || command, performance.now() - startCommand);
+            statistics.addCommandTypeStat("slash");
             log.info("wrote statistic to " + (commandsObject.normalAliasesToBaseCommand[command] || command))
         }
         if (interaction.channel) {

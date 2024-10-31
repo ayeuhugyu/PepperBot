@@ -1,5 +1,5 @@
 import prettyBytes from "pretty-bytes";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import * as action from "../lib/discord_action.js";
 import { Command, CommandData, SubCommand, SubCommandData } from "../lib/types/commands.js";
 import fs from "fs";
@@ -61,7 +61,7 @@ const performance = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const embed = default_embed();
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         embed.setTitle("Performance Info");
         //const memory = process.memoryUsage();
         let memory = undefined;
@@ -157,7 +157,7 @@ const logs = new SubCommand(
             totalSize += filestat.size;
         }));
         //console.log(sizes, lengths)
-        const embed = default_embed()
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
         embed.setTitle("Log Info");
         embed.setDescription(`files: ${logfiles.map((file) => `${file}`).join(", ")}`);
         embed.addFields(
@@ -200,7 +200,7 @@ const bot = new SubCommand(
             fs.readFileSync("resources/data/persistent_data.json", "utf-8")
         );
 
-        const embed = default_embed()
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
             .setTitle("pepperbot info")
             .addFields(
                 {

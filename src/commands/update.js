@@ -6,7 +6,7 @@ import * as globals from "../lib/globals.js";
 import setversion from "./setversion.js";
 import deploycommands from "./deploycommands.js";
 import fsextra from "fs-extra";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 
 const config = globals.config;
 
@@ -66,8 +66,8 @@ const command = new Command(
                 args.get("message")
             );
             action.editMessage(writeFileMessage, "file written");
-            const messageTextContent = args.get("patch") ? `PepperBot small update/patch! 🌶` : `<@&1210034891018993755> PepperBot update! 🌶`;
-            const embed = default_embed()
+            const messageTextContent = args.get("patch") ? `PepperBot small update/patch! ${theme.getThemeEmoji(theme.themes.CURRENT)}` : `<@&1210034891018993755> PepperBot update! ${theme.getThemeEmoji(theme.themes.CURRENT)}`;
+            const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
                 .setTitle(`VERSION ${version + 1}`)
                 .setDescription(args.get("message"));
             const sent = await action.sendMessage(

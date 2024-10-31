@@ -13,7 +13,7 @@ import * as builderutil from "../lib/deepwokenbuilderapi.js";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import commonRegex from "../lib/commonRegex.js";
 import * as util from "util";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 
 const config = globals.config;
 
@@ -78,7 +78,7 @@ const command = new Command(
         //console.log(util.inspect(buildPages, { depth: Infinity, colors: true }));
         const menu = new AdvancedPagedMenuBuilder();
         buildPages.forEach((page) => {
-            const embed = default_embed();
+            const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
             embed.setTitle(page.title);
             if (page.description) {
                 embed.setDescription(page.description);

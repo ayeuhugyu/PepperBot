@@ -24,9 +24,19 @@ shit on the todo list:
 [18] - so apparently the end event of collectors is called when the bot is removed from a server so that means you're gonna have to fix a bunch of collectors that rely upon guild ids to remove them from lists
 [19] - add some sort of greeting message that tells people the features of the bot
 [20] - p/chatbubble can be used by replying, reference can be set with a p/setreference and used from right click > apps > thingy
+[21] - catch ytdl-core errors
 [22] - projects page
 [23] - triangulation page that would be similar to sebastian lague's intro thingy, just cuz its interesting idk. similar to the physics experiment.
-[26] - update deepwoken equipment w/ all the new changes
+[24] - update deepwoken equipment w/ all the new changes
+[25] - force ephemeral for "the deed is done" messages ✅
+[26] - `p/queue add sound_file_name` should just work dont need no file:// ✅
+[27] - seasonal pepperbot themes ✅
+[28] - rewrite p/random buildidea
+[29] - don't deploy whitelisted commands ✅
+[30] - exclude whitelist commands from deploy list ✅
+[31] - gconfig option for autocrosspost cuz idk some would find it useful ✅
+[32] - statistics on slash commands vs text commands ✅
+[33] - statistics on user installs ✅
 
 to add to todo list:
 
@@ -36,6 +46,15 @@ p/update
 
 **actual content:**
 
+- added statistics on user installs / guilds / guild users
+- added new gconfig option for autocrossposting
+- commands with a whitelist length > 0 are no longer deployed/registered
+- added statistics for text vs slash comamnds used
+- you no longer need the "file://" before adding soundboard files to the queue, as long as you don't start it with http it will assume you are adding a file.
+- **Seasonal Pepperbot 🌶🎃❄🐰**
+-# will add more seasons to this as i come up with them
+
 **fixes/optimizations:**
 
+- messages from p/force that reply with "the deed is done" are now always ephemeral, nomatter the gconfig options.
 - fixed command aliases being logged separately in the statistics object

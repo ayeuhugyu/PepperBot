@@ -10,7 +10,7 @@ import fs from "fs";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import * as gpt from "../lib/gpt.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 
 const config = globals.config;
 
@@ -81,7 +81,7 @@ const command = new Command(
             if (!caption) {
                 return action.editReply(processingMessage, "error processing image");
             }
-            const embed = default_embed()
+            const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
                 .setTitle(args.get("request") ? args.get("request").name : url.split('/').pop().split('?')[0])
                 .setDescription(caption)
                 .setImage(args.get("request") ? args.get("request").url : url);

@@ -260,6 +260,7 @@ async function processCommand(message) {
             const excludeList = ["restart", "eval"];
             if (!excludeList.includes(commandsObject.normalAliasesToBaseCommand[command] || command)) {
                 statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || commandsObject.commandAliasesToBaseCommand[command] || command, performance.now() - startCommand);
+                statistics.addCommandTypeStat("text");
                 log.info("wrote statistic to " + (commandsObject.normalAliasesToBaseCommand[command] || command))
             }
             if (message.channel) {
@@ -335,6 +336,9 @@ async function processOtherStuff(message) {
             await command.default.execute(message, args, false)
         }
         
+    }
+    if (gconfig.autoCrosspostChannels.includes(message.channel.id)) {
+        message.crosspost()
     }
 }
 

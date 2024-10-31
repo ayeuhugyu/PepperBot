@@ -2,7 +2,7 @@ import * as action from "../lib/discord_action.js";
 import { Command, CommandData } from "../lib/types/commands.js";
 import { Collection, GuildSystemChannelFlags } from "discord.js";
 import fs from "fs";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import * as globals from "../lib/globals.js";
 import guildConfigs from "../lib/guildConfigs.js";
 

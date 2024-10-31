@@ -5,6 +5,7 @@ import prettyBytes from "pretty-bytes";
 import fs from "fs";
 import * as globals from "./lib/globals.js";
 import process from "node:process";
+import * as theme from "./lib/theme.js";
 
 const config = globals.config;
 
@@ -51,7 +52,7 @@ client.on(Events.ClientReady, async () => {
     log.info("bot online");
     let channel = await client.channels.cache.get("1148814162273763418");
     if (channel) {
-        channel.send(`its pepper time 🌶`);
+        channel.send(`its pepper time ${theme.getThemeEmoji(theme.themes.CURRENT)}`);
     } else {
         let channels = await client.shard.fetchClientValues("channels.cache");
         const shards = channels.size;
@@ -66,7 +67,7 @@ client.on(Events.ClientReady, async () => {
         if (!channel) {
             log.error("failed to find pepper channel");
         } else {
-            channel.send(`its pepper time 🌶 ${client.shard.ids[0]}/${shards}`);
+            channel.send(`its pepper time ${theme.getThemeEmoji(theme.themes.CURRENT)} ${client.shard.ids[0]}/${shards}`);
         }
     }
 

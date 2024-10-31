@@ -6,7 +6,7 @@ import {
     ButtonStyle,
     ActionRowBuilder,
 } from "discord.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import fs from "fs";
 import { client } from "../bot.js";
 import * as log from "../lib/log.js";
@@ -49,7 +49,7 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const embed = await default_embed();
+        const embed = await theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         let guilds = await client.shard.fetchClientValues("guilds.cache");
         let hiddenGuilds = Object.entries(guildConfigs.guildConfigs)
             .filter(

@@ -8,7 +8,7 @@ import {
 import { Collection, PermissionFlagsBits } from "discord.js";
 import { createRandomFreshie } from "../lib/types/deepwokenCharacter.js";
 import * as voice from "../lib/voice.js";
-import default_embed from "../lib/default_embed.js";
+import * as theme from "../lib/theme.js";
 import fs from "fs";
 import * as log from "../lib/log.js";
 import { randomBuildIdea as randomUnbiasedBuildIdea } from "../lib/deepwokenUnbiasedBuildIdea.js";
@@ -295,7 +295,7 @@ const pepper = new SubCommand(
         const maxRan = pepperfiles.length;
         const randomnum = Math.floor(Math.random() * maxRan);
         const file = pepperfiles[randomnum];
-        const embed = default_embed();
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         embed.setImage(`attachment://${file}`);
         embed.setTitle("🌶🌶🌶 RANDOM PEPPER!!!!!!!! 🌶🌶🌶");
 
@@ -322,7 +322,7 @@ const freshie = new SubCommand(
     },
     async function execute(message, args, fromInteraction, gconfig) {
         const freshie = createRandomFreshie();
-        const embed = await default_embed();
+        const embed = await theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         const boons = freshie.boonsAndFlaws.boons;
         const flaws = freshie.boonsAndFlaws.flaws;
         let boonsText = "";
@@ -392,7 +392,7 @@ const buildidea = new SubCommand(
     },
     async function execute(message, args, fromInteraction, gconfig) {
         let buildIdea;
-        const embed = default_embed();
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         embed.setTitle("Random Build Idea");
         if (!args.get("weighted")) buildIdea = randomUnbiasedBuildIdea(args.get("possible"));
         else buildIdea = randomBiasedBuildIdea(args.get("possible"));

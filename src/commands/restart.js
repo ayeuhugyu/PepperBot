@@ -3,6 +3,7 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import * as globals from "../lib/globals.js";
 import { Collection } from "discord.js";
 import process from "node:process";
+import * as theme from "../lib/theme.js"
 
 const config = globals.config;
 
@@ -68,7 +69,7 @@ const command = new Command(
                 return;
             }
         }
-        await action.reply(message, "Bye Bye! 🌶");
+        await action.reply(message, `Bye Bye! ${theme.getThemeEmoji(theme.themes.CURRENT)}`);
         process.exit(0);
     }
 );

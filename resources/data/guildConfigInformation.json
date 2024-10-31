@@ -92,5 +92,18 @@
         "default": false,
         "cleanname": "auto build preview",
         "description": "whether or not to automatically preview a build for build links posted in chat"
+    },
+    "autoCrosspostChannels": {
+        "type": "array",
+        "arraytype": "string",
+        "default": [],
+        "cleanname": "auto crosspost channels",
+        "description": "list of ANNOUNCEMENT channels that should automatically crosspost/publish their messages to followers"
+    },
+    "theme": {
+        "type": "string",
+        "default": "current",
+        "cleanname": "theme",
+        "description": "the seasonal theme to use for the bot; can only be: current, spooky, winter, or default."
     }
 }
