@@ -50,7 +50,7 @@ const command = new Command(
                 action.reply(message, { content: "sent!", ephemeral: gconfig.useEphemeralReplies });
             }
             action.deleteMessage(message);
-            sent.crosspost();
+            //sent.crosspost(); now done by autocrossposter
         } else {
             action.reply(message, "provide a message to say you baffoon!");
         }

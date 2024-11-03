@@ -17,28 +17,28 @@ export const themeData = {
     spooky: {
         emoji: "🎃",
         color: 0xff9900,
-        thumbnail: "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
+        thumbnail: "https://media.discordapp.net/attachments/1213676236929236994/1301685620678197310/lumpkin.png?ex=672560b4&is=67240f34&hm=7d587e660c961526e8cec21ee5aa56194feb5ab1a40fc2f7226bdb7342f39cac&=&format=webp&quality=lossless&width=180&height=215",
         footer: {
             text: "It's spooky month!",
-            iconURL: "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png"
+            iconURL: "https://media.discordapp.net/attachments/1213676236929236994/1301685620678197310/lumpkin.png?ex=672560b4&is=67240f34&hm=7d587e660c961526e8cec21ee5aa56194feb5ab1a40fc2f7226bdb7342f39cac&=&format=webp&quality=lossless&width=180&height=215"
         },
     },
     winter: {
         emoji: "❄️",
         color: 0x3399ff,
-        thumbnail: "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
+        thumbnail: "https://media.discordapp.net/attachments/1213676236929236994/1301691746044088350/tree.png?ex=67256668&is=672414e8&hm=301b4f72f7e5e0519ba0ac842b8abd27997c7d2ac93c61fff9d6f1a9f3622ca1&=&format=webp&quality=lossless&width=403&height=701",
         footer: {
             text: "Hey! It's cold up here, don't you agree?",
-            iconURL: "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png"
+            iconURL: "https://media.discordapp.net/attachments/1213676236929236994/1301691746044088350/tree.png?ex=67256668&is=672414e8&hm=301b4f72f7e5e0519ba0ac842b8abd27997c7d2ac93c61fff9d6f1a9f3622ca1&=&format=webp&quality=lossless&width=403&height=701"
         },
     },
     easter: {
         emoji: "🐰",
         color: 0xffccff,
-        thumbnail: "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png",
+        thumbnail: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png",
         footer: {
             text: "eaker basker",
-            iconURL: "https://cdn.discordapp.com/attachments/755150633191080073/1149152214850469908/Map_Icon.png"
+            iconURL: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png"
         },
     }
 
@@ -50,7 +50,7 @@ export const themes = {
     WINTER: "winter",
     EASTER: "easter",
     
-    CURRENT: "spooky"
+    CURRENT: "default"
 }
 
 export function getThemeEmoji(theme) {
@@ -77,5 +77,5 @@ export function getTheme(theme) {
 
 
 export default function () {
-    return createThemeEmbed(theme.DEFAULT);
+    return createThemeEmbed(themes.DEFAULT);
 } // the only reason this still exists is to support old code incase i forgot to change it

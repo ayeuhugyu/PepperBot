@@ -19,6 +19,9 @@ export class BaseCommandData {
     disabledContexts = [];
     setWhitelist(whitelist) {
         this.whitelist = whitelist;
+        if (whitelist.length > 0) {
+            this.doNotDeploy = true;
+        }
         return this;
     }
     setPermissions(permissions) {
@@ -76,6 +79,7 @@ export class CommandData extends SlashCommandBuilder {
     primarySubcommand = undefined;
     integration_types = [0, 1];
     disableExternalGuildUsage = false;
+    doNotDeploy = false;
     constructor() {
         super();
         for (const method of Object.getOwnPropertyNames(
@@ -93,6 +97,10 @@ export class CommandData extends SlashCommandBuilder {
     }
     setIntegrationTypes(integrationTypes) {
         this.integration_types = integrationTypes;
+        return this;
+    }
+    setDoNotDeploy(doNotDeploy) {
+        this.doNotDeploy = doNotDeploy;
         return this;
     }
 }

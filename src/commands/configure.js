@@ -280,12 +280,12 @@ function changeGuildConfig(
         if (guildConfigItemKey === "theme") {
             if (!theme.themes[parsedValue.toUpperCase().replaceAll(" ", "_")]) {
                 action.reply(interaction, {
-                    content: `the theme ${parsedValue.toUpperCase} doesn't exist`,
+                    content: `the theme ${parsedValue.toUpperCase().replaceAll(" ", "_")} doesn't exist`,
                     ephemeral: guildConfig.useEphemeralReplies,
                 });
                 return;
             } else {
-                parsedValue = theme.themes[parsedValue.toUpperCase().replaceAll(" ", "_")];
+                parsedValue = parsedValue.toUpperCase().replaceAll(" ", "_")
             }
         }
         if (interaction.deferUpdate) {
@@ -430,7 +430,7 @@ const command = new Command(
             ephemeral: messageGuildConfig.useEphemeralReplies,
         });
 
-        const detailsEmbed = theme.createThemeEmbed(messageGuildConfig.theme || theme.themes.CURRENT);
+        const detailsEmbed = theme.createThemeEmbed(theme.themes[messageGuildConfig.theme] || theme.themes.CURRENT);
         detailsEmbed.setTitle("loading...");
         const collectorID = message.guild.id;
         function refreshDetails() {

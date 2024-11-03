@@ -276,7 +276,7 @@ async function queue(queue, interaction, args, embed, row, sentMessage) {
         if (input.endsWith(">")) {
             input = input.slice(0, -1);
         }
-        if (input.startsWith("file://") || !args.get("sound").startsWith("http")) {
+        if (input.startsWith("file://") || !input.startsWith("http")) {
             if (!input.startsWith("file://")) {
                 input = `file://${input}`;
             }
@@ -982,7 +982,7 @@ const command = new Command(
             }
             return;
         }
-        let embed = default_embed(message);
+        let embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
         embed.setTitle("Queue");
         embed.setDescription("loading queue");
 

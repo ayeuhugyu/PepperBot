@@ -338,7 +338,16 @@ async function processOtherStuff(message) {
         
     }
     if (gconfig.autoCrosspostChannels.includes(message.channel.id)) {
-        message.crosspost()
+        try {
+            if (message.crosspostable) {
+                message.crosspost().catch((err) => {
+                    log.error(err)
+                })
+            }
+        } catch (e) {
+            log.error(e)
+        }
+        
     }
 }
 

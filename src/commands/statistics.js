@@ -59,9 +59,11 @@ const command = new Command(
         
         const commandUsageEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         commandUsageEmbed.setTitle("Usage");
-        commandUsageEmbed.setDescription(
-            "GPT Messages: " + gpt
-        );
+        commandUsageEmbed.setDescription(`
+            GPT Messages: ${gpt}
+            Text Command Usage: ${stats.commandTypeUsage.text}
+            Slash Command Usage: ${stats.commandTypeUsage.slash}
+            `);
         const commandUsageHumanReadable = Object.keys(commandUsage).map((commandName) => {
             return `${commandName}: ${commandUsage[commandName]}`;
         });
@@ -88,11 +90,11 @@ const command = new Command(
 
         const usersEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         usersEmbed.setTitle("Users");
-        let guilds = message.client.application.approximateGuildCount
+        let guilds = message.client.application.approximateGuildCount || "unknown"
         let guildUsers = 0
-        let installUsers = message.client.application.approximateUserInstallCount
+        let installUsers = message.client.application.approximateUserInstallCount || "unknown"
 
-        let guildsData = await client.shard.fetchClientValues("guilds.cache");
+        let guildsData = await message.client.shard.fetchClientValues("guilds.cache");
         guildsData.forEach((guildsCache) => {
             guildsCache.forEach((guild) => {
                 guildUsers += guild.memberCount

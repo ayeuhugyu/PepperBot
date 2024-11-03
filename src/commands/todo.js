@@ -239,7 +239,7 @@ const switchc = new SubCommand(
 
         whichListForUser[message.author.id] = args.get("content");
         ensureList(message.author.id, args.get("content"));
-        refresh(message.author.id, gconfig);
+        refresh(message.author.id, fromInteraction, gconfig);
         content += `switched to list "${args.get("content")}"`;
         action.reply(message, {
             content: content,
@@ -294,7 +294,7 @@ const addTask = new SubCommand(
             args.get("content"),
             false
         );
-        refresh(message.author.id, gconfig);
+        refresh(message.author.id, fromInteraction, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -355,7 +355,7 @@ const removeTask = new SubCommand(
         }
         const task = readList(message.author.id, whichList)[taskIndex - 1];
         removeListItem(message.author.id, whichList, taskIndex - 1);
-        refresh(message.author.id, gconfig);
+        refresh(message.author.id, fromInteraction, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -438,7 +438,7 @@ const checkOffTask = new SubCommand(
             task.value,
             setTaskCompleted
         );
-        refresh(message.author.id, gconfig);
+        refresh(message.author.id, fromInteraction, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;

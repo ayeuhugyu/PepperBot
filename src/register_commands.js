@@ -16,12 +16,10 @@ let commands
 
 export async function getCommands() {
     import("./lib/commands.js").then((commandsObject) => {
-        commands = commandsObject.default.commandsWithoutAliases.map((command) => {
-            if (!command.data.whitelist || (command.data.whitelist.length === 0)) {
-                return command.data.toJSON();
-            } else {
-                return null;
-            }
+        commands = commandsObject.default.commandsWithoutAliases.filter(
+            (command) => !command.data.doNotDeploy
+        ).map((command) => {
+            return command.data.toJSON();
         });
     });
 }

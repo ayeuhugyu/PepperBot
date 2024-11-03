@@ -55,6 +55,7 @@ const command = new Command(
             return;
         }
         try {
+            console.log(message.crosspostable)
             const commandsObject = await import("../lib/commands.js");
             const result = await (async function () {
                 return await eval(args.get("code"));

@@ -24,9 +24,6 @@ const blockedIps = {
     "209.126.106.7": "i don't got those pages open man stop trying",
 };
 
-let requestCount = fs.readFileSync("resources/data/requestCount.txt", "utf-8");
-requestCount = parseInt(requestCount);
-
 const starts = {};
 
 const app = express();
@@ -104,13 +101,7 @@ async function logAccess(req) {
         `${formattedDate} ACCESS FROM ${req.headers['cf-connecting-ip'] || req.ip} AT ${req.path}\n`,
         () => {}
     );
-    requestCount++;
-    const stringRequestCount = requestCount.toString();
-    fs.writeFile(
-        "resources/data/requestCount.txt",
-        stringRequestCount,
-        () => {}
-    );
+    statistics.addRequestCountStat()
 }
 
 io.on("connection", (socket) => {
@@ -284,7 +275,6 @@ app.get("/api/read-statistics", (req, res) => {
                 },
                 statistics: JSON.parse(data),
                 shardCount: shardCount,
-                requestCount: requestCount,
             };
             if (starts.bot) {
                 object.starts.bot = starts.bot;

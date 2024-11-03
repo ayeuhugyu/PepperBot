@@ -102,8 +102,8 @@
     },
     "theme": {
         "type": "string",
-        "default": "current",
+        "default": "CURRENT",
         "cleanname": "theme",
-        "description": "the seasonal theme to use for the bot; can only be: current, spooky, winter, or default."
+        "description": "the seasonal theme to use for the bot; can only be: CURRENT, SPOOKY, WINTER, EASTER, or DEFAULT."
     }
 }

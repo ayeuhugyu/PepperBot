@@ -1,5 +1,4 @@
 import fs, { stat } from "fs";
-import default_embed from "./theme.js";
 import * as log from "./log.js";
 
 const start = performance.now();
@@ -80,10 +79,20 @@ export default {
                 statistics.commandTypeUsage = {};
             }
             if (statistics.commandTypeUsage[type]) {
-                statistics.commandTypes[type]++;
+                statistics.commandTypeUsage[type]++;
             } else {
                 statistics.commandTypeUsage[type] = 1;
             }
+            this.writeStatistics();
+            resolve();
+        });
+    },
+    async addRequestCountStat() {
+        return new Promise((resolve, reject) => {
+            if (!statistics.requestCount) {
+                statistics.requestCount = 12777; // last recorded request count, its been writing NaN this whole time.
+            }
+            statistics.requestCount++;
             this.writeStatistics();
             resolve();
         });
