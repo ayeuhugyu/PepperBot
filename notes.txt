@@ -27,8 +27,9 @@ shit on the todo list:
 [21] - catch ytdl-core errors
 [22] - projects page
 [23] - triangulation page that would be similar to sebastian lague's intro thingy, just cuz its interesting idk. similar to the physics experiment.
-[24] - update deepwoken equipment w/ all the new changes
-[25] - rewrite p/random buildidea
+[24] - rewrite p/random buildidea
+[25] - thanksgiving seasonal theme
+[26] - 2 sanity = 1 ether, add this to the godroll calculator AND check to see if it can get higher ether n shit
 
 to add to todo list:
 
