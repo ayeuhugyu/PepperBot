@@ -219,7 +219,7 @@ export function getRandomAttunement() {
         // Return the attunement at the random index
         if (weightedArray[randomIndex] !== "Attunement-less") {
             attunementsArr.push(weightedArray[randomIndex]);
-        } // TODO: increase chance of 2 attunements
+        }
     }
     if (attunementsArr.length == 0) {
         let randomIndex = Math.floor(Math.random() * weightedArray.length);

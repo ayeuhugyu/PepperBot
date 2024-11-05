@@ -15,6 +15,7 @@ function mergeObjects(target, source) {
 
 export class Base {
     constructor(object) {
+        if (!object) return;
         for (let key in object) {
             if (object.hasOwnProperty(key) && this.hasOwnProperty(key)) {
                 if (object[key] instanceof Object && !(object[key] instanceof Array)) {
@@ -82,6 +83,7 @@ export class characterStats extends Base {
     "posture" = 0
     "carry_load" = 0
     "dvm" = 0
+    "stealth" = 0
     "weapon_type" = Enum.WeaponType.SWORD
     "murmur" = "murmur_name"
     "oath" = "oath_name"
@@ -324,4 +326,37 @@ export class faction extends Base {
     "territories" = [
         "location_name"
     ]
+}
+
+export class equipment extends Base {
+    constructor(object) {
+        super(object)
+    }
+    "name" = "equipment_name"
+    "rich_name" = "Equipment Rich Name"
+    "description" = "equipment_description"
+    "requirements" = new characterData()
+    "variants" = [
+        "equipment_name"
+    ]
+    "selling_price" = 0
+    "rarity" = Enum.ItemRarity.COMMON
+    "pips" = [
+        Enum.PipRarity.COMMON
+    ]
+    "obtained_from" = {
+        "locations": [
+            "location_name"
+        ],
+        "npcs": [
+            "npc_name"
+        ],
+        "monsters": [
+            "monster_name"
+        ],
+        "other": [
+            "other_chest_name"
+        ]
+    }
+    "innate" = new characterData()
 }

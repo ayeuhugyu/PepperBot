@@ -40,8 +40,16 @@ export const themeData = {
             text: "eaker basker",
             iconURL: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png"
         },
+    },
+    thanksgiving: {
+        emoji: "🦃",
+        color: 0xcc6600,
+        thumbnail: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png", // TODO: find icon
+        footer: {
+            text: "gobble cobble",
+            iconURL: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png"
+        },
     }
-
 }
 
 export const themes = {
@@ -49,6 +57,7 @@ export const themes = {
     SPOOKY: "spooky",
     WINTER: "winter",
     EASTER: "easter",
+    THANKSGIVING: "thanksgiving",
     
     CURRENT: "default"
 }

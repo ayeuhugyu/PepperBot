@@ -42,7 +42,7 @@ const pipNameOverrides = {
     "carry": "carry load",
 }
 
-function equipmentDataToMessage(equipmentData, requestedGodrollPip) { // todo: bold requested godroll pips
+function equipmentDataToMessage(equipmentData, requestedGodrollPip) {
     const starMessage = starMessages[equipmentData.stars] || "";
     const titleMessage = `--${starMessage ? ` ${starMessage} ` : ""}${equipmentData.name.toUpperCase()}--`
     let processedTitleMessage = "";

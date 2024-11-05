@@ -76,3 +76,21 @@ export const MantraType = {
     MOBILITY: "mobility",
     SUPPORT: "support"
 }
+
+export const PipRarity = {
+    COMMON: "common",
+    UNCOMMON: "uncommon",
+    RARE: "rare",
+    LEGENDARY: "legendary",
+    MYTHIC: "mythic",
+}
+
+export const EquipmentType = {
+    HEAD: "head",
+    ARMS: "arms",
+    LEGS: "legs",
+    TORSO: "torso",
+    FACE: "face",
+    EAR: "ear",
+    RING: "ring",
+}
