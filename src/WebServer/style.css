@@ -1,0 +1,27 @@
+:root {
+    font-family: monospace; /* todo: change font to "hack" */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #fff;
+    font-size: 16px;
+    overflow: hidden;
+}
+
+
+/* TV FX */
+
+.tvCenter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 50px);
+    height: 50px;
+    transform: translate(-50%, -50%);
+    object-fit:fill;
+}

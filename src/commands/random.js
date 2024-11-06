@@ -377,17 +377,19 @@ buildideadata.setWhitelist([]);
 buildideadata.setNormalAliases(["randombuildidea"]);
 buildideadata.setCanRunFromBot(true);
 buildideadata.addBooleanOption((option) =>
-    option.setName("weighted").setDescription("affects whether or not the random build will be weighted").setRequired(false)
+    option.setName("weighted").setDescription("if the random build will be weighted. will only equal false if you input false").setRequired(false)
 );
 buildideadata.addBooleanOption((option) =>
-    option.setName("possible").setDescription("performs checks to make sure the build is actually possible; this is always done when weighted").setRequired(false)
+    option.setName("possible").setDescription("makes sure the build is actually possible; will only equal false if you input false").setRequired(false)
 );
 const buildidea = new SubCommand(
     buildideadata,
     async function getArguments(message) {
         let args = new Collection();
         args.set("weighted", message.content.split(" ")[1]);
+        if (message.content.split(" ")[1] == "false") args.set("weighted", false); 
         args.set("possible", message.content.split(" ")[2]);
+        if (message.content.split(" ")[2] == "false") args.set("possible", false);
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {

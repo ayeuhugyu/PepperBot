@@ -44,10 +44,10 @@ export const themeData = {
     thanksgiving: {
         emoji: "🦃",
         color: 0xcc6600,
-        thumbnail: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png", // TODO: find icon
+        thumbnail: "https://media.discordapp.net/attachments/1213676236929236994/1303572756587352144/turkton.png?ex=672c3e3c&is=672aecbc&hm=ae68359e2f0f32096d1f10758795d822cc05520b9a162c908d76c71852b453a6&=", // TODO: find icon
         footer: {
             text: "gobble cobble",
-            iconURL: "https://cdn.discordapp.com/attachments/1213676236929236994/1301688035720695891/eggcircle.png"
+            iconURL: "https://media.discordapp.net/attachments/1213676236929236994/1303572756587352144/turkton.png?ex=672c3e3c&is=672aecbc&hm=ae68359e2f0f32096d1f10758795d822cc05520b9a162c908d76c71852b453a6&="
         },
     }
 }
