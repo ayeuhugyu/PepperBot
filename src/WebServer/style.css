@@ -16,12 +16,59 @@ body {
 
 /* TV FX */
 
-.tvCenter {
+.tvFxContainer {
     position: absolute;
-    top: 50%;
+    height: 100vh;
+    width: 100vw;
+}
+
+.tvLine {
+    position: absolute;
     left: 50%;
-    width: calc(100% - 50px);
-    height: 50px;
+    top: 50%;
     transform: translate(-50%, -50%);
     object-fit:fill;
+}
+
+.tvLine.horizontal {
+    transition: height 0.35s ease-in, width 0.35s ease-out, opacity 0.5s;
+    width: calc(100vw - 50px);
+    height: 0px;
+}
+
+.tvLine.vertical {
+    transition: height 0.35s ease-out, width 0.35s ease-in, opacity 0.5s;
+    height: calc(100vh - 50px);
+    width: 0px;
+}
+
+.tvScanlines {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -9999;
+    user-select: none;
+}
+
+.tvStatic {
+    opacity: 0;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -9998;
+    user-select: none;
+}
+@keyframes tvStaticAnimation {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
