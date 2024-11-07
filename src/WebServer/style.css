@@ -1,5 +1,21 @@
+@font-face {
+    font-family: 'BPdotsSquareBold';
+    src: url('/font/BPdotsSquareBold.otf') format('truetype');
+}
+
 :root {
-    font-family: monospace; /* todo: change font to "hack" */
+    --text-color: rgba(207, 117, 0, 1);
+    --highlighted-text-color: rgba(255, 145, 0, 1);
+    --highlighted-text-color-light: rgb(255, 182, 87, 1);
+    --highlighted-text-color-lighter: rgb(255, 213, 159, 1);
+    --background-color: rgba(11, 3, 0, 1);
+    --midground-color: rgba(37, 20, 0, 0.35);
+    --midground-color-light: rgba(92, 50, 0, 0.65);
+    --border-color: rgba(255, 145, 0, 1);
+    --border-color-light: rgba(255, 145, 0, 0.5);
+    --main-font: 'BPdotsSquareBold', monospace;
+
+    font-family: var(--main-font);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -7,8 +23,8 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #000;
-    color: #fff;
+    background-color: var(--background-color);
+    color: var(--text-color);
     font-size: 16px;
     overflow: hidden;
 }
@@ -17,58 +33,143 @@ body {
 /* TV FX */
 
 .tvFxContainer {
-    position: absolute;
-    height: 100vh;
-    width: 100vw;
+    position: fixed;
+    height: 0;
+    width: 0;
 }
-
-.tvLine {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    object-fit:fill;
-}
-
-.tvLine.horizontal {
-    transition: height 0.35s ease-in, width 0.35s ease-out, opacity 0.5s;
-    width: calc(100vw - 50px);
-    height: 0px;
-}
-
-.tvLine.vertical {
-    transition: height 0.35s ease-out, width 0.35s ease-in, opacity 0.5s;
-    height: calc(100vh - 50px);
-    width: 0px;
-}
-
-.tvScanlines {
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-    width: 100vw;
-    height: 100vh;
-    position: absolute;
+.tvScanline {
+    position: fixed;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: -9999;
     user-select: none;
+    background-image: repeating-linear-gradient(0deg, #FFFFFF20, #FFFFFF20, 2px, transparent 4px);
+    animation: scrollDown 30s linear infinite;
 }
 
-.tvStatic {
-    opacity: 0;
-    width: 100vw;
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -9998;
-    user-select: none;
-}
-@keyframes tvStaticAnimation {
+@keyframes scrollDown {
     0% {
-        opacity: 1;
+        background-position: 0 0;
     }
     100% {
-        opacity: 0;
+        background-position: 0 100vh;
     }
+}
+.tvStatic {
+    position: fixed;
+    opacity: 1;
+    width: 100vw;
+    height: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    user-select: none;
+}
+
+/* Categories */
+details {
+    margin: 5px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--midground-color);
+}
+
+summary {
+    background-color: var(--midground-color);
+    color: var(--text-color);
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+}
+summary:focus {
+    outline: 1px solid var(--border-color-light);
+}
+
+summary::-webkit-details-marker {
+    display: none;
+}
+
+summary:hover {
+    background-color: var(--midground-color-light);
+}
+
+details[open] summary {
+    border-bottom: 1px solid var(--border-color);
+}
+
+details > *:not(summary) {
+    padding: 5px;
+    background-color: var(--midground-color);
+}
+
+/* General */
+
+pre {
+    font-family: var(--main-font);
+}
+
+.outlined {
+    border: 1px solid var(--border-color);
+    background-color: var(--midground-color);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.flex {
+    display: flex;
+}
+.flex.column {
+    flex-direction: column;
+}
+.flex.row {
+    flex-direction: row;
+}
+
+button {
+    background-color: var(--midground-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+    cursor: pointer;
+    font-family: var(--main-font);
+}
+button:hover {
+    background-color: var(--midground-color-light);
+}
+
+input {
+    background-color: var(--midground-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+    font-family: var(--main-font);
+}
+input:focus {
+    outline: 1px solid var(--border-color-light);
+}
+input:hover {
+    background-color: var(--midground-color-light);
+}
+
+a {
+    color: var(--highlighted-text-color);
+    text-decoration: underline;
+}
+a:hover {
+    color: var(--highlighted-text-color-light);
+}
+a:active {
+    color: var(--highlighted-text-color-lighter);
+}
+a:visited {
+    color: var(--highlighted-text-color);
 }

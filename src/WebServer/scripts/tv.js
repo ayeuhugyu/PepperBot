@@ -1,70 +1,34 @@
 const tvFxContainer = document.createElement('div');
 tvFxContainer.className = 'tvFxContainer';
+tvFxContainer.ariaHidden = true;
 document.body.insertBefore(tvFxContainer, document.body.firstChild);
 
-const horizontal = document.createElement('img');
-horizontal.className = 'tvLine horizontal';
-horizontal.src = '/images/line.svg';
-horizontal.alt = 'TV FX';
-tvFxContainer.appendChild(horizontal);
+const scanlines = document.createElement('div');
+scanlines.className = 'tvScanline';
+scanlines.ariaHidden = true;
+document.body.appendChild(scanlines);
 
-const vertical = document.createElement('img');
-vertical.className = 'tvLine vertical';
-vertical.src = '/images/vline.svg';
-vertical.alt = 'TV FX';
-tvFxContainer.appendChild(vertical);
-
-const scanlines = document.createElement('img');
-scanlines.className = 'tvScanlines';
-scanlines.src = 'https://photoshopcafe.com/wp-content/uploads/2011/04/scanlines08.jpg';
-scanlines.alt = 'TV SCANLINES';
-
-const static = document.createElement('img');
-static.className = 'tvStatic';
-static.src = 'https://upload.wikimedia.org/wikipedia/commons/0/02/Television_static.gif';
-static.alt = 'TV Static';
-tvFxContainer.appendChild(static);
-
-function turnOnTVAnimation() {
-    setTimeout(() => {
-        horizontal.style.height = '50px'
-        setTimeout(() => {
-            horizontal.style.height = '300vh';
-            horizontal.style.width = '300vw';
-            vertical.style.width = '300vw';
-            vertical.style.height = '300vh';
-            setTimeout(() => {
-                horizontal.remove();
-                vertical.style.opacity = 0;
-                tvFxContainer.appendChild(scanlines);
-                setTimeout(() => {
-                    vertical.remove();
-                    scanlines.style.opacity = 0.15;
-                }, 500)
-            }, 400);
-        }, 750);
-    }, 10)
-}
+const staticImage = document.createElement('img');
+staticImage.className = 'tvStatic';
+staticImage.src = 'https://upload.wikimedia.org/wikipedia/commons/0/02/Television_static.gif';
+staticImage.alt = 'TV Static';
+staticImage.ariaHidden = true;
+tvFxContainer.appendChild(staticImage);
 
 function tvStaticAnimation() {
-    static.style.transition = '';
-    static.style.opacity = 1;
-    static.style.transition = 'opacity 0.5s';
+    staticImage.style.height = '100vh'
+    staticImage.style.transition = '';
+    staticImage.style.transition = 'opacity 0.5s';
     setTimeout(() => {
-        static.style.opacity = 0;
+        staticImage.style.opacity = 0;
+        setTimeout(() => {
+            staticImage.style.height = '0';
+            staticImage.style.opacity = 1;
+            staticImage.style.transition = 'opacity 0.00001s';
+        }, 500);
     }, 15);
 }
 
-function playTVStartAnimation() {
-    const hasVisited = sessionStorage.getItem('hasVisited');
-    if (!hasVisited) {
-        turnOnTVAnimation();
-        sessionStorage.setItem('hasVisited', true);
-    } else {
-        tvStaticAnimation();
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    playTVStartAnimation();
+['DOMContentLoaded', 'focus'].forEach(event => {
+    window.addEventListener(event, tvStaticAnimation);
 });
