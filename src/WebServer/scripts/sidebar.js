@@ -76,7 +76,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 function checkMobileMode() {
-    if (window.innerWidth < 512) {
+    if (window.innerWidth < 768) {
         if (sidebarIsShowing) {
             toggleSidebar();
         }
