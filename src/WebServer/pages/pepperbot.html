@@ -13,14 +13,515 @@
     <body>
         <script src="/scripts/tv.js"></script>
         <script src="/scripts/sidebar.js"></script>
+        <!-- the only reason this isnt auto generated from a list of commands is because in here i can specify more information than i can with the commands regularly, the descriptions have character limits -->
         <div id="guideblockcontainer" class="flex row">
             <div id="commandsList" class="outlined guideblock">
-                <details class="commandDetails">
-                    <summary>p/help</summary>
-                    <span>here i would put a description but im lazy</span>
-                    <details class="commandArgument">
-                        <summary>subcommand</summary>
-                        <span>argument description</span>
+                <details class="commandDetails" id="p/ask">
+                    <summary class="commandName">p/ask<span class="commandCategory">AI</span></summary>
+                    <div class="commandDescription">ask the AI something
+                        <span class="commandArgumentProperty">ALIASES: p/question, p/askai</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>request<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">what to ask the ai
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/blacklist">
+                    <summary class="commandName">p/blacklist<span class="commandCategory">management</span></summary>
+                    <div class="commandDescription">operations relating to the users blacklisted from using pepperbot</div>
+                    <span class="commandProperty">ALIASES: p/bl</span>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: view, add, remove</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/blacklist view</summary>
+                            <div class="commandDescription">view the list of people blacklisted from using pepperbot</div>
+                        </details>
+                        <details class="commandDetails subcommand">
+                            <summary class="commandName whitelistOnly">p/blacklist add</summary>
+                            <div class="commandDescription">add someone to the blacklist
+                                <span class="commandArgumentProperty">WHITELIST: 440163494529073152</span>
+                            </div>
+                        <details class="commandArgument" open>
+                            <summary>user<span class="commandArgumentType">string</span></summary>
+                            <div class="argumentDescription">who to add, either a user ID or a mention
+                                <span class="commandArgumentProperty">REQUIRED: true</span>
+                            </div>
+                        </details>
+                        </details>
+                        <details class="commandDetails subcommand">
+                            <summary class="commandName whitelistOnly">p/blacklist remove</summary>
+                            <div class="commandDescription">remove someone from the blacklist
+                                <span class="commandArgumentProperty">WHITELIST: 440163494529073152</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>user<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">who to remove, either a user ID or a mention
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/chatbubble">
+                    <summary class="commandName">p/chatbubble<span class="commandCategory">fun</span></summary>
+                    <div class="commandDescription">turn an image or a gif into a chat bubble
+                        <span class="commandArgumentProperty">ALIASES: p/cb, p/sb, p/speechbubble, p/bubble</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>image<span class="commandArgumentType">attachment</span></summary>
+                        <div class="argumentDescription">the image to turn into a chat bubble
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                        </div>
+                    </details>
+                    <details class="commandArgument" open>
+                        <summary>tail<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the position the tail of the bubble should end at, defaults to left
+                            <span class="commandArgumentProperty">REQUIRED: false</span>
+                            <span class="commandArgumentProperty">OPTIONS: left, center, right</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/cleanup">
+                    <summary class="commandName whitelistOnly">p/cleanup<span class="commandCategory">management</span></summary>
+                    <div class="commandDescription">cleans up some useless files to save on storage space
+                        <span class="commandArgumentProperty">ALIASES: p/clean, p/clear, p/cu</span>
+                        <span class="commandArgumentProperty">WHITELIST: 440163494529073152</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>what<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">what to clean up
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: logs, videos, gptdownloads</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/configure">
+                    <summary class="commandName">p/configure<span class="commandCategory">customization</span></summary>
+                    <div class="commandDescription">allows you to configure certain features of pepperbot
+                        <span class="commandArgumentProperty">ALIASES: p/config, p/cfg, p/gconfig, p/guildconfig, p/serverconfig</span>
+                        <span class="commandArgumentProperty">PERMISSIONS: Administrator</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>key<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the key in the guild's config to change. can either be the number displayed next to the key in the list, or the key's unenriched name.
+                            <span class="commandArgumentProperty">REQUIRED: true (if configuring)</span>
+                        </div>
+                    </details>
+                    <details class="commandArgument" open>
+                        <summary>value<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">a formatted string to set the key to; run the command and click the "formatting" button for help formatting the value. make sure that the format you use matches the key's type.
+                            <span class="commandArgumentProperty">REQUIRED: true (if configuring)</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/corrupt">
+                    <summary class="commandName">p/corrupt<span class="commandCategory">fun</span></summary>
+                    <div class="commandDescription">fuck up your message, replaces a bunch of stuff with some other things (note: this does not actually corrupt your message, results from that would be incredibly boring). image support soon™
+                        <span class="commandArgumentProperty">ALIASES: p/fuckup</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>message<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the message to corrupt
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                        </div>
+                    </details>
+                    <details class="commandArgument" open>
+                        <summary>severity<span class="commandArgumentType">integer</span></summary>
+                        <div class="argumentDescription">how badly to corrupt your message, defaults to 5.
+                            <span class="commandArgumentProperty">OPTIONS: 1, 2, 3, 4, 5</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/cquery">
+                    <summary class="commandName">p/cquery<span class="commandCategory">fun</span></summary>
+                    <div class="commandDescription">queries adobe stock for christos georghiou images relating to your input
+                        <span class="commandArgumentProperty">ALIASES: p/christosquery, p/csearch, p/christossearch, p/cq, p/cs</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>query<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">what to search for
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/deploycommands">
+                    <summary class="commandName whitelistOnly">p/deploycommands<span class="commandCategory">management</span></summary>
+                    <div class="commandDescription">deploys slash commands to the given guild
+                        <span class="commandArgumentProperty">ALIASES: p/deploy</span>
+                        <span class="commandArgumentProperty">WHITELIST: 440163494529073152</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>guild<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the id of the guild to deploy to, or "global" to deploy globally
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/describe">
+                    <summary class="commandName">p/describe<span class="commandCategory">AI</span></summary>
+                    <div class="commandDescription">describes the given image</div>
+                    <details class="commandArgument" open>
+                        <summary>request<span class="commandArgumentType">attachment</span></summary>
+                        <div class="argumentDescription">the image to describe
+                            <span class="commandArgumentProperty">REQUIRED: true (if not describing with URL)</span>
+                        </div>
+                    </details>
+                    <details class="commandArgument" open>
+                        <summary>url<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the url of the image to describe
+                            <span class="commandArgumentProperty">REQUIRED: true (if not describing with image)</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/embed">
+                    <summary class="commandName">p/embed<span class="commandCategory">utility</span></summary>
+                    <div class="commandDescription">allows you to create and send a formatted embed</div>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: send, preview, settitle, setdescription, setcolor, setauthor, setfooter, setimage, setthumbnail, restart, save, load</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed send</summary>
+                            <div class="commandDescription">sends your current embed</div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed preview</summary>
+                            <div class="commandDescription">previews your current embed</div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed settitle</summary>
+                            <div class="commandDescription">sets the title of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the title to set
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed setdescription</summary>
+                            <div class="commandDescription">sets the description of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the description to set
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed setcolor</summary>
+                            <div class="commandDescription">sets the color of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the color to set; must be a hex color code
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed setauthor</summary>
+                            <div class="commandDescription">sets the author of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the author
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed setfooter</summary>
+                            <div class="commandDescription">sets the footer of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the content of the footer
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed setimage</summary>
+                            <div class="commandDescription">sets the image of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the url of the image to set
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed setthumbnail</summary>
+                            <div class="commandDescription">sets the thumbnail of your embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the url of the thumbnail to set
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed restart</summary>
+                            <div class="commandDescription">restarts your embed</div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed save</summary>
+                            <div class="commandDescription">saves your current embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name to save the embed as
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/embed load</summary>
+                            <div class="commandDescription">loads a saved embed</div>
+                            <details class="commandArgument" open>
+                                <summary>content<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the embed to load, input "ls" to list saved embeds
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/equipment">
+                    <summary class="commandName">p/equipment<span class="commandCategory">utility</span></summary>
+                    <div class="commandDescription">various deepwoken equipment related commands
+                        <span class="commandArgumentProperty">ALIASES: p/deepwokenequipment</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: random, godroll</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/equipment random</summary>
+                            <div class="commandDescription">generates a random piece of equipment</div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/equipment godroll</summary>
+                            <div class="commandDescription">generates a godrolled piece of equipment</div>
+                            <details class="commandArgument" open>
+                                <summary>equipment<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the equipment to godroll, do not use spaces if you aren't using slash commands
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>stat<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the stat to godroll, defaults to health
+                                    <span class="commandArgumentProperty">REQUIRED: false</span>
+                                    <span class="commandArgumentProperty">OPTIONS: health, ether, sanity, posture, dvm, physical, elemental, monster</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>stars<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the number of stars the equipment will have, defaults to the maximum possible on the item.
+                                    <span class="commandArgumentProperty">REQUIRED: false</span>
+                                    <span class="commandArgumentProperty">OPTIONS: 0, 1, 2, 3</span>
+                                </div>
+                            </details>
+                        </details>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/eval">
+                    <summary class="commandName whitelistOnly">p/eval<span class="commandCategory">management</span></summary>
+                    <div class="commandDescription">evaluates JS code, this command is used purely for debugging purposes
+                        <span class="commandArgumentProperty">WHITELIST: 440163494529073152</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>code<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">what to evaluate
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                        </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/explore">
+                    <summary class="commandName">p/explore<span class="commandCategory">info</span></summary>
+                    <div class="commandDescription">returns a list of servers with pepperbot in them that have the 'exploreVisible' config option enabled, also allows you to generate an invite and join them
+                        <span class="commandArgumentProperty">ALIASES: p/servers</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>server<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the id of the server to show more details about</div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/force">
+                    <summary class="commandName">p/force<span class="commandCategory">fun</span></summary>
+                    <div class="commandDescription">allows you to force pepperbot to do something</div>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: say, dm, react, reply, respond</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/force say</summary>
+                            <div class="commandDescription">forces pepperbot to say something
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/say</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>message<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">what to say
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/force dm</summary>
+                            <div class="commandDescription">forces pepperbot to dm someone
+                                <span class="commandArgumentProperty">ALIASES: p/force dmuser, p/force send</span>
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/dmuser, p/dm, p/send</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>user<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">who to dm, either a user ID or a mention
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>message<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">what to dm
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/force react</summary>
+                            <div class="commandDescription">forces pepperbot to react to a message
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/react</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>message<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the message ID to react to, if not using slash commands this can be done by just replying to the message with the command
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>reaction<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the reaction to add
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/force reply</summary>
+                            <div class="commandDescription">forces pepperbot to reply to a message
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/reply</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>message<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the message ID to reply to, if not using slash commands this can be done by just replying to the message with the command
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>text<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">what to reply with
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/force respond</summary>
+                            <div class="commandDescription">forces pepperbot to respond to your command with whatever you said
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/respond</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>message<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">what to respond with
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/git">
+                    <summary class="commandName">p/git<span class="commandCategory">info</span></summary>
+                    <div class="commandDescription">links you to the github repo, or gives you a log of commits.</div>
+                    <span class="commandProperty">ALIASES: p/github, p/openpepper, p/repo</span>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: false</span>
+                            <span class="commandArgumentProperty">OPTIONS: log</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/git log</summary>
+                            <div class="commandDescription">returns a graph of the git history</div>
+                        </details>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/gpt">
+                    <summary class="commandName">p/gpt<span class="commandCategory">AI</span></summary>
+                    <div class="commandDescription">allows you to view, edit, and clear your current conversation. you can also ue this to change the AI's prompt</div>
+                    <span class="commandProperty">ALIASES: p/ai</span>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: setprompt, clear, getconversation, old</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/gpt setprompt</summary>
+                            <div class="commandDescription">allows you to change the prompt used by the AI</div>
+                            <details class="commandArgument" open>
+                                <summary>prompt<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the prompt to set
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                    <span class="commandArgumentProperty">ALIASES: p/gpt prompt, p/gpt gptprompt, p/gpt sp</span>
+                                    <span class="commandArgumentProperty">NORMAL ALIASES: p/setprompt, p/prompt, p/gptprompt, p/sp</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/gpt clear</summary>
+                            <div class="commandDescription">clears the current conversation</div>
+                            <details class="commandArgument" open>
+                                <summary>context<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">what to clear, defaults to conversation. setting it to prompt will just reset the prompt to the default, and will keep your conversation
+                                    <span class="commandArgumentProperty">OPTIONS: conversation, prompt</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/gpt getconversation</summary>
+                            <div class="commandDescription">returns the current conversation's JSON data. this command is mostly used for debugging purposes
+                                <span class="commandArgumentProperty">ALIASES: p/gpt get, p/gpt conversation</span>
+                            </div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/gpt old</summary>
+                            <div class="commandDescription"> changes the model used by the GPT to the old 3.5-turbo instead of 4o-mini</div>
+                        </details>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/help">
+                    <summary class="commandName">p/help<span class="commandCategory">info</span></summary>
+                    <div class="commandDescription">shows a list of commands, or information about a specific command if given a command name
+                        <span class="commandArgumentProperty">ALIASES: p/commands</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>command<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the command to display more info about
+                            <span class="commandArgumentProperty">REQUIRED: false (unless looking for a subcommand)</span>
+                        </div>
+                    </details>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand of the command to display more info about
+                            <span class="commandArgumentProperty">REQUIRED: false</span>
+                            <span class="commandArgumentProperty">OPTIONS: left, center, right</span>
+                        </div>
                     </details>
                 </details>
             </div>

@@ -8,9 +8,12 @@
     --highlighted-text-color: rgba(255, 145, 0, 1);
     --highlighted-text-color-light: rgb(255, 182, 87, 1);
     --highlighted-text-color-lighter: rgb(255, 213, 159, 1);
+    --darkened-text-color: rgb(130, 72, 0);
+    --darker-darkened-text-color: rgba(92, 50, 0, 1);
     --background-color: rgba(11, 3, 0, 1);
     --midground-color: rgba(37, 20, 0, 0.35);
     --midground-color-light: rgba(92, 50, 0, 0.65);
+    --midground-color-lighter: rgba(130, 72, 0, 0.85);
     --border-color: rgba(255, 145, 0, 1);
     --border-color-light: rgba(255, 145, 0, 0.5);
     --main-font: 'BPdotsSquareBold', monospace;
@@ -147,16 +150,21 @@ summary {
     justify-content: space-between;
     list-style: none;
 }
+/*
 summary:focus {
     outline: 1px solid var(--border-color-light);
 }
-
+*/
 summary::-webkit-details-marker {
     display: none;
 }
 
 summary:hover {
     background-color: var(--midground-color-light);
+}
+
+summary:active {
+    background-color: var(--midground-color-lighter);
 }
 
 details[open] summary {
@@ -247,17 +255,16 @@ a:visited:active {
     display: flex;
     flex-direction: column;
     height: calc(100% - 32px);
+    max-height: calc(100% - 32px);
     width: calc(50% - 27px);
     overflow-y: auto;
     padding: 5px;
-    margin-top: 20px;
     margin-right: 10px;
 }
 
 #guideblockcontainer {
     height: 100vh;
     width: 100vw;
-    padding-top: 10px;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -266,9 +273,51 @@ a:visited:active {
 .commandDetails {
 
 }
+.commandName {
+    
+}
 */
-.commandArgument {
+.subcommand {
     margin-left: 5px;
     margin-right: 5px;
     padding: 0;
+}
+.whitelistOnly {
+    color: var(--darkened-text-color);
+}
+.commandCategory::before {
+    content: "category: ";
+    color: var(--darker-darkened-text-color);
+}
+.commandCategory {
+    color: var(--darker-darkened-text-color);
+}
+.commandDescription {
+    margin-top: 3px;
+    margin-bottom: 0;
+    white-space: pre-line;
+}
+.commandArgument {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 0px;
+    padding: 0;
+}
+.commandArgumentType::before {
+    content: "type: ";
+    color: var(--darker-darkened-text-color);
+}
+.commandArgumentType {
+    color: var(--darker-darkened-text-color);
+}
+.commandArgumentProperty {
+    color: var(--darkened-text-color);
+}
+.commandProperty {
+    color: var(--darkened-text-color);
+}
+.argumentDescription {
+    margin-top: 3px;
+    margin-bottom: 0;
+    white-space: pre-line;
 }

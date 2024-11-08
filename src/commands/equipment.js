@@ -333,7 +333,7 @@ data.addStringOption((option) =>
 data.addStringOption((option) =>
     option.setName("stat").setDescription("the stat to calculate the godroll for").setRequired(false)
     .addChoices(
-        {name: "health", value: "health"},
+        {name: "health", value: "health"}, 
         {name: "ether", value: "ether"},
         {name: "sanity", value: "sanity"},
         {name: "posture", value: "posture"},

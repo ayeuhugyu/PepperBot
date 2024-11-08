@@ -258,7 +258,7 @@ data.addStringOption((option) =>
         .setDescription("subcommand to run")
         .setRequired(true)
         .addChoices(
-            { name: "old", value: "old" },
+            { name: "old", value: "old" }, 
             { name: "setprompt", value: "setprompt" },
             { name: "getconversation", value: "getconversation" },
             { name: "clear", value: "clear" }

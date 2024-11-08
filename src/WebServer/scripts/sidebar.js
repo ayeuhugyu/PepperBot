@@ -57,6 +57,7 @@ function createSourceCodeButton() {
 }
 
 createSidebarButton('/home', '/');
+createSidebarButton('/pepperbot', '/pepperbot');
 createSidebarButton('/statistics', '/statistics');
 createSidebarButton('/logs', '/logs');
 createSidebarButton('/chat', '/chat');

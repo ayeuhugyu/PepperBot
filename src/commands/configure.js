@@ -366,7 +366,6 @@ data.setDescription("allows you to change a guild's configuration");
 data.setPermissions([PermissionFlagsBits.Administrator]);
 data.setPermissionsReadable("Administrator");
 data.setCanRunFromBot(true);
-;
 data.setAliases(["config", "cfg", "gconfig", "guildconfig", "serverconfig"]);
 data.setDisabledContexts(["dm"]);
 data.addStringOption((option) =>

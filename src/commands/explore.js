@@ -24,7 +24,6 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-;
 data.setAliases(["servers"]);
 data.addStringOption((option) =>
     option

@@ -4,7 +4,6 @@ import { Command, CommandData } from "../lib/types/commands.js";
 import { AttachmentBuilder, Collection } from "discord.js";
 import sharp from "sharp";
 import * as globals from "../lib/globals.js";
-import { error } from "shelljs";
 
 const config = globals.config;
 
