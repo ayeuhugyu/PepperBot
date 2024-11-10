@@ -72,7 +72,7 @@ const command = new Command(
         if (response.status === 'failed') {
             return action.reply(message, `couldn't fetch build \`${args.get('buildid')}\``);
         }
-        const build = builderutil.buildReformatter(response.content);
+        const build = builderutil.buildReformatter(response);
         //console.log(build)
         const buildPages = builderutil.cleanBuildToHumanReadable(build);
         //console.log(util.inspect(buildPages, { depth: Infinity, colors: true }));

@@ -60,7 +60,7 @@ retrievedata.setPermissions([]);
 retrievedata.setPermissionsReadable("");
 retrievedata.setWhitelist([]);
 retrievedata.setCanRunFromBot(true);
-retrievedata.setNormalAliases(["retrievesound"]);
+retrievedata.setNormalAliases(["retrievesound", "getsound"]);
 retrievedata.setAliases(["getsound", "retrieve", "rs", "gs"]);
 retrievedata.addStringOption((option) =>
     option

@@ -7,7 +7,8 @@ import { version } from "os";
 
 export async function fetchBuild(buildID) {
     const response = await fetch(`https://api.deepwoken.co/build?id=${buildID}`, { method: "GET" });
-    return await response.json();
+    const JSONresponse = await response.json();
+    return JSONresponse;
 }
 
 export function buildReformatter(build) {
@@ -38,7 +39,7 @@ export function buildReformatter(build) {
             preshrine: build.preShrine,
             postshrine: build.postShrine || build.attributes,
         },
-        mantras: build.mantraModifications,
+        mantras: build.content.mantraModifications,
         notes: build.notes,
         talents: build.talents,
         favoritedTalents: build.favoritedTalents,

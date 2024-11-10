@@ -109,7 +109,7 @@ olddata.setPermissionsReadable("");
 olddata.setWhitelist([]);
 olddata.setCanRunFromBot(false);
 olddata.setNormalAliases([["markovold"]])
-olddata.setAliases(["trigger", "markovchain"]);
+olddata.setAliases();
 const old = new SubCommand(
     olddata,
     async function getArguments(message) {

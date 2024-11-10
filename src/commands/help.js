@@ -25,7 +25,7 @@ const command_option_types = {
 async function listCommands(message, gconfig) {
     const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
     const prefix = gconfig.prefix || config.generic.prefix
-    embed.setDescription(`run ${prefix}help [command] for more info`);
+    embed.setDescription(`for a more detailed commands list, visit [the guide page](https://pepperbot.online/pepperbot) \nrun ${prefix}help [command] for more info about that specific command`);
     let fieldsText = {
         [1]: "",
         [2]: "",
@@ -154,7 +154,7 @@ async function infoAboutCommand(
         title = `${prefix}${command.name}`
     }
     commandPage.setTitle(title);
-    let text = `${command.description}\n`;
+    let text = `visit [the guide page](https://pepperbot.online/pepperbot?command=${command.name}) for more detailed information\n${command.description}\n`;
     if (command.aliases && command.aliases.length > 0) {
         text += `ALIASES: ${command.aliases.join(", ")}\n`;
     }

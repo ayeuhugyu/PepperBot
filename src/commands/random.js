@@ -417,7 +417,6 @@ data.setPermissions([]);
 data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
-;
 data.setAliases();
 data.addStringOption((option) =>
     option

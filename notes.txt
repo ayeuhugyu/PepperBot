@@ -39,14 +39,14 @@ p/update
 
 **actual content:**
 
-- added statistics on user installs / guilds / guild users
-- added new gconfig option for autocrossposting
-- new CommandData.setDoNotDeploy()
-- doNotDeploy is automatically made true if whitelist > 0. in other words, whitelist-only commands are no longer deployed/registered
-- added statistics for text vs slash comamnds used
-- you no longer need the "file://" before adding soundboard files to the queue, as long as you don't start it with http it will assume you are adding a file.
-- **Seasonal Pepperbot 🌶🎃❄🐰**
--# will add more seasons to this as i come up with them
+- removed aliases from p/markov old, they were remnants from when it was the original p/markov
+- fixed p/preview
+- removed p/sendlog, as polled
+- **finally finished a pepperbot guide**
+this guide can be viewed at https://pepperbot.online/pepperbot, and has more detailed explanations of commands along with examples. it's MUCH better than p/help. it also has a nice feature list so that i dont have to explain it to everyone
+this page uses yet another new theme im gonna redo the whole website with, i havent been satisfied with the previous two :/
+-# i am aware it doesnt look the greatest on mobile rn but its usable so idrc, ill fix it later
+- p/help now includes links to the pepperbot guide page
 
 **fixes/optimizations:**
 

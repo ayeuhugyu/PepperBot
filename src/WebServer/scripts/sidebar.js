@@ -20,6 +20,7 @@ sidebarTitleSeperator.ariaHidden = 'true';
 sidebarContainer.appendChild(sidebarTitleSeperator);
 
 let sidebarIsShowing = true;
+const boundFunctions = [];
 
 function toggleSidebar() {
     if (sidebarIsShowing) {
@@ -31,6 +32,12 @@ function toggleSidebar() {
         sidebarContainer.style.display = 'flex';
         toggleSidebarButton.style.right = '147px';
     }
+    boundFunctions.forEach(fn => fn(sidebarIsShowing));
+}
+
+function bindToSidebarToggle(fn) {
+    boundFunctions.push(fn);
+    fn(sidebarIsShowing);
 }
 
 const toggleSidebarButton = document.createElement('button');
