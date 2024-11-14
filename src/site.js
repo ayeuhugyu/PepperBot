@@ -24,6 +24,10 @@ const blockedIps = {
     "209.126.106.7": "i don't got those pages open man stop trying",
 };
 
+const pageAliases = {
+    "pepperbot": "guide"
+}
+
 const starts = {};
 
 const app = express();
@@ -149,6 +153,11 @@ for (const page of pages) {
     const pageName = page.split(".")[0];
     app.get(`/${pageName}`, (req, res) => {
         res.sendFile(`pages/${page}`, { root: rootPath });
+    });
+}
+for (const alias in Object.keys(pageAliases)) {
+    app.get(`/${alias}`, (req, res) => {
+        res.redirect(`/${pageAliases[alias]}`);
     });
 }
 
@@ -504,6 +513,13 @@ process.on("message", (message) => {
         starts.shard = message.shard;
         log.debug("updated started at times");
         return;
+    }
+    if (message.action == "log") {
+        const level = message.level;
+        const log = message.log;
+        const time = message.time;
+        io.emit("log", { level: level, log: log, time: time });
+        console.log(`log recieved by site: ${time} ${level.toUpperCase()} ${log}`);
     }
 });
 

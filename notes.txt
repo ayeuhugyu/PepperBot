@@ -39,16 +39,14 @@ p/update
 
 **actual content:**
 
-- removed aliases from p/markov old, they were remnants from when it was the original p/markov
-- fixed p/preview
-- removed p/sendlog, as polled
-- **finally finished a pepperbot guide**
-this guide can be viewed at https://pepperbot.online/pepperbot, and has more detailed explanations of commands along with examples. it's MUCH better than p/help. it also has a nice feature list so that i dont have to explain it to everyone
-this page uses yet another new theme im gonna redo the whole website with, i havent been satisfied with the previous two :/
--# i am aware it doesnt look the greatest on mobile rn but its usable so idrc, ill fix it later
-- p/help now includes links to the pepperbot guide page
+- the guide page's name has been changed from /pepperbot to /guide
+- diabolical events have been given an actual system to manage them rather than just a function in the message create event
+- diabolical event rates adjusted:
+    thread: 0.025% -> 0.05% 
+    reply: 0.05% -> 0.1%
+    reaction: 0.25% -> 0.5% 
 
 **fixes/optimizations:**
 
-- messages from p/force that reply with "the deed is done" are now always ephemeral, nomatter the gconfig options.
-- fixed command aliases being logged separately in the statistics object
+- fixed some small visual errors on the guide page
+- added some missing information to the features list on the guide page

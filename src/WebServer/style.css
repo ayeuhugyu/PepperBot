@@ -147,6 +147,12 @@ body {
     border: 1px solid var(--border-color);
 }
 
+@media (max-width: 768px) {
+    .sidebarContainer {
+        background-color: var(--midground-color-dark)
+    }
+}
+
 /* Scrollbar */
     /* Firefox */
 
@@ -242,11 +248,7 @@ details.borderlessCategory {
     border-radius: 0;
 }
 
-details[open] .borderlessCategory summary {
-    border-bottom: none;
-}
-
-details .borderlessCategory > *:not(summary) {
+details.borderlessCategory > *:not(summary) {
     padding: 0;
     background-color: var(--transparent);
 }
@@ -312,9 +314,14 @@ button {
     margin: 5px;
     cursor: pointer;
     font-family: var(--main-font);
+    font-size: 100%;
 }
 button:hover {
     background-color: var(--midground-color-light);
+}
+
+button:active {
+    background-color: var(--midground-color-lighter);
 }
 
 input {
@@ -380,7 +387,7 @@ h6 {
 
 /* Pepperbot Guide */
 
-details .commandArgument > *:not(summary):not(details) {
+details.commandArgument > *:not(summary):not(details) {
     padding: 5px;
     background-color: var(--midground-color);
 }
@@ -482,4 +489,91 @@ details .commandArgument > *:not(summary):not(details) {
 }
 .commandArgumentOrderItem::after {
     content: ">";
+}
+
+/* Logs Viewer */
+
+.logLine {
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
+    background-color: var(--midground-color);
+}
+
+.logPageContainer {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 42px);
+    width: calc(100vw - 42px);
+    overflow: hidden;
+    padding: 10px;
+}
+
+.logContent {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-grow: 1;
+    width: calc(100% - 137px);
+    margin: 0;
+    background-color: var(--midground-color-dark)
+}
+
+.logMessage {
+    color: #e0cbb9;
+}
+
+.logLevel::before {
+    content: " ";
+}
+.logLevel::after {
+    content: " ";
+}
+
+.logLevel {
+    color: #ffffff;
+    &.error {
+        color: #d67b51;
+    }
+    &.wrn {
+        color: #dfc623;
+    }
+    &.inf {
+        color: #acdee4;
+    }
+    &.dbg {
+        color: #b4bfcf;
+    }
+    &.fatal {
+        color: #ff0000;
+    }
+    &.access {
+        color: #ccffcc;
+    }
+}
+
+.logTime {
+    color: #8e817d;
+}
+
+.logControllerContainer {
+    width: calc(100% - 125px);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    background-color: blue;
+}
+
+.logLevelButton {
+    margin: 0;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.logReaderStatus {
+    color: var(--darkened-text-color);
+    text-align: right;
+    flex-grow: 1;
+    margin-bottom: 5px;
 }

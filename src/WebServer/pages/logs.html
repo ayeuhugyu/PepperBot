@@ -1,328 +1,84 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Logs</title>
-        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
+        <title>Log Viewer</title>
+        <link rel="stylesheet" type="text/css" href="/style.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
-        <meta content="ze peppersite" property="og:title" />
-        <meta content="ye" property="og:description" />
+        <meta content="Log Viewer" property="og:title" />
+        <meta content="allows you to scroll through logs and sort by log level" property="og:description" />
         <meta content="https://pepperbot.online" property="og:url" />
         <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
     </head>
     <body>
-        <div class="sidebar">
-            <script id="definesidebarfunctions">
-                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
-                function redirectTo(url) {
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                    window.location.href = url;
-                }
-                function openInNewTab(url) {
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                    let win = window.open(
-                        url,
-                        "_blank"
-                    );
-                }
-                function showSidebarToggler() {
-                    const sidebarToggler = document.querySelector(".sidebarToggler");
-                    sidebarToggler.style.opacity = "0.25";
-                }
-                function hideSidebarToggler() {
-                    const sidebarToggler = document.querySelector(".sidebarToggler");
-                    sidebarToggler.style.opacity = "0";
-                }
-            </script>
-            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
-            <h2 class="sidebarTitle">NAVIGATION</h2>
-            <div class="sidebarDivider"></div>
-            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
-            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
-            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
-            <div class="sidebarButton" id="/chat" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Chat</div>
-            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
-            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
-            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
-            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
-            <div class="sidebarButton" id="/simulations" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Simulations</div>
-            <div class="sidebarButton" id="/todo" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Todo</div>
-            <div class="sidebarButton" id="/updates" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Updates</div>
-
-            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
-            <script id="sidebarmain">
-                function toggleSidebar() {
-                    document.querySelectorAll(".sidebar").forEach((element) => {
-                        void element.offsetWidth;
-
-                        if (sidebarIsOpen) {
-                            element.style.animation = "slideOpen 0.5s forwards";
-                        } else {
-                            element.style.animation =
-                                "slideClose 0.5s forwards";
-                        }
-                    });
-                    sidebarIsOpen = !sidebarIsOpen;
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                }
-                document.addEventListener("keydown", (event) => {
-                    if (event.key === "k" && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") {
-                        toggleSidebar();
-                    }
-                });
-                document
-                    .querySelectorAll(".sidebarButton")
-                    .forEach((button) => {
-                        button.style.transition = "transform 0.25s ease-in-out";
-                        button.addEventListener("mouseover", () => {
-                            button.style.backgroundColor = "#13131d";
-                            button.style.transform = "translateX(-100px)";
-                        });
-                        button.addEventListener("mouseout", () => {
-                            button.style.backgroundColor = "#1E1E2E";
-                            button.style.transform = "translateX(0px)";
-                        });
-                        button.addEventListener("mousedown", () => {
-                            button.style.backgroundColor = "#616187";
-                        });
-                        button.addEventListener("mouseup", () => {
-                            button.style.backgroundColor = "#616187";
-                        });
-                    });
-                document.addEventListener("DOMContentLoaded", function () {
-                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
-                    if (sidebarIsOpen) {
-                        document
-                            .querySelectorAll(".sidebar")
-                            .forEach((element) => {
-                                element.style.animation =
-                                    "slideClose 0s forwards";
-                            });
-                    }
-                });
-            </script>
-        </div>
-        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
-            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
-                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
-                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
-                        <h2 class="sectionTitle">logs viewer</h2>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div class="dropdown-wrapper">
-                                <select class="logLevelDropdown">
-                                    <option class="logLevelDropdownOption" value="-">-</option>
-                                    <option value="GLOBAL">GLOBAL</option>
-                                    <option value="INFO">INFO</option>
-                                    <option value="DEBUG">DEBUG</option>
-                                    <option value="WARN">WARN</option>
-                                    <option value="ERROR">ERROR</option>
-                                    <option value="FATAL">FATAL</option>
-                                    <option value="ACCESS">ACCESS</option>
-                                </select>
-                            </div>
-                            <div id="status" style="text-align: right;">awaiting input...</div>
-                        </div>
-                        <div class="logFileContentContainer" style="width: calc(100% - 3px); flex-grow: 1; overflow: hidden;">
-                            <pre class="outlined" id="logFileContent" style="width: 100%; height: 100%; overflow: scroll; text-align: left;"></pre>
-                        </div>
-                    </div>
-                </div>
+        <script src="/scripts/tv.js"></script>
+        <script src="/scripts/sidebar.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <div class="outlined logPageContainer">
+            <div id="logControllerContainer" class="logControllerContainer">
+                <button class="logLevelButton" id="GLOBAL">GLOBAL</button>
+                <button class="logLevelButton" id="INFO">INFO</button>
+                <button class="logLevelButton" id="DEBUG">DEBUG</button>
+                <button class="logLevelButton" id="WARN">WARN</button>
+                <button class="logLevelButton" id="ERROR">ERROR</button>
+                <button class="logLevelButton" id="FATAL">FATAL</button>
+                <button class="logLevelButton" id="ACCESS">ACCESS</button>
+                <span class="outlined logReaderStatus">awaiting input...</span>
             </div>
+            <pre id="logContent" class="logContent outlined"></pre>
         </div>
-        <script>
-            window.onload = function () {
-                const mainTitle = document.getElementById("mainTitle");
-                const logFileContentContainer = document.querySelector(
-                    ".logFileContentContainer"
-                );
-
-                if (mainTitle && logFileContentContainer) {
-                    const mainTitleBottom =
-                        mainTitle.offsetTop + mainTitle.offsetHeight;
-                    logFileContentContainer.style.top = `${mainTitleBottom}px`;
-                    const maxHeight = window.innerHeight - mainTitleBottom;
-                    logFileContentContainer.style.height = `${maxHeight}px`;
-                }
-            };
-        </script>
-        <script>
-            const status = document.getElementById("status");
-            function processLogs(containerId, logs, keyword, color, global) {
-                const parentContainer = document.getElementById(containerId);
-                const container = document.createElement("div");
-            
-                const previousScrollHeight = parentContainer.scrollHeight;
-                const previousScrollTop = parentContainer.scrollTop;
-            
-                logs.split("\n").forEach((log) => {
-                    const lineElement = document.createElement("div");
-            
-                    if (global) {
-                        // If global is true, treat keyword as an array and color as an object
-                        let modifiedLog = log;
-                        keyword.forEach((kw) => {
-                            const kwIndex = modifiedLog.indexOf(kw);
-                            if (kwIndex !== -1) {
-                                const beforeKeyword = modifiedLog.substring(0, kwIndex);
-                                const afterKeyword = modifiedLog.substring(kwIndex + kw.length);
-            
-                                // Part before the keyword
-                                const beforeSpan = document.createElement("span");
-                                beforeSpan.style.color = "#7d848e";
-                                beforeSpan.innerText = beforeKeyword;
-                                lineElement.appendChild(beforeSpan);
-            
-                                // Keyword part
-                                const keywordSpan = document.createElement("span");
-                                keywordSpan.innerHTML = `<span style="color: ${color[kw]}">${kw}</span>`;
-                                lineElement.appendChild(keywordSpan);
-            
-                                // Update modifiedLog to process the remaining part
-                                modifiedLog = afterKeyword;
-                            }
-                        });
-            
-                        // Part after the last keyword
-                        const afterSpan = document.createElement("span");
-                        afterSpan.innerText = modifiedLog;
-                        lineElement.appendChild(afterSpan);
-                    } else {
-                        // If global is false, treat keyword as a single keyword and color as a single color
-                        const keywordIndex = log.indexOf(keyword);
-                        if (keywordIndex === -1) {
-                            // If the keyword is not found, display the log as is.
-                            lineElement.innerText = log;
-                        } else {
-                            // If the keyword is found, split and display accordingly.
-                            const beforeKeyword = log.substring(0, keywordIndex);
-                            const afterKeyword = log.substring(keywordIndex + keyword.length);
-            
-                            // Part before the keyword
-                            const beforeSpan = document.createElement("span");
-                            beforeSpan.style.color = "#7d848e";
-                            beforeSpan.innerText = beforeKeyword;
-                            lineElement.appendChild(beforeSpan);
-            
-                            // Keyword part
-                            const keywordSpan = document.createElement("span");
-                            keywordSpan.innerHTML = `<span style="color: ${color}">${keyword}</span>`;
-                            lineElement.appendChild(keywordSpan);
-            
-                            // Part after the keyword
-                            const afterSpan = document.createElement("span");
-                            afterSpan.innerText = afterKeyword;
-                            lineElement.appendChild(afterSpan);
-                        }
-                    }
-            
-                    container.appendChild(lineElement);
-                });
-            
-                parentContainer.insertBefore(container, parentContainer.firstChild);
-            
-                parentContainer.scrollTop = previousScrollTop + (parentContainer.scrollHeight - previousScrollHeight);
-            }
-            let startIndex = 0
-            const logLevelDropdown =
-                document.querySelector(".logLevelDropdown");
-            const container = document.querySelector("#logFileContent");
-            container.innerText =
-                "select a log file to view from the dropdown above";
-            let previousLevel = undefined
-            let logLength = 0
-            let isAtEnd = false
-            let hasAppended = false
-            async function readlog() {
-                const selectedLevel = logLevelDropdown.value;
-                if (selectedLevel === "-") {
-                    container.innerHTML = ""; // Clear existing content
-                    container.innerText =
-                        "select a log file to view from the dropdown above";
-                    status.innerText = `awaiting input...`;
-                    previousLevel = undefined;
-                    return;
-                }
-                if (selectedLevel != previousLevel) {
-                    isAtEnd = false
-                    hasAppended = false
-                }
-                if (isAtEnd && !hasAppended) {
-                    const end = document.createElement("div");
-                    end.innerText = "end of log file";
-                    container.insertBefore(end, container.firstChild);
-                    status.innerText = `awaiting input...`;
-                    hasAppended = true
-                }
-                if (isAtEnd) {
-                    return;
-                }
-                if (selectedLevel != previousLevel) {
-                    container.innerHTML = ""; // Clear existing content
-                    startingIndex = 0
-                    container.innerText = ``;
-                    startIndex = await fetch("/api/get-log-length?level=" + selectedLevel.toLowerCase()).then((response) => response.text()).then(async (data) => { return await parseInt(await data) }).catch((error) => console.error("Error:", error));
+        <script id="sidebarAdjustments">
+            function editTextAreaSize(sidebarState) {
+                const logController = document.getElementById("logControllerContainer")
+                const logContent = document.getElementById("logContent")
+                if (window.innerWidth < 768) {
+                    logContent.style.width = "calc(100% - 12px)"
+                    logController.style.width = "100%"
+                } else if (sidebarState) {
+                    logContent.style.width = "calc(100% - 137px)"
+                    logController.style.width = "calc(100% - 125px);"
                 } else {
-                    startIndex -= 150
+                    logContent.style.width = "calc(100% - 12px)"
+                    logController.style.width = "100%"
                 }
-                if (startIndex < 0) {
-                    isAtEnd = true
-                }
-                status.innerText = `reading ${selectedLevel.toLowerCase()}.log...`
-                await fetch(`/api/read-log?level=${selectedLevel.toLowerCase()}&end=${startIndex}&start=${startIndex - 150}`).then((response) => response.text()).then((data) => {
-                    const container = document.querySelector("#logFileContent");
-                    if (selectedLevel == "GLOBAL") {
-                        const levels = ["INFO", "DEBUG", "WARN", "ERROR", "FATAL"];
-                        const levelColors = {}
-                        levels.forEach(level => {
-                            levelColors[level] = getColor(level)
-                        });
-                        processLogs(
-                            "logFileContent",
-                            data,
-                            levels,
-                            levelColors,
-                            true
-                        );
-                    } else {
-                        processLogs(
-                            "logFileContent",
-                            data,
-                            selectedLevel.toUpperCase(),
-                            getColor(selectedLevel)
-                        );
-                    }
-                    
-                    status.innerText = `awaiting input...`;
-                }).catch((error) => console.error("Error:", error));
-                if (selectedLevel != previousLevel) {
-                    container.scrollTop = container.scrollHeight;
-                }
-                previousLevel = selectedLevel
             }
-            logLevelDropdown.addEventListener("change", () => {
-                readlog()
-            });
-            container.addEventListener("scroll", () => {
-                if (container.scrollTop === 0) {
-                    readlog()
-                }
-            });
-            function getColor(level) {
-                switch (level) {
-                    case "ERROR":
-                        return "#d67b51";
-                    case "WARN":
-                        return "#dfc623";
-                    case "INFO":
-                        return "#acdee4";
-                    case "DEBUG":
-                        return "#b4bfcf";
-                    case "FATAL":
-                        return "#ff0000";
-                    case "ACCESS":
-                        return "#ccffcc";
-                    default:
-                        return "#ffffff";
-                }
+            bindToSidebarToggle(editTextAreaSize)
+            setButtonPositionOffset(11)
+        </script>
+        <script id="logProcessor">
+            const testText = `11/14 17:09:46 DBG hi
+11/14 17:09:46 INF hi 11/14 17:09:46 INF hi
+11/14 17:09:46 WRN hi <h2>hiiiiiii</h2>
+11/14 17:09:46 ERROR hi
+11/14 17:09:46 FATAL hi
+11/14 17:09:46 ACCESS hi`
+            const logRegex = /(\d{2}\/\d{2} \d{2}:\d{2}:\d{2}) (DBG|INF|WRN|ERROR|FATAL|ACCESS) (.+)/
+            function processLogLine(line) {
+                const match = logRegex.exec(line)
+                if (!match) return line
+                const date = match[1]
+                const level = match[2]
+                const message = match[3]
+                const dateSpan = document.createElement('span')
+                dateSpan.classList = 'logTime'
+                dateSpan.innerText = date
+                const levelSpan = document.createElement('span')
+                levelSpan.classList = `logLevel ${level.toLowerCase()}`
+                levelSpan.innerText = level
+                const messageSpan = document.createElement('span')
+                messageSpan.classList = 'logMessage'
+                messageSpan.innerText = message
+                const lineDiv = document.createElement('div')
+                lineDiv.classList = 'logLine'
+                lineDiv.appendChild(dateSpan)
+                lineDiv.appendChild(levelSpan)
+                lineDiv.appendChild(messageSpan)
+                return lineDiv
+            }
+
+            const logContent = document.querySelector('.logContent')
+            const logLines = testText.split('\n')
+            for (const line of logLines) {
+                logContent.appendChild(processLogLine(line))
             }
         </script>
     </body>

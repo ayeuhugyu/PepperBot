@@ -1,3 +1,5 @@
+let buttonPositionOffset = 0
+
 const sidebarContainer = document.createElement('div');
 sidebarContainer.id = 'sidebarContainer';
 sidebarContainer.className = 'sidebarContainer outlined';
@@ -26,7 +28,7 @@ function toggleSidebar() {
     if (sidebarIsShowing) {
         sidebarIsShowing = false;
         sidebarContainer.style.display = 'none';
-        toggleSidebarButton.style.right = '5px';
+        toggleSidebarButton.style.right = `calc(5px + ${typeof buttonPositionOffset === "number" ? `${buttonPositionOffset}px` : buttonPositionOffset})`;
     } else {
         sidebarIsShowing = true;
         sidebarContainer.style.display = 'flex';
@@ -64,7 +66,7 @@ function createSourceCodeButton() {
 }
 
 createSidebarButton('/home', '/');
-createSidebarButton('/pepperbot', '/pepperbot');
+createSidebarButton('/guide', '/guide');
 createSidebarButton('/statistics', '/statistics');
 createSidebarButton('/logs', '/logs');
 createSidebarButton('/chat', '/chat');
@@ -82,6 +84,11 @@ document.addEventListener("keydown", (event) => {
         toggleSidebar();
     }
 });
+
+function setButtonPositionOffset(value) {
+    buttonPositionOffset = value;
+    return buttonPositionOffset;
+}
 
 function checkMobileMode() {
     if (window.innerWidth < 768) {

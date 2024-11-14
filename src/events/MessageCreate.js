@@ -19,6 +19,7 @@ import cheerio from "cheerio";
 import guildConfigs from "../lib/guildConfigs.js";
 import commonRegex from "../lib/commonRegex.js";
 import statistics from "../lib/statistics.js";
+import * as diabolic from "../lib/diabolicalEvents.js";
 
 async function fetchTitle(url) {
     try {
@@ -94,67 +95,12 @@ async function processDM(message) {
     }
 }
 async function processDiabolicalEvent(message) {
-    const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
-    const prefix = gconfig.prefix || config.generic.prefix;
-    if (
-        !message.author.bot &&
-        !message.content.toLowerCase().startsWith(prefix.toLowerCase())
-    ) {
-        if (gconfig && gconfig.disableDiabolicalEvents) {
-            return;
-        }
-        if (
-            gconfig &&
-            gconfig.diabolicalEventBlacklistedChannelIds &&
-            gconfig.diabolicalEventBlacklistedChannelIds.includes(
-                message.channel.id
-            )
-        ) {
-            return;
-        }
-        const random = Math.random() * 500;
-        if (random < 1.25) {
-            // ~0.25%
-            const emojiIndex = Math.floor(
-                Math.random() * globals.emojis.length
-            );
-            log.debug(`diabolical emoji event triggered on ${message.id} with: ${globals.emojis[emojiIndex]} at index: ${emojiIndex}`);
-            const emoji = globals.emojis[emojiIndex];
-            message.react(emoji);
-        }
-        if (random > 248.875 && random < 249) {
-            // ~0.025%
-            log.debug(`diabolical thread event triggered on ${message.id}`);
-            if (message.startThread) {
-                if (
-                    message.channel &&
-                    (message.channel.type === 0 || message.channel.type === 5)
-                ) {
-                    message
-                        .startThread({
-                            name: "Threaded! 🧵",
-                            autoArchiveDuration: 60,
-                            reason: "It's quite diabolical.",
-                        })
-                        .then((thread) => {
-                            thread.send("You've just been threaded! 🧵");
-                        });
-                } else {
-                    log.warn("could not start thread on message due to channel type");
-                    return;
-                }
-            }
-        }
-        if (random > 249.75 && random < 250) {
-            // ~0.05%
-            log.debug(`diabolical event triggered on ${message.id}`);
-            const event =
-                diabolical_events[
-                    Math.floor(Math.random() * diabolical_events.length)
-                ];
-            action.reply(message, event);
-        }
-    }
+    if (diabolic.messageFilter(message)) return;
+    const eventName = diabolic.getEvent();
+    if (!eventName) return;
+    const eventFunction = diabolic.getEventFunction(eventName);
+    if (!eventFunction) return;
+    eventFunction(message);
 }
 
 async function processGPTResponse(message) {
