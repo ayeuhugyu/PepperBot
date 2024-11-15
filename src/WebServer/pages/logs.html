@@ -15,27 +15,27 @@
         <script src="/socket.io/socket.io.js"></script>
         <div class="outlined logPageContainer">
             <div id="logControllerContainer" class="logControllerContainer">
-                <button class="logLevelButton" id="GLOBAL">GLOBAL</button>
-                <button class="logLevelButton" id="INFO">INFO</button>
-                <button class="logLevelButton" id="DEBUG">DEBUG</button>
-                <button class="logLevelButton" id="WARN">WARN</button>
-                <button class="logLevelButton" id="ERROR">ERROR</button>
-                <button class="logLevelButton" id="FATAL">FATAL</button>
-                <button class="logLevelButton" id="ACCESS">ACCESS</button>
+                <button class="logLevelButton" id="GLOBAL" onclick="logLevel = this.id; readNewLog()">GLOBAL</button>
+                <button class="logLevelButton" id="INFO" onclick="logLevel = this.id; readNewLog()">INFO</button>
+                <button class="logLevelButton" id="DEBUG" onclick="logLevel = this.id; readNewLog()">DEBUG</button>
+                <button class="logLevelButton" id="WARN" onclick="logLevel = this.id; readNewLog()">WARN</button>
+                <button class="logLevelButton" id="ERROR" onclick="logLevel = this.id; readNewLog()">ERROR</button>
+                <button class="logLevelButton" id="FATAL" onclick="logLevel = this.id; readNewLog()">FATAL</button>
+                <button class="logLevelButton" id="ACCESS" onclick="logLevel = this.id; readNewLog()">ACCESS</button>
                 <span class="outlined logReaderStatus">awaiting input...</span>
             </div>
             <pre id="logContent" class="logContent outlined"></pre>
         </div>
         <script id="sidebarAdjustments">
+            const logContent = document.querySelector('.logContent')
             function editTextAreaSize(sidebarState) {
                 const logController = document.getElementById("logControllerContainer")
-                const logContent = document.getElementById("logContent")
                 if (window.innerWidth < 768) {
-                    logContent.style.width = "calc(100% - 12px)"
+                    logContent.style.width = "100%"
                     logController.style.width = "100%"
                 } else if (sidebarState) {
                     logContent.style.width = "calc(100% - 137px)"
-                    logController.style.width = "calc(100% - 125px);"
+                    logController.style.width = "calc(100% - 125px)"
                 } else {
                     logContent.style.width = "calc(100% - 12px)"
                     logController.style.width = "100%"
@@ -45,13 +45,69 @@
             setButtonPositionOffset(11)
         </script>
         <script id="logProcessor">
-            const testText = `11/14 17:09:46 DBG hi
-11/14 17:09:46 INF hi 11/14 17:09:46 INF hi
-11/14 17:09:46 WRN hi <h2>hiiiiiii</h2>
-11/14 17:09:46 ERROR hi
-11/14 17:09:46 FATAL hi
-11/14 17:09:46 ACCESS hi`
-            const logRegex = /(\d{2}\/\d{2} \d{2}:\d{2}:\d{2}) (DBG|INF|WRN|ERROR|FATAL|ACCESS) (.+)/
+            let logLevel = 'GLOBAL'
+            let startIndex = 0;
+            let endIndex = 150;
+            let logHasEnded = false;
+
+            const status = document.querySelector('.logReaderStatus')
+
+            async function readNewLog() {
+                logContent.innerHTML = ''
+                status.innerText = 'resetting...'
+                endIndex = await fetch(`/api/get-log-length?level=${logLevel.toLowerCase()}`)
+                    .then(response => response.text())
+                    .then(text => {
+                        return parseInt(text);
+                    })
+                startIndex = endIndex - 150
+                logHasEnded = false
+                await readLog()
+                logContent.scrollTop = logContent.scrollHeight
+                
+            }
+            let previousLineSection = null
+            async function readLog() {
+                status.innerText = 'reading...'
+                if (startIndex < 0) startIndex = 0
+                if (endIndex < 0) endIndex = 0
+                if (startIndex === 0 && endIndex === 0) {
+                    if (logHasEnded) {
+                        status.innerText = 'end of log'
+                        return
+                    } else {
+                        const endOfLogText = document.createElement('h1')
+                        endOfLogText.innerText = '----end of log----'
+                        logContent.prepend(endOfLogText)
+                        logHasEnded = true
+                    }
+                }
+                await fetch(`/api/read-log?level=${logLevel.toLowerCase()}&end=${endIndex}&start=${startIndex}`)
+                    .then(response => response.text())
+                    .then(text => {
+                        const lines = text.split('\n')
+                        const linesSection = document.createElement('div')
+                        for (const line of lines) {
+                            const lineDiv = processLogLine(line)
+                            if (typeof lineDiv === "string") {
+                                console.log('linediv is a string, skipping...')
+                                continue
+                            }
+                            linesSection.appendChild(lineDiv)
+                        }
+                        logContent.prepend(linesSection)
+                        if (previousLineSection) {
+                            previousLineSection.scrollIntoView({ behavior: "instant", block: "start" })
+                        }
+                        previousLineSection = linesSection
+                    }
+                )
+                startIndex -= 150
+                endIndex -= 150
+                status.innerText = 'awaiting input...'
+            }
+
+            const logRegex = /(\d{2}\/\d{2} \d{2}:\d{2}:\d{2}) (DEBUG|INFO|WARN|ERROR|FATAL|ACCESS) (.+)/
             function processLogLine(line) {
                 const match = logRegex.exec(line)
                 if (!match) return line
@@ -75,11 +131,12 @@
                 return lineDiv
             }
 
-            const logContent = document.querySelector('.logContent')
-            const logLines = testText.split('\n')
-            for (const line of logLines) {
-                logContent.appendChild(processLogLine(line))
-            }
+            readNewLog()
+            logContent.addEventListener("scroll", () => {
+                if (logContent.scrollTop === 0) {
+                    readLog()
+                }
+            });
         </script>
     </body>
 </html>

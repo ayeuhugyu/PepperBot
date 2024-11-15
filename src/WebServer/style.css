@@ -17,6 +17,7 @@
     --midground-color-lighter: rgba(130, 72, 0, 0.85);
     --border-color: rgba(255, 145, 0, 1);
     --border-color-light: rgba(255, 145, 0, 0.5);
+    --border-color-dark: rgba(255, 145, 0, 0.1);
     --main-font: 'BPdotsSquareBold', monospace;
     --transparent: rgba(0, 0, 0, 0);
     --heading-margins: 5px;
@@ -154,39 +155,15 @@ body {
 }
 
 /* Scrollbar */
-    /* Firefox */
 
-@-moz-document url-prefix() {
-    * {
-        scrollbar-width: auto;
-        scrollbar-color: var(--midground-color-lighter) var(--midground-color);
-        scrollbar-base-color: var(--transparent);
-    }
+::-webkit-scrollbar-button {
+    height: 0;
+    width: 0
 }
 
-    /* Chrome, Edge and Safari */
-*::-webkit-scrollbar {
-    height: 7px;
-    width: 10px;
-}
-*::-webkit-scrollbar-track {
-    border-radius: 4px;
-    background-color: var(--transparent);
-}
-
-*::-webkit-scrollbar-thumb {
-    border-radius: 3px;
-    background-color: var(--midground-color-dark);
-    border: 1px solid var(--border-color);
-    margin-right: 10px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-    background-color: var(--midground-color-light)
-}
-
-*::-webkit-scrollbar-thumb:active {
-    background-color: var(--midground-color-lighter)
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--midground-color-lighter) var(--midground-color-dark);
 }
 
 /* Categories */
@@ -498,7 +475,7 @@ details.commandArgument > *:not(summary):not(details) {
     flex-direction: row;
     margin: 0;
     padding: 0;
-    background-color: var(--midground-color);
+    border-bottom: 1px solid var(--border-color-dark);
 }
 
 .logPageContainer {
@@ -517,7 +494,7 @@ details.commandArgument > *:not(summary):not(details) {
     flex-grow: 1;
     width: calc(100% - 137px);
     margin: 0;
-    background-color: var(--midground-color-dark)
+    background-color: var(--midground-color);
 }
 
 .logMessage {
@@ -533,24 +510,24 @@ details.commandArgument > *:not(summary):not(details) {
 
 .logLevel {
     color: #ffffff;
-    &.error {
+}
+.logLevel.error {
         color: #d67b51;
-    }
-    &.wrn {
+}
+.logLevel.warn {
         color: #dfc623;
-    }
-    &.inf {
+}
+.logLevel.info {
         color: #acdee4;
-    }
-    &.dbg {
+}
+.logLevel.debug {
         color: #b4bfcf;
-    }
-    &.fatal {
+}
+.logLevel.fatal {
         color: #ff0000;
-    }
-    &.access {
+}
+.logLevel.access {
         color: #ccffcc;
-    }
 }
 
 .logTime {
@@ -562,7 +539,6 @@ details.commandArgument > *:not(summary):not(details) {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    background-color: blue;
 }
 
 .logLevelButton {
