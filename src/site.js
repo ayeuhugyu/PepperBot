@@ -155,8 +155,10 @@ for (const page of pages) {
         res.sendFile(`pages/${page}`, { root: rootPath });
     });
 }
-for (const alias in Object.keys(pageAliases)) {
+for (const alias in pageAliases) {
+    console.log('setting alias: ' + alias + ' to ' + pageAliases[alias]);
     app.get(`/${alias}`, (req, res) => {
+        console.log("getting alias: " + alias);
         res.redirect(`/${pageAliases[alias]}`);
     });
 }

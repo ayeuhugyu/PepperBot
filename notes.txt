@@ -37,7 +37,7 @@ p/update
 
 **website changes:**
 
-- entirely rewrote the logs page w/ the new style and a much more optimized, non manually escaped log processor
+- **entirely rewrote the logs page w/ the new style and a much more optimized, non manually escaped log processor**
 - the guide page's name has been changed from /pepperbot to /guide
 - added web aliases
 - added web alias: /pepperbot -> /guide
