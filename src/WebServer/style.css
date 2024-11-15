@@ -392,6 +392,7 @@ details.commandArgument > *:not(summary):not(details) {
     justify-content: flex-start;
     align-items: center;
     z-index: -1;
+    flex-direction: row;
 }
 @media (max-width: 768px) {
     #guideblockcontainer {

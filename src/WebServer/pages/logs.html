@@ -55,15 +55,14 @@
             async function readNewLog() {
                 logContent.innerHTML = ''
                 status.innerText = 'resetting...'
-                endIndex = await fetch(`/api/get-log-length?level=${logLevel.toLowerCase()}`)
+                await fetch(`/api/get-log-length?level=${logLevel.toLowerCase()}`)
                     .then(response => response.text())
                     .then(text => {
-                        return parseInt(text);
+                        endIndex = parseInt(text)
+                        startIndex = endIndex - 150
+                        logHasEnded = false
+                        readLog()  
                     })
-                startIndex = endIndex - 150
-                logHasEnded = false
-                await readLog()
-                logContent.scrollTop = logContent.scrollHeight
                 
             }
             let previousLineSection = null
@@ -102,6 +101,7 @@
                         previousLineSection = linesSection
                     }
                 )
+                logContent.scrollTop = logContent.scrollHeight
                 startIndex -= 150
                 endIndex -= 150
                 status.innerText = 'awaiting input...'

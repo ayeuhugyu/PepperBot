@@ -37,19 +37,9 @@ p/update
 
 **website changes:**
 
-- **entirely rewrote the logs page w/ the new style and a much more optimized, non manually escaped log processor**
-- the guide page's name has been changed from /pepperbot to /guide
-- added web aliases
-- added web alias: /pepperbot -> /guide
-- fixed some small visual errors on the guide page
-- added some missing information to the features list on the guide page
-
 **actual content:**
 
-- diabolical events have been given an actual system to manage them rather than just a function in the message create event
-- diabolical event rates adjusted:
-    thread: 0.025% -> 0.05% 
-    reply: 0.05% -> 0.1%
-    reaction: 0.25% -> 0.5% 
-
 **fixes/optimizations:**
+
+- fixed guide page blocks incorrectly stacking on lower zoom levels
+- fixed logs viewer reading past logs when its not supposed to
