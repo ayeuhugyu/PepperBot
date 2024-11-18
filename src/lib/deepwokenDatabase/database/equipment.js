@@ -656,6 +656,175 @@ export default {
             "mantras": []
         })
     }),
+    black_strapped_hat: new classes.equipment({
+        "name": "black_strapped_hat",
+        "rich_name": "Black Strapped Hat",
+        "description": "A hat typically worn by those from the Central Luminant.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 6
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "double_strapped_hat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths"
+            ],
+            "npcs": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "exterminator"
+            ],
+            "mantras": []
+        })
+    }),
+    bloodfeather_cowl: new classes.equipment({
+        "name": "bloodfeather_cowl",
+        "rich_name": "Bloodfeather Cowl",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 8
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale"
+            ],
+            "npcs": [
+                "maestro_evengarde_rest",
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "stealth": 0.06,
+                "resistance": {
+                    "shadow": 0.05
+                }
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "bloodletter"
+            ],
+            "mantras": []
+        })
+    }),
+    bloodforged_crown: new classes.equipment({
+        "name": "bloodforged_crown",
+        "rich_name": "Bloodforged Crown",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.MYTHICAL,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "npcs": [
+                "chaser",
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "cauterized_wounds"
+            ],
+            "mantras": []
+        })
+    }),
+    brigands_bicorn: new classes.equipment({
+        "name": "brigands_bicorn",
+        "rich_name": "Brigand's Bicorn",
+        "description": "Even outlaws need style.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 6
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths",
+                "miners_landing",
+                "summer_isle"
+            ],
+            "npcs": [
+                "chaser",
+                "maestro_evengarde_rest",
+                "duke_erisia"
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "spare_nails",
+                "emergency_repairs"
+            ],
+            "mantras": []
+        })
+    }),
     // #endregion
     // #region ARMS EQUIPMENT
     // #endregion

@@ -45,7 +45,9 @@ export class statDistribution extends Base {
         thundercall: 0,
         galebreathe: 0,
         shadowcast: 0,
-        ironsing: 0
+        ironsing: 0,
+        bloodrend: 0,
+        lifeweave: 0
     }
     weapon = {
         light: 0,
@@ -102,7 +104,9 @@ export class characterStats extends Base {
         "lightning": 0,
         "wind": 0,
         "shadow": 0,
-        "iron": 0
+        "iron": 0,
+        "blood": 0,
+        "life": 0
     }
     "mantra_slots" = new mantraSlots()
     "reputation" = { // 0 = neutral, 1 to 149 = friendly, 150 to 299 = allied, 300 = hero. -1 to -149 = enemy, -150 to -299 = hunted, -300 = villan
