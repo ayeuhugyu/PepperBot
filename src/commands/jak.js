@@ -8,12 +8,13 @@ import {
 import sharp from "sharp";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import * as theme from "../lib/theme.js";
-import { Collection } from "discord.js";
+import { Collection, AttachmentBuilder } from "discord.js";
 import fs from "fs";
 import fsExtra from "fs-extra";
 import stream from "stream";
 import * as globals from "../lib/globals.js";
 import * as files from "../lib/files.js";
+import * as log from "../lib/log.js"
 
 const config = globals.config;
 
@@ -113,13 +114,14 @@ const graph = new SubCommand(
         let inputImgArrayBuf;
         let inputBuffer;
         let inputMetadata;
+        let inputImageProcessed;
         let errored = false;
         try {
             inputImg = await fetch(args.get("image").url);
             inputImgArrayBuf = await inputImg.arrayBuffer();
-
-            inputBuffer = await sharp(inputImgArrayBuf, { animated: true }).png().toBuffer();
-            inputMetadata = await inputBuffer.metadata();
+            inputImageProcessed = await sharp(inputImgArrayBuf, { animated: true }).png()
+            inputBuffer = await inputImageProcessed.toBuffer();
+            inputMetadata = await inputImageProcessed.metadata();
         } catch (e) {
             log.error(e);
             errored = true;
@@ -143,8 +145,8 @@ const graph = new SubCommand(
                 background: { r: 255, g: 255, b: 255 }
             }
         }).composite([
-            { input: imageBuffer, top: 50, left: 50 },
-            { input: graphBuffer, top: imageMetadata.height, left: 0 }
+            { input: inputBuffer, top: 50, left: 50 },
+            { input: graphBuffer, top: inputMetadata.height, left: 0 }
         ]).png().toBuffer();
 
         if (replied) return;
