@@ -134,8 +134,19 @@ const graph = new SubCommand(
         const graphBuffer = await sharp("resources/images/pleaseconsultthegraphs.jpg").png().toBuffer();
         const graphMetadata = await sharp(graphBuffer, { animated: true }).metadata();
 
-        const combinedWidth = Math.max(inputMetadata.width, graphMetadata.width);
-        const combinedHeight = inputMetadata.height + graphMetadata.height;
+        const targetWidth = Math.max(inputMetadata.width, graphMetadata.width);
+        const resizedInputBuffer = await sharp(inputBuffer)
+            .resize({ width: targetWidth - 50 })
+            .toBuffer();
+        const resizedInputMetadata = await sharp(resizedInputBuffer).metadata();
+
+        const resizedGraphBuffer = await sharp(graphBuffer)
+            .resize({ width: targetWidth })
+            .toBuffer();
+        const resizedGraphMetadata = await sharp(resizedGraphBuffer).metadata();
+
+        const combinedWidth = targetWidth + 50;
+        const combinedHeight = resizedInputMetadata.height + resizedGraphMetadata.height + 50;
 
         const combinedImage = await sharp({
             create: {
@@ -145,8 +156,8 @@ const graph = new SubCommand(
                 background: { r: 255, g: 255, b: 255 }
             }
         }).composite([
-            { input: inputBuffer, top: 50, left: 50 },
-            { input: graphBuffer, top: inputMetadata.height, left: 0 }
+            { input: resizedInputBuffer, top: 50, left: 50 },
+            { input: resizedGraphBuffer, top: resizedInputMetadata.height + 50, left: 0 }
         ]).png().toBuffer();
 
         if (replied) return;
