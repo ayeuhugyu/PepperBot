@@ -39,6 +39,8 @@ p/update
 
 **actual content:**
 
+- added p/jak graph, allows easy creation of "If you would please consult the graphs." images
+
 **fixes/optimizations:**
 
 - fixed guide page blocks incorrectly stacking on lower zoom levels
