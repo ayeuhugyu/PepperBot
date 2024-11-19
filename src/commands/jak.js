@@ -5,6 +5,7 @@ import {
     SubCommand,
     SubCommandData,
 } from "../lib/types/commands.js";
+import sharp from "sharp";
 import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 import * as theme from "../lib/theme.js";
 import { Collection } from "discord.js";
@@ -53,6 +54,110 @@ function autocorrect(message) {
     };
     return corrections;
 }
+
+const graphdata = new SubCommandData();
+graphdata.setName("graph");
+graphdata.setDescription("If you would please consult the graphs.");
+graphdata.setPermissions([]);
+graphdata.setPermissionsReadable("");
+graphdata.setWhitelist([]);
+graphdata.setAliases([]);
+graphdata.setCanRunFromBot(true);
+graphdata.addAttachmentOption((option) =>
+    option
+        .setName("image")
+        .setDescription("the image to use")
+        .setRequired(true)
+);
+const graph = new SubCommand(
+    graphdata,
+    async function getArguments(message, gconfig) {
+        const args = new Collection();
+        args.set("image", message.attachments.first());
+        return args;
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        if (!args.get("image")) {
+            action.reply(message, { content: "provide an image you baffoon!" });
+            return;
+        }
+        const supportedFiletypes = [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif",
+            "tiff",
+            "avif",
+            "heif",
+        ];
+        const extension = args.get("image").name.split(".").pop();
+        const nameWithoutExtension = args.get("image").name.split(".").slice(0, -1).join(".");
+        if (!supportedFiletypes.includes(extension)) {
+            action.reply(message, { content: `invalid format, only \`${supportedFiletypes.join(", ")}\` are supported`, ephemeral: gconfig.useEphemeralReplies, });
+            return;
+        }
+        const originalImg = args.get("image");
+        if (!originalImg.width || !originalImg.height) {
+            action.reply(message, { content: "this image does not appear to have a valid height or width defined. please try again with a different image.", ephemeral: gconfig.useEphemeralReplies, });
+            return;
+        }
+        if (originalImg.width > 4096 || originalImg.height > 4096) {
+            action.reply(message, { content: "image too big, please try again with a smaller image.", ephemeral: gconfig.useEphemeralReplies, });
+            return;
+        }
+        let replied = false;
+        const sentReply = await action.reply(message, { content: "processing...", ephemeral: gconfig.useEphemeralReplies });
+
+        let inputImg;
+        let inputImgArrayBuf;
+        let inputBuffer;
+        let inputMetadata;
+        let errored = false;
+        try {
+            inputImg = await fetch(args.get("image").url);
+            inputImgArrayBuf = await inputImg.arrayBuffer();
+
+            inputBuffer = await sharp(inputImgArrayBuf, { animated: true }).png().toBuffer();
+            inputMetadata = await inputBuffer.metadata();
+        } catch (e) {
+            log.error(e);
+            errored = true;
+        }
+        if (errored) {
+            action.editMessage(sentReply, { content: "there was an error processing/fetching this image, see logs for more details"  });
+            return;
+        }
+
+        const graphBuffer = await sharp("resources/images/pleaseconsultthegraphs.jpg").png().toBuffer();
+        const graphMetadata = await sharp(graphBuffer, { animated: true }).metadata();
+
+        const combinedWidth = Math.max(inputMetadata.width, graphMetadata.width);
+        const combinedHeight = inputMetadata.height + graphMetadata.height;
+
+        const combinedImage = await sharp({
+            create: {
+                width: combinedWidth,
+                height: combinedHeight,
+                channels: 4,
+                background: { r: 255, g: 255, b: 255 }
+            }
+        }).composite([
+            { input: imageBuffer, top: 50, left: 50 },
+            { input: graphBuffer, top: imageMetadata.height, left: 0 }
+        ]).png().toBuffer();
+
+        if (replied) return;
+        replied = true;
+        action.editMessage(sentReply, {
+            content: "here is your Item Of Interest:tm:" + ((message.appPermissions && !message.appPermissions.has("Administrator")) ? "\n⚠ EPHEMERAL (the \"only you can see this\") REPLIES WILL NOT WORK IF FAVORITED ⚠\ndiscord does not store these images and they will cease to work as soon as you hit \"dismiss message\"\nit will still work if you save the image though" : ""),
+            files: [
+                new AttachmentBuilder(combinedImage, { name: `pleaseconsultthe${nameWithoutExtension}.png` }),
+            ],
+        });
+    }
+);
+
 
 const randomData = new SubCommandData();
 randomData.setName("random");
@@ -317,7 +422,7 @@ const command = new Command(
             return;
         }
     },
-    [add, get, list, random]
+    [add, get, list, random, graph]
 );
 
 export default command;

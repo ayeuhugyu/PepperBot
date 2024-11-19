@@ -676,7 +676,7 @@
                 </details>
                 <details class="commandDetails" id="p/jak">
                     <summary class="commandName">p/jak<span class="commandCategory">fun</span></summary>
-                    <div class="commandDescription">various functions relating to The Jak Collection™
+                    <div class="commandDescription">various functions relating to The Jak Collection™ (and other jaks)
                         <span class="argumentOrder">ARGUMENT ORDER: p/jak <span class="commandArgumentOrderItem">subcommand</span> </span>
                         <span class="exampleUsage">EXAMPLE 1: p/jak list</span>
                         <span class="commandProperty">ALIASES: p/jaks</span>
@@ -685,8 +685,21 @@
                         <summary>subcommand<span class="commandArgumentType">string</span></summary>
                         <div class="argumentDescription">the subcommand to use
                             <span class="commandArgumentProperty">REQUIRED: true</span>
-                            <span class="commandArgumentProperty">OPTIONS: get, list, random, add</span>
+                            <span class="commandArgumentProperty">OPTIONS: get, list, random, add, graph</span>
                         </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/jak graph</summary>
+                            <div class="commandDescription">adds your image above a "If you would please consult the graphs." image
+                                <span class="argumentOrder">ARGUMENT ORDER: p/jak graph <span class="commandArgumentOrderItem">image</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/jak graph <span class="lesserText">[attach your image]</span></span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>image<span class="commandArgumentType">attachment</span></summary>
+                                <div class="argumentDescription">the image to use
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/jak get</summary>
                             <div class="commandDescription">returns the specified jak
