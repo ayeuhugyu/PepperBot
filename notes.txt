@@ -30,6 +30,8 @@ shit on the todo list:
 [24] - rewrite p/random buildidea
 [25] - thanksgiving seasonal theme
 [26] - 2 sanity = 1 ether, add this to the godroll calculator AND check to see if it can get higher ether n shit
+[27] - p/composite
+[28] - rewrite command data
 
 to add to todo list:
 
@@ -40,6 +42,7 @@ p/update
 **actual content:**
 
 - added p/jak graph, allows easy creation of "If you would please consult the graphs." images
+- added p/composite, allows you to easily put multiple images together in a canvas.
 
 **fixes/optimizations:**
 

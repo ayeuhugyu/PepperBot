@@ -115,6 +115,144 @@
                         </div>
                     </details>
                 </details>
+                <details class="commandDetails" id="p/composite">
+                    <summary class="commandName">p/composite<span class="commandCategory">utility</span></summary>
+                    <div class="commandDescription">allows you to composite multiple images together
+                        <span class="argumentOrder">ARGUMENT ORDER: p/composite <span class="commandArgumentOrderItem">subcommand</span> <span class="lesserText">[remaining arguments depend on subcommand]</span></span>
+                        <span class="exampleUsage">EXAMPLE 1: p/composite preview</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: add, remove, canvas, output, clear, move, scale, meta, preview</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite add</summary>
+                            <div class="commandDescription">adds an image to the composite
+                                <span class="argumentOrder">ARGUMENT ORDER: p/composite add <span class="commandArgumentOrderItem">image</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/composite add <span class="lesserText">[attach your file]</span></span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>image<span class="commandArgumentType">attachment</span></summary>
+                                <div class="argumentDescription">the image to add to the composite, and returns its ID after adding it
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite remove</summary>
+                            <div class="commandDescription">removes an image from the composite
+                                <span class="argumentOrder">ARGUMENT ORDER: p/composite remove <span class="commandArgumentOrderItem">imageID</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/composite remove 0</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>imageID<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the ID of the image to remove
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite canvas</summary>
+                            <div class="commandDescription">sets the canvas size and background color of the composite
+                                <span class="argumentOrder">ARGUMENT ORDER: p/composite canvas <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span> <span class="commandArgumentOrderItem">backgroundColor</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/composite canvas 1920 1080 #13131d</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>width<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the width of the canvas
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>height<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the height of the canvas
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>backgroundColor<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the background color of the canvas, must be a hex color code
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite output</summary>
+                            <div class="commandDescription">sets the output format of the composite
+                                <span class="argumentOrder">ARGUMENT ORDER: p/composite output <span class="commandArgumentOrderItem">format</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/composite output png</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>format<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the format to output the composite as
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                    <span class="commandArgumentProperty">OPTIONS: jpeg, png, webp, gif, avif, tiff</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite clear</summary>
+                            <div class="commandDescription">clears the composite
+                                <span class="exampleUsage">EXAMPLE 1: p/composite clear</span>
+                            </div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite move</summary>
+                            <div class="commandDescription">moves an image in the composite
+                                <span class="argumentOrder">ARGUMENT ORDER: p/composite move <span class="commandArgumentOrderItem">imageID</span> <span class="commandArgumentOrderItem">x</span> <span class="commandArgumentOrderItem">y</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/composite move 0 100 100</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>imageID<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the ID of the image to move
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>x<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the x position to move the image to
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>y<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the y position to move the image to
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite scale</summary>
+                            <div class="commandDescription">scales an image in the composite
+                                <span class="argumentOrder">ARGUMENT ORDER: p/composite scale <span class="commandArgumentOrderItem">imageID</span> <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/composite scale 0 2</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>imageID<span class="commandArgumentType">integer</span></summary>
+                                <div class="argumentDescription">the ID of the image to scale
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>width<span class="commandArgumentType">float</span></summary>
+                                <div class="argumentDescription">the width to scale the image to
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>height<span class="commandArgumentType">float</span></summary>
+                                <div class="argumentDescription">the height to scale the image to
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+
+
+                        
+                    </details>
+                </details>
                 <details class="commandDetails" id="p/configure">
                     <summary class="commandName">p/configure<span class="commandCategory">customization</span></summary>
                     <div class="commandDescription">allows you to configure certain features of pepperbot
