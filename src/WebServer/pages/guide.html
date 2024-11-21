@@ -129,21 +129,13 @@
                         </div>
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite add</summary>
-<<<<<<< HEAD
-                            <div class="commandDescription">adds an image to the composite
-=======
                             <div class="commandDescription">adds an image to the composite and returns its ID afterwards
->>>>>>> b126007 (unfinished p/composite)
                                 <span class="argumentOrder">ARGUMENT ORDER: p/composite add <span class="commandArgumentOrderItem">image</span></span>
                                 <span class="exampleUsage">EXAMPLE 1: p/composite add <span class="lesserText">[attach your file]</span></span>
                             </div>
                             <details class="commandArgument" open>
                                 <summary>image<span class="commandArgumentType">attachment</span></summary>
-<<<<<<< HEAD
-                                <div class="argumentDescription">the image to add to the composite, and returns its ID after adding it
-=======
                                 <div class="argumentDescription">the image to add to the composite
->>>>>>> b126007 (unfinished p/composite)
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
                                 </div>
                             </details>
@@ -151,19 +143,11 @@
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite remove</summary>
                             <div class="commandDescription">removes an image from the composite
-<<<<<<< HEAD
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite remove <span class="commandArgumentOrderItem">imageID</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite remove 0</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageID<span class="commandArgumentType">integer</span></summary>
-=======
                                 <span class="argumentOrder">ARGUMENT ORDER: p/composite remove <span class="commandArgumentOrderItem">imageid</span></span>
                                 <span class="exampleUsage">EXAMPLE 1: p/composite remove 0</span>
                             </div>
                             <details class="commandArgument" open>
                                 <summary>imageid<span class="commandArgumentType">integer</span></summary>
->>>>>>> b126007 (unfinished p/composite)
                                 <div class="argumentDescription">the ID of the image to remove
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
                                 </div>
@@ -171,13 +155,8 @@
                         </details>
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite canvas</summary>
-<<<<<<< HEAD
-                            <div class="commandDescription">sets the canvas size and background color of the composite
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite canvas <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span> <span class="commandArgumentOrderItem">backgroundColor</span></span>
-=======
                             <div class="commandDescription">sets the canvas size and background color
                                 <span class="argumentOrder">ARGUMENT ORDER: p/composite canvas <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span> <span class="commandArgumentOrderItem">backgroundcolor</span></span>
->>>>>>> b126007 (unfinished p/composite)
                                 <span class="exampleUsage">EXAMPLE 1: p/composite canvas 1920 1080 #13131d</span>
                             </div>
                             <details class="commandArgument" open>
@@ -193,11 +172,7 @@
                                 </div>
                             </details>
                             <details class="commandArgument" open>
-<<<<<<< HEAD
-                                <summary>backgroundColor<span class="commandArgumentType">string</span></summary>
-=======
                                 <summary>backgroundcolor<span class="commandArgumentType">string</span></summary>
->>>>>>> b126007 (unfinished p/composite)
                                 <div class="argumentDescription">the background color of the canvas, must be a hex color code
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
                                 </div>
@@ -226,19 +201,11 @@
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite move</summary>
                             <div class="commandDescription">moves an image in the composite
-<<<<<<< HEAD
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite move <span class="commandArgumentOrderItem">imageID</span> <span class="commandArgumentOrderItem">x</span> <span class="commandArgumentOrderItem">y</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite move 0 100 100</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageID<span class="commandArgumentType">integer</span></summary>
-=======
                                 <span class="argumentOrder">ARGUMENT ORDER: p/composite move <span class="commandArgumentOrderItem">imageid</span> <span class="commandArgumentOrderItem">x</span> <span class="commandArgumentOrderItem">y</span></span>
                                 <span class="exampleUsage">EXAMPLE 1: p/composite move 0 100 100</span>
                             </div>
                             <details class="commandArgument" open>
                                 <summary>imageid<span class="commandArgumentType">integer</span></summary>
->>>>>>> b126007 (unfinished p/composite)
                                 <div class="argumentDescription">the ID of the image to move
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
                                 </div>
@@ -259,19 +226,11 @@
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite scale</summary>
                             <div class="commandDescription">scales an image in the composite
-<<<<<<< HEAD
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite scale <span class="commandArgumentOrderItem">imageID</span> <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite scale 0 2</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageID<span class="commandArgumentType">integer</span></summary>
-=======
                                 <span class="argumentOrder">ARGUMENT ORDER: p/composite scale <span class="commandArgumentOrderItem">imageid</span> <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span></span>
                                 <span class="exampleUsage">EXAMPLE 1: p/composite scale 0 1920 1080</span>
                             </div>
                             <details class="commandArgument" open>
                                 <summary>imageid<span class="commandArgumentType">integer</span></summary>
->>>>>>> b126007 (unfinished p/composite)
                                 <div class="argumentDescription">the ID of the image to scale
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
                                 </div>
@@ -289,11 +248,6 @@
                                 </div>
                             </details>
                         </details>
-<<<<<<< HEAD
-
-
-                        
-=======
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite meta</summary>
                             <div class="commandDescription">gets the metadata of an image in the composite
@@ -308,12 +262,17 @@
                             </details>
                         </details>
                         <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/composite data</summary>
+                            <div class="commandDescription">returns data about the composite, like the size, background color, format, and some other things.
+                                <span class="exampleUsage">EXAMPLE 1: p/composite preview</span>
+                            </div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/composite preview</summary>
                             <div class="commandDescription">previews the composite
                                 <span class="exampleUsage">EXAMPLE 1: p/composite preview</span>
                             </div>
                         </details>
->>>>>>> b126007 (unfinished p/composite)
                     </details>
                 </details>
                 <details class="commandDetails" id="p/configure">

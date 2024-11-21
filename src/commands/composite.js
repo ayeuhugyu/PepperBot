@@ -5,7 +5,7 @@ import {
     SubCommand,
     SubCommandData,
 } from "../lib/types/commands.js";
-import { Collection } from "discord.js";
+import { AttachmentBuilder, Collection } from "discord.js";
 import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import sharp from "sharp";
@@ -20,7 +20,7 @@ class Composite {
     canvas = {
         width: 0,
         height: 0,
-        backgroundColor: "000000"
+        backgroundcolor: "000000"
     };
     output = {
         format: "png",
@@ -29,6 +29,10 @@ class Composite {
     addImage = function(img) {
         this.images.push(img);
         img.id = this.images.length - 1;
+        if (this.images.length == 1) {
+            this.canvas.width = img.size.width;
+            this.canvas.height = img.size.height;
+        }
         return this.images
     }
     removeImage = function(id) {
@@ -101,30 +105,25 @@ const preview = new SubCommand(
                     width: composite.canvas.width,
                     height: composite.canvas.height,
                     channels: composite.output.channels,
-                    background: `#${composite.canvas.backgroundColor}`
+                    background: `#${composite.canvas.backgroundcolor}`
                 }
             });
+            let compositeData = []
             for (const image of composite.images) {
-                const img = sharp(await image.buffer);
-                canvas.composite([
-                    {
-                        input: await img.toBuffer(),
-                        left: image.position.x,
-                        top: image.position.y
-                    }
-                ]);
+                const img = sharp(await image.buffer).resize({ width: image.size.width, height: image.size.height });
+                compositeData.push({
+                    input: await img.toBuffer(),
+                    left: image.position.x,
+                    top: image.position.y,
+                });
             }
-            const buffer = await canvas.toBuffer();
-            const embed = theme.createThemeEmbed(theme.themes.CURRENT);
-            embed.setTitle(`Preview of composite`);
-            embed.setImage("attachment://composite.png");
+            console.log(composite.output.format)
+            const finalComposite = await canvas.composite(compositeData);
+            const formattedCanvas = await finalComposite.toFormat(composite.output.format)
+            const buffer = await formattedCanvas.toBuffer();
             action.reply(message, {
-                embeds: [embed],
                 files: [
-                    {
-                        attachment: buffer,
-                        name: "composite.png"
-                    }
+                    new AttachmentBuilder(buffer, `composite.${composite.output.format}`)
                 ],
                 ephemeral: gconfig.useEphemeralReplies,
             });
@@ -133,11 +132,50 @@ const preview = new SubCommand(
                 content: `an error occurred while trying to create the preview: \`${error}\``,
                 ephemeral: gconfig.useEphemeralReplies,
             });
-            log.error(error);
         }
     }
 );
 
+const datadata = new SubCommandData();
+datadata.setName("data");
+datadata.setDescription("gets data from the composite");
+datadata.setPermissions([]);
+datadata.setPermissionsReadable("");
+datadata.setWhitelist([]);
+datadata.setCanRunFromBot(true);
+datadata.setAliases();
+const datacommand = new SubCommand(
+    datadata,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        const composite = getComposite(message.author.id);
+        const embed = theme.createThemeEmbed(theme.themes.CURRENT);
+        embed.setTitle(`Data for composite`);
+        const fields = [{
+            name: "Canvas",
+            value: `Width: ${composite.canvas.width}\nHeight: ${composite.canvas.height}\nBackground color: #${composite.canvas.backgroundcolor}`,
+            inline: true
+        },
+        {
+            name: "Output",
+            value: `Format: ${composite.output.format}\nChannels: ${composite.output.channels}`,
+            inline: true
+        },
+        {
+            name: "Images",
+            value: composite.images.map((image) => `ID: ${image.id}\nSize: ${image.size.width}x${image.size.height}\nPosition: ${image.position.x}, ${image.position.y}`).join("\n\n") || "No images.",
+            inline: false
+        }]
+        embed.setFields(fields);
+        
+        action.reply(message, {
+            embeds: [embed],
+            ephemeral: gconfig.useEphemeralReplies,
+        });
+    }
+);
 
 const metacommanddata = new SubCommandData();
 metacommanddata.setName("meta");
@@ -149,19 +187,20 @@ metacommanddata.setCanRunFromBot(true);
 metacommanddata.setAliases();
 metacommanddata.addIntegerOption((option) =>
     option
-        .setName("imageID")
-        .setDescription("the ID of the image that you want to get metadata from")
+        .setName("imageid")
+        .setDescription("the ID of the image to get metadata from")
         .setRequired(true)
 );
 const meta = new SubCommand(
     metacommanddata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("imageID", parseInt(message.content.split(" ")[2]));
+        const splitMessage = message.content.split(" ");
+        args.set("imageid", parseInt(splitMessage[1]));
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("imageID")) {
+        if (args.get("imageid") === undefined) {
             action.reply(message, {
                 content: `you need to provide an image ID to get metadata from`,
                 ephemeral: gconfig.useEphemeralReplies,
@@ -169,7 +208,7 @@ const meta = new SubCommand(
             return;
         }
         const composite = getComposite(message.author.id);
-        const image = composite.getImage(args.get("imageID"));
+        const image = composite.getImage(args.get("imageid"));
         if (!image) {
             action.reply(message, {
                 content: `the image you provided does not exist`,
@@ -177,18 +216,15 @@ const meta = new SubCommand(
             });
             return;
         }
-        const metadata = await sharp(image.buffer).metadata();
+        const metadata = await sharp(await image.buffer).metadata();
         const embed = theme.createThemeEmbed(theme.themes.CURRENT);
-        embed.setTitle(`Metadata for image ${args.get("imageID")}`);
-        embed.addField("Format", metadata.format);
-        embed.addField("Width", metadata.width);
-        embed.addField("Height", metadata.height);
-        embed.addField("Channels", metadata.channels);
-        embed.addField("Density", metadata.density);
-        embed.addField("Has Profile", metadata.hasProfile);
-        embed.addField("Space", metadata.space);
-        embed.addField("Alpha", metadata.alpha);
-        embed.addField("Orientation", metadata.orientation);
+        embed.setTitle(`Metadata for image ${args.get("imageid")}`);
+        const fields = Object.entries(metadata).map(([key, value]) => ({
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            value: value.toString(),
+            inline: true
+        }));
+        embed.setFields(fields);
         action.reply(message, {
             embeds: [embed],
             ephemeral: gconfig.useEphemeralReplies,
@@ -206,7 +242,7 @@ scaledata.setCanRunFromBot(true);
 scaledata.setAliases();
 scaledata.addIntegerOption((option) =>
     option
-        .setName("imageID")
+        .setName("imageid")
         .setDescription("the ID of the image that you want to scale")
         .setRequired(true)
 );
@@ -226,20 +262,20 @@ const scale = new SubCommand(
     scaledata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("imageID", parseInt(message.content.split(" ")[2]));
-        args.set("width", parseInt(message.content.split(" ")[3]));
-        args.set("height", parseInt(message.content.split(" ")[4]));
+        args.set("imageid", parseInt(message.content.split(" ")[1]));
+        args.set("width", parseInt(message.content.split(" ")[2]));
+        args.set("height", parseInt(message.content.split(" ")[3]));
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("imageID")) {
+        if (args.get("imageid") === undefined) {
             action.reply(message, {
                 content: `you need to provide an image ID to scale`,
                 ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
-        if (!args.get("width") || !args.get("height")) {
+        if (args.get("width") === undefined || args.get("height") === undefined) {
             action.reply(message, {
                 content: `you need to provide a width and height to scale the image to`,
                 ephemeral: gconfig.useEphemeralReplies,
@@ -247,7 +283,7 @@ const scale = new SubCommand(
             return;
         }
         const composite = getComposite(message.author.id);
-        const image = composite.getImage(args.get("imageID"));
+        const image = composite.getImage(args.get("imageid"));
         if (!image) {
             action.reply(message, {
                 content: `the image you provided does not exist`,
@@ -258,7 +294,7 @@ const scale = new SubCommand(
         image.size.width = args.get("width");
         image.size.height = args.get("height");
         action.reply(message, {
-            content: `scaled image ${args.get("imageID")} to ${args.get("width")}x${args.get("height")}`,
+            content: `scaled image ${args.get("imageid")} to ${args.get("width")}x${args.get("height")}`,
             ephemeral: gconfig.useEphemeralReplies,
         });
     }
@@ -274,7 +310,7 @@ movedata.setCanRunFromBot(true);
 movedata.setAliases();
 movedata.addIntegerOption((option) =>
     option
-        .setName("imageID")
+        .setName("imageid")
         .setDescription("the ID of the image that you want to move")
         .setRequired(true)
 );
@@ -294,20 +330,20 @@ const move = new SubCommand(
     movedata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("imageID", parseInt(message.content.split(" ")[2]));
-        args.set("x", parseInt(message.content.split(" ")[3]));
-        args.set("y", parseInt(message.content.split(" ")[4]));
+        args.set("imageid", parseInt(message.content.split(" ")[1]));
+        args.set("x", parseInt(message.content.split(" ")[2]));
+        args.set("y", parseInt(message.content.split(" ")[3]));
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("imageID")) {
+        if (args.get("imageid") === undefined) {
             action.reply(message, {
                 content: `you need to provide an image ID to move`,
                 ephemeral: gconfig.useEphemeralReplies,
             });
             return;
         }
-        if (!args.get("x") || !args.get("y")) {
+        if (args.get("x") === undefined || args.get("y") === undefined) {
             action.reply(message, {
                 content: `you need to provide an x and y position to move the image to`,
                 ephemeral: gconfig.useEphemeralReplies,
@@ -315,7 +351,7 @@ const move = new SubCommand(
             return;
         }
         const composite = getComposite(message.author.id);
-        const image = composite.getImage(args.get("imageID"));
+        const image = composite.getImage(args.get("imageid"));
         if (!image) {
             action.reply(message, {
                 content: `the image you provided does not exist`,
@@ -326,7 +362,7 @@ const move = new SubCommand(
         image.position.x = args.get("x");
         image.position.y = args.get("y");
         action.reply(message, {
-            content: `moved image ${args.get("imageID")} to ${args.get("x")}, ${args.get("y")}`,
+            content: `moved image ${args.get("imageid")} to ${args.get("x")}, ${args.get("y")}`,
             ephemeral: gconfig.useEphemeralReplies,
         });
     }
@@ -380,7 +416,7 @@ const output = new SubCommand(
     outputdata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("format", message.content.split(" ")[2]);
+        args.set("format", message.content.split(" ")[1]);
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
@@ -422,7 +458,7 @@ canvasdata.addIntegerOption((option) =>
 );
 canvasdata.addStringOption((option) =>
     option
-        .setName("backgroundColor")
+        .setName("backgroundcolor")
         .setDescription("the background color of the canvas")
         .setRequired(false)
 );
@@ -430,13 +466,14 @@ const canvas = new SubCommand(
     canvasdata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("width", parseInt(message.content.split(" ")[2]));
-        args.set("height", parseInt(message.content.split(" ")[3]));
-        args.set("backgroundColor", message.content.split(" ")[4]);
+        const splitMessage = message.content.split(" ");
+        args.set("width", parseInt(splitMessage[1]));
+        args.set("height", parseInt(splitMessage[2]));
+        args.set("backgroundcolor", splitMessage[3]);
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("width") && !args.get("height") && !args.get("backgroundColor")) {
+        if (!args.get("width") && !args.get("height") && !args.get("backgroundcolor")) {
             action.reply(message, {
                 content: `you need to provide a width, height or background color for the canvas`,
                 ephemeral: gconfig.useEphemeralReplies,
@@ -457,7 +494,7 @@ const canvas = new SubCommand(
             });
             return;
         }
-        if (args.get("backgroundColor") && !isHexColor(args.get("backgroundColor"))) {
+        if (args.get("backgroundcolor") && !isHexColor(args.get("backgroundcolor"))) {
             action.reply(message, {
                 content: `the color you provided is not a valid hex color`,
                 ephemeral: gconfig.useEphemeralReplies,
@@ -471,8 +508,8 @@ const canvas = new SubCommand(
         if (args.get("height")) {
             composite.canvas.height = args.get("height");
         }
-        if (args.get("backgroundColor")) {
-            composite.canvas.backgroundColor = args.get("backgroundColor");
+        if (args.get("backgroundcolor")) {
+            composite.canvas.backgroundcolor = args.get("backgroundcolor");
         }
 
         action.reply(message, {
@@ -492,7 +529,7 @@ removedata.setCanRunFromBot(true);
 removedata.setAliases();
 removedata.addIntegerOption((option) =>
     option
-        .setName("imageID")
+        .setName("imageid")
         .setDescription("the ID of the image to remove")
         .setRequired(true)
 );
@@ -500,11 +537,11 @@ const remove = new SubCommand(
     removedata,
     async function getArguments(message) {
         const args = new Collection();
-        args.set("imageID", parseInt(message.content.split(" ")[2]));
+        args.set("imageid", parseInt(message.content.split(" ")[1]));
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("imageID")) {
+        if (args.get("imageid") === undefined) {
             action.reply(message, {
                 content: `you need to provide an image ID to remove from the composite`,
                 ephemeral: gconfig.useEphemeralReplies,
@@ -512,7 +549,7 @@ const remove = new SubCommand(
             return;
         }
         const composite = getComposite(message.author.id);
-        composite.removeImage(args.get("imageID"));
+        composite.removeImage(args.get("imageid"));
         action.reply(message, {
             content: `removed image from composite`,
             ephemeral: gconfig.useEphemeralReplies,
@@ -586,6 +623,7 @@ data.addStringOption((option) =>
             { name: "remove", value: "remove" },
             { name: "preview", value: "preview" },
             { name: "meta", value: "meta" },
+            { name: "data", value: "data" },
             { name: "move", value: "move" },
             { name: "scale", value: "scale" },
             { name: "canvas", value: "canvas" },
@@ -599,7 +637,7 @@ data.addAttachmentOption((option) =>
         .setDescription("the image to add to the composite")
         .setRequired(false)
 );
-data.addIntegerOption((option) => option.setName("imageID").setDescription("the ID of the image that you want to move/scale").setRequired(false));
+data.addIntegerOption((option) => option.setName("imageid").setDescription("the ID of the image that you want to move/scale").setRequired(false));
 data.addIntegerOption((option) => option.setName("x").setDescription("the x position to move the image to").setRequired(false));
 data.addIntegerOption((option) => option.setName("y").setDescription("the y position to move the image to").setRequired(false));
 data.addIntegerOption((option) => option.setName("width").setDescription("the width to scale the image/canvas to").setRequired(false));
@@ -632,7 +670,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies,
         });
     },
-    [add, remove, canvas, output, clear, move, scale, meta, preview] // subcommands
+    [add, remove, canvas, output, clear, move, scale, meta, datacommand, preview] // subcommands
 );
 
 export default command;
