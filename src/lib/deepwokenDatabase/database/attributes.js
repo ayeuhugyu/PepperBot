@@ -113,8 +113,4 @@ export const weapon = {
     })
 }
 
-export default {
-    attunement: attunement,
-    base: base,
-    weapon: weapon
-}
+export default { ...base, ...attunement, ...weapon }

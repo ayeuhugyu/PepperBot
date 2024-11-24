@@ -35,7 +35,7 @@ shit on the todo list:
 
 to add to todo list:
 
-p/update
+p/update a whole entire TWO new commands... CRAZY...
 
 **website changes:**
 
@@ -43,8 +43,17 @@ p/update
 
 - added p/jak graph, allows easy creation of "If you would please consult the graphs." images
 - added p/composite, allows you to easily put multiple images together in a canvas.
+-# this command has NOT been sufficiently tested to my liking, i can't guarantee that it will work 100% of the time
 
 **fixes/optimizations:**
 
 - fixed guide page blocks incorrectly stacking on lower zoom levels
 - fixed logs viewer reading past logs when its not supposed to
+
+**stuff i've been doing in the background**
+-# this is why there has been no pepperbot update for 9 days
+
+- deepwoken database expansions
+- deepwoken database optimizations
+- command format rewrites
+- bingo (no i will not elaborate (unless you pester me about it then i will probably elaborate))

@@ -1,44 +1,8 @@
 import * as Enum from "./enumDefinitions.js"
 
-function mergeObjects(target, source) {
-    for (let key in source) {
-        if (source.hasOwnProperty(key)) {
-            if (source[key] instanceof Object && !(source[key] instanceof Array)) {
-                target[key] = target[key] || {};
-                mergeObjects(target[key], source[key]);
-            } else {
-                target[key] = source[key];
-            }
-        }
-    }
-}
-
-export class Base {
-    constructor(object) {
-        if (!object) return;
-        for (let key in object) {
-            if (object.hasOwnProperty(key) && this.hasOwnProperty(key)) {
-                if (object[key] instanceof Object && !(object[key] instanceof Array)) {
-                    // If the property is an object, recursively merge its properties
-                    this[key] = this[key] || {};
-                    mergeObjects(this[key], object[key]);
-                } else {
-                    // If the property is not an object, set it directly
-                    this[key] = object[key];
-                }
-            } else {
-                console.error(`Key ${key} is not a valid key for ${this.constructor.name}; ignoring.`);
-            }
-        }
-    }
-}
-
 // Data Structures
 
-export class statDistribution extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class statDistribution {
     attunement = {
         flamecharm: 0,
         frostdraw: 0,
@@ -62,22 +26,22 @@ export class statDistribution extends Base {
         willpower: 0,
         charisma: 0
     }
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class mantraSlots extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class mantraSlots {
     "combat" = 0
     "mobility" = 0
     "support" = 0
     "wildcard" = 0
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class characterStats extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class characterStats {
     "level" = 0
     "health" = 0
     "ether" = 0
@@ -112,12 +76,12 @@ export class characterStats extends Base {
     "reputation" = { // 0 = neutral, 1 to 149 = friendly, 150 to 299 = allied, 300 = hero. -1 to -149 = enemy, -150 to -299 = hunted, -300 = villan
         "faction_name": 0
     } // TODO: expand this to always include all factions, rather than doing it like this.
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class characterData extends Base { // previously named requirements, is used for requirements & passives & other things etc.
-    constructor(object) {
-        super(object)
-    }
+export class characterData { // previously named requirements, is used for requirements & passives & other things etc.
     "character" = new characterStats()
     "stats" = new statDistribution()
     "talents" = [
@@ -129,26 +93,26 @@ export class characterData extends Base { // previously named requirements, is u
     "quests" = [
         "quest_name"
     ]
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
 // Real Things
 
-export class talentCategory extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class talentCategory {
     "name" = "talentCategory_name"
     "rich_name" = "Talent Category Rich Name"
     "mystic" = "mystic_dialogue"
     "talents" = [
         "talent_name"
     ]
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class talent extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class talent {
     "name" = "talent_name"
     "rich_name" = "Talent Rich Name"
     "description" = "talent_description"
@@ -160,12 +124,12 @@ export class talent extends Base {
     ]
     "echo" = false
     "passives" = new characterData()
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class weapon extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class weapon {
     "name" = "weapon_name"
     "rich_name" = "Weapon Rich Name"
     "description" = "weapon_description"
@@ -182,43 +146,43 @@ export class weapon extends Base {
     }
     "type" = Enum.WeaponType.SWORD
     "rarity" = Enum.ItemRarity.COMMON
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class stat extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class stat {
     "name" = "stat_name"
     "rich_name" = "Stat Rich Name"
     "description" = "stat_description"
     "shortform" = "stat_shortform"
     "category" = Enum.StatCategory.BASE
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class resonance extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class resonance {
     "name" = "resonance_name"
     "rich_name" = "Resonance Rich Name"
     "description" = "resonance_description"
     "rarity" = Enum.ResonanceRarity.NORMAL
     "corrupted" = false
     "corruptionDownside" = Enum.CorruptionDownside.NONE
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class questReward extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class questReward {
     "type" = "##enums/questRewardType"
     "value" = {} // TODO: finish this
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class quest extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class quest {
     "name" = "quest_name"
     "rich_name" = "Quest Rich Name"
     "description" = "quest_description"
@@ -226,12 +190,12 @@ export class quest extends Base {
     "rewards" = [
         new questReward()
     ]
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class oathProgression extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class oathProgression {
     "level" = 0
     "talents" = [
         "talent_name"
@@ -239,12 +203,12 @@ export class oathProgression extends Base {
     "mantras" = [
         "mantra_name"
     ]
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class oath extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class oath {
     "name" = "oath_name"
     "rich_name" = "Oath Rich Name"
     "description" = "oath_description"
@@ -261,21 +225,21 @@ export class oath extends Base {
     "progression" = [
         new oathProgression()
     ]
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class dialogue extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class dialogue {
     "id" = 0
     "text" = "dialogue_text"
     "next" = 0
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class npc extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class npc {
     "name" = "npc_name"
     "rich_name" = "NPC Rich Name"
     "dialogue" = [
@@ -286,56 +250,56 @@ export class npc extends Base {
     ]
     "oath" = "oath_name"
     "murmur" = "murmur_name"
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class murmur extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class murmur {
     "name" = "murmur_name"
     "rich_name" = "Murmur Rich Name"
     "description" = "murmur_description"
     "requirements" = new characterData()
     "murmurGiver" = "npc_name"
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class mantra extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class mantra {
     "name" = "mantra_name"
     "rich_name" = "Mantra Rich Name"
     "description" = "mantra_description"
     "requirements" = new characterData()
     "mantra_type" = Enum.MantraType.COMBAT
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class location extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class location {
     "name" = "location_name"
     "rich_name" = "Location Rich Name"
     "description" = "location_description"
     "majorPlace" = "island_name"
     "territoryOf" = "faction_name"
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class faction extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class faction {
     "name" = "faction_name"
     "rich_name" = "Faction Rich Name"
     "territories" = [
         "location_name"
     ]
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }
 
-export class equipment extends Base {
-    constructor(object) {
-        super(object)
-    }
+export class equipment {
     "name" = "equipment_name"
     "rich_name" = "Equipment Rich Name"
     "description" = "equipment_description"
@@ -363,4 +327,7 @@ export class equipment extends Base {
         ]
     }
     "innate" = new characterData()
+    constructor(object) {
+        Object.assign(this, object)
+    }
 }

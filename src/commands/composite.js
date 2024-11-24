@@ -430,7 +430,7 @@ const output = new SubCommand(
         }
         composite.output.format = args.get("format");
         action.reply(message, {
-            content: `set output format to ${args.get("format")}`,
+            content: `set output format to ${args.get("format")}\n:bangbang: this command does not currently function :bangbang:\nit will always be a jpeg (?) output\n-# idfk why this happens, feel free to try fixing it faster than i can: <https://github.com/ayeuhugyu/PepperBot/blob/dev/src/commands/composite.js#L122>`,
             ephemeral: gconfig.useEphemeralReplies,
         });
     }

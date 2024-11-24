@@ -1,6 +1,8 @@
 import oaths from "../database/oaths.js";
 import attributes from "../database/attributes.js";
 import murmurs from "../database/murmurs.js";
+import equipment from "../database/equipment.js";
+import fs from "fs";
 
 class DBError {
     constructor(message, code) {
@@ -11,32 +13,43 @@ class DBError {
     }
 }
 
-const punctuation = [".", ",", "!", "?", ";", ":", "-", "_", " ", "'", '"', "(", ")", "[", "]", "{", "}", "<", ">", "/", "\\", "|", "`", "~", "@", "#"]
+const punctuation = [".", ",", "!", "?", ";", ":", "'", '"', "(", ")", "[", "]", "{", "}", "<", ">", "/", "\\", "|", "`", "~", "@", "#"]
+const spaces = [" ", "-", "+"]
 
 export function  normalizeString(string) {
-    return string.toLowerCase().split("").filter(char => !punctuation.includes(char)).join("");
+    if (string === undefined) return string;
+    return string.toLowerCase().split("").filter(char => !punctuation.includes(char)).map(char => spaces.includes(char) ? "_" : char).join("")
 }
 
 export const data = {
     oaths: oaths,
     attributes: attributes,
-    murmurs: murmurs
+    murmurs: murmurs,
+    equipment: equipment
 }
 
+fs.writeFileSync("./testUtils/database.json", JSON.stringify(data, null, 4));
+
 function getNestedProperty(obj, key) {
-    return key.split('.').reduce((o, k) => (o && o[k] !== 'undefined') ? o[k] : undefined, obj);
+    const split = key.split('.');
+    if (split.length === 1) {
+        return obj[key];
+    }
+    return split.reduce((o, k) => (o && o[k] !== 'undefined') ? o[k] : undefined, obj);
 }
 
 export function getItems(listName, key, value) {
     key = normalizeString(key);
+    console.log(value)
     const list = data[listName];
     if (!list) {
         return new DBError(`invalid list name: ${listName}`, 404);
     }
-    if (typeof value === "string") {
-        value = normalizeString(value);
-    }
-    const items = Object.values(list).filter(item => normalizeString(getNestedProperty(item, key)) === value);
+    const items = Object.values(list).map(item => {
+        if (getNestedProperty(item, key) === value) {
+            return item;
+        }
+    }).filter(item => item !== undefined);
     if (items.length === 0) {
         return new DBError(`item with ${key} == ${value} not found in list: ${listName}`, 404);
     }

@@ -1,5 +1,5 @@
 import * as classes from "../lib/classDefinitions.js"
-import * as Enum from "../lib/enums.js"
+import * as Enum from "../lib/enumDefinitions.js"
 
 export default {
     arcwarder: new classes.oath({

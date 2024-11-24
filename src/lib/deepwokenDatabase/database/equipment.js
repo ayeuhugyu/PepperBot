@@ -1,5 +1,5 @@
 import * as Enum from '../lib/enumDefinitions.js'
-import * as classes from '../lib/classDefinitions'
+import * as classes from '../lib/classDefinitions.js'
 
 export default {
     // #region HEAD EQUIPMENT
@@ -821,6 +821,341 @@ export default {
             "talents": [
                 "spare_nails",
                 "emergency_repairs"
+            ],
+            "mantras": []
+        })
+    }),
+    bulwark_helm: new classes.equipment({
+        "name": "bulwark_helm",
+        "rich_name": "Bulwark Helm",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 8
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths",
+                "miners_landing",
+                "the_eternal_gale"
+            ],
+            "npcs": [
+                "maestro_evengarde_rest",
+                "duke_erisia"
+            ],
+            "monsters": [],
+            "other": [
+                "hell_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "strong_hold",
+            ],
+            "mantras": []
+        })
+    }),
+    captains_kabuto: new classes.equipment({
+        "name": "captains_kabuto",
+        "rich_name": "Captain's Kabuto",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths",
+            ],
+            "npcs": [
+                "maestro_evengarde_rest",
+                "duke_erisia"
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 8,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    celtor_commander_helm: new classes.equipment({
+        "name": "celtor_commander_helm",
+        "rich_name": "Celtor Commander Helm",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths",
+                "the_eternal_gale"
+            ],
+            "npcs": [
+                "maestro_evengarde_rest",
+                "duke_erisia"
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "grasp_on_reality"
+            ],
+            "mantras": []
+        })
+    }),
+    chefs_toque: new classes.equipment({
+        "name": "chefs_toque",
+        "rich_name": "Chef's Toque",
+        "description": "It's not raw, you are.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 100,
+        "rarity": Enum.ItemRarity.UNIQUE,
+        "pips": [
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "npcs": [
+                "chef_odiolovaro",
+            ],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "umami",
+                "gourmet"
+            ],
+            "mantras": []
+        })
+    }),
+    dark_cowl: new classes.equipment({
+        "name": "dark_cowl",
+        "rich_name": "Dark Cowl",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [],
+        "obtained_from": {
+            "locations": [
+                "the_depths",
+            ],
+            "npcs": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+            ],
+            "monsters": [
+                "deep_widow"
+            ],
+            "other": [
+                "chime_of_conflict",
+                "artifact_chest"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "stealth": 0.04,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    dark_owl_chapeau: new classes.equipment({
+        "name": "dark_owl_chapeau",
+        "rich_name": "Dark Owl Chapeau",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_diluvian_mechanism",
+                "the_depths",
+                "the_eternal_gale",
+                "miners_landing"
+            ],
+            "npcs": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+            ],
+            "monsters": [
+                "primadon",
+            ],
+            "other": [
+                "chime_of_conflict",
+                "bounty_chest"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "stealth": 0.10,
+                "resistance": {
+                    "shadow": 0.05
+                }
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "giantslayer"
+            ],
+            "mantras": []
+        })
+    }),
+    deepscorn_casque: new classes.equipment({
+        "name": "deepscorn_casque",
+        "rich_name": "Deepscore Casque",
+        "description": "An artifact of dark renown, convincing them they are already dead, instilling a strange reckless calm, Crafted from darksteel, its history is steeped in blood; its last owner met a grim fate during a forbidden Ministry Ritual to grow a murky, grotesque abomination. Grayhule failed his experiments and succumbed to his own shadows. Dare to don this helm at your own peril.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 100,
+        "rarity": Enum.ItemRarity.MYTHICAL,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "ministry_cache"
+            ],
+            "npcs": [],
+            "monsters": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "already_dead"
+            ],
+            "mantras": []
+        })
+    }),
+    deepwoken_hood: new classes.equipment({
+        "name": "deepwoken_hood",
+        "rich_name": "Deepwoken Hood",
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 6
+            }),
+            "stats": new classes.statDistribution({
+                "agility": 10
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "fort_merit",
+                "the_depths",
+                "miners_landing"
+            ],
+            "npcs": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+            ],
+            "monsters": [
+                "primadon"
+            ],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "already_dead"
             ],
             "mantras": []
         })
