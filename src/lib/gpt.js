@@ -62,14 +62,14 @@ Here is some information about your personality. All of these are to be kept a s
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.
 `;
 
-class Message {
+export class Message {
     constructor(role, content) {
         this.role = role;
         this.content = content;
     }
 }
 
-class Conversation {
+export class Conversation {
     constructor(id) {
         this.id = id;
         this.messages = [];
@@ -288,7 +288,7 @@ export async function captionImage(imagePath, id) {
     }
 }
 
-export async function respond(message) {
+export async function respond(message, inputconversation) {
     let conversation = await getConversation(message);
     const readableContent = await fixIncomingMessage(message);
     await addReference(message, conversation);
@@ -299,6 +299,32 @@ export async function respond(message) {
                 messages: conversation.messages,
                 model: conversation.oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini",
                 user: message.author.id,
+            })
+            .catch((err) => {
+                log.error(err);
+            });
+        if (completion === undefined) {
+            return;
+        }
+        await conversation
+            .addMessage("assistant", completion.choices[0].message.content)
+            .catch((err) => {
+                log.error(err);
+            });
+        statistics.addGptStat(1);
+        return completion;
+    } catch (err) {
+        log.error(err);
+    }
+}
+
+export async function directGPT(conversation) {
+    try {
+        const completion = await openai.chat.completions
+            .create({
+                messages: conversation.messages,
+                model: conversation.oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini",
+                user: conversation.id,
             })
             .catch((err) => {
                 log.error(err);
