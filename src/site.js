@@ -474,6 +474,9 @@ app.get(`/oauth2/getGuilds`, async (req, res) => {
 app.use("/cgi-bin", (req, res, next) => {
     res.redirect("http://plaskinino.horse");
 });
+app.use("/sludge", (req, res, next) => {
+    res.redirect("http://sludge.de");
+});
 
 app.all("*", (req, res) => {
     res.sendFile("/pages/errors/404.html", { root: rootPath });
