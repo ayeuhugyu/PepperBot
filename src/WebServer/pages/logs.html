@@ -49,25 +49,31 @@
             let startIndex = 0;
             let endIndex = 150;
             let logHasEnded = false;
+            let readingNew = false;
 
             const status = document.querySelector('.logReaderStatus')
 
             async function readNewLog() {
+                console.log(`reading new log with level: ${logLevel}`)
+                readingNew = true
                 logContent.innerHTML = ''
                 status.innerText = 'resetting...'
+                previousLineSection = null
                 await fetch(`/api/get-log-length?level=${logLevel.toLowerCase()}`)
-                    .then(response => response.text())
-                    .then(text => {
-                        endIndex = parseInt(text)
-                        startIndex = endIndex - 150
-                        logHasEnded = false
-                        readLog()  
-                    })
-                
+                .then(response => response.text())
+                .then(text => {
+                    endIndex = parseInt(text)
+                    startIndex = endIndex - 150
+                    logHasEnded = false 
+                })
+                await readLog()
+                readingNew = false
+                logContent.scrollTop = logContent.scrollHeight
             }
             let previousLineSection = null
             async function readLog() {
                 status.innerText = 'reading...'
+                console.log(`startIndex: ${startIndex}, endIndex: ${endIndex}`)
                 if (startIndex < 0) startIndex = 0
                 if (endIndex < 0) endIndex = 0
                 if (startIndex === 0 && endIndex === 0) {
@@ -98,10 +104,10 @@
                         if (previousLineSection) {
                             previousLineSection.scrollIntoView({ behavior: "instant", block: "start" })
                         }
+                        console.log(`previousLineSection: ${previousLineSection}`)
                         previousLineSection = linesSection
                     }
                 )
-                logContent.scrollTop = logContent.scrollHeight
                 startIndex -= 150
                 endIndex -= 150
                 status.innerText = 'awaiting input...'
@@ -132,8 +138,9 @@
             }
 
             readNewLog()
+
             logContent.addEventListener("scroll", () => {
-                if (logContent.scrollTop === 0) {
+                if (logContent.scrollTop === 0 ** !readingNew) {
                     readLog()
                 }
             });

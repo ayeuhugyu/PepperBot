@@ -194,8 +194,12 @@ async function isUsableUrl(url) {
     } catch {
         isExistingVideo = false;
     }
-    if (response.data.items[0].snippet.title) {
-        isExistingVideo = true;
+    try {
+        if (response.data.items[0].snippet.title) {
+            isExistingVideo = true;
+        }
+    } catch {
+        isExistingVideo = false;
     }
     if (!isExistingVideo) {
         return {

@@ -231,6 +231,10 @@ details.borderlessCategory > *:not(summary) {
 }
 /* General */
 
+.hidden {
+    display: none;
+}
+
 pre {
     font-family: var(--main-font);
 }
