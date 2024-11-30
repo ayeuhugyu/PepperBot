@@ -1489,6 +1489,52 @@
                         </details>
                     </details>
                 </details>
+                <details class="commandDetails" id="p/trueban">
+                    <summary class="commandName">p/trueban<span class="commandCategory">moderation</span></summary>
+                    <div class="commandDescription">operations relating to the users truebanned from the server. ONLY SERVER OWNERS CAN CHANGE THIS LIST!
+                        <span class="argumentOrder">ARGUMENT ORDER: p/trueban <span class="commandArgumentOrderItem">subcommand</span></span> <span class="commandArgumentOrderItem">user</span>
+                        <span class="exampleUsage">EXAMPLE 1: p/trueban view</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use (defaults to view)
+                            <span class="commandArgumentProperty">REQUIRED: false</span>
+                            <span class="commandArgumentProperty">OPTIONS: view, add, remove</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/trueban view</summary>
+                            <div class="commandDescription">view the list of people truebanned from the server
+                                <span class="exampleUsage">EXAMPLE 1: p/trueban view</span>
+                            </div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/trueban add</summary>
+                            <div class="commandDescription">add someone to the trueban list
+                                <span class="argumentOrder">ARGUMENT ORDER: p/trueban add <span class="commandArgumentOrderItem">user</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/trueban add 111111111111111111</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>user<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">who to add, either a user ID or a mention
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/trueban remove</summary>
+                            <div class="commandDescription">remove someone from the trueban
+                                <span class="argumentOrder">ARGUMENT ORDER: p/trueban remove <span class="commandArgumentOrderItem">user</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/trueban remove 111111111111111111</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>user<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">who to remove, either a user ID or a mention
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                    </details>
+                </details>
                 <details class="commandDetails" id="p/undeploycommands">
                     <summary class="commandName whitelistOnly">p/undeploycommands<span class="commandCategory">management</span></summary>
                     <div class="commandDescription">removes slash commands from the given guild
@@ -1602,6 +1648,7 @@
                         <p class="indented">an image compositor</p>
                         <p class="indented">custom todo lists</p>
                         <p class="indented">reaction roles</p>
+                        <p class="indented">a server-owner-only permanent, recursive banning tool</p>
                         <h3 class="indented indent-half">Info <span class="lesserText smallText">(features for getting info about the bot)</span></h3> <!-- info segment -->
                         <p class="indented">usage statistics</p>
                         <p class="indented">a servers list</p>

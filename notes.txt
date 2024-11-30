@@ -41,8 +41,8 @@ p/update a whole entire TWO new commands... CRAZY...
 
 **actual content:**
 
-**fixes/optimizations:**
+- reverted theme back to default
+- added p/trueban, which bans someone and makes it impossible to unban them. only usable by server owners
+- adjusted GPT prompt
 
-- fixed author links causing errors with p/queue and p/playurl
-- fixed logs page thinking you've scrolled to the top when the log content is cleared
-- fixed logs page resetting the scroll height back down to the bottom after reading a log section
+**fixes/optimizations:**
