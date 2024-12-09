@@ -67,7 +67,7 @@ async function processDM(message) {
                     .startsWith(config.generic.prefix.toLowerCase())
             ) {
                 const channel = await client.channels.cache.get(
-                    "1148814162273763418"
+                    "1312566483569741896"
                 );
                 const webhooks = await channel.fetchWebhooks();
                 let webhook = await webhooks.find(

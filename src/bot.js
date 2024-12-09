@@ -51,7 +51,7 @@ for (const file of eventFiles) {
 
 client.on(Events.ClientReady, async () => {
     log.info("bot online");
-    let channel = await client.channels.cache.get("1148814162273763418");
+    let channel = await client.channels.cache.get("1312566483569741896");
     if (channel) {
         channel.send(`its pepper time ${theme.getThemeEmoji(theme.themes.CURRENT)}`);
     } else {
@@ -59,7 +59,7 @@ client.on(Events.ClientReady, async () => {
         const shards = channels.size;
         for (const shardChannels of channels) {
             for (const shardChannel of shardChannels) {
-                if (shardChannel.id == "1148814162273763418") {
+                if (shardChannel.id == "1312566483569741896") {
                     channel = shardChannel;
                     break;
                 }
@@ -83,7 +83,7 @@ client.on(Events.ClientReady, async () => {
 
 await init();
 
-const channel = await client.channels.fetch("1148814162273763418");
+const channel = await client.channels.fetch("1312566483569741896");
 
 let quickErrors = 3;
 let lastErrorTime = undefined;
