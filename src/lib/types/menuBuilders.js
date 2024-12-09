@@ -31,6 +31,7 @@ export class AdvancedPagedMenuBuilder {
         this.pages = pages;
     }
     begin(sentMessage, duration, { actionRow, currentPage, pages }) {
+        pages = this.pages;
         if (!sentMessage) return;
         let embed = pages[currentPage];
 
@@ -55,6 +56,7 @@ export class AdvancedPagedMenuBuilder {
                 embed = pages[currentPage];
                 interaction.update({ embeds: [embed] });
             }
+            this.collector = collector;
         });
         collector.on("end", async (collected, reason) => {
             if (reason === "time") {
@@ -68,10 +70,10 @@ export class AdvancedPagedMenuBuilder {
         });
         this.collector = collector;
     }
-    stop(menu) {
-        if (menu && menu.collector) {
+    stop() {
+        if (this.collector) {
             try {
-                menu.collector.stop();
+                this.collector.stop();
             } catch {
                 log.warn("Failed to stop collector");
             }

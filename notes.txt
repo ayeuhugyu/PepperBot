@@ -41,8 +41,10 @@ p/update a whole entire TWO new commands... CRAZY...
 
 **actual content:**
 
-- reverted theme back to default
-- added p/trueban, which bans someone and makes it impossible to unban them. only usable by server owners
-- adjusted GPT prompt
+- removed p/force dm, it's been broken for months and it violates discord TOS
+- p/todo refresh function rewritten, lists are now put into pages of 15 items
+- rewrote README.md, much MUCH simpler now. i dont really know what i would actually explain about it, and if it was anything about the source code that would just be yet another thing i have to keep changing.
 
 **fixes/optimizations:**
+
+- fixed something with paged menu builders... tbh i dont even know what it was..

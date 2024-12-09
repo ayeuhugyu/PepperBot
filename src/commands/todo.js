@@ -22,6 +22,7 @@ import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import * as files from "../lib/files.js";
 import * as theme from "../lib/theme.js";
+import { AdvancedPagedMenuBuilder } from "../lib/types/menuBuilders.js";
 
 const config = globals.config;
 
@@ -106,46 +107,61 @@ const ActionRow = new ActionRowBuilder().addComponents(
     buttons.switch
 );
 
-function refresh(authorId, fromInteraction, gconfig) {
+async function refresh(authorId, gconfig) {
     const latestEmbed = latestEmbeds[authorId];
+    console.log(latestEmbed)
     if (!latestEmbed) return;
-    let message = latestEmbed.message;
-    if (!message) {
-        message = latestEmbed.executedMessage;
-    }
-    if (!message) return;
-    if (latestEmbed.isInteraction) {
-        message = message.interaction;
-    }
+    console.log(`refreshing to ${latestEmbed.message.id}`)
+    if (latestEmbed.menu) {
+        latestEmbed.menu.full.stop();
+    };
     const whichList = whichListForUser[authorId] || "main";
     const l = ensureList(authorId, whichList);
     const list = readList(authorId, whichList);
-    const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT).setTitle(
-        `${latestEmbed.executedMessage.author.username}'s "${whichList}"`
-    );
-    let text = "";
-
+    const menu = latestEmbed.menu || new AdvancedPagedMenuBuilder();
+    let listChunks = [];
+    let chunk = [];
+    let currentIndexCount = 0
     list.forEach((item, index) => {
-        text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${
-            item.completed ? "~~" : ""
-        }\n`;
+        chunk.push(`${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${item.completed ? "~~" : ""}`);
+        if (currentIndexCount === 14) {
+            listChunks.push(chunk);
+            chunk = [];
+            currentIndexCount = 0;
+        }
+        currentIndexCount++
     });
-    if (!text) {
-        embed.setDescription("there are no items in this list");
-    } else {
-        embed.setDescription(text);
+    if (currentIndexCount !== 0 && chunk.length !== 0) {
+        listChunks.push(chunk);
     }
-    if (latestEmbed.isInteraction) {
-        action.editInteractionReply(latestEmbed.executedMessage, {
-            embeds: [embed],
-            components: [ActionRow],
-        });
-        return;
+    menu.full.pages = [];
+    listChunks.forEach((chunk, pageIndex) => {
+        if (chunk.length === 0) return;
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
+            .setTitle(`${latestEmbed.executedMessage.author.username}'s "${whichList}" (page ${pageIndex + 1}/${listChunks.length})`)
+            .setDescription(chunk.join("\n"));
+        menu.full.addPage(embed);
+    });
+    const noItemsEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
+        .setTitle(`${latestEmbed.executedMessage.author.username}'s "${whichList}"`)
+        .setDescription("there aren't any items in this list");
+    let embed = menu.full.pages[0] || noItemsEmbed
+    let components = [ActionRow];
+    if (embed !== noItemsEmbed) {
+        components = [ActionRow, menu.actionRow];
     }
-    action.editMessage(message, {
+
+    const sent = await action.editMessage(latestEmbed.message, {
         embeds: [embed],
-        components: [ActionRow],
+        components: components,
+        ephemeral: gconfig.useEphemeralReplies,
+        content: "viewing todo list: " + whichList,
     });
+
+    menu.full.begin(sent, 1200_000, menu);
+    latestEmbeds[authorId].menu = menu;
+
+    return sent;
 }
 
 const whichData = new SubCommandData();
@@ -239,7 +255,7 @@ const switchc = new SubCommand(
 
         whichListForUser[message.author.id] = args.get("content");
         ensureList(message.author.id, args.get("content"));
-        refresh(message.author.id, fromInteraction, gconfig);
+        refresh(message.author.id, gconfig);
         content += `switched to list "${args.get("content")}"`;
         action.reply(message, {
             content: content,
@@ -287,14 +303,14 @@ const addTask = new SubCommand(
         const whichList = whichListForUser[message.author.id] || "main";
         const list = ensureList(message.author.id, whichList);
         const listLength = readList(message.author.id, whichList).length;
-        editList(
+        await editList(
             message.author.id,
             whichList,
             listLength,
             args.get("content"),
             false
         );
-        refresh(message.author.id, fromInteraction, gconfig);
+        refresh(message.author.id, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -354,8 +370,8 @@ const removeTask = new SubCommand(
             return;
         }
         const task = readList(message.author.id, whichList)[taskIndex - 1];
-        removeListItem(message.author.id, whichList, taskIndex - 1);
-        refresh(message.author.id, fromInteraction, gconfig);
+        await removeListItem(message.author.id, whichList, taskIndex - 1);
+        refresh(message.author.id, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -438,7 +454,7 @@ const checkOffTask = new SubCommand(
             task.value,
             setTaskCompleted
         );
-        refresh(message.author.id, fromInteraction, gconfig);
+        refresh(message.author.id, gconfig);
         if (isButton) {
             message.deferUpdate();
             return;
@@ -572,11 +588,6 @@ function onComponentCollect(interaction, gconfig) {
     const button = interaction.customId;
     if (button in buttonFunctions) {
         return buttonFunctions[button](interaction, gconfig);
-    } else {
-        return action.reply(interaction, {
-            content: "how tf did you press an invalid button 😭😭",
-            ephemeral: gconfig.useEphemeralReplies,
-        });
     }
 }
 
@@ -630,30 +641,11 @@ const command = new Command(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const whichList = whichListForUser[message.author.id] || "main";
-        const l = ensureList(message.author.id, whichList);
-        const list = readList(message.author.id, whichList);
-        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT).setTitle(
-            `${message.author.username}'s "${whichList}"`
-        );
-
-        let text = "";
-
-        list.forEach((item, index) => {
-            text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${
-                item.value
-            }${item.completed ? "~~" : ""}\n`;
-        });
-        if (!text) {
-            embed.setDescription("there are no items in this list");
-        } else {
-            embed.setDescription(text);
-        }
-
         const sent = await action.reply(message, {
-            embeds: [embed],
-            components: [ActionRow],
+            embeds: [],
+            components: [],
             ephemeral: gconfig.useEphemeralReplies,
+            content: "loading embed..."
         });
         sent.createMessageComponentCollector({
             ComponentType: ComponentType.Button,
@@ -678,10 +670,12 @@ const command = new Command(
         }
         latestEmbeds[message.author.id] = {
             message: sent,
-            embed: embed,
             executedMessage: message,
-            isInteraction: fromInteraction,
+            fromInteraction: fromInteraction,
+            menu: undefined,
         };
+
+        refresh(message.author.id, gconfig);
     },
     [addTask, removeTask, checkOffTask, switchc, which] // subcommands
 );

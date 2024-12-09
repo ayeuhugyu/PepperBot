@@ -198,77 +198,6 @@ const react = new SubCommand(
     [] // subcommands
 );
 
-const dmdata = new SubCommandData();
-dmdata.setName("dm");
-dmdata.setDescription("make the bot dm someone");
-dmdata.setPermissions([]);
-dmdata.setPermissionsReadable("");
-dmdata.setWhitelist([]);
-dmdata.setCanRunFromBot(false);
-dmdata.setAliases(["dmuser", "send"]);
-dmdata.setDisabledContexts(["dm"])
-dmdata.setNormalAliases(["dmuser", "dm", "send"])
-dmdata.setdisableExternalGuildUsage(true);
-dmdata.addUserOption((option) =>
-    option.setName("user").setDescription("who to dm").setRequired(true)
-);
-dmdata.addStringOption((option) =>
-    option.setName("message").setDescription("what to say").setRequired(true)
-);
-const dm = new SubCommand(
-    dmdata,
-    async function getArguments(message, gconfig) {
-        const commandLength = message.content.split(" ")[0].length - 1;
-        const args = new Collection();
-        const prefix = gconfig.prefix || config.generic.prefix
-        if (message.mentions.users.first()) {
-            args.set("user", message.mentions.users.first());
-        } else {
-            if (message.client.users.cache.get(message.content.split(" ")[1])) {
-                args.set(
-                    "user",
-                    message.client.users.cache.get(
-                        message.content.split(" ")[1]
-                    )
-                );
-            }
-        }
-        if (args.get("user")) {
-            args.set(
-                "message",
-                message.content.slice(
-                    prefix.length +
-                        commandLength +
-                        message.content.split(" ")[1].length +
-                        1
-                )
-            );
-        }
-        return args;
-    },
-    async function execute(message, args, isInteraction, gconfig) {
-        if (args.get("text") && !args.get("message")) {
-            args.set("message", args.get("text"));
-        }
-        if (args.get("user")) {
-            if (args.get("message")) {
-                action.sendDM(args.get("user"), args.get("message"));
-                action.deleteMessage(message);
-                if (isInteraction) {
-                    action.reply(message, {
-                        content: "sent!",
-                        ephemeral: gconfig.useEphemeralReplies,
-                    });
-                }
-            } else {
-                action.reply(message, "provide a valid message you baffoon!");
-            }
-        } else {
-            action.reply(message, "provide a valid user to dm you baffoon!");
-        }
-    }
-);
-
 const responddata = new SubCommandData();
 responddata.setName("respond");
 responddata.setDescription("make the bot respond to your command with something");
@@ -461,7 +390,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies
         })
     },
-    [say, dm, react, reply, respond] // subcommands
+    [say, react, reply, respond] // subcommands
 );
 
 export default command;
