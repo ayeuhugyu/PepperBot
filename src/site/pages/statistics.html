@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Log Viewer</title>
+        <title>Statistics</title>
         <link rel="stylesheet" type="text/css" href="/style.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
         <meta content="Statistics" property="og:title" />
@@ -14,31 +14,66 @@
         <script src="/scripts/sidebar.js"></script>
         <div class="outlined statisticsPageContainer">
             <div class="outlined statisticsTextContainer"></div>
+            <div class="outlined statisticsControllerContainer">
+                <button class="statisticsControllerButton">SORT: NAME</button>
+                <button class="statisticsControllerButton">SORT: VALUE</button>
+                <span class="statisticsStatus">awaiting input...</span>
+            </div>
             <div class="statisticsBlocksContainer">
-                <div class="outlined statisticsBlock"></div>
-                <div class="outlined statisticsBlock"></div>
-                <div class="outlined statisticsBlock"></div>
-                <div class="outlined statisticsBlock"></div>
+                <div class="outlined statisticsBlock" id="statisticsBlock0">
+                    <div class="statisticContainer">
+                        <span class="statistic">name: 100%</span>
+                        <div class="statisticBar" style="width: 50%"></div>
+                    </div>
+                </div>
+                <div class="outlined statisticsBlock" id="statisticsBlock1"></div>
+                <div class="outlined statisticsBlock" id="statisticsBlock2"></div>
+                <div class="outlined statisticsBlock" id="statisticsBlock3"></div>
             </div>
         </div>
         <script id="sidebarAdjustments">
             const statisticsBlocksContainer = document.querySelector('.statisticsBlocksContainer')
             const statisticsTextContainer = document.querySelector('.statisticsTextContainer')
+            const statisticsControllerContainer = document.querySelector('.statisticsControllerContainer')
             function editTextAreaSize(sidebarState) {
                 if (window.innerWidth < 768) {
                     statisticsBlocksContainer.style.width = "100%"
                     statisticsTextContainer.style.width = "100%"
+                    statisticsControllerContainer.style.width = "100%"
                 } else if (sidebarState) {
-                    statisticsBlocksContainer.style.width = "calc(100% - 131px)"
+                    statisticsBlocksContainer.style.width = "calc(100% - 136px)"
                     statisticsTextContainer.style.width = "calc(100% - 153px)"
+                    statisticsControllerContainer.style.width = "calc(100% - 153px)"
                 } else {
-                    statisticsBlocksContainer.style.width = "100%"
-                    statisticsTextContainer.style.width = "100%"
+                    statisticsBlocksContainer.style.width = "calc(100% - 5px)"
+                    statisticsTextContainer.style.width = "calc(100% - 22px)"
+                    statisticsControllerContainer.style.width = "calc(100% - 22px)"
                 }
             }
             bindToSidebarToggle(editTextAreaSize)
             setButtonPositionOffset(16, false)
             setButtonPositionOffset(5, true)
+        </script>
+        <script id="statisticsReader">
+            const sortModes = {
+                0: 'value',
+                1: 'name'
+            }
+            
+            const sortMode = 0;
+
+            const statisticsBlocks = [
+                document.getElementById('statisticsBlock0'),
+                document.getElementById('statisticsBlock1'),
+                document.getElementById('statisticsBlock2'),
+                document.getElementById('statisticsBlock3')
+            ]
+            fetch("/api/read-statistics")
+                .then((response) => response.json())
+                .then((jsonData) => {
+                    const statistics = jsonData.statistics
+                }
+            )
         </script>
     </body>
 </html>

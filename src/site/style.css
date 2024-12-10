@@ -577,15 +577,16 @@ details.commandArgument > *:not(summary):not(details) {
     overflow-y: auto;
     width: calc(100% - 131px);
     margin: 0;
+    margin-left: 5px;
     background-color: var(--midground-color);
-    height: 80%;
+    height: 75%;
 }
 
 .statisticsBlock {
     display: flex;
     flex-direction: column;
-    margin: 5px;
-    padding: 5px;
+    margin-top: 5px;
+    margin-right: 5px;
     background-color: var(--midground-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -601,4 +602,42 @@ details.commandArgument > *:not(summary):not(details) {
     border: 1px solid var(--border-color);
     border-radius: 5px;
     flex-grow: 1;
+}
+
+.statisticsControllerContainer {
+    width: calc(100% - 125px);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 5px;
+}
+
+.statisticsControllerButton {
+    margin: 0;
+    margin-right: 5px;
+}
+
+.statisticsStatus {
+    color: var(--darkened-text-color);
+    text-align: right;
+    flex-grow: 1;
+    padding-top: 6px;
+}
+
+.statisticContainer {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+    background-color: var(--midground-color);
+    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+}
+
+.statistic {
+    color: var(--text-color);
+}
+
+.statisticBar {
+    background-color: var(--midground-color-light);
+    height: 100%;
 }
