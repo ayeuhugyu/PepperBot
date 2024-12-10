@@ -81,7 +81,7 @@ const dirSize = async (directory) => {
     );
 };
 
-const rootPath = "./src/WebServer";
+const rootPath = "./src/site";
 
 async function logAccess(req) {
     const currentDate = new Date();
