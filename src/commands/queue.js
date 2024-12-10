@@ -28,12 +28,34 @@ import process from "node:process";
 import fs from "fs";
 import * as files from "../lib/files.js";
 import commonRegex from "../lib/commonRegex.js";
+import guildConfigs from "../lib/guildConfigs.js";
 
 const config = globals.config;
 
 let queues = {};
 let queueEmbeds = {};
 let queuePageBuilders = {};
+
+export function getQueuesSanitized() {
+    const queuesSanitized = {};
+    for (const [key, value] of Object.entries(queues)) {
+        queuesSanitized[key] = {
+            queues: value.queues,
+            readableQueue: value.readableQueue,
+            currentIndex: value.currentIndex,
+            state: value.state,
+            guild: {
+                id: key,
+            }
+        };
+        const guildConfig = guildConfigs.getGuildConfig(key);
+        if (guildConfig.exploreVisible) {
+            queuesSanitized[key].guild.name = value.guild.name;
+            queuesSanitized[key].guild.iconURL = value.guild.iconURL();
+        }
+    }
+    return queuesSanitized;
+}
 
 function convertISO8601ToHumanReadable(duration) {
     const match = duration.match(
@@ -55,6 +77,23 @@ function convertISO8601ToHumanReadable(duration) {
     return string + `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
 }
 
+function convertISO8601ToUnix(duration) {
+    const match = duration.match(
+        commonRegex.ISO8601
+    );
+    const days = parseInt(match[1]) || 0;
+    const hours = parseInt(match[2]) || 0;
+    const minutes = parseInt(match[3]) || 0;
+    const seconds = parseInt(match[4]) || 0;
+
+    return (
+        days * 86400 +
+        hours * 3600 +
+        minutes * 60 +
+        seconds
+    );
+}
+
 async function getDuration(url) {
     try {
         const videoId = await ytdl.getURLVideoID(url);
@@ -63,9 +102,10 @@ async function getDuration(url) {
             part: "contentDetails",
             id: videoId,
         });
-        return convertISO8601ToHumanReadable(
-            response.data.items[0].contentDetails.duration
-        );
+        return [
+            convertISO8601ToHumanReadable(response.data.items[0].contentDetails.duration), 
+            convertISO8601ToUnix(response.data.items[0].contentDetails.duration)
+        ]
     } catch (error) {
         return false;
     }
@@ -106,11 +146,12 @@ async function refresh(queue, interaction, args, row, sentMessage, gconfig) {
             title += ` | Now Playing Song ${queue.currentIndex + 1}/${
                 queue.readableQueue.length
             }`;
-            const duration = await getDuration(
-                queue.queues[queue.currentIndex]
-            );
+            const [duration, timestamp] = await getDuration(queue.queues[queue.currentIndex]);
             if (duration) {
                 title += ` | Duration: ${duration}`;
+            }
+            if (timestamp) {
+                title += ` | Next song <t:${timestamp}:R>` 
             }
         } else {
             title += ` | ${queue.readableQueue.length} items`;

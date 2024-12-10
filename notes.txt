@@ -7,31 +7,40 @@ shit on the todo list:
 [1] - add p/corrupt image support
 [2] - add a p/embed setfootericon, setauthoricon, addfield, removefield, seturl
 [3] - fix p/queue (and future stuff) editing the message twice when collector stops
-[4] - p/todo pages if list length > 15
-[5] - peppersite statistics on most visited pages
-[6] - using p/queue while p/playurl is playing converts it to a queue system
-[7] - peppersite resources viewer
-[8] - p/jak viewer
-[9] - reminder / scheduling capabilities
-[10] - p/notice multi-shard fix
-[11] - custom command aliases
-[12] - custom command permissions from gconfig
-[13] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
-[14] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
-[15] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
-[16] - logs page removes content at the bottom after you've scrolled wayy past it
-[17] - rewrite readme.md to include info about stuff like what the lib files do and the forking pattern
-[18] - so apparently the end event of collectors is called when the bot is removed from a server so that means you're gonna have to fix a bunch of collectors that rely upon guild ids to remove them from lists
-[19] - add some sort of greeting message that tells people the features of the bot
-[20] - p/chatbubble can be used by replying, reference can be set with a p/setreference and used from right click > apps > thingy
-[21] - catch ytdl-core errors
-[22] - projects page
-[23] - triangulation page that would be similar to sebastian lague's intro thingy, just cuz its interesting idk. similar to the physics experiment.
-[24] - rewrite p/random buildidea
-[25] - thanksgiving seasonal theme
-[26] - 2 sanity = 1 ether, add this to the godroll calculator AND check to see if it can get higher ether n shit
-[27] - p/composite
-[28] - rewrite command data
+[4] - peppersite statistics on most visited pages
+[5] - peppersite resources viewer
+[6] - p/jak viewer
+[7] - reminder / scheduling capabilities
+[8] - p/notice multi-shard fix
+[9] - custom command aliases
+[10] - custom command permissions from gconfig
+[11] - change how ls txt files are made because currently running it twice at once in 2 different guilds could cause issues
+[12] - p/soundboard sounds are guild specific, make a seperate command for all soundboards
+[13] - p/chatbubble options for the bubble being on the left, right, and bottom sides of the image
+[14] - logs page removes content at the bottom after you've scrolled wayy past it
+[15] - so apparently the end event of collectors is called when the bot is removed from a server so that means you're gonna have to fix a bunch of collectors that rely upon guild ids to remove them from lists
+[16] - add some sort of greeting message that tells people the features of the bot
+[17] - p/chatbubble can be used by replying, reference can be set with a p/setreference and used from right click > apps > thingy
+[18] - catch ytdl-core errors
+[19] - projects page
+[20] - triangulation page that would be similar to sebastian lague's intro thingy, just cuz its interesting idk. similar to the physics experiment.
+[21] - rewrite p/random buildidea
+[22] - 2 sanity = 1 ether, add this to the godroll calculator AND check to see if it can get higher ether n shit
+[23] - messages for rate limit exceeded (err 429)
+[24] - p/setprompt normal alias: p/forceprompt
+[25] - rewrite command datas
+[26] - p/composite aliases & fix file format not changing???
+[27] - gpt prompt saving
+[28] - guide page has source code links
+[29] - p/peppers, pepper index which tells factoids about peppers
+[30] - p/queue silence, disables the messages for changing songs
+[31] - p/lastfm (probably just links to a page on the website similar to discord oauth page) which lets u link ur account, p/queue & playurl support for last.fm
+[32] - p/playurl and p/queue download function rewrite, put into a voice module
+[33] - website page which lists currently active queues, disableable in guild config.
+[34] - create a module for playing audio to guilds ✅ (already had been done basically)
+[35] - p/queue embed title has timestamps for end and beginning of song ✅
+[36] - reaction diabolical event is AI based ✅
+[37] - pepperbot playground, honestly just remove the chat its buggy as shit and doesn't work
 
 to add to todo list:
 
@@ -44,6 +53,8 @@ p/update a whole entire TWO new commands... CRAZY...
 - removed p/force dm, it's been broken for months and it violates discord TOS
 - p/todo refresh function rewritten, lists are now put into pages of 15 items
 - rewrote README.md, much MUCH simpler now. i dont really know what i would actually explain about it, and if it was anything about the source code that would just be yet another thing i have to keep changing.
+- diabolical reactions are now AI based. multiple reactions may be generated. these take into account attached files as well
+- queue titles now have a timestamp that shows when the next song will play
 
 **fixes/optimizations:**
 

@@ -2,6 +2,7 @@ import guildConfigs from './guildConfigs.js';
 import * as globals from './globals.js';
 import * as log from './log.js';
 import * as action from "./discord_action.js";
+import { AIReaction, fixIncomingMessage } from './gpt.js';
 
 export const eventChances = {
     'thread': 0.0005, // 0.05% chance
@@ -57,8 +58,22 @@ export function replyEvent(message) {
 }
 
 export function reactionEvent(message) {
-    const emoji = getRandomEmoji();
-    action.messageReact(message, emoji);
+    const messageContent = fixIncomingMessage(message);
+    const AIEmoji = AIReaction(messageContent);
+    try {
+        const AIReactions = AIEmoji.split(',');
+        AIReactions.forEach(emoji => {
+            action.messageReact(message, emoji);
+        });
+    } catch (err) {
+        log.warn(`could not react to message with AI emoji. AI emoji: ${AIEmoji}`);
+        const emoji = getRandomEmoji();
+        try {
+            action.messageReact(message, emoji);
+        } catch (err) {
+            log.error(`could not react to message with AI emoji or random emoji. random emoji: ${emoji}`);
+        }
+    }
 }
 
 export function getEvent() {
