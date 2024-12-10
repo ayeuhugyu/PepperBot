@@ -1,4 +1,8 @@
-let buttonPositionOffset = 0
+
+let buttonPositionOffsets = {
+    open: 0,
+    closed: 0
+}
 
 const sidebarContainer = document.createElement('div');
 sidebarContainer.id = 'sidebarContainer';
@@ -28,11 +32,11 @@ function toggleSidebar() {
     if (sidebarIsShowing) {
         sidebarIsShowing = false;
         sidebarContainer.style.display = 'none';
-        toggleSidebarButton.style.right = `calc(5px + ${typeof buttonPositionOffset === "number" ? `${buttonPositionOffset}px` : buttonPositionOffset})`;
+        toggleSidebarButton.style.right = `calc(5px + ${typeof buttonPositionOffsets.closed === "number" ? `${buttonPositionOffsets.closed}px` : buttonPositionOffsets.closed})`;
     } else {
         sidebarIsShowing = true;
         sidebarContainer.style.display = 'flex';
-        toggleSidebarButton.style.right = '147px';
+        toggleSidebarButton.style.right = `calc(147px + ${typeof buttonPositionOffsets.open === "number" ? `${buttonPositionOffsets.open}px` : buttonPositionOffsets.open})`;
     }
     boundFunctions.forEach(fn => fn(sidebarIsShowing));
 }
@@ -85,9 +89,19 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-function setButtonPositionOffset(value) {
-    buttonPositionOffset = value;
-    return buttonPositionOffset;
+function setButtonPositionOffset(value, toggledState) {
+    if (toggledState) {
+        buttonPositionOffsets.open = value;
+        if (sidebarIsShowing) {
+            toggleSidebarButton.style.right = `calc(147px + ${typeof buttonPositionOffsets.open === "number" ? `${buttonPositionOffsets.open}px` : buttonPositionOffsets.open})`;
+        }
+    } else {
+        buttonPositionOffsets.closed = value;
+        if (!sidebarIsShowing) {
+            toggleSidebarButton.style.right = `calc(5px + ${typeof buttonPositionOffsets.closed === "number" ? `${buttonPositionOffsets.closed}px` : buttonPositionOffsets.closed})`;
+        }
+    }
+    return buttonPositionOffsets;
 }
 
 function checkMobileMode() {

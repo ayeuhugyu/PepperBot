@@ -558,3 +558,47 @@ details.commandArgument > *:not(summary):not(details) {
     flex-grow: 1;
     margin-bottom: 5px;
 }
+
+/* Statistics */
+
+.statisticsPageContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: calc(100vh - 42px);
+    width: calc(100vw - 42px);
+    overflow: hidden;
+    padding: 10px;
+}
+
+.statisticsBlocksContainer {
+    display: flex;
+    flex-direction: row;
+    overflow-y: auto;
+    width: calc(100% - 131px);
+    margin: 0;
+    background-color: var(--midground-color);
+    height: 80%;
+}
+
+.statisticsBlock {
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    padding: 5px;
+    background-color: var(--midground-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    flex-grow: 1;
+}
+
+.statisticsTextContainer {
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+    padding: 5px;
+    background-color: var(--midground-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    flex-grow: 1;
+}
