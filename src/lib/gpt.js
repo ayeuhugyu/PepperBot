@@ -308,6 +308,35 @@ export async function AIReaction(str) {
     return completion.choices[0].message.content;
 }
 
+export async function AIDiabolicReply(str) {
+    const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            {
+                role: "system",
+                content: `You will be given a message. You are to come up with the MOST FITTING response to this message, and in this case most fitting would mean most humorous. You will ONLY respond with an integer, this integer represents the index in the list of possible replies. The possible replies are: 
+
+                0: It's time to go on a Big Berry Adventure! --(attached is a funny tic tac picture)--
+                1: It's glorious! --(attached is an AI generated glowing egg in a forest)--
+                2: 😬 --(attached is a grimacing something or other???)--
+                3: This conversation is getting a little spicy!! --(attached is a poorly drawn chili pepper)--
+                4: Monster (2004)
+                5: Hello Gang'\nThis is Jackson from b robux\nDragon Snake driver ########\nspeaking
+                6: Happy birthday <@694850919032160316>!
+
+                DO NOT return ANYTHING other than a number 0-6. EVER.
+                For an example, if given the message "the fuck are you doing?" you could respond with "3" 
+                `,
+            },
+            {
+                role: "user",
+                content: str,
+            },
+        ],
+    });
+    return completion.choices[0].message.content;
+}
+
 export async function respond(message, inputconversation) {
     let conversation = await getConversation(message);
     const readableContent = await fixIncomingMessage(message);

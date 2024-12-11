@@ -29,6 +29,4 @@ function tvStaticAnimation() {
     }, 15);
 }
 
-['DOMContentLoaded', 'focus'].forEach(event => {
-    window.addEventListener(event, tvStaticAnimation);
-});
+window.addEventListener('focus', tvStaticAnimation);

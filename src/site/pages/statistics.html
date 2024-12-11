@@ -46,12 +46,10 @@
                 }
             }
             bindToSidebarToggle(editTextAreaSize)
-            setButtonPositionOffset(16, false)
-            setButtonPositionOffset(5, true)
-            const sortNameButton = document.querySelector('#sortName')
-
-            setVerticalButtonPosition("41px", true)
-            setVerticalButtonPosition("41px", false)
+            setButtonPositionOffset(11, false)
+            setButtonPositionOffset(0, true)
+            setVerticalButtonPosition("36px", true)
+            setVerticalButtonPosition("36px", false)
         </script>
         <script id="statisticsReader">
 
@@ -160,6 +158,12 @@
                 });
                 return newStatistics;
             }
+            let loaded = false;
+            setTimeout(() => {
+                if (!loaded) {
+                    tvStaticAnimation();
+                }
+            }, 5000)
             function formatTime(seconds) {
                 const hours = Math.floor(seconds / 3600);
                 const minutes = Math.floor((seconds % 3600) / 60);
@@ -173,7 +177,6 @@
                 return number.toString().padStart(2, "0");
             }
 
-            setTimeout(() => {
             fetch("/api/read-statistics")
                 .then((response) => response.json())
                 .then((jsonData) => {
@@ -232,9 +235,10 @@ shard uptime: ${formatTime(
                     )}
 
                     `;
-
+                    tvStaticAnimation();
+                    loaded = true;
                 }
-            )}, 500);
+            );
         </script>
     </body>
 </html>

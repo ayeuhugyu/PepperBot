@@ -12,6 +12,11 @@
     </head>
     <body>
         <script src="/scripts/tv.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                tvStaticAnimation()
+            })
+        </script>
         <script src="/scripts/sidebar.js"></script>
         <!-- the only reason this isnt auto generated from a list of commands is because in here i can specify more information than i can with the commands regularly, the descriptions have character limits -->
         <div id="guideblockcontainer" class="flex" aria-hidden="true">

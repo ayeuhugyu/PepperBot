@@ -34,8 +34,8 @@
                     logContent.style.width = "100%"
                     logController.style.width = "100%"
                 } else if (sidebarState) {
-                    logContent.style.width = "calc(100% - 137px)"
-                    logController.style.width = "calc(100% - 125px)"
+                    logContent.style.width = "calc(100% - 143px)"
+                    logController.style.width = "calc(100% - 131px)"
                 } else {
                     logContent.style.width = "calc(100% - 12px)"
                     logController.style.width = "100%"
@@ -136,8 +136,15 @@
                 lineDiv.appendChild(messageSpan)
                 return lineDiv
             }
-
+            let loaded = false
+            setTimeout(() => {
+                if (!loaded) {
+                    tvStaticAnimation();
+                }
+            }, 5000)
             readNewLog()
+            loaded = true
+            tvStaticAnimation()
 
             logContent.addEventListener("scroll", () => {
                 if (logContent.scrollTop === 0 ** !readingNew) {

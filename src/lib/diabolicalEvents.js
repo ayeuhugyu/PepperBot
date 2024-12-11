@@ -2,7 +2,7 @@ import guildConfigs from './guildConfigs.js';
 import * as globals from './globals.js';
 import * as log from './log.js';
 import * as action from "./discord_action.js";
-import { AIReaction, fixIncomingMessage } from './gpt.js';
+import { AIReaction, fixIncomingMessage, AIDiabolicReply } from './gpt.js';
 
 export const eventChances = { // defaults
     'thread': 0.0005, // 0.05% chance
@@ -52,8 +52,11 @@ export function threadEvent(message) {
     }
 }
 
-export function replyEvent(message) {
-    const event = getReplyEvent();
+export async function replyEvent(message) {
+    const messageContent = await fixIncomingMessage(message);
+    const replyEvent = parseInt(await AIDiabolicReply(messageContent));
+    log.info(`diabolical reply event triggered with AI response: ${replyEvent} ${message.id} with content: ${messageContent}`);
+    const event = replyEvents[replyEvent] || getReplyEvent();
     action.reply(message, event);
 }
 
