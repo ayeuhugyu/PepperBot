@@ -48,6 +48,8 @@ p/update a whole entire TWO new commands... CRAZY...
 
 **website changes:**
 
+- remade statistics page with the new style
+
 **actual content:**
 
 - removed p/force dm, it's been broken for months and it violates discord TOS

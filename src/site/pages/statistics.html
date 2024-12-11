@@ -13,22 +13,17 @@
         <script src="/scripts/tv.js"></script>
         <script src="/scripts/sidebar.js"></script>
         <div class="outlined statisticsPageContainer">
-            <div class="outlined statisticsTextContainer"></div>
+            <pre class="outlined statisticsTextContainer" id="statisticsTextContainer"></pre>
             <div class="outlined statisticsControllerContainer">
-                <button class="statisticsControllerButton">SORT: NAME</button>
-                <button class="statisticsControllerButton">SORT: VALUE</button>
-                <span class="statisticsStatus">awaiting input...</span>
+                <button class="statisticsControllerButton" id="sortName" onclick="setSortMode(1)">SORT: NAME</button>
+                <button class="statisticsControllerButton" id="sortValue" onclick="setSortMode(0)">SORT: VALUE</button>
+                <button class="statisticsControllerButton" id="displayPercent" onclick="setDisplayMode(0)">DISPLAY: PERCENT</button>
+                <button class="statisticsControllerButton" id="displayValue" onclick="setDisplayMode(1)">DISPLAY: VALUE</button>
             </div>
             <div class="statisticsBlocksContainer">
-                <div class="outlined statisticsBlock" id="statisticsBlock0">
-                    <div class="statisticContainer">
-                        <span class="statistic">name: 100%</span>
-                        <div class="statisticBar" style="width: 50%"></div>
-                    </div>
-                </div>
-                <div class="outlined statisticsBlock" id="statisticsBlock1"></div>
-                <div class="outlined statisticsBlock" id="statisticsBlock2"></div>
-                <div class="outlined statisticsBlock" id="statisticsBlock3"></div>
+                <pre class="outlined statisticsBlock" id="statisticsBlock0"></pre>
+                <pre class="outlined statisticsBlock" id="statisticsBlock1"></pre>
+                <pre class="outlined statisticsBlock" id="statisticsBlock2"></pre>
             </div>
         </div>
         <script id="sidebarAdjustments">
@@ -37,9 +32,9 @@
             const statisticsControllerContainer = document.querySelector('.statisticsControllerContainer')
             function editTextAreaSize(sidebarState) {
                 if (window.innerWidth < 768) {
-                    statisticsBlocksContainer.style.width = "100%"
-                    statisticsTextContainer.style.width = "100%"
-                    statisticsControllerContainer.style.width = "100%"
+                    statisticsBlocksContainer.style.width = "calc(100% - 5px)"
+                    statisticsTextContainer.style.width = "calc(100% - 22px)"
+                    statisticsControllerContainer.style.width = "calc(100% - 22px)"
                 } else if (sidebarState) {
                     statisticsBlocksContainer.style.width = "calc(100% - 136px)"
                     statisticsTextContainer.style.width = "calc(100% - 153px)"
@@ -53,27 +48,193 @@
             bindToSidebarToggle(editTextAreaSize)
             setButtonPositionOffset(16, false)
             setButtonPositionOffset(5, true)
+            const sortNameButton = document.querySelector('#sortName')
+
+            setVerticalButtonPosition("41px", true)
+            setVerticalButtonPosition("41px", false)
         </script>
         <script id="statisticsReader">
+
+            function hourToHumanReadable(hour) {
+                hour = parseInt(hour) + 1;
+                if (hour < 12) {
+                    return `${hour} AM`;
+                } else if (hour === 12) {
+                    return `${hour} PM`;
+                } else {
+                    return `${hour - 12} PM`;
+                }
+            }
+
             const sortModes = {
                 0: 'value',
                 1: 'name'
             }
+            const displayModes = {
+                0: 'percent',
+                1: 'value'
+            }
             
-            const sortMode = 0;
+            let sortMode = 0;
+            let displayMode = 1;
+
+            function refreshCharts() {
+                const sorted = sortStatistics();
+                console.log(sorted)
+                createChart(0, sorted.commandUsage, 'commandUsage', 'Command Usage');
+                createChart(1, sorted.executionTime, 'executionTime', 'Execution Time');
+                createChart(2, sorted.hourlyUsage, 'hourlyUsage', 'Hourly Usage');
+            }
+
+            function setSortMode(mode) {
+                sortMode = mode;
+                refreshCharts();
+            }
+            function setDisplayMode(mode) {
+                displayMode = mode;
+                refreshCharts();
+            }
 
             const statisticsBlocks = [
                 document.getElementById('statisticsBlock0'),
                 document.getElementById('statisticsBlock1'),
                 document.getElementById('statisticsBlock2'),
-                document.getElementById('statisticsBlock3')
             ]
+            const statisticsText = document.getElementById('statisticsTextContainer');
+
+            let statistics = {
+                commandUsage: {},
+                executionTime: {},
+                hourlyUsage: {}
+            }
+
+            function createChart(blockId, data, dataType, title) {
+                console.log(`charting in block ${blockId} with data:`);
+                console.log(data);
+
+                const block = statisticsBlocks[blockId];
+                block.innerHTML = '';
+
+                const blockTitle = document.createElement('h3');
+                blockTitle.innerText = title;
+                block.appendChild(blockTitle);
+
+                let max = Math.max(...Object.values(data));
+                let total = Object.values(data).reduce((total, value) => total + value, 0);
+
+                console.log(Object.entries(data));
+
+                for (const [key, value] of Object.entries(data)) {
+                    console.log(`creating statistic for ${key} with value ${value}`);
+                    const statisticContainer = document.createElement('div');
+                    statisticContainer.classList.add('statisticContainer');
+                    const statistic = document.createElement('span');
+                    statistic.classList.add('statistic');
+                    let text = "";
+                    if (displayMode === 0) {
+                        text = `${dataType == 'hourlyUsage' ? hourToHumanReadable(key) : 'p/' + key}: ${((value / total) * 100).toFixed(2)}%`;
+                    } else {
+                        text = `${dataType == 'hourlyUsage' ? hourToHumanReadable(key) : 'p/' + key}: ${dataType == 'executionTime' ? value.toFixed(2) : value.toFixed(0)} ${dataType === 'executionTime' ? 'ms' : ''}`;
+                    }
+
+                    statistic.innerText = text;
+                    const statisticBar = document.createElement('div');
+                    statisticBar.classList.add('statisticBar');
+                    statisticBar.style.width = `${(value / max) * 100}%`;
+                    statisticContainer.appendChild(statistic);
+                    statisticContainer.appendChild(statisticBar);
+                    block.appendChild(statisticContainer);
+                }
+            }
+
+            function sortStatistics() {
+                const newStatistics = {}
+                Object.entries(statistics).forEach(([key, value]) => {
+                    newStatistics[key] = Object.fromEntries(Object.entries(statistics[key]).sort((a, b) => {
+                        if (sortMode === 0) {
+                            return b[1] - a[1];
+                        } else {
+                            return a[0].localeCompare(b[0]);
+                        }
+                    }));
+                });
+                return newStatistics;
+            }
+            function formatTime(seconds) {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const remainingSeconds = seconds % 60;
+                return `${padZero(hours)}:${padZero(minutes)}:${padZero(
+                    remainingSeconds
+                )}`;
+            }
+
+            function padZero(number) {
+                return number.toString().padStart(2, "0");
+            }
+
+            setTimeout(() => {
             fetch("/api/read-statistics")
                 .then((response) => response.json())
                 .then((jsonData) => {
-                    const statistics = jsonData.statistics
+                    const statisticsData = jsonData.statistics;
+
+                    const totalUsage = Object.values(statisticsData.commandUsage).reduce((total, value) => total + value, 0);
+                    let averageExecutionTimes = {};
+                    for (const [command, executionTimes] of Object.entries(statisticsData.executionTime)) {
+                        const averageExecutionTime = executionTimes.reduce((total, value) => total + value, 0) / executionTimes.length;
+                        averageExecutionTimes[command] = averageExecutionTime;
+                    }
+                    const hourlyUsage = statisticsData.hourlyUsage;
+                    const commandUsage = statisticsData.commandUsage;
+
+                    statistics.commandUsage = commandUsage
+                    statistics.executionTime = averageExecutionTimes
+                    statistics.hourlyUsage = hourlyUsage
+                    console.log(statistics);
+
+                    refreshCharts();
+
+                    statisticsText.innerText = `version: ${jsonData.version}
+system: ${jsonData.system}
+memory usage: ${jsonData.mem}
+wasted space: ${jsonData.wasted_space}
+total GPT messages: ${statistics.gpt}
+total commands used: ${totalUsage}
+total slash commands used: ${statisticsData.commandTypeUsage.slash}
+total text commands used: ${statisticsData.commandTypeUsage.text}
+total running shards: ${jsonData.shardCount}
+total request count: ${statisticsData.requestCount}
+
+site started at: ${jsonData.starts.site.startedAt}
+bot started at: ${jsonData.starts.bot.startedAt}
+shard started at: ${jsonData.starts.shard.startedAt}
+site uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() -
+                                jsonData.starts.site.startedAtTimestamp) /
+                                1000
+                        )
+                    )}
+bot uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() -
+                                jsonData.starts.bot.startedAtTimestamp) /
+                                1000
+                        )
+                    )}
+shard uptime: ${formatTime(
+                        Math.floor(
+                            (Date.now() -
+                                jsonData.starts.shard.startedAtTimestamp) /
+                                1000
+                        )
+                    )}
+
+                    `;
+
                 }
-            )
+            )}, 500);
         </script>
     </body>
 </html>

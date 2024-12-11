@@ -3,6 +3,10 @@ let buttonPositionOffsets = {
     open: 0,
     closed: 0
 }
+let verticalButtonPosition = {
+    open: '50vh',
+    closed: '50vh'
+}
 
 const sidebarContainer = document.createElement('div');
 sidebarContainer.id = 'sidebarContainer';
@@ -32,10 +36,12 @@ function toggleSidebar() {
     if (sidebarIsShowing) {
         sidebarIsShowing = false;
         sidebarContainer.style.display = 'none';
+        toggleSidebarButton.style.top = verticalButtonPosition.closed;
         toggleSidebarButton.style.right = `calc(5px + ${typeof buttonPositionOffsets.closed === "number" ? `${buttonPositionOffsets.closed}px` : buttonPositionOffsets.closed})`;
     } else {
         sidebarIsShowing = true;
         sidebarContainer.style.display = 'flex';
+        toggleSidebarButton.style.top = verticalButtonPosition.open;
         toggleSidebarButton.style.right = `calc(147px + ${typeof buttonPositionOffsets.open === "number" ? `${buttonPositionOffsets.open}px` : buttonPositionOffsets.open})`;
     }
     boundFunctions.forEach(fn => fn(sidebarIsShowing));
@@ -102,6 +108,20 @@ function setButtonPositionOffset(value, toggledState) {
         }
     }
     return buttonPositionOffsets;
+}
+
+function setVerticalButtonPosition(value, toggledState) {
+    if (toggledState) {
+        verticalButtonPosition.open = value;
+        if (sidebarIsShowing) {
+            toggleSidebarButton.style.top = value
+        }
+    } else {
+        verticalButtonPosition.closed = value;
+        if (!sidebarIsShowing) {
+            toggleSidebarButton.style.top = value
+        }
+    }
 }
 
 function checkMobileMode() {
