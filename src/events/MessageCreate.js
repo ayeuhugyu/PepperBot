@@ -96,7 +96,7 @@ async function processDM(message) {
 }
 async function processDiabolicalEvent(message) {
     if (diabolic.messageFilter(message)) return;
-    const eventName = diabolic.getEvent();
+    const eventName = diabolic.getEvent(message);
     if (!eventName) return;
     const eventFunction = diabolic.getEventFunction(eventName);
     if (!eventFunction) return;

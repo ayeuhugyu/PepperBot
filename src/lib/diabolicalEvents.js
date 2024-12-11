@@ -4,10 +4,10 @@ import * as log from './log.js';
 import * as action from "./discord_action.js";
 import { AIReaction, fixIncomingMessage } from './gpt.js';
 
-export const eventChances = {
+export const eventChances = { // defaults
     'thread': 0.0005, // 0.05% chance
     'reply': 0.001, // 0.1% chance
-    'reaction': 0.005, // 0.5% chance
+    'reaction': 0.01, // 1% chance
 }
 
 const replyEvents = globals.diabolical_events
@@ -57,28 +57,29 @@ export function replyEvent(message) {
     action.reply(message, event);
 }
 
-export function reactionEvent(message) {
-    const messageContent = fixIncomingMessage(message);
-    const AIEmoji = AIReaction(messageContent);
-    try {
-        const AIReactions = AIEmoji.split(',');
-        AIReactions.forEach(emoji => {
-            action.messageReact(message, emoji);
+export async function reactionEvent(message) {
+    const messageContent = await fixIncomingMessage(message);
+    const AIEmoji = await AIReaction(messageContent);
+    log.info(`diabolical emoji event triggered with AI emojis: ${AIEmoji} on message: ${message.id} with content: ${messageContent}`);
+    let AIReactions = AIEmoji.split(',');
+    AIReactions.forEach(emoji => {
+        action.messageReact(message, emoji).catch(err => {
+            log.warn(`could not react to message with AI emoji. AI emoji: ${emoji}`);
         });
-    } catch (err) {
-        log.warn(`could not react to message with AI emoji. AI emoji: ${AIEmoji}`);
-        const emoji = getRandomEmoji();
-        try {
-            action.messageReact(message, emoji);
-        } catch (err) {
-            log.error(`could not react to message with AI emoji or random emoji. random emoji: ${emoji}`);
-        }
-    }
+    });
 }
 
-export function getEvent() {
+export function getEvent(message) {
+    const guildConfig = guildConfigs.getGuildConfig(message.guild.id);
     const seed = Math.random();
-    const chances = eventChances;
+    let chances = eventChances;
+    if (guildConfig) {
+        chances = {
+            thread: guildConfig.diabolicalThreadEventChance,
+            reply: guildConfig.diabolicalReplyEventChance,
+            reaction: guildConfig.diabolicalReactionEventChance
+        }
+    }
     if (seed < chances.thread) {
         return 'thread';
     } else if (seed < chances.thread + chances.reply) {

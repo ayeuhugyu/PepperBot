@@ -142,7 +142,7 @@ function parseUserInputValue(value, type, arraytype) {
         case "string":
             return value;
         case "number":
-            return parseInt(value);
+            return parseFloat(value);
         case "object":
             return JSON.parse(`{${value}}`);
         default:

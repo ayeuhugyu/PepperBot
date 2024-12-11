@@ -15,5 +15,8 @@
     "useEphemeralReplies": false,
     "autoBuildPreview": false,
     "autoCrosspostChannels": [],
-    "theme": "CURRENT"
+    "theme": "CURRENT",
+    "diabolicalReactionEventChance": 0.01,
+    "diabolicalThreadEventChance": 0.0005,
+    "diabolicalReplyEventChance": 0.001
 }

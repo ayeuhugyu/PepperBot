@@ -55,6 +55,7 @@ p/update a whole entire TWO new commands... CRAZY...
 - rewrote README.md, much MUCH simpler now. i dont really know what i would actually explain about it, and if it was anything about the source code that would just be yet another thing i have to keep changing.
 - diabolical reactions are now AI based. multiple reactions may be generated. these take into account attached files as well
 - queue titles now have a timestamp that shows when the next song will play
+- diabolical event chances are not configurable by guild configs. as a result, p/configure now supports floats
 
 **fixes/optimizations:**
 

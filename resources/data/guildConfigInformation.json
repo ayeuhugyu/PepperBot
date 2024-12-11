@@ -105,5 +105,23 @@
         "default": "CURRENT",
         "cleanname": "theme",
         "description": "the seasonal theme to use for the bot; can only be: CURRENT, SPOOKY, WINTER, EASTER, THANKSGIVING, or DEFAULT."
+    },
+    "diabolicalReactionEventChance": {
+        "type": "number",
+        "default": "0.01",
+        "cleanname": "diabolical reaction event chance",
+        "description": "percentage chance of a diabolical reaction event happening when a message is sent. default is 1%."
+    },
+    "diabolicalThreadEventChance": {
+        "type": "number",
+        "default": "0.0005",
+        "cleanname": "diabolical thread event chance",
+        "description": "percentage chance of a diabolical thread event happening when a message is sent. default is 0.05%."
+    },
+    "diabolicalReplyEventChance": {
+        "type": "number",
+        "default": "0.001",
+        "cleanname": "diabolical reply event chance",
+        "description": "percentage chance of a diabolical reply event happening when a message is sent. default is 0.1%."
     }
 }
