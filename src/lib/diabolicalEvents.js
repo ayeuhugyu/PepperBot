@@ -6,7 +6,7 @@ import { AIReaction, fixIncomingMessage, AIDiabolicReply } from './gpt.js';
 
 export const eventChances = { // defaults
     'thread': 0.0005, // 0.05% chance
-    'reply': 0.001, // 0.1% chance
+    'reply': 0.005, // 0.5% chance
     'reaction': 0.01, // 1% chance
 }
 
@@ -54,7 +54,7 @@ export function threadEvent(message) {
 
 export async function replyEvent(message) {
     const messageContent = await fixIncomingMessage(message);
-    const replyEvent = parseInt(await AIDiabolicReply(messageContent));
+    const replyEvent = await AIDiabolicReply(messageContent);
     log.info(`diabolical reply event triggered with AI response: ${replyEvent} ${message.id} with content: ${messageContent}`);
     const event = replyEvents[replyEvent] || getReplyEvent();
     action.reply(message, event);

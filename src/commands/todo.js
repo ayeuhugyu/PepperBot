@@ -109,9 +109,7 @@ const ActionRow = new ActionRowBuilder().addComponents(
 
 async function refresh(authorId, gconfig) {
     const latestEmbed = latestEmbeds[authorId];
-    console.log(latestEmbed)
     if (!latestEmbed) return;
-    console.log(`refreshing to ${latestEmbed.message.id}`)
     if (latestEmbed.menu) {
         latestEmbed.menu.full.stop();
     };

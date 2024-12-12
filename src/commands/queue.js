@@ -87,10 +87,10 @@ function convertISO8601ToUnix(duration) {
     const seconds = parseInt(match[4]) || 0;
 
     return (
-        days * 86400 +
-        hours * 3600 +
-        minutes * 60 +
-        seconds
+        days * 24 * 60 * 60 * 1000 +
+        hours * 60 * 60 * 1000 +
+        minutes * 60 * 1000 +
+        seconds * 1000
     );
 }
 
@@ -151,7 +151,7 @@ async function refresh(queue, interaction, args, row, sentMessage, gconfig) {
                 title += ` | Duration: ${duration}`;
             }
             if (timestamp) {
-                title += ` | Next song <t:${timestamp}:R>` 
+                title += ` | Next song <t:${((Date.now() + timestamp) / 1000).toFixed(0)}:R>` 
             }
         } else {
             title += ` | ${queue.readableQueue.length} items`;

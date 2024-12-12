@@ -40,7 +40,6 @@ function getNestedProperty(obj, key) {
 
 export function getItems(listName, key, value) {
     key = normalizeString(key);
-    console.log(value)
     const list = data[listName];
     if (!list) {
         return new DBError(`invalid list name: ${listName}`, 404);

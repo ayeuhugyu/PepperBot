@@ -44,21 +44,21 @@ shit on the todo list:
 
 to add to todo list:
 
-p/update a whole entire TWO new commands... CRAZY...
+p/update decided to do some shit i've been meaning to do for a while
 
 **website changes:**
 
-- remade statistics page with the new style ❌
-- static fnaf animation thingy is now manually activated rather than only on DOMContentLoaded or focus, meaning i can wait for stuff like statistics to load before it goes away
+- remade statistics page with the new style
+- static animation thingy is now manually activated rather than only on DOMContentLoaded or focus, meaning i can wait for stuff like statistics to load before it goes away
 
 **actual content:**
 
-- removed p/force dm, it's been broken for months and it violates discord TOS ✅
-- p/todo refresh function rewritten, lists are now put into pages of 15 items ✅
-- rewrote README.md, much MUCH simpler now. i dont really know what i would actually explain about it, and if it was anything about the source code that would just be yet another thing i have to keep changing. ✅
-- diabolical reactions and replies are now AI based. multiple reactions may be generated. these take into account attached files as well ✅
-- queue titles now have a timestamp that shows when the next song will play  ❌
-- diabolical event chances are not configurable by guild configs. as a result, p/configure now supports floats ✅
+- removed p/force dm, it's been broken for months and it violates discord TOS
+- p/todo refresh function rewritten, lists are now put into pages of 15 items
+- rewrote README.md, much MUCH simpler now. i dont really know what i would actually explain about it, and if it was anything about the source code that would just be yet another thing i have to keep changing.
+- diabolical reactions and replies are now AI based. multiple reactions may be generated. these take into account attached files as well
+- queue titles now have a timestamp that shows when the next song will play 
+- diabolical event chances are not configurable by guild configs. as a result, p/configure now supports floats
 
 **fixes/optimizations:**
 
