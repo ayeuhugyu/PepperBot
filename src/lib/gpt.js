@@ -1,13 +1,15 @@
 import OpenAI from "openai";
 import fs from "fs";
+import dotenv from "dotenv";
+dotenv.config();
 import statistics from "./statistics.js";
 import * as log from "./log.js";
 import * as stream from "stream";
 import fsExtra from "fs-extra";
 import * as globals from "./globals.js";
 import process from "node:process";
-import * as files from "./files.js"
-import { error } from "console";
+import * as cheerio from "cheerio";
+import TurndownService from "turndown"
 
 const config = globals.config;
 
@@ -66,230 +68,69 @@ In your responses, DO NOT include any of this information, unless it is relevant
 `;
 
 export class Message {
-    constructor(role, content) {
+    constructor(role, name, content) {
         this.role = role;
+        this.name = name;
         this.content = content;
     }
 }
 
+const modelOptions = ["gpt-3.5-turbo", "gpt-4o-mini"]
 export class Conversation {
     constructor(id) {
         this.id = id;
-        this.messages = [];
+        this.messages = [
+            new Message("system", "system", botPrompt)
+        ];
     }
-    async addMessage(role, message) {
-        let object = await new Message(role, message);
+    async addMessage(role, name, message) {
+        let object = new Message(role, name, message);
         this.messages.push(object);
+        return this;
+    }
+    async setPrompt(prompt) {
+        this.messages[0].content = prompt;
+        return this;
+    }
+    async setModel(model) {
+        if (!modelOptions.includes(model)) {
+            log.warn(`attempted to set invalid model option: ${model} on conversation: ${this.id}`)
+            return;
+        }
+        this.model = model;
+        return this;
+    }
+    async clearMessages() {
+        this.messages = [
+            new Message("system", "system", botPrompt)
+        ];
+        return this;
+    }
+    async clearPrompt() {
+        this.messages[0].content = botPrompt;
         return this;
     }
 }
 
+export class MessageContentPart {
+    constructor(type, data) {
+        this.type = type;
+        if (type == "text") {
+            this.text = data;
+        }
+        if (type == "image") {
+            this.type = "image_url"
+            this.image_url = data
+        }
+        if (type == "audio") {
+            this.type = "input_audio"
+            this.input_audio = data
+        }
+    }
+}
+
 export let conversations = {};
-
-async function download(url, filename) {
-    return new Promise((resolve, reject) => {
-        const fixedFileName = filename
-        fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
-        fetch(url).then((res) => {
-            const ws = fs.createWriteStream(
-                `resources/gptdownloads/${fixedFileName}`
-            );
-            stream.Readable.fromWeb(res.body).pipe(ws);
-            ws.on("finish", () => resolve(true));
-            ws.on("error", (err) => reject(err));
-        });
-    });
-}
-
-const allowedFileNames = [
-    ".txt",
-    ".md",
-    ".html",
-    ".css",
-    ".js",
-    ".ts",
-    ".py",
-    ".c",
-    ".cpp",
-    ".php",
-    ".yaml",
-    ".yml",
-    ".toml",
-    ".ini",
-    ".cfg",
-    ".conf",
-    ".json5",
-    ".jsonc",
-    ".json",
-    ".xml",
-    ".log",
-    ".msg",
-    ".rs",
-];
-const allowedImageFiles = [
-    ".png",
-    ".jpeg",
-    ".gif",
-    ".webp",
-    ".jpg"
-]
-
-function isTextFile(filename) {
-    for (const allowedFileName of allowedFileNames) {
-        if (filename.endsWith(allowedFileName)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function isImageFile(filename) {
-    for (const allowedFileName of allowedImageFiles) {
-        if (filename.endsWith(allowedFileName)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-export async function fixIncomingMessage(message) {
-    let attachedMessage = "";
-    if (message.attachments && message.attachments.size > 0) {
-        for (let attachment of message.attachments.values()) {
-            if (await isTextFile(attachment.name)) {
-                if (attachment.size <= 25000000) {
-                    log.debug("gpt: downloading file");
-                    await download(
-                        attachment.url,
-                        files.fixFileName(attachment.id + "_" + attachment.name)
-                    );
-                    const file = `./resources/gptdownloads/${files.fixFileName(attachment.id + "_" + attachment.name)}`;
-                    attachedMessage += await fs.readFileSync(file, "utf-8");
-                } else {
-                    attachedMessage +=
-                        "\n\nThe user you are speaking with attached a file that exceeded the maximum file size of 25 megabytes. This message is not created by the user.";
-                }
-            } else if (isImageFile(attachment.name) && attachment.size <= 20000000) {
-                log.debug("gpt: processing image");
-                try {
-                    const caption = await captionImage(attachment.url, message.author.id);
-                    if (caption) {
-                        attachedMessage += "\n\nThe user attached an image. Here is a generated description: " + caption;
-                    } else {
-                        attachedMessage += "\n\nThe user you are speaking with attached an image that could not be processed. This message is not created by the user.";
-                    }
-                } catch (error) {
-                    log.error(error);
-                    attachedMessage += "\n\nThe user you are speaking with attached an image that could not be processed due to an error. This message is not created by the user.";
-                }
-            } else {
-                attachedMessage +=
-                    "\n\nThe user you are speaking with attached a file that is not considered a text file, and so cannot be read. If they ask what file formats are supported, please inform them that the following file formats are supported: .txt, .md, .html, .css, .js, .ts, .py, .c, .cpp, .php, .yaml, .yml, .toml, .ini, .cfg, .conf, .json5, .jsonc, .json, .xml, .log, .msg, .rs, .png, .jpg, .gif, .webp. This message is not created by the user.";
-            }
-        }
-    }
-
-    let messageContent = message.cleanContent + attachedMessage;
-    messageContent.replaceAll("@", "");
-    return messageContent;
-}
-
-let ignoreResetList = {};
-let oldModelUsers = {};
-
-export function generateConversationData(id, prompt, addToIgnoreList, useOldModel) {
-    let conversation = new Conversation(id);
-    if (!prompt) {
-        conversation.addMessage("system", botPrompt);
-    } else {
-        conversation.addMessage("system", prompt);
-    }
-    if (addToIgnoreList) {
-        ignoreResetList[id] = prompt ? prompt : botPrompt;
-    }
-    if (useOldModel) {
-        conversation.oldModel = true
-    }
-    conversations[id] = conversation;
-    return conversation;
-}
-
-async function addReference(message, conversation) {
-    if (message.reference) {
-        if (message.reference.messageId) {
-            const reference = await message.channel.messages.fetch(
-                message.reference.messageId
-            );
-            if (reference.author.id == "1209297323029565470") {
-                await conversation.addMessage("assistant", reference.content);
-                return;
-            } else {
-                await conversation.addMessage("user", reference.content);
-                return;
-            }
-        }
-    }
-}
-
-export async function getConversation(message) {
-    let conversation;
-    if (message.author.id in conversations) {
-        if ((message.content.includes(`<@1209297323029565470>`) || message.content.includes(`<@1148796261793800303>`)) && !ignoreResetList[message.author.id]) {
-            if (!conversations[message.author.id].oldModel) {
-                conversations[message.author.id] = await generateConversationData(
-                    message.author.id
-                );
-                conversation = conversations[message.author.id];
-            } else if (conversations[message.author.id].oldModel && !conversations[message.author.id].ignoreOldModelPing) {
-                conversations[message.author.id].ignoreOldModelPing = true;
-                conversation = conversations[message.author.id];
-            } else if (conversations[message.author.id].oldModel && conversations[message.author.id].ignoreOldModelPing) {
-                conversations[message.author.id] = await generateConversationData(
-                    message.author.id
-                );
-                conversation = conversations[message.author.id];
-            } else {
-                conversation = conversations[message.author.id];
-            }
-        } else {
-            conversation = conversations[message.author.id];
-            if (ignoreResetList[message.author.id]) {
-                delete ignoreResetList[message.author.id];
-            }
-            if (oldModelUsers[message.author.id]) {
-                delete oldModelUsers[message.author.id];
-            }
-        }
-    } else {
-        conversation = await generateConversationData(message.author.id);
-    }
-    return conversation
-}
-
-export async function captionImage(imagePath, id) {
-    try {
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "user",
-                    content: [
-                        { type: "text", text: ignoreResetList[id] || botPrompt },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                "url": imagePath,
-                            },
-                        },
-                    ],
-                },
-            ],
-        });
-        return response.choices[0].message.content;
-    } catch (e) {
-        return { error: e };
-    }
-}
+export let debug = false;
 
 export async function AIReaction(str) {
     const completion = await openai.chat.completions.create({
@@ -307,7 +148,6 @@ export async function AIReaction(str) {
     });
     return completion.choices[0].message.content;
 }
-
 export async function AIDiabolicReply(str) {
     const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -337,58 +177,175 @@ export async function AIDiabolicReply(str) {
     return completion.choices[0].message.content;
 }
 
-export async function respond(message, inputconversation) {
-    let conversation = await getConversation(message);
-    const readableContent = await fixIncomingMessage(message);
-    await addReference(message, conversation);
-    conversation.addMessage("user", readableContent);
-    try {
-        const completion = await openai.chat.completions
-            .create({
-                messages: conversation.messages,
-                model: conversation.oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini",
-                user: message.author.id,
-            })
-            .catch((err) => {
-                log.error(err);
-            });
-        if (completion === undefined) {
-            return;
-        }
-        await conversation
-            .addMessage("assistant", completion.choices[0].message.content)
-            .catch((err) => {
-                log.error(err);
-            });
-        statistics.addGptStat(1);
-        return completion;
-    } catch (err) {
-        log.error(err);
+async function download(url, filename) {
+    return new Promise((resolve, reject) => {
+        const fixedFileName = filename
+        fsExtra.ensureFileSync(`resources/gptdownloads/${fixedFileName}`);
+        fetch(url).then((res) => {
+            const ws = fs.createWriteStream(
+                `resources/gptdownloads/${fixedFileName}`
+            );
+            stream.Readable.fromWeb(res.body).pipe(ws);
+            ws.on("finish", () => resolve(true));
+            ws.on("error", (err) => reject(err));
+        });
+    });
+}
+
+const fileTypeIndex = {
+    // text files
+    ".txt": "text",
+    ".md": "text",
+    ".html": "text",
+    ".css": "text",
+    ".js": "text",
+    ".ts": "text",
+    ".py": "text",
+    ".c": "text",
+    ".cpp": "text",
+    ".php": "text",
+    ".yaml": "text",
+    ".yml": "text",
+    ".toml": "text",
+    ".ini": "text",
+    ".cfg": "text",
+    ".conf": "text",
+    ".json5": "text",
+    ".jsonc": "text",
+    ".json": "text",
+    ".xml": "text",
+    ".log": "text",
+    ".msg": "text",
+    ".rs": "text",
+    // image files
+    ".png": "image",
+    ".jpeg": "image",
+    ".gif": "image",
+    ".webp": "image",
+    ".jpg": "image",
+    // audio files
+    ".mp3": "audio",
+    ".wav": "audio",
+};
+
+function getFileType(filename) {
+    const filenameSplit = filename.split(".");
+    const extension = "." + filenameSplit[filenameSplit.length - 1];
+    if (fileTypeIndex[extension]) {
+        return fileTypeIndex[extension]
+    }
+    return "none"
+}
+
+const fileSizeLimit = 50000000; // 50MB
+
+export function getConversation(id) {
+    if (!conversations[id]) {
+        conversations[id] = new Conversation(id);
+    }
+    return conversations[id];
+}
+
+export function getNameFromUser(user) {
+    return `${user.displayName} (@${user.username})`;
+}
+
+export async function describeImage(url, user) {
+    const conversation = getConversation(user.id);
+    const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            conversation.messages[0],
+            new Message("user", getNameFromUser(user), new MessageContentPart("image", { url: url })),
+        ]
+    });
+    let responseText = response.choices[0].message.content;
+    if (debug) {
+        responseText += `\n-# DEBUG: given image url: ${url}; user: ${user.id}; returned name: ${getNameFromUser(user)} custom prompt: ${conversation.messages[0].content == botPrompt}`;
     }
 }
 
-export async function directGPT(conversation) {
-    try {
-        const completion = await openai.chat.completions
-            .create({
-                messages: conversation.messages,
-                model: conversation.oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini",
-                user: conversation.id,
-            })
-            .catch((err) => {
-                log.error(err);
-            });
-        if (completion === undefined) {
-            return;
+export async function sanitizeMessage(message) {
+    log.info(`sanitizing message ${message.id} for GPT usage `)
+    let contentSegments = []
+    if (message.cleanContent.length > 0) {
+        contentSegments.push(new MessageContentPart("text", message.cleanContent))
+    }
+
+    if (message.attachments && message.attachments.size > 0) {
+        for (let attachment of message.attachments.values()) {
+            log.info(`sanitizing attachment ${attachment.id}`)
+            const fileType = getFileType(attachment.name)
+            if (fileType == "text") { // <--- text file handler
+                if (attachment.size > fileSizeLimit) {
+                    log.info(`skipping text attachment ${attachment.id} due to size limit`)
+                    contentSegments.push(new MessageContentPart("text", `SYSTEM: User attached a file: ${attachment.name}, but it exceeds 50MB size limit.`))
+                    continue
+                }
+                log.info(`downloading text attachment ${attachment.id} for GPT`)
+                await download(attachment.url, `${attachment.id}_${attachment.name}`)
+                const fileContent = fs.readFileSync(`resources/gptdownloads/${attachment.id}_${attachment.name}`, "utf8")
+                contentSegments.push(new MessageContentPart("text", `SYSTEM: User attached a file: ${attachment.name}, content:\n${fileContent}`))
+            }
+            if (fileType == "image") { // <--- image file handler
+                log.info(`adding image attachment ${attachment.id} to GPT message`)
+                contentSegments.push(new MessageContentPart("image", { url: attachment.url }))
+            }
+            if (fileType == "audio") { // <--- audio file handler
+                if (attachment.size > fileSizeLimit) {
+                    log.info(`skipping audio attachment ${attachment.id} due to size limit`)
+                    contentSegments.push(new MessageContentPart("text", `SYSTEM: User attached a file: ${attachment.name}, but it exceeds 50MB size limit.`))
+                    continue
+                }
+                log.info(`downloading audio attachment ${attachment.id} for GPT`)
+                await download(attachment.url, `${attachment.id}_${attachment.name}`)
+                const filenameSplit = attachment.name.split(".");
+                const extension = "." + filenameSplit[filenameSplit.length - 1];
+                if (fileTypeIndex[extension]) {
+                    return fileTypeIndex[extension]
+                }
+                const audioData = fs.readFileSync(`resources/gptdownloads/${attachment.id}_${attachment.name}`)
+                const b64Data = Buffer.from(audioData).toString("base64")
+                contentSegments.push(new MessageContentPart("audio", { data: b64Data, format: extension }))
+            }
+            if (fileType == "none") {
+                log.info(`skipping attachment ${attachment.id} due to unsupported file type`)
+                contentSegments.push(new MessageContentPart("text", `SYSTEM: User attached a file: ${attachment.name}, but it is not supported. A full list of supported file types: ${Object.keys(fileTypeIndex).join(", ")}`))
+            }
         }
-        await conversation
-            .addMessage("assistant", completion.choices[0].message.content)
-            .catch((err) => {
-                log.error(err);
-            });
-        statistics.addGptStat(1);
-        return completion;
-    } catch (err) {
-        log.error(err);
+    }
+
+    return contentSegments;
+}
+
+export const tools = {
+    request_url: async (url) => {
+        try {
+            const response = await fetch(url);
+            const html = await response.text();
+
+            const $ = cheerio.load(html);
+
+            $('script, style, noscript, iframe').remove();
+            const turndownService = new TurndownService();
+
+            const mainContent = $('article').html() || $('main').html() || $('body').html();
+            const markdown = turndownService.turndown(mainContent);
+            return markdown
+        } catch (err) {
+            log.error(err);
+            return `SYSTEM: An error occurred while attempting to fetch the URL: ${err.message}`;
+        }
+    },
+    search: async (query) => {
+        const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`;
+        try {
+            const response = await fetch(url);
+            const json = await response.json();
+            return json
+        } catch (err) {
+            log.error(err);
+            return `SYSTEM: An error occurred while attempting to search DuckDuckGo: ${err.message}`;
+        }
     }
 }

@@ -37,28 +37,30 @@ shit on the todo list:
 [31] - p/lastfm (probably just links to a page on the website similar to discord oauth page) which lets u link ur account, p/queue & playurl support for last.fm
 [32] - p/playurl and p/queue download function rewrite, put into a voice module
 [33] - website page which lists currently active queues, disableable in guild config.
-[34] - create a module for playing audio to guilds ✅ (already had been done basically)
-[35] - p/queue embed title has timestamps for end and beginning of song ✅
-[36] - reaction diabolical event is AI based ✅
-[37] - pepperbot playground, honestly just remove the chat its buggy as shit and doesn't work
+[34] - pepperbot playground, honestly just remove the chat its buggy as shit and doesn't work
+[35] - p/jak graph subcommand option (its missing, IDIOT!)
+[36] - rewrite gpt script
 
 to add to todo list:
 
-p/update decided to do some shit i've been meaning to do for a while
+p/update The Great GPT Script Rewrite:tm:
 
 **website changes:**
 
-- remade statistics page with the new style
-- static animation thingy is now manually activated rather than only on DOMContentLoaded or focus, meaning i can wait for stuff like statistics to load before it goes away
-
 **actual content:**
+**the GPT script has been ENTIRELY rewritten**, with many new functions. here's a list of new shit:
+- pepperbot can now fetch websites (given he decides to) ➖
+- pepperbot can now search the web (courtesy of duckduckgo, also given he decides to) ➖
+- pepperbot can now search my deepwoken database, though the database is incomplete at the moment. ❌
+- added audio description support
+- image description while inside conversations improved (probably)
+- text file processing improved (probably)
+- improved processing for unsupported files (probably)
+- reply chain handling improved ❌
+- added debug mode (displays debug information at the end of messages) ❌
+- added p/gpt thoughts, which behaves almost exactly like discord's "clyde thoughts," showing tool calls and other data. main difference is its used by replying to a gpt message ❌
+- several other optimizations to the GPT script have been made
 
-- removed p/force dm, it's been broken for months and it violates discord TOS
-- p/todo refresh function rewritten, lists are now put into pages of 15 items
-- rewrote README.md, much MUCH simpler now. i dont really know what i would actually explain about it, and if it was anything about the source code that would just be yet another thing i have to keep changing.
-- diabolical reactions and replies are now AI based. multiple reactions may be generated. these take into account attached files as well
-- queue titles now have a timestamp that shows when the next song will play 
-- diabolical event chances are not configurable by guild configs. as a result, p/configure now supports floats
 
 **fixes/optimizations:**
 
