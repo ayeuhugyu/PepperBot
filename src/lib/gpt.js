@@ -10,6 +10,8 @@ import * as globals from "./globals.js";
 import process from "node:process";
 import * as cheerio from "cheerio";
 import TurndownService from "turndown"
+import { Buffer } from "buffer";
+import EventEmitter from "events";
 
 const config = globals.config;
 
@@ -67,48 +69,137 @@ Here is some information about your personality. All of these are to be kept a s
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.
 `;
 
+export const toolFunctions = {
+    request_url: async ({ url }) => {
+        try {
+            const response = await fetch(url);
+            const html = await response.text();
+
+            const $ = cheerio.load(html);
+
+            $('script, style, noscript, iframe').remove();
+            const turndownService = new TurndownService();
+
+            const mainContent = $('article').html() || $('main').html() || $('body').html();
+            const markdown = turndownService.turndown(mainContent);
+            return markdown
+        } catch (err) {
+            log.error(err);
+            return `SYSTEM: An error occurred while attempting to fetch the URL: ${err.message}`;
+        }
+    },
+    search: async ({ query }) => {
+        const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const results = data.items
+            return results;
+        } catch (err) {
+            log.error(err);
+            return `SYSTEM: An error occurred while attempting to search Google: ${err.message}`;
+        }
+    }
+}
+
+export const toolData = [
+    {
+        "type": "function",
+        "function": {
+            "name": "request_url",
+            "description": "fetches a URL and returns the main content as markdown",
+            "strict": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "the URL to fetch"
+                    }
+                },
+                "additionalProperties": false,
+                "required": ["url"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search",
+            "description": "searches Google and returns the top results",
+            "strict": true,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "the search query"
+                    }
+                },
+                "additionalProperties": false,
+                "required": ["query"]
+            }
+        }
+    }
+]
+
+const PepperBot = await openai.beta.assistants.create({
+    name: "PepperBot",
+    instructions: botPrompt,
+    tools: toolData,
+    model: "gpt-4o"
+})
+
+export let conversations = {};
+export let debug = false;
+export let newUsers = [];
+
 export class Message {
-    constructor(role, name, content) {
+    constructor(role, content) {
         this.role = role;
-        this.name = name;
         this.content = content;
     }
 }
 
 const modelOptions = ["gpt-3.5-turbo", "gpt-4o-mini"]
 export class Conversation {
-    constructor(id) {
-        this.id = id;
-        this.messages = [
-            new Message("system", "system", botPrompt)
-        ];
+    messages = [];
+    constructor(userId) {
+        this.id = userId;
+        this.emitter = new EventEmitter();
     }
-    async addMessage(role, name, message) {
-        let object = new Message(role, name, message);
-        this.messages.push(object);
-        return this;
+
+    async init() {
+        if (newUsers.includes(this.id)) {
+            const thread = await openai.beta.threads.create();
+            this.thread = thread;
+        }
+        return this
+    }
+    async addMessage(role, text) {
+        const message = new Message(role, text);
+        if (newUsers.includes(this.id)) {
+            await openai.beta.threads.messages.create(this.thread.id, message);
+        }
+        this.messages.push(message);
+        return this; 
+    }
+    async delete() {
+        if (newUsers.includes(this.id)) {
+            await openai.beta.threads.del(this.thread.id);
+        }
+        log.info(`deleted gpt conversation ${this.id}`)
+        delete conversations[this.id];
+    }
+    async getLatestMessage(add = false) {
+        const messages = await openai.beta.threads.messages.list(this.thread.id);
+        if (add) {
+            this.messages.push(messages.data[0]);
+        }
+        return messages.data[0];
     }
     async setPrompt(prompt) {
-        this.messages[0].content = prompt;
-        return this;
-    }
-    async setModel(model) {
-        if (!modelOptions.includes(model)) {
-            log.warn(`attempted to set invalid model option: ${model} on conversation: ${this.id}`)
-            return;
-        }
-        this.model = model;
-        return this;
-    }
-    async clearMessages() {
-        this.messages = [
-            new Message("system", "system", botPrompt)
-        ];
-        return this;
-    }
-    async clearPrompt() {
-        this.messages[0].content = botPrompt;
-        return this;
+        this.customPrompt = prompt;
     }
 }
 
@@ -128,9 +219,6 @@ export class MessageContentPart {
         }
     }
 }
-
-export let conversations = {};
-export let debug = false;
 
 export async function AIReaction(str) {
     const completion = await openai.chat.completions.create({
@@ -239,9 +327,10 @@ function getFileType(filename) {
 
 const fileSizeLimit = 50000000; // 50MB
 
-export function getConversation(id) {
+export async function getConversation(id) {
     if (!conversations[id]) {
         conversations[id] = new Conversation(id);
+        await conversations[id].init();
     }
     return conversations[id];
 }
@@ -255,14 +344,12 @@ export async function describeImage(url, user) {
     const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-            conversation.messages[0],
-            new Message("user", getNameFromUser(user), new MessageContentPart("image", { url: url })),
+            new Message("system", conversation.customPrompt || botPrompt),
+            new Message("user", [new MessageContentPart("image", { url: url })]),
         ]
     });
     let responseText = response.choices[0].message.content;
-    if (debug) {
-        responseText += `\n-# DEBUG: given image url: ${url}; user: ${user.id}; returned name: ${getNameFromUser(user)} custom prompt: ${conversation.messages[0].content == botPrompt}`;
-    }
+    return responseText;
 }
 
 export async function sanitizeMessage(message) {
@@ -314,38 +401,74 @@ export async function sanitizeMessage(message) {
             }
         }
     }
-
     return contentSegments;
 }
 
-export const tools = {
-    request_url: async (url) => {
-        try {
-            const response = await fetch(url);
-            const html = await response.text();
-
-            const $ = cheerio.load(html);
-
-            $('script, style, noscript, iframe').remove();
-            const turndownService = new TurndownService();
-
-            const mainContent = $('article').html() || $('main').html() || $('body').html();
-            const markdown = turndownService.turndown(mainContent);
-            return markdown
-        } catch (err) {
-            log.error(err);
-            return `SYSTEM: An error occurred while attempting to fetch the URL: ${err.message}`;
+export async function handleToolData(run, conversation) {
+    if (run.required_action && run.required_action.submit_tool_outputs && run.required_action.submit_tool_outputs.tool_calls) {
+        const toolOutputs = await Promise.all(run.required_action.submit_tool_outputs.tool_calls.map(
+            async (tool) => {
+                conversation.emitter.emit("tool_call", {
+                    tool_call_id: tool.id,
+                    function_name: tool.function.name,
+                    arguments: tool.function.arguments
+                })
+                if (tool.function.name in toolFunctions) {
+                    log.info(`running tool function: "${tool.function.name}" for tool call: "${tool.id}"`)
+                    try {
+                        const output = await toolFunctions[tool.function.name](JSON.parse(tool.function.arguments))
+                        return {
+                            tool_call_id: tool.id,
+                            output: JSON.stringify(output, null, 2)
+                        }
+                    } catch (err) {
+                        log.error(`internal error running tool function ${tool.function.name} for tool call ${tool.id}: ${err}`)
+                        return {
+                            tool_call_id: tool.id,
+                            output: `{ status: "error", message: "internal error running tool function: "${tool.function.name}" for tool call: "${tool.id}"" }`
+                        }
+                    }
+                } else {
+                    log.warn(`tool function ${tool.function.name} not found`)
+                    return {
+                        tool_call_id: tool.id,
+                        output: { status: "error", message: `tool function: "${tool.function.name}" not found from tool call: "${tool.id}"` }
+                    }
+                }
+            }
+        ))
+        if (toolOutputs.length > 0) {
+            run = await openai.beta.threads.runs.submitToolOutputsAndPoll(
+                conversation.thread.id,
+                run.id,
+                { tool_outputs: toolOutputs },
+            );
+            log.info(`submitted tool outputs for run ${run.id}`)
         }
-    },
-    search: async (query) => {
-        const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`;
-        try {
-            const response = await fetch(url);
-            const json = await response.json();
-            return json
-        } catch (err) {
-            log.error(err);
-            return `SYSTEM: An error occurred while attempting to search DuckDuckGo: ${err.message}`;
-        }
+
+        return handleRunData(run, conversation);
     }
+}
+
+export async function handleRunData(run, conversation) {
+    if (run.status === "completed") {
+        const message = await conversation.getLatestMessage(true);
+        conversation.emitter.emit("message", message);
+        return message;
+    } else if (run.status === "requires_action") {
+        return await handleToolData(run, conversation);
+    } else {
+        log.warn(`run ${run.id} did not complete: ${run}`)
+        conversation.emitter.emit("error")
+        return null;
+    }
+}
+
+export async function run(conversation) {
+    let runData = { assistant_id: PepperBot.id };
+    if (conversation.customPrompt) {
+        runData.instructions = conversation.customPrompt;
+    }
+    const run = await openai.beta.threads.runs.createAndPoll(conversation.thread.id, runData);
+    return await handleRunData(run, conversation);
 }

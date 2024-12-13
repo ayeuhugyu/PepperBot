@@ -48,7 +48,7 @@ export async function fixMsg(msg) {
         .replaceAll(process.env.DISCORD_TOKEN, "##pepper")
         .replaceAll(process.env.OPENAI_API_KEY, "##bellpepper")
         .replaceAll(process.env.WEBHOOK_TOKEN, "##onion")
-        .replaceAll(process.env.YOUTUBE_API_KEY, "##cucumber")
+        .replaceAll(process.env.GOOGLE_API_KEY, "##cucumber")
         .replaceAll(process.env.ADOBE_API_KEY, "##kiwi");
     if (msg.content.match(roleRegex)) {
         msg.content = msg.content.replaceAll(roleRegex, "Mister Role");

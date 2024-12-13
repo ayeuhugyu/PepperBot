@@ -24,7 +24,7 @@ async function isExistingVideo(url) {
     try {
         const videoId = await ytdl.getURLVideoID(url);
         const response = await youtube.videos.list({
-            auth: process.env.YOUTUBE_API_KEY,
+            auth: process.env.GOOGLE_API_KEY,
             part: "snippet",
             id: videoId,
         });

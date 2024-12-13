@@ -46,26 +46,40 @@ const command = new Command(
         if (!message.cleanContent) {
             message.cleanContent = args.get("request");
         }
-        const sent = await action.reply(
-            message,
-            { content: "processing...", ephemeral: ephemeral }
-        );
-        let completion = await gpt.respond(message).catch((err) => {
-            log.error(err);
-        });
+        if (gconfig && gconfig.disableGPTResponses) return;
+        if (gconfig && gconfig.blacklistedGPTResponseChannelIds && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id)) return;
         
-        if (completion) {
-            log.info(`gpt response succssful for ${message.author.id}`);
-            action.editMessage(
-                sent,
-                { content: completion.choices[0].message.content, ephemeral: ephemeral }
-            );
-        } else {
-            action.editMessage(
-                sent,
-                "error while generating GPT completion, edit your prompt and try again later"
-            );
-        }
+        const sent = await action.reply(message, { content: "processing...", ephemeral: ephemeral });
+        let sentContent = "processing...";
+
+        const conversation = await gpt.getConversation(message.author.id);
+        sentContent += `\n-# fetched conversation with ${message.author.username} (${message.author.id})`
+        await action.editMessage(sent, {
+            content: sentContent,
+        })
+        conversation.emitter.on("tool_call", async (tool) => {
+            sentContent += `\n-# processing tool call ${tool.tool_call_id}: ${tool.function_name}`
+            await action.editMessage(sent, {
+                content: sentContent,
+            })
+        })
+        conversation.emitter.on("message", async (message) => {
+            await action.editMessage(sent, {
+                content: message.content[0].text.value
+            })
+        })
+        const sanitizedMessage = await gpt.sanitizeMessage(message);
+        sentContent += `\n-# sanitized message: ${sanitizedMessage.id}`
+        await action.editMessage(sent, {
+            content: sentContent,
+        })
+        await conversation.addMessage("user", sanitizedMessage);
+        sentContent += `\n-# added sanitized message to thread`
+        await action.editMessage(sent, {
+            content: sentContent,
+        })
+        await gpt.run(conversation);
+        conversation.emitter.removeAllListeners();
     },
     [] // subcommands
 );

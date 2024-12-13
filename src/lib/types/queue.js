@@ -31,7 +31,7 @@ function fetchTitleFromURL(url) {
             return;
         }
         const info = await youtube.videos.list({
-            auth: process.env.YOUTUBE_API_KEY,
+            auth: process.env.GOOGLE_API_KEY,
             part: "snippet",
             id: videoId,
         });
@@ -162,7 +162,7 @@ async function playlist(url, queue) {
         playlistID = playlistID.split("&index=")[0];
     }
     const results = await youtube.playlistItems.list({
-        auth: process.env.YOUTUBE_API_KEY,
+        auth: process.env.GOOGLE_API_KEY,
         part: "id,snippet",
         maxResults: 150,
         playlistId: playlistID,

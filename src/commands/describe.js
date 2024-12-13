@@ -74,12 +74,12 @@ const command = new Command(
         const ephemeral = gconfig.useEphemeralReplies || gconfig.disableGPTResponses || (gconfig.blacklistedGPTResponseChannelIds && message.channel && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id))
         const processingMessage = await action.reply(message, { content: "processing...", ephemeral: ephemeral });
         try {
-            const caption = await gpt.captionImage(url || args.get("request").url, message.author.id);
+            const caption = await gpt.describeImage(url || args.get("request").url, message.author.id);
             if (typeof caption == "object" && caption.error) {
                 return action.editMessage(processingMessage, { content: `there was an error processing your image: \`\`\`${caption.error.message}\`\`\``, ephemeral: ephemeral });
             }
             if (!caption) {
-                return action.editReply(processingMessage, "error processing image");
+                return action.editMessage(processingMessage, "error processing image");
             }
             const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
                 .setTitle(args.get("request") ? args.get("request").name : url.split('/').pop().split('?')[0])

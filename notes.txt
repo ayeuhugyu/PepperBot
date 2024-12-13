@@ -49,18 +49,20 @@ p/update The Great GPT Script Rewrite:tm:
 
 **actual content:**
 **the GPT script has been ENTIRELY rewritten**, with many new functions. here's a list of new shit:
-- pepperbot can now fetch websites (given he decides to) ➖
-- pepperbot can now search the web (courtesy of duckduckgo, also given he decides to) ➖
+- pepperbot can now fetch websites (given he decides to)
+- pepperbot can now search the web (courtesy of duckduckgo, also given he decides to)
 - pepperbot can now search my deepwoken database, though the database is incomplete at the moment. ❌
 - added audio description support
 - image description while inside conversations improved (probably)
 - text file processing improved (probably)
 - improved processing for unsupported files (probably)
-- reply chain handling improved ❌
+- reply chain handling improved
 - added debug mode (displays debug information at the end of messages) ❌
 - added p/gpt thoughts, which behaves almost exactly like discord's "clyde thoughts," showing tool calls and other data. main difference is its used by replying to a gpt message ❌
 - several other optimizations to the GPT script have been made
-
+these do come at a price though:
+- gpt responses (BY DEFAULT**) are now much slower due to using openai's official systems, which are for some reason slow as shit.
+for comparison, p/ask used to take about 1.5 seconds to execute. now, it takes 8 seconds. 
 
 **fixes/optimizations:**
 

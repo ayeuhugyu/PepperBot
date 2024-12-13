@@ -2,7 +2,7 @@ import guildConfigs from './guildConfigs.js';
 import * as globals from './globals.js';
 import * as log from './log.js';
 import * as action from "./discord_action.js";
-import { AIReaction, fixIncomingMessage, AIDiabolicReply } from './gpt.js';
+import { AIReaction, sanitizeMessage, AIDiabolicReply } from './gpt.js';
 
 export const eventChances = { // defaults
     'thread': 0.0005, // 0.05% chance
@@ -53,7 +53,7 @@ export function threadEvent(message) {
 }
 
 export async function replyEvent(message) {
-    const messageContent = await fixIncomingMessage(message);
+    const messageContent = await sanitizeMessage(message);
     const replyEvent = await AIDiabolicReply(messageContent);
     log.info(`diabolical reply event triggered with AI response: ${replyEvent} ${message.id} with content: ${messageContent}`);
     const event = replyEvents[replyEvent] || getReplyEvent();
@@ -61,7 +61,7 @@ export async function replyEvent(message) {
 }
 
 export async function reactionEvent(message) {
-    const messageContent = await fixIncomingMessage(message);
+    const messageContent = await sanitizeMessage(message);
     const AIEmoji = await AIReaction(messageContent);
     log.info(`diabolical emoji event triggered with AI emojis: ${AIEmoji} on message: ${message.id} with content: ${messageContent}`);
     let AIReactions = AIEmoji.split(',');

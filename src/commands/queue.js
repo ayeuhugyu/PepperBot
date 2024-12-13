@@ -98,7 +98,7 @@ async function getDuration(url) {
     try {
         const videoId = await ytdl.getURLVideoID(url);
         const response = await youtube.videos.list({
-            auth: process.env.YOUTUBE_API_KEY,
+            auth: process.env.GOOGLE_API_KEY,
             part: "contentDetails",
             id: videoId,
         });
@@ -228,7 +228,7 @@ async function isUsableUrl(url) {
     try {
         const videoId = await ytdl.getURLVideoID(url);
         response = await youtube.videos.list({
-            auth: process.env.YOUTUBE_API_KEY,
+            auth: process.env.GOOGLE_API_KEY,
             part: "snippet,contentDetails",
             id: videoId,
         });
