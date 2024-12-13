@@ -160,14 +160,14 @@ const clear = new SubCommand(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        let conversation = await gpt.getConversation(message);
+        const conversation = await gpt.getConversation(message);
         if (args.get("context") == "prompt") {
             if (conversation) {
                 conversation.messages[0].content = gpt.botPrompt;
                 action.reply(message, { content: "your prompt has been reset, your current conversation now uses the default prompt.", ephemeral: gconfig.useEphemeralReplies });
             }
         } else if (args.get("context") == "conversation" || !args.get("context")) {
-            delete gpt.conversations[message.author.id];
+            conversation.delete();
             action.reply(
                 message,
                 { content: "your conversation has been cleared, your next conversation will be a new one.", ephemeral: gconfig.useEphemeralReplies }
@@ -208,7 +208,8 @@ const setprompt = new SubCommand(
     },
     async function execute(message, args) {
         if (args.get("prompt")) {
-            gpt.generateConversationData(message.author.id, args.get("prompt"), true);
+            const conversation = await gpt.getConversation(message.author.id);
+            conversation.setPrompt(args.get("prompt"));
             action.reply(
                 message,
                 `the next conversation you have with pepperbot will be influenced by your prompt: \`\`\`${args.get(
@@ -236,7 +237,9 @@ const old = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        gpt.generateConversationData(message.author.id, undefined, false, true);
+        const conversation = gpt.getConversation(message.author.id);
+        const oldModel = gpt.model !== "gpt-4o-mini";
+        conversation.model = oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini";
         action.reply(
             message,
             { content: "your next conversation with pepperbot will use the old 3.5-turbo model rather than the new 4o-mini model. pinging him twice will reset this.", ephemeral: gconfig.useEphemeralReplies }

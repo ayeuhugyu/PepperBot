@@ -66,13 +66,9 @@ async function processDM(message) {
                     .toLowerCase()
                     .startsWith(config.generic.prefix.toLowerCase())
             ) {
-                const channel = await client.channels.cache.get(
-                    "1312566483569741896"
-                );
+                const channel = await client.channels.cache.get("1312566483569741896");
                 const webhooks = await channel.fetchWebhooks();
-                let webhook = await webhooks.find(
-                    (webhook) => webhook.name === message.author.displayName
-                );
+                let webhook = await webhooks.find((webhook) => webhook.name === message.author.displayName);
                 if (webhook === undefined) {
                     webhook = await channel.createWebhook({
                         name: message.author.displayName,
@@ -121,14 +117,14 @@ async function processGPTResponse(message) {
                     content: sentContent,
                 })
                 conversation.emitter.on("tool_call", async (tool) => {
-                    sentContent += `\n-# processing tool call ${tool.tool_call_id}: ${tool.function_name}`
+                    sentContent += `\n-# processing tool call ${tool.id}: ${tool.function}`
                     await action.editMessage(sent, {
                         content: sentContent,
                     })
                 })
                 conversation.emitter.on("message", async (message) => {
                     await action.editMessage(sent, {
-                        content: message.content[0].text.value
+                        content: message
                     })
                 })
                 conversation.emitter.on("error", async (message) => {
@@ -137,17 +133,7 @@ async function processGPTResponse(message) {
                         content: sentContent
                     })
                 })
-                const sanitizedMessage = await gpt.sanitizeMessage(message);
-                sentContent += `\n-# sanitized message: ${sanitizedMessage.id}`
-                await action.editMessage(sent, {
-                    content: sentContent,
-                })
-                await conversation.addMessage("user", sanitizedMessage);
-                sentContent += `\n-# added sanitized message to thread`
-                await action.editMessage(sent, {
-                    content: sentContent,
-                })
-                await gpt.run(conversation);
+                await gpt.respond(message);
                 conversation.emitter.removeAllListeners();
             }
         }

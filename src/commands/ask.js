@@ -46,10 +46,7 @@ const command = new Command(
         if (!message.cleanContent) {
             message.cleanContent = args.get("request");
         }
-        if (gconfig && gconfig.disableGPTResponses) return;
-        if (gconfig && gconfig.blacklistedGPTResponseChannelIds && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id)) return;
-        
-        const sent = await action.reply(message, { content: "processing...", ephemeral: ephemeral });
+        const sent = await action.reply(message, { content: "processing..." });
         let sentContent = "processing...";
 
         const conversation = await gpt.getConversation(message.author.id);
@@ -58,27 +55,23 @@ const command = new Command(
             content: sentContent,
         })
         conversation.emitter.on("tool_call", async (tool) => {
-            sentContent += `\n-# processing tool call ${tool.tool_call_id}: ${tool.function_name}`
+            sentContent += `\n-# processing tool call ${tool.id}: ${tool.function}`
             await action.editMessage(sent, {
                 content: sentContent,
             })
         })
         conversation.emitter.on("message", async (message) => {
             await action.editMessage(sent, {
-                content: message.content[0].text.value
+                content: message
             })
         })
-        const sanitizedMessage = await gpt.sanitizeMessage(message);
-        sentContent += `\n-# sanitized message: ${sanitizedMessage.id}`
-        await action.editMessage(sent, {
-            content: sentContent,
+        conversation.emitter.on("error", async (message) => {
+            sentContent += `\nan error occurred while creating a GPT message. see logs for more details. debug data will persist.`
+            await action.editMessage(sent, {
+                content: sentContent
+            })
         })
-        await conversation.addMessage("user", sanitizedMessage);
-        sentContent += `\n-# added sanitized message to thread`
-        await action.editMessage(sent, {
-            content: sentContent,
-        })
-        await gpt.run(conversation);
+        await gpt.respond(message);
         conversation.emitter.removeAllListeners();
     },
     [] // subcommands

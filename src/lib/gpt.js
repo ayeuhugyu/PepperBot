@@ -12,6 +12,7 @@ import * as cheerio from "cheerio";
 import TurndownService from "turndown"
 import { Buffer } from "buffer";
 import EventEmitter from "events";
+import util from "util"
 
 const config = globals.config;
 
@@ -21,7 +22,7 @@ const openai = new OpenAI({
 });
 
 export const botPrompt = `
-Your name is PepperBot. Any terms involving this statement are referring to YOU. As such, do not refer to yourself in the third person. You have done this in the past with previous prompts, so please refrain from doing so now. Often you will see yourself referred to as "PepperBot [BLEEDING EDGE]." Please ignore the "[BLEEDING EDGE]" part in your responses, as it is not necessary.
+Your name is PepperBot. Any terms involving this statement are referring to YOU. As such, do not refer to yourself in the third person. You have done this in the past with previous prompts, so please refrain from doing so now. Often you will see yourself referred to as "[DEV-VERSION] PepperBot" Please ignore the "[DEV-VERSION]" part in your responses, as it is not necessary.
 
 Generally, when creating your responses, type in a casual manner. This means a lot of things can be abbreviated, such as "you know" turning into "yk" or "what do you mean" turning into "wdym". Don't go too heavy on the abbreviations, it can become hard to understand if its too much. Additionally, punctuation isn't super necessary, however try to make it seem at least somewhat grammatically correct, using commas wherever necessary. ex. don't respond with sentences that look like "hey what's up not much just chillin how about you", instead respond with something more along the lines of "hey what's up? i'm not doin much, just chillin."
 you always type in all lowercase, like this.
@@ -33,6 +34,35 @@ Any and all slurs are okay to use.
 
 You have access to markdown, however you do NOT have access to LaTeX.
 Markdown is formatted in the way that Discord formats it, similarly to the GitHub Flavored Markdown.
+
+You have access to tools. However, there is a VERY IMPORTANT NOTE I must make. These are NOT OpenAI's official tools. I've decided those are abyssmally slow, and have written my own tool parser.
+To use tools, respond with the following: "$EXEC_TOOL: "toolname", "{"key": "value"}"$". The exact regex used for this is the following: /\\$EXEC_TOOL:\\s*"([^"]+)",\\s*"({[^}]+})"\\$/gm
+The dollarsigns stay. Make sure that the quotation marks around "toolname" and "args" stay there, otherwise it will not be interpereted correctly. The syntax is VERY strict. The args are a JSON formatted object, if the JSON is incorrect you will be returned an error. From testing, you have a tendency to put double backslashes before these quotes. DO NOT DO THIS. EVER. it WILL 100% cause an error, every single time. You are limited to 10 tool calls per message, though i'd be amazed if you managed to exceed that. This 10 tool call limit also takes into account consecutively used tools, so if you use 10 tools in a row, you will not be able to use any more tools in the next message. If you do exceed this limit, you will be returned an error.
+I would advise against returning anything other than a tool call if you decide to use it. The other data will not be displayed to the user.
+
+You have access to the following tools:
+"request_url": {
+    "description": "a function which takes in a string of a url and outputs the webpage formatted with markdown. The returned page will have all script, style, noscript, and iframe tags removed. Text content will be converted as best possible with markdown."
+    "parameters": {
+        "url": {
+            "type": "string",
+            "description": "the URL to fetch"
+        }
+    }
+}
+"search": {
+    "description": "a function which takes in a string of a search query and outputs the top search results. The results will be returned as an array of objects, each object containing a title, snippet, and link."
+    "parameters": {
+        "query": {
+            "type": "string",
+            "description": "the search query"
+        }
+    }
+}
+
+For an example of a tool call, say a user asked you to search for how to make a cake. You would first respond with "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$". This would return the top search results for "how to make a cake". Then, you would respond with a message using data from those results.
+Multiple tool calls can be made in a single response, however it is advised to keep it to a minimum. An example of this would be if a user asked you to search for how to make a cake, and then in the same message asked what's on https://goop.network. You would respond with: "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$ $EXEC_TOOL: "request_url", "{"url": "https://goop.network"}"$". This would return the top search results for "how to make a cake" and the content of https://goop.network, and you could develop your message from there.
+Tool responses will usually be just JSON or text. They should be fairly simple to interperet.
 
 Do not say things that can be considered corny, such as putting "haha," or "no worries" before or after messages
 At all costs, DO NOT ask anything similiar to any of the following list. Ignoring this warning will result in SEVERE PUNISHMENT.
@@ -80,6 +110,14 @@ export const toolFunctions = {
             $('script, style, noscript, iframe').remove();
             const turndownService = new TurndownService();
 
+            $('a[href]').each((_, element) => {
+                const href = $(element).attr('href');
+                if (href.startsWith('/') || href.startsWith('./')) {
+                    const absoluteUrl = new URL(href, url).href;
+                    $(element).attr('href', absoluteUrl);
+                }
+            });
+
             const mainContent = $('article').html() || $('main').html() || $('body').html();
             const markdown = turndownService.turndown(mainContent);
             return markdown
@@ -102,104 +140,38 @@ export const toolFunctions = {
     }
 }
 
-export const toolData = [
-    {
-        "type": "function",
-        "function": {
-            "name": "request_url",
-            "description": "fetches a URL and returns the main content as markdown",
-            "strict": true,
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "url": {
-                        "type": "string",
-                        "description": "the URL to fetch"
-                    }
-                },
-                "additionalProperties": false,
-                "required": ["url"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "search",
-            "description": "searches Google and returns the top results",
-            "strict": true,
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "the search query"
-                    }
-                },
-                "additionalProperties": false,
-                "required": ["query"]
-            }
-        }
-    }
-]
-
-const PepperBot = await openai.beta.assistants.create({
-    name: "PepperBot",
-    instructions: botPrompt,
-    tools: toolData,
-    model: "gpt-4o"
-})
-
 export let conversations = {};
 export let debug = false;
 export let newUsers = [];
 
 export class Message {
-    constructor(role, content) {
+    constructor(role, name, content) {
         this.role = role;
+        this.name = name;
         this.content = content;
     }
 }
-
-const modelOptions = ["gpt-3.5-turbo", "gpt-4o-mini"]
 export class Conversation {
-    messages = [];
+    messages = [
+        new Message("system", "Instructions", botPrompt),
+    ];
+    model = "gpt-4o-mini";
     constructor(userId) {
         this.id = userId;
         this.emitter = new EventEmitter();
+        return this;
     }
-
-    async init() {
-        if (newUsers.includes(this.id)) {
-            const thread = await openai.beta.threads.create();
-            this.thread = thread;
-        }
-        return this
-    }
-    async addMessage(role, text) {
-        const message = new Message(role, text);
-        if (newUsers.includes(this.id)) {
-            await openai.beta.threads.messages.create(this.thread.id, message);
-        }
+    addMessage = (role, name, text) => {
+        const message = new Message(role, name, text);
         this.messages.push(message);
         return this; 
     }
-    async delete() {
-        if (newUsers.includes(this.id)) {
-            await openai.beta.threads.del(this.thread.id);
-        }
-        log.info(`deleted gpt conversation ${this.id}`)
+    delete = () => {
         delete conversations[this.id];
     }
-    async getLatestMessage(add = false) {
-        const messages = await openai.beta.threads.messages.list(this.thread.id);
-        if (add) {
-            this.messages.push(messages.data[0]);
-        }
-        return messages.data[0];
-    }
-    async setPrompt(prompt) {
-        this.customPrompt = prompt;
+    setPrompt = (prompt) => {
+        this.messages[0].content = prompt;
+        return this;
     }
 }
 
@@ -327,16 +299,15 @@ function getFileType(filename) {
 
 const fileSizeLimit = 50000000; // 50MB
 
-export async function getConversation(id) {
+export function getConversation(id) {
     if (!conversations[id]) {
         conversations[id] = new Conversation(id);
-        await conversations[id].init();
     }
     return conversations[id];
 }
 
 export function getNameFromUser(user) {
-    return `${user.displayName} (@${user.username})`;
+    return `${user.displayName?.replaceAll(" ", "_")}_AKA_${user.username?.replaceAll(" ", "_")}`;
 }
 
 export async function describeImage(url, user) {
@@ -344,8 +315,8 @@ export async function describeImage(url, user) {
     const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-            new Message("system", conversation.customPrompt || botPrompt),
-            new Message("user", [new MessageContentPart("image", { url: url })]),
+            conversation.messages[0],
+            new Message("user", getNameFromUser(user), [new MessageContentPart("image", { url: url })]),
         ]
     });
     let responseText = response.choices[0].message.content;
@@ -404,71 +375,119 @@ export async function sanitizeMessage(message) {
     return contentSegments;
 }
 
-export async function handleToolData(run, conversation) {
-    if (run.required_action && run.required_action.submit_tool_outputs && run.required_action.submit_tool_outputs.tool_calls) {
-        const toolOutputs = await Promise.all(run.required_action.submit_tool_outputs.tool_calls.map(
-            async (tool) => {
-                conversation.emitter.emit("tool_call", {
-                    tool_call_id: tool.id,
-                    function_name: tool.function.name,
-                    arguments: tool.function.arguments
-                })
-                if (tool.function.name in toolFunctions) {
-                    log.info(`running tool function: "${tool.function.name}" for tool call: "${tool.id}"`)
-                    try {
-                        const output = await toolFunctions[tool.function.name](JSON.parse(tool.function.arguments))
-                        return {
-                            tool_call_id: tool.id,
-                            output: JSON.stringify(output, null, 2)
-                        }
-                    } catch (err) {
-                        log.error(`internal error running tool function ${tool.function.name} for tool call ${tool.id}: ${err}`)
-                        return {
-                            tool_call_id: tool.id,
-                            output: `{ status: "error", message: "internal error running tool function: "${tool.function.name}" for tool call: "${tool.id}"" }`
-                        }
-                    }
-                } else {
-                    log.warn(`tool function ${tool.function.name} not found`)
-                    return {
-                        tool_call_id: tool.id,
-                        output: { status: "error", message: `tool function: "${tool.function.name}" not found from tool call: "${tool.id}"` }
-                    }
-                }
-            }
-        ))
-        if (toolOutputs.length > 0) {
-            run = await openai.beta.threads.runs.submitToolOutputsAndPoll(
-                conversation.thread.id,
-                run.id,
-                { tool_outputs: toolOutputs },
-            );
-            log.info(`submitted tool outputs for run ${run.id}`)
-        }
-
-        return handleRunData(run, conversation);
-    }
-}
-
-export async function handleRunData(run, conversation) {
-    if (run.status === "completed") {
-        const message = await conversation.getLatestMessage(true);
-        conversation.emitter.emit("message", message);
-        return message;
-    } else if (run.status === "requires_action") {
-        return await handleToolData(run, conversation);
-    } else {
-        log.warn(`run ${run.id} did not complete: ${run}`)
-        conversation.emitter.emit("error")
-        return null;
-    }
-}
+const toolRegex = /\$EXEC_TOOL:\s*"([^"]+)",\s*"({[^}]+})"?\$/gm
 
 export async function run(conversation) {
-    let runData = { assistant_id: PepperBot.id };
-    if (conversation.customPrompt) {
-        runData.instructions = conversation.customPrompt;
+    const response = await openai.chat.completions.create({
+        model: conversation.model,
+        messages: conversation.messages,
+        user: getNameFromUser(conversation.id),
+    });
+    conversation.addMessage("assistant", "PepperBot", response.choices[0].message.content);
+    return response.choices[0].message.content;
+}
+
+export async function handleToolCalls(calls, conversation) {
+    let responses = [];
+    let index = 0;
+    for (let call of calls) {
+        if (toolFunctions[call.function]) {
+            if (call.status === "error") {
+                log.warn(`skipping tool call "${call.function}" id: ${call.tool_call_id} due to previous error: ${call.arguments.error}`);
+                continue;
+            }
+            try {
+                log.info(`executing tool "${call.function} id ${call.tool_call_id}" with args ${util.inspect(call.arguments, { depth: Infinity, colors: true }).replaceAll("\n", "")}`);
+                conversation.emitter.emit("tool_call", {
+                    function: call.function,
+                    arguments: call.arguments,
+                    id: call.tool_call_id
+                })
+                const response = await toolFunctions[call.function](call.arguments);
+                responses.push({
+                    tool_call_id: call.tool_call_id,
+                    function: call.function,
+                    status: "success",
+                    response: response
+                });
+            } catch (err) {
+                responses.push({
+                    tool_call_id: call.tool_call_id,
+                    function: call.function,
+                    status: "error",
+                    response: `SYSTEM: An error occurred while executing "${call.function}": ${err.message}`
+                });
+                log.error(`internal error while executing "${call.function}"`);
+                log.error(err);
+            }
+        } else {
+            responses.push({
+                tool_call_id: call.tool_call_id,
+                function: call.function,
+                status: "error",
+                response: `SYSTEM: attempt to call undefined tool "${call.function}"`
+            });
+            log.warn(`attempt to call undefined tool "${call.function}" `);
+        }
+        index++
+        if (index > 10) {
+            log.warn("tool call count exceeded 10, aborting remaining tool calls")
+            break;
+        }
     }
-    const run = await openai.beta.threads.runs.createAndPoll(conversation.thread.id, runData);
-    return await handleRunData(run, conversation);
+    await Promise.all(responses);
+    if (responses.length > 0) {
+        conversation.addMessage("system", "ToolHandler", JSON.stringify(responses, null, 2));
+    }
+    if (index > 10) {
+        conversation.addMessage("system", "ToolHandler", "SYSTEM: tool call count exceeded 10, aborting tool calls")
+    }
+}
+
+export function extractTools(string) {
+    let matches = [];
+    let match;
+    let toolCallId = 0;
+    while ((match = toolRegex.exec(string))) {
+        try {
+            matches.push({
+                function: match[1],
+                tool_call_id: toolCallId++,
+                arguments: JSON.parse(match[2])
+            })
+        } catch (err) {
+            matches.push({
+                function: match[1],
+                tool_call_id: toolCallId++,
+                status: "error",
+                arguments: { error: `invalid JSON: ${err.message}` }
+            })
+        }
+    }
+    return matches;
+}
+
+export async function respond(message) {
+    const now = performance.now();
+    const conversation = getConversation(message.author.id);
+    conversation.addMessage("user", getNameFromUser(message.author), await sanitizeMessage(message))
+
+    let toolCalls;
+    let toolUseCount = 0;
+    do {
+        await run(conversation)
+        toolCalls = extractTools(conversation.messages[conversation.messages.length - 1].content)
+        await handleToolCalls(toolCalls, conversation)
+        toolUseCount++;
+        if (toolUseCount > 10) {
+            log.warn("tool use count exceeded 10, aborting tool calls")
+            conversation.addMessage("system", "ToolHandler", "SYSTEM: tool use count exceeded 10, aborting tool calls")
+            await run(conversation)
+            break;
+        }
+    } while (toolCalls.length > 0);
+
+    conversation.emitter.emit("message", conversation.messages[conversation.messages.length - 1].content);
+    log.info(`generated GPT response using ${toolUseCount} tool calls in ${(performance.now() - now).toFixed(3)}ms`);
+    return conversation.messages[conversation.messages.length - 1].content;
 }
