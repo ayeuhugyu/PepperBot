@@ -66,7 +66,7 @@ const command = new Command(
             })
         })
         conversation.emitter.on("error", async (message) => {
-            sentContent += `\nan error occurred while creating a GPT message. see logs for more details. debug data will persist.`
+            sentContent += `\n-# ${message}`
             await action.editMessage(sent, {
                 content: sentContent
             })

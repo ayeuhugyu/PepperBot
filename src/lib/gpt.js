@@ -403,6 +403,7 @@ export async function handleToolCalls(calls, conversation) {
             if (call.status === "error") {
                 log.warn(`skipping tool call "${call.function}" id: ${call.tool_call_id} due to previous error: ${call.arguments.error}`);
                 conversation.addMessage("system", "ToolHandler", `SYSTEM: skipping tool call "${call.function}" due to previous error: ${call.arguments.error}`);
+                conversation.emitter.emit("error", `skipping tool call "${call.function}" due to previous error: ${call.arguments.error}`);
                 continue;
             }
             try {
@@ -436,6 +437,7 @@ export async function handleToolCalls(calls, conversation) {
                     response: `SYSTEM: An error occurred while executing "${call.function}": ${err.message}`
                 });
                 log.error(`internal error while executing "${call.function}"`);
+                conversation.emitter.emit("error", `internal error while executing "${call.function}"`);
                 log.error(err);
             }
         } else {
@@ -446,6 +448,7 @@ export async function handleToolCalls(calls, conversation) {
                 response: `SYSTEM: attempt to call undefined tool "${call.function}"`
             });
             log.warn(`attempt to call undefined tool "${call.function}" `);
+            conversation.emitter.emit("error", `attempt to call undefined tool "${call.function}"`);
         }
         index++
         if (index > 10) {
