@@ -473,14 +473,24 @@ export function extractTools(string) {
                 tool_call_id: toolCallId++,
                 arguments: JSON.parse(match[2])
             })
-        } catch (err) {
-            matches.push({
-                function: match[1],
-                tool_call_id: toolCallId++,
-                status: "error",
-                arguments: { error: `invalid JSON: ${err.message}. refer to the prompt to find details of how to fix it.` }
-            })
-            console.log(match[2])
+        } catch (e) {
+            try {
+                log.warn(`unable to process GPT JSON before replacement, attempting to fix: ${e.message}`);
+                matches.push({
+                    function: match[1],
+                    tool_call_id: toolCallId++,
+                    arguments: JSON.parse(match[2].replaceAll("\\", ""))
+                })
+            } catch (err) {
+                log.warn(`unable to process GPT JSON after replacement, returning error: ${err.message}`);
+                matches.push({
+                    function: match[1],
+                    tool_call_id: toolCallId++,
+                    status: "error",
+                    arguments: { error: `invalid JSON: ${e.message}. refer to the prompt to find details of how to fix it.` }
+                })
+                console.log(match[2])
+            }
         }
     }
     return matches;
