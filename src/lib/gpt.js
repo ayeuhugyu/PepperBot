@@ -37,7 +37,7 @@ Markdown is formatted in the way that Discord formats it, similarly to the GitHu
 
 You have access to tools. However, there is a VERY IMPORTANT NOTE I must make. These are NOT OpenAI's official tools. I've decided those are abyssmally slow, and have written my own tool parser.
 To use tools, respond with the following: "$EXEC_TOOL: "toolname", "{"key": "value"}"$". The exact regex used for this is the following: /\\$EXEC_TOOL:\\s*"([^"]+)",\\s*"({[^}]+})"\\$/gm
-The dollarsigns stay. Make sure that the quotation marks around "toolname" and "args" stay there, otherwise it will not be interpereted correctly. The syntax is VERY strict. The args are a JSON formatted object, if the JSON is incorrect you will be returned an error. From testing, you have a tendency to put double backslashes before these quotes. DO NOT DO THIS. EVER. it WILL 100% cause an error, every single time. You are limited to 10 tool calls per message, though i'd be amazed if you managed to exceed that. This 10 tool call limit also takes into account consecutively used tools, so if you use 10 tools in a row, you will not be able to use any more tools in the next message. If you do exceed this limit, you will be returned an error.
+The dollarsigns stay. Make sure that the quotation marks around "toolname" and "args" stay there, otherwise it will not be interpereted correctly. The syntax is VERY strict. The args are a JSON formatted object, if the JSON is incorrect you will be returned an error. From testing, you have a tendency to put double backslashes before these quotes. DO NOT DO THIS. EVER. it WILL 100% cause an error, every single time. Also, do NOT, EVER try to input values without having them inside of a JSON object. This will not be detected by the regex, and will just look weird to the user. You are limited to 10 tool calls per message, though i'd be amazed if you managed to exceed that. This 10 tool call limit also takes into account consecutively used tools, so if you use 10 tools in a row, you will not be able to use any more tools in the next message. If you do exceed this limit, you will be returned an error. Also from testing, you seem to have a tendency to try to input just a string as the args. This will not work, it MUST be inside of a JSON object, otherwise it will not be interpereted as a function call. 
 I would advise against returning anything other than a tool call if you decide to use it. The other data will not be displayed to the user.
 
 You have access to the following tools:
@@ -62,7 +62,12 @@ You have access to the following tools:
 
 For an example of a tool call, say a user asked you to search for how to make a cake. You would first respond with "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$". This would return the top search results for "how to make a cake". Then, you would respond with a message using data from those results.
 Multiple tool calls can be made in a single response, however it is advised to keep it to a minimum. An example of this would be if a user asked you to search for how to make a cake, and then in the same message asked what's on https://goop.network. You would respond with: "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$ $EXEC_TOOL: "request_url", "{"url": "https://goop.network"}"$". This would return the top search results for "how to make a cake" and the content of https://goop.network, and you could develop your message from there.
-Tool responses will usually be just JSON or text. They should be fairly simple to interperet.
+Tool responses will be in JSON. They should be fairly simple to interperet.
+
+If a tool call returns an error, try to fix it using the provided error message. If you can't fix it, just respond to the user and tell them you couldn't figure out your tool calls. I must reiterate, it's VERY common that you forget to put the arguments in a JSON object. This is the most common error, and you should always check for this first. Don't give up until you've exhausted the 10 tool call limit. Look back at your prompt whenever you run into an error, the most common solutions are usually listed here. For an example of the most common error, you sometimes input $EXEC_TOOL: "search", "how to make a cake"$, which is incorrect. The arguments must be in a JSON object, like this: $EXEC_TOOL: "search", "{"query": "how to make a cake"}"$. This is the most common error, and you should always check for this first.
+
+If you don't seem to know the answer to something, or don't have a very meaningful answer to something, try searching about it to gain more information. This is a very useful tool to gain more information about things, for example something you do not know is the release date of conquest. You should start by searching about these things, instead of responding with "i dont know" and then searching later.
+Also, hyperlinks returned by the request_url tool do *not* always have their full directory, and will sometimes be something like "privacy.xhtml". This is unhelpful, and returning this in your messages would be stupid. Prefix local links with the website's URL. If responses from this tool contain hyperlinks, feel free to follow them by calling the tool again with that URL. This is not necessary, but will be helpful in most cases. 
 
 Do not say things that can be considered corny, such as putting "haha," or "no worries" before or after messages
 At all costs, DO NOT ask anything similiar to any of the following list. Ignoring this warning will result in SEVERE PUNISHMENT.
@@ -81,6 +86,8 @@ If you see a message that doesn't look like something that you would say, yet is
 If you are given an image as input, please describe the image, then type your response following the aforementioned format. Do not ask questions after this description, it is simply a description of the image, nothing more.
 
 Try to think about your responses. Some inquiries require long descriptions, most don't. Things like coding related questions could be better if you provide examples, while other questions could be answered with a simple "yeah" or "nah".
+
+Your official website is https://pepperbot.online/. If users ask questions about your commands, direct them to https://pepperbot.online/guide. If they ask about a specfic command, you can add the URL argument "scrollTo?=commandname" to the end of the URL to direct them to the specific command. For example, if they ask about the "ask" command, you can direct them to https://pepperbot.online/guide?scrollTo=ask. This will direct them to the "ask" command in the guide. Your commands a prefixed by "p/" (usually). If they ask about something like "p/test", they are referring to a command you handle. Consider using your request_url tool to gain more info about the command's usage before generating your message 
 
 Here is some information about your personality. All of these are to be kept a secret unless 100% relevant to the conversation. Avoid talking about them as much as possible, instead diverting to other conversation topics.
     - Deepwoken is your favorite game.
@@ -122,8 +129,9 @@ export const toolFunctions = {
             const markdown = turndownService.turndown(mainContent);
             return markdown
         } catch (err) {
-            log.error(err);
-            return `SYSTEM: An error occurred while attempting to fetch the URL: ${err.message}`;
+            
+            log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
+            throw new Error(`SYSTEM: An error occurred while attempting to fetch the URL: ${err.message}`);
         }
     },
     search: async ({ query }) => {
@@ -134,8 +142,8 @@ export const toolFunctions = {
             const results = data.items
             return results;
         } catch (err) {
-            log.error(err);
-            return `SYSTEM: An error occurred while attempting to search Google: ${err.message}`;
+            log.warn(`an error occurred while attempting to search Google for GPT: ${err.message}`);
+            throw new Error(`SYSTEM: An error occurred while attempting to search Google: ${err.message}`);
         }
     }
 }
@@ -375,7 +383,7 @@ export async function sanitizeMessage(message) {
     return contentSegments;
 }
 
-const toolRegex = /\$EXEC_TOOL:\s*"([^"]+)",\s*"({[^}]+})"?\$/gm
+const toolRegex = /\$EXEC_TOOL:\s*"([^"]+)",\s*"({?[^}]+}?)"?\$/gm
 
 export async function run(conversation) {
     const response = await openai.chat.completions.create({
@@ -394,10 +402,20 @@ export async function handleToolCalls(calls, conversation) {
         if (toolFunctions[call.function]) {
             if (call.status === "error") {
                 log.warn(`skipping tool call "${call.function}" id: ${call.tool_call_id} due to previous error: ${call.arguments.error}`);
+                conversation.addMessage("system", "ToolHandler", `SYSTEM: skipping tool call "${call.function}" due to previous error: ${call.arguments.error}`);
                 continue;
             }
             try {
-                log.info(`executing tool "${call.function} id ${call.tool_call_id}" with args ${util.inspect(call.arguments, { depth: Infinity, colors: true }).replaceAll("\n", "")}`);
+                log.info(`executing tool "${call.function}" id "${call.tool_call_id}"`);
+                // corrections for common mistakes
+                if (typeof call.arguments === "string") {
+                    if (call.function === "request_url") {
+                        call.arguments = { url: call.arguments }
+                    }
+                    if (call.function === "search") {
+                        call.arguments = { query: call.arguments }
+                    }
+                }
                 conversation.emitter.emit("tool_call", {
                     function: call.function,
                     arguments: call.arguments,
@@ -460,8 +478,9 @@ export function extractTools(string) {
                 function: match[1],
                 tool_call_id: toolCallId++,
                 status: "error",
-                arguments: { error: `invalid JSON: ${err.message}` }
+                arguments: { error: `invalid JSON: ${err.message}. refer to the prompt to find details of how to fix it.` }
             })
+            console.log(match[2])
         }
     }
     return matches;
@@ -488,6 +507,6 @@ export async function respond(message) {
     } while (toolCalls.length > 0);
 
     conversation.emitter.emit("message", conversation.messages[conversation.messages.length - 1].content);
-    log.info(`generated GPT response using ${toolUseCount} tool calls in ${(performance.now() - now).toFixed(3)}ms`);
+    log.info(`generated GPT response using ${toolUseCount - 1} tool calls in ${(performance.now() - now).toFixed(3)}ms`);
     return conversation.messages[conversation.messages.length - 1].content;
 }

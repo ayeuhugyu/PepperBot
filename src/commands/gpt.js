@@ -119,7 +119,7 @@ const getconversation = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = await gpt.getConversation(message);
+        const conversation = await gpt.getConversation(message.author.id);
         action.reply(message, {
             content: "```json\n" + await util.inspect(conversation, { depth: Infinity }) + "\n```",
             ephemeral: gconfig.useEphemeralReplies
@@ -160,7 +160,7 @@ const clear = new SubCommand(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = await gpt.getConversation(message);
+        const conversation = await gpt.getConversation(message.author.id);
         if (args.get("context") == "prompt") {
             if (conversation) {
                 conversation.messages[0].content = gpt.botPrompt;

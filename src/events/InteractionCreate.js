@@ -66,7 +66,7 @@ async function chatInputCommand(interaction) {
     const commandFn = commands.get(command);
     const startCommand = performance.now()
     commandFn(interaction, interaction.options, true).catch((err) => {log.error(err)}).then((returned) => {
-        let logmsg = `command received: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${interaction.author.username} (${interaction.author}) `;
+        let logmsg = `command recieved: ${command} in: ${(performance.now() - startCommand).toFixed(3)}ms from: ${interaction.author} `;
         const excludeList = ["restart", "eval"];
         if (!excludeList.includes(commandsObject.normalAliasesToBaseCommand[command] || command)) {
             statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || commandsObject.commandAliasesToBaseCommand[command] || command, performance.now() - startCommand);
@@ -77,11 +77,11 @@ async function chatInputCommand(interaction) {
             if (interaction.channel.type === 1) {
                 logmsg += `in DM `;
             } else {
-                logmsg += `in: ${interaction.channel.name} (${interaction.channel}) `;
+                logmsg += `in: ${interaction.channel} `;
             }
         }
         if (interaction.guild) {
-            logmsg += `in guild: ${interaction.guild.name} (${interaction.guild}) `;
+            logmsg += `in guild: ${interaction.guild.id} `;
         }
         log.debug(logmsg);
     });

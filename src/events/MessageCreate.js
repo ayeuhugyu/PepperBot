@@ -194,9 +194,7 @@ async function processCommand(message) {
         .then((returned) => {
             let logmsg = `command executed: ${command} in: ${(
                 performance.now() - startCommand
-            ).toFixed(3)}ms from: ${message.author.username} (${
-                message.author
-            }) `;
+            ).toFixed(3)}ms from: ${message.author} `;
             const excludeList = ["restart", "eval"];
             if (!excludeList.includes(commandsObject.normalAliasesToBaseCommand[command] || command)) {
                 statistics.logCommandUsage(commandsObject.normalAliasesToBaseCommand[command] || commandsObject.commandAliasesToBaseCommand[command] || command, performance.now() - startCommand);
@@ -207,11 +205,11 @@ async function processCommand(message) {
                 if (message.channel.type === 1) {
                     logmsg += `in DM `;
                 } else {
-                    logmsg += `in: ${message.channel.name} (${message.channel}) `;
+                    logmsg += `in: ${message.channel} `;
                 }
             }
             if (message.guild) {
-                logmsg += `in guild: ${message.guild.name} (${message.guild}) `;
+                logmsg += `in guild: ${message.guild.id} `;
             }
             const firstNewlineIndex = message.content.indexOf('\n');
             const logsliced = firstNewlineIndex !== -1 ? message.content.slice(0, firstNewlineIndex) : message.content;

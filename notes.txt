@@ -59,6 +59,11 @@ the GPT script has been ENTIRELY rewritten, with many new functions. here's a li
 
 a note about tools:
 custom prompts CAN use tools, however he will not understand how to use tools unless you instruct him how to in your prompt. easiest way to do that is to copy and paste the part of the default prompt that tells him how to use tools from the source code.
+**please tell me about any issues you encounter with tools!** if responses contain something like "$EXEC_TOOL: $, it's not supposed to do that. 
+
+**other things:**
+
+- message content & channel/guild/user names are no longer logged, making it much harder to accidentally leak your info or something like that
 
 **fixes/optimizations:**
 

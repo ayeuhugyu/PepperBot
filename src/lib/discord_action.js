@@ -89,7 +89,7 @@ export async function sendMessage(channel, content) {
         const fixed = await fixMsg(content);
         const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
         const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
-        log.debug(`sending message to ${channel.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
+        log.debug(`sending message to ${channel.id}`);
         const sent = await channel.send(fixed).catch((err) => {
             log.error(err);
         });
@@ -112,7 +112,7 @@ export async function reply(message, content) {
     const fixed = await fixMsg(content);
     const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
     const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
-    log.debug(`replying to ${message.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
+    log.debug(`replying to ${message.id}`);
     try {
         if (message.replied) {
             sent = await message.followUp(fixed).catch(() => {});
@@ -147,7 +147,7 @@ export async function sendDM(user, content) {
         const fixed = await fixMsg(content);
         const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
         const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
-        log.debug(`sending dm to ${user.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
+        log.debug(`sending dm to ${user.id}`);
         const msg = await user.send(fixed).catch((err) => {
             log.error(err);
         });
@@ -190,7 +190,7 @@ export async function editMessage(message, content) {
         const fixed = await fixMsg(content);
         const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
         const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
-        log.debug(`editing message: ${message.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
+        log.debug(`editing message: ${message.id}`);
         const sent = await message
             .edit(fixed)
             .catch(async (err) => {
@@ -211,7 +211,7 @@ export async function editInteractionReply(interaction, content) {
         const fixed = await fixMsg(content);
         const firstNewlineIndex = fixed.content ? fixed.content.indexOf('\n') : -1;
         const logsliced = firstNewlineIndex !== -1 ? fixed.content.slice(0, firstNewlineIndex) : fixed.content;
-        log.debug(`editing message: ${interaction.id} with ${fixed.content ? `content: ${logsliced}` : "no content; embed/attachment only"}`);
+        log.debug(`editing message: ${interaction.id}`);
         const sent = await interaction
             .editReply(fixed)
             .catch(async (err) => {
