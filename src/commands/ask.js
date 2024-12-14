@@ -71,6 +71,12 @@ const command = new Command(
                 content: sentContent
             })
         })
+        conversation.emitter.on("tool_call_complete", async (tool) => {
+            sentContent += `\n-# tool call ${tool.id} completed for: ${tool.function}`
+            await action.editMessage(sent, {
+                content: sentContent,
+            })
+        })
         await gpt.respond(message);
         conversation.emitter.removeAllListeners();
     },
