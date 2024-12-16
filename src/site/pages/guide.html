@@ -760,6 +760,32 @@
                                 <span class="exampleUsage">EXAMPLE 1: p/gpt old</span>
                             </div>
                         </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/gpt add</summary>
+                            <div class="commandDescription">adds a message to the conversation
+                                <span class="argumentOrder">ARGUMENT ORDER: p/gpt add <span class="commandArgumentOrderItem">role</span> <span class="commandArgumentOrderItem">name</span> <span class="commandArgumentOrderItem">message</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/gpt add assistant PepperBot hey there! i'm not PepperBot!</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>role<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the role of the person who sent the message
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                    <span class="commandArgumentProperty">OPTIONS: assistant, user, system</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>name<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the person who sent the message. can't contain spaces or parentheses due to API limits. 
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                            <details class="commandArgument" open>
+                                <summary>message<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the message to add
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
                     </details>
                 </details>
                 <details class="commandDetails" id="p/help">

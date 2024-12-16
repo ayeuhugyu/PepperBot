@@ -402,7 +402,8 @@ data.addStringOption((option) =>
             { name: "add", value: "add" },
             { name: "get", value: "get" },
             { name: "list", value: "list" },
-            { name: "random", value: "random" }
+            { name: "random", value: "random" },
+            { name: "graph", value: "graph" }
         )
 );
 data.addStringOption((option) =>

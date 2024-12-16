@@ -119,9 +119,79 @@ const getconversation = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = await gpt.getConversation(message.author.id);
+        const conversation = await gpt.getConversation(message.author);
         action.reply(message, {
             content: "```json\n" + await util.inspect(conversation, { depth: Infinity }) + "\n```",
+            ephemeral: gconfig.useEphemeralReplies
+        });
+    }
+);
+
+const allowedRoles = ["system", "assistant", "user"]
+
+const adddata = new SubCommandData();
+adddata.setName("add");
+adddata.setDescription("allows you to add a fake message to your conversation; this message will be considered by the bot.");
+adddata.setPermissions([]);
+adddata.setPermissionsReadable("");
+adddata.setWhitelist([]);
+adddata.setCanRunFromBot(true);
+adddata.setAliases(["addmessage"]);
+adddata.addStringOption((option) =>
+    option
+        .setName("role")
+        .setDescription("the role of the message")
+        .setRequired(true)
+        .addChoices(
+            { name: "system", value: "system" },
+            { name: "assistant", value: "assistant" },
+            { name: "user", value: "user" }
+        )
+);
+adddata.addStringOption((option) =>
+    option
+        .setName("name")
+        .setDescription("the name of the message")
+        .setRequired(true)
+);
+adddata.addStringOption((option) =>
+    option
+        .setName("content")
+        .setDescription("the content of the message")
+        .setRequired(true)
+);
+const add = new SubCommand(
+    adddata,
+    async function getArguments(message, gconfig) {
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
+        const slicedMessage = message.content.slice(prefix.length + commandLength).trim();
+        const splitMessage = slicedMessage.split(" ");
+        args.set("role", splitMessage.shift());
+        args.set("name", splitMessage.shift());
+        args.set("content", splitMessage.join(" "));
+
+        return args;
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        if (!args.get("role")) {
+            return action.reply(message, "provide a role to add");
+        }
+        if (!allowedRoles.includes(args.get("role"))){
+            return action.reply(message, "invalid role provided, options are system, assistant, user");
+        }
+        if (!args.get("name")) {
+            return action.reply(message, "provide a name to add");
+        }
+        if (!args.get("content")) {
+            return action.reply(message, "provide message content to add");
+        }
+        args.set("name", args.get("name").replaceAll(" ", "_").replaceAll("-", "_").replaceAll("(", "").replaceAll(")", "").replaceAll("[", "").replaceAll("]", "").replaceAll("{", "").replaceAll("}", "").replaceAll(":", "").replaceAll(";", "").replaceAll("'", "").replaceAll('"', "").replaceAll("<", "").replaceAll(">", "").replaceAll(",", "").replaceAll("?", "").replaceAll("!", "").replaceAll("|", "").replaceAll("\\", "").replaceAll("/", "")) // ts sucks replace with openai's regex when that error eventually comes back
+        const conversation = await gpt.getConversation(message.author);
+        await conversation.addMessage(args.get("role"), args.get("name"), args.get("content"));
+        action.reply(message, {
+            content: `added message to conversation with role: ${args.get("role")}, name: ${args.get("name")}, content: ${args.get("content")}`,
             ephemeral: gconfig.useEphemeralReplies
         });
     }
@@ -160,7 +230,7 @@ const clear = new SubCommand(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = await gpt.getConversation(message.author.id);
+        const conversation = await gpt.getConversation(message.author);
         if (args.get("context") == "prompt") {
             if (conversation) {
                 conversation.messages[0].content = gpt.botPrompt;
@@ -208,7 +278,7 @@ const setprompt = new SubCommand(
     },
     async function execute(message, args) {
         if (args.get("prompt")) {
-            const conversation = await gpt.getConversation(message.author.id);
+            const conversation = await gpt.getConversation(message.author);
             conversation.setPrompt(args.get("prompt"));
             action.reply(
                 message,
@@ -237,7 +307,7 @@ const old = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = gpt.getConversation(message.author.id);
+        const conversation = gpt.getConversation(message.author);
         const oldModel = gpt.model !== "gpt-4o-mini";
         conversation.model = oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini";
         action.reply(
@@ -264,7 +334,8 @@ data.addStringOption((option) =>
             { name: "old", value: "old" }, 
             { name: "setprompt", value: "setprompt" },
             { name: "getconversation", value: "getconversation" },
-            { name: "clear", value: "clear" }
+            { name: "clear", value: "clear" },
+            { name: "add", value: "add" }
         )
 );
 data.addStringOption((option) =>
@@ -282,6 +353,29 @@ data.addStringOption((option) =>
             { name: "conversation", value: "conversation" }
         )
 )
+data.addStringOption((option) =>
+    option
+        .setName("role")
+        .setDescription("the role of the message to add")
+        .setRequired(false)
+        .addChoices(
+            { name: "system", value: "system" },
+            { name: "assistant", value: "assistant" },
+            { name: "user", value: "user" }
+        )
+);
+data.addStringOption((option) =>
+    option
+        .setName("name")
+        .setDescription("the name of person sending the message to add")
+        .setRequired(false)
+);
+data.addStringOption((option) =>
+    option
+        .setName("content")
+        .setDescription("the content of the message to add")
+        .setRequired(false)
+);
 const command = new Command(
     data,
     async function getArguments(message, gconfig) {
@@ -302,7 +396,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies
         })
     },
-    [old, setprompt, getconversation, clear] // subcommands
+    [old, setprompt, getconversation, clear, add] // subcommands
 );
 
 export default command;

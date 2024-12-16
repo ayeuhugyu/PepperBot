@@ -43,28 +43,18 @@ shit on the todo list:
 
 to add to todo list:
 
-p/update finally, after a very long time...
+p/update more gpt stuff...
 
-**The Great GPT Script Rewrite:**
-the GPT script has been ENTIRELY rewritten, with many new functions. here's a list of new shit:
-- gpt prompt adjusted (crazy, i know)
-- created a tools system which allows pepperbot to execute functions with parameters. this is NOT OpenAI's official tools system, i've found that is abyssmally slow. 16 seconds per message slow. my system takes only 3 seconds. 
-- pepperbot can now fetch websites (given he decides to)
-- pepperbot can now search the web (also given he decides to)
-- added audio description support (though from my testing OpenAI has told it that it can't hear audio so it doesn't tend to work well)
-- image description while inside conversations improved
-- text file processing improved
-- improved processing for unsupported files
-- several other optimizations to the GPT script have been made
+**actual content:**
 
-a note about tools:
-custom prompts CAN use tools, however he will not understand how to use tools unless you instruct him how to in your prompt. easiest way to do that is to copy and paste the part of the default prompt that tells him how to use tools from the source code.
-**please tell me about any issues you encounter with tools!** if responses contain something like "$EXEC_TOOL: $, it's not supposed to do that. 
-
-**other things:**
-
-- message content & channel/guild/user names are no longer logged, making it much harder to accidentally leak your info or something like that
+- added several new tools available to the ai:
+  - image description tool (behaves the same as p/describe)
+  - a tool to dm the person who initiated the conversation
+  - a tool to get the current date
+- results from the search tool are now trimmed to exclude useless content
+- conversations are now started with some information about the environment of the conversation, mostly data about the user. this includes displayname, username, user id, avatar, type (ex. bot / system / human), badges, and creation date. 
+- added p/gpt add, which allows you to add fake messages to your current conversation with pepperbot. this can be useful to fake him out into thinking he said something. 
 
 **fixes/optimizations:**
 
-- fixed something with paged menu builders... tbh i dont even know what it was..
+- fixed missing p/jak graph subcommand option

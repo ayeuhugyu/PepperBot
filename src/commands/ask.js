@@ -49,7 +49,7 @@ const command = new Command(
         const sent = await action.reply(message, { content: "processing..." });
         let sentContent = "processing...";
 
-        const conversation = await gpt.getConversation(message.author.id);
+        const conversation = await gpt.getConversation(message.author);
         sentContent += `\n-# fetched conversation with ${message.author.username} (${message.author.id})`
         await action.editMessage(sent, {
             content: sentContent,
