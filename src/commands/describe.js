@@ -74,7 +74,7 @@ const command = new Command(
         const ephemeral = gconfig.useEphemeralReplies || gconfig.disableGPTResponses || (gconfig.blacklistedGPTResponseChannelIds && message.channel && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id))
         const processingMessage = await action.reply(message, { content: "processing...", ephemeral: ephemeral });
         try {
-            const caption = await gpt.describeImage(url || args.get("request").url, message.author.id);
+            const caption = await gpt.describeImage(url || args.get("request").url, message.author, message, false);
             if (typeof caption == "object" && caption.error) {
                 return action.editMessage(processingMessage, { content: `there was an error processing your image: \`\`\`${caption.error.message}\`\`\``, ephemeral: ephemeral });
             }

@@ -47,14 +47,10 @@ p/update more gpt stuff...
 
 **actual content:**
 
-- added several new tools available to the ai:
-  - image description tool (behaves the same as p/describe)
-  - a tool to dm the person who initiated the conversation
-  - a tool to get the current date
-- results from the search tool are now trimmed to exclude useless content
-- conversations are now started with some information about the environment of the conversation, mostly data about the user. this includes displayname, username, user id, avatar, type (ex. bot / system / human), badges, and creation date. 
-- added p/gpt add, which allows you to add fake messages to your current conversation with pepperbot. this can be useful to fake him out into thinking he said something. 
+- environment message now contains channel information (if applicable)
+- added a new gpt tool to view last.fm listening data
 
 **fixes/optimizations:**
 
-- fixed missing p/jak graph subcommand option
+- fixed gpt statistics not being counted
+- fixed errors returned by search tool when only one result is provided

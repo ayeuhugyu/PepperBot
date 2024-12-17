@@ -119,7 +119,7 @@ const getconversation = new SubCommand(
         return null;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = await gpt.getConversation(message.author);
+        const conversation = await gpt.getConversation(message.author, message, false);
         action.reply(message, {
             content: "```json\n" + await util.inspect(conversation, { depth: Infinity }) + "\n```",
             ephemeral: gconfig.useEphemeralReplies
@@ -151,7 +151,7 @@ adddata.addStringOption((option) =>
 adddata.addStringOption((option) =>
     option
         .setName("name")
-        .setDescription("the name of the message")
+        .setDescription("the name of person sending the message to add")
         .setRequired(true)
 );
 adddata.addStringOption((option) =>
@@ -188,7 +188,7 @@ const add = new SubCommand(
             return action.reply(message, "provide message content to add");
         }
         args.set("name", args.get("name").replaceAll(" ", "_").replaceAll("-", "_").replaceAll("(", "").replaceAll(")", "").replaceAll("[", "").replaceAll("]", "").replaceAll("{", "").replaceAll("}", "").replaceAll(":", "").replaceAll(";", "").replaceAll("'", "").replaceAll('"', "").replaceAll("<", "").replaceAll(">", "").replaceAll(",", "").replaceAll("?", "").replaceAll("!", "").replaceAll("|", "").replaceAll("\\", "").replaceAll("/", "")) // ts sucks replace with openai's regex when that error eventually comes back
-        const conversation = await gpt.getConversation(message.author);
+        const conversation = await gpt.getConversation(message.author, message, false);
         await conversation.addMessage(args.get("role"), args.get("name"), args.get("content"));
         action.reply(message, {
             content: `added message to conversation with role: ${args.get("role")}, name: ${args.get("name")}, content: ${args.get("content")}`,
@@ -230,7 +230,7 @@ const clear = new SubCommand(
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = await gpt.getConversation(message.author);
+        const conversation = await gpt.getConversation(message.author, message, false)
         if (args.get("context") == "prompt") {
             if (conversation) {
                 conversation.messages[0].content = gpt.botPrompt;
@@ -278,7 +278,7 @@ const setprompt = new SubCommand(
     },
     async function execute(message, args) {
         if (args.get("prompt")) {
-            const conversation = await gpt.getConversation(message.author);
+            const conversation = await gpt.getConversation(message.author, message, false)
             conversation.setPrompt(args.get("prompt"));
             action.reply(
                 message,
@@ -307,7 +307,7 @@ const old = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        const conversation = gpt.getConversation(message.author);
+        const conversation = gpt.getConversation(message.author, message, false)
         const oldModel = gpt.model !== "gpt-4o-mini";
         conversation.model = oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini";
         action.reply(

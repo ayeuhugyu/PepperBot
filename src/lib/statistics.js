@@ -68,7 +68,15 @@ export default {
             if (!statistics.gpt) {
                 statistics.gpt = 0;
             }
+            if (!statistics.timedGpt) {
+                statistics.timedGpt = {};
+            }
             statistics.gpt += amount;
+            const currentHour = new Date().getHours();
+            if (!statistics.timedGpt[currentHour]) {
+                statistics.timedGpt[currentHour] = 0;
+            }
+            statistics.timedGpt[currentHour] += amount;
             this.writeStatistics();
             resolve();
         });

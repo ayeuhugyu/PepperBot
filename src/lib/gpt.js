@@ -81,6 +81,13 @@ description = "the content to send in the DM"
 [date]
 description = "a function which returns the current date and time"
 
+[get_listening_data]
+description = "a function which takes in a string of a user's Last.fm username and outputs their most recent tracks."
+
+[get_listening_data.parameters.userid]
+type = "string"
+description = "the user's Last.fm username"
+
 For an example of a tool call, say a user asked you to search for how to make a cake. You would first respond with "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$". This would return the top search results for "how to make a cake". Then, you would respond with a message using data from those results.
 Multiple tool calls can be made in a single response. An example of this would be if a user asked you to search for how to make a cake, and then in the same message asked what's on https://goop.network. You would respond with: "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$ $EXEC_TOOL: "request_url", "{"url": "https://goop.network"}"$". This would return the top search results for "how to make a cake" and the content of https://goop.network, and you could develop your message from there.
 Tool responses will be in JSON. They should be fairly simple to interperet.
@@ -96,6 +103,7 @@ Feel free to follow links while browsing the web. If you see a link, you can use
 The dm tool probably won't see much use, but if a user asks you to dm them, you should. Or, if you want to share information privately, you can use this tool to do so.
 The date tool is useful for when you need to know the current date and time. Users may ask you for the current date and time, and you can use this tool to get that information.
 If a user asks you about Deepwoken, ALWAYS search up the answer, no exceptions. Your answers to deepwoken-related content are never correct.
+If a user asks you for song reccomendations, you can use the get_listening_data tool to get their most recent tracks. This is useful to see what they've been listening to, and can help you give them a song reccomendation based on their recent listening habits. To get their username, ask them for it. If they don't provide it, try guessign it based on their username provided in the environment message. When they ask for recomendations, look for music which is similar in genre to what they've been listening to recently, don't just provide songs they've been listening to. 
 
 # General Guidelines
 
@@ -172,8 +180,12 @@ export const toolFunctions = {
         try {
             const response = await fetch(url);
             const data = await response.json();
-            const results = data.items
-            let newResults = []
+            if (data.error) {
+                log.warn(`an error occurred while attempting to search Google for GPT: ${data.error.message}`);
+                throw new Error(`an error occurred while attempting to search Google: ${data.error.message}`);
+            }
+            const results = Array.isArray(data.items) ? data.items : [data.items];
+            let newResults = [];
             for (let result of results) {
                 newResults.push({ title: result.title, snippet: result.snippet, link: result.link })
             }
@@ -184,7 +196,7 @@ export const toolFunctions = {
         }
     },
     describe_image: async ({ url }) => {
-        return await describeImage(url, { id: "nonexistant", username: "username_unavailable" });
+        return await describeImage(url, { id: "nonexistant", username: "username_unavailable" }, undefined, false);
     },
     dm: async ({ content, conversation }) => {
         try {
@@ -198,6 +210,30 @@ export const toolFunctions = {
     },
     date: () => {
         return new Date().toLocaleString();
+    },
+    get_listening_data: async ({ conversation, userid }) => {
+        const url = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${userid}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=5`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.error) {
+            log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${data.message}`);
+            throw new Error(`an error occurred while attempting to fetch Last.fm data: ${data.message}`);
+            }
+            const mapped = data.recenttracks.track.map(track => ({
+                artist: track.artist['#text'],
+                track: track.name,
+                album: track.album['#text'],
+                url: track.url,
+                date: track.date ? track.date['#text'] : 'Now Playing'
+            }));
+            console.log(mapped)
+            return mapped
+        } catch (err) {
+            log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${err.message}`);
+            throw new Error(`an error occurred while attempting to fetch Last.fm data: ${err.message}`);
+        }
     }
 }
 
@@ -217,17 +253,29 @@ export class Conversation {
         new Message("system", "Instructions", botPrompt),
     ];
     model = "gpt-4o-mini";
-    constructor(user, noEnvironment = false) {
+    constructor(user, startingMessage, noEnvironment = false) {
         this.id = user.id;
         this.user = user;
+        this.startingMessage = startingMessage
+        const message = startingMessage
         if (!noEnvironment) {
             const environmentMessage = new Message("system", "EnvironmentHandler", `Here's some information about your current environment: 
-                You are speaking with a user. display name: ${user.displayName} (username: @${user.username} / id: ${user.id})
-                Their avatar can be found at ${user.avatarURL()}
-                This user is ${user.bot ? "a bot, not a human." : "a human, not a bot."}
-                This user has the following badges: ${user.flags.toArray().join(", ")}
-                The user was created at ${user.createdAt}
-                `);
+# User
+
+You are speaking with a user. display name: ${user?.displayName} (username: @${user?.username} / id: ${user?.id})
+Their avatar can be found at ${user?.avatarURL()}
+This user is ${user?.bot ? "a bot, not a human." : "a human, not a bot."}
+This user has the following badges: ${user?.flags?.toArray().join(", ")}
+The user was created at ${user?.createdAt}
+This user is currently playing: ${message?.member?.presence?.activities.map((activity) => activity.name)?.join(", ") || "unknown"}
+
+# Channel
+(channel may change, this is just the channel the conversation was started in!)
+
+This conversation was started in the channel ${message?.channel?.name} (id: ${message?.channel?.id}) in the guild ${message?.guild?.name} (id: ${message.guild?.id})
+This channel is of type ${message?.channel?.type}
+This channel was created at ${message?.channel?.createdAt}
+The channel topic is: ${message?.channel?.topic || "N/A (DM channel)"}`);
             this.messages.push(environmentMessage);
         }
         this.emitter = new EventEmitter();
@@ -371,10 +419,10 @@ function getFileType(filename) {
 
 const fileSizeLimit = 50000000; // 50MB
 
-export function getConversation(user, noEnvironment) {
+export function getConversation(user, message, noEnvironment) {
     const id = user.id
     if (!conversations[id]) {
-        conversations[id] = new Conversation(user, noEnvironment);
+        conversations[id] = new Conversation(user, message, noEnvironment);
     }
     return conversations[id];
 }
@@ -383,8 +431,8 @@ export function getNameFromUser(user) {
     return `${user.username}`//_AKA_${user.username?.replaceAll(" ", "_")}`;
 }
 
-export async function describeImage(url, user) {
-    const conversation = getConversation(user, true);
+export async function describeImage(url, user, message, noEnvironment) {
+    const conversation = getConversation(user, message, noEnvironment); // todo update with new thing
     const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -580,7 +628,7 @@ export function extractTools(string, conversation) {
 
 export async function respond(message) {
     const now = performance.now();
-    const conversation = getConversation(message.author);
+    const conversation = getConversation(message.author, message, false); // todo update with new thing
     conversation.addMessage("user", getNameFromUser(message.author), await sanitizeMessage(message))
 
     let toolCalls;
@@ -600,5 +648,6 @@ export async function respond(message) {
 
     conversation.emitter.emit("message", conversation.messages[conversation.messages.length - 1].content);
     log.info(`generated GPT response using ${toolUseCount - 1} tool calls in ${(performance.now() - now).toFixed(3)}ms`);
+    statistics.addGptStat(1)
     return conversation.messages[conversation.messages.length - 1].content;
 }

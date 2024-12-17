@@ -111,7 +111,7 @@ async function processGPTResponse(message) {
                 const sent = await action.reply(message, { content: "processing..." });
                 let sentContent = "processing...";
 
-                const conversation = await gpt.getConversation(message.author);
+                const conversation = await gpt.getConversation(message.author, message, false)
                 sentContent += `\n-# fetched conversation with ${message.author.username} (${message.author.id})`
                 await action.editMessage(sent, {
                     content: sentContent,
