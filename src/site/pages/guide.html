@@ -723,13 +723,13 @@
                             <div class="commandDescription">allows you to change the prompt used by the AI
                                 <span class="argumentOrder">ARGUMENT ORDER: p/gpt setprompt <span class="commandArgumentOrderItem">prompt</span></span>
                                 <span class="exampleUsage">EXAMPLE 1: p/gpt setprompt always respond with "Hello! I am PepperBot!"</span>
+                                <span class="commandArgumentProperty">ALIASES: p/gpt prompt, p/gpt gptprompt, p/gpt sp</span>
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/setprompt, p/prompt, p/gptprompt, p/sp</span>
                             </div>
                             <details class="commandArgument" open>
                                 <summary>prompt<span class="commandArgumentType">string</span></summary>
                                 <div class="argumentDescription">the prompt to set
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
-                                    <span class="commandArgumentProperty">ALIASES: p/gpt prompt, p/gpt gptprompt, p/gpt sp</span>
-                                    <span class="commandArgumentProperty">NORMAL ALIASES: p/setprompt, p/prompt, p/gptprompt, p/sp</span>
                                 </div>
                             </details>
                         </details>
@@ -782,6 +782,21 @@
                             <details class="commandArgument" open>
                                 <summary>message<span class="commandArgumentType">string</span></summary>
                                 <div class="argumentDescription">the message to add
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/gpt image</summary>
+                            <div class="commandDescription">generates an image based on an inputted prompt
+                                <span class="argumentOrder">ARGUMENT ORDER: p/gpt image <span class="commandArgumentOrderItem">prompt</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/gpt image a cat</span>
+                                <span class="commandArgumentProperty">ALIASES: p/gpt img, p/gpt generateimage, p/gpt imagine</span>
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/imagine</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>prompt<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the prompt to generate the image from
                                     <span class="commandArgumentProperty">REQUIRED: true</span>
                                 </div>
                             </details>

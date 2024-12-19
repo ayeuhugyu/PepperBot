@@ -246,6 +246,56 @@ const clear = new SubCommand(
     }
 );
 
+const imagedata = new SubCommandData();
+imagedata.setName("image");
+imagedata.setDescription("generates an image based on the prompt");
+imagedata.setPermissions([]);
+imagedata.setPermissionsReadable("");
+imagedata.setWhitelist([]);
+imagedata.setCanRunFromBot(true);
+imagedata.setAliases(["img", "generateimage", "imagine"]);
+imagedata.setNormalAliases(["imagine"]);
+imagedata.setDisabledContexts()
+imagedata.addStringOption((option) =>
+    option
+        .setName("prompt")
+        .setDescription("the prompt to generate the image from")
+        .setRequired(false)
+);
+const image = new SubCommand(
+    setpromptdata,
+    async function getArguments(message, gconfig) {
+        const commandLength = message.content.split(" ")[0].length - 1;
+        const args = new Collection();
+        const prefix = gconfig.prefix || config.generic.prefix
+        args.set(
+            "prompt",
+            message.content
+                .slice(prefix.length + commandLength)
+                .trim() + (await fixIncomingMessage(message))
+        );
+        return args;
+    },
+    async function execute(message, args) {
+        if (args.get("prompt")) {
+            const sent = await action.reply(message, { content: "generating image, please wait...", ephemeral: gconfig.useEphemeralReplies });
+            const url = await gpt.generateImage(args.get("prompt"));
+            if (typeof url !== "string") {
+                return action.editMessage(sent, {
+                    content: "failed to generate image, your prompt was probably filtered. try again with a different prompt. error: " + url,
+                    ephemeral: gconfig.useEphemeralReplies
+                });
+            }
+            action.editMessage(sent, {
+                attachments: [url],
+                content: "here ya go"
+            });
+        } else {
+            action.reply(message, "provide a prompt to use you baffoon!");
+        }
+    }
+);
+
 const setpromptdata = new SubCommandData();
 setpromptdata.setName("setprompt");
 setpromptdata.setDescription("adjusts the prompt for the next conversation");
@@ -280,6 +330,7 @@ const setprompt = new SubCommand(
         if (args.get("prompt")) {
             const conversation = await gpt.getConversation(message.author, message, false)
             conversation.setPrompt(args.get("prompt"));
+            gpt.resetExceptions[message.author.id] = true;
             action.reply(
                 message,
                 `the next conversation you have with pepperbot will be influenced by your prompt: \`\`\`${args.get(
@@ -310,6 +361,7 @@ const old = new SubCommand(
         const conversation = gpt.getConversation(message.author, message, false)
         const oldModel = gpt.model !== "gpt-4o-mini";
         conversation.model = oldModel ? "gpt-3.5-turbo" : "gpt-4o-mini";
+        gpt.resetExceptions[message.author.id] = true;
         action.reply(
             message,
             { content: "your next conversation with pepperbot will use the old 3.5-turbo model rather than the new 4o-mini model. pinging him twice will reset this.", ephemeral: gconfig.useEphemeralReplies }
@@ -341,7 +393,7 @@ data.addStringOption((option) =>
 data.addStringOption((option) =>
     option
         .setName("prompt")
-        .setDescription("the prompt to use")
+        .setDescription("the prompt to use / generate an image from")
         .setRequired(false)
 );
 data.addStringOption((option) => 
@@ -396,7 +448,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies
         })
     },
-    [old, setprompt, getconversation, clear, add] // subcommands
+    [old, setprompt, getconversation, clear, add, image] // subcommands
 );
 
 export default command;

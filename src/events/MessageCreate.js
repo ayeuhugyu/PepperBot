@@ -103,7 +103,7 @@ async function processGPTResponse(message) {
     const gconfig = await guildConfigs.getGuildConfig(message.guild.id);
     const prefix = gconfig.prefix || config.generic.prefix;
     if (message.mentions) {
-        if (message.mentions.has(client.user) && !message.content.toLowerCase().startsWith(prefix.toLowerCase()) && !message.mentions.everyone) {
+        if (message.mentions.has(client.user) && !message.content.toLowerCase().startsWith(prefix.toLowerCase()) && !message.mentions.everyone && !message.content.toLowerCase().includes("@here")) {
             if (!message.author.bot) {
                 if (gconfig && gconfig.disableGPTResponses) return;
                 if (gconfig && gconfig.blacklistedGPTResponseChannelIds && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id)) return;
