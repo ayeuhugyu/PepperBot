@@ -47,16 +47,7 @@ p/update more gpt stuff...
 
 **actual content:**
 
-- environment message for gpt now contains channel information (if applicable)
-- added a new gpt tool to view last.fm listening data
-- finished message reference system, starting a conversation when replying to something now adds it to the beginning of the conversation
-- removed usernames in messages sent to gpt (these are provided by the environment message, don't worry). for some fucking reason some idiot at openai decided that promises that dont ever reject or complete were a better idea than throwing an error
-- added p/gpt image, which generates an image based on a prompt. (i literally just addded this so i can say i'm 100% better than Microsoft Copilot)
-- set current theme to winter
+- pepperbot now has a tool to generate images
 
 **fixes/optimizations:**
 
-- fixed messages that include a ping for the bot not resetting the conversation
-- fixed gpt statistics not being counted
-- fixed errors returned by search tool when only one result is provided
-- fixed gpt responding to @ here pings
