@@ -139,7 +139,7 @@ async function processGPTResponse(message) {
                         content: sentContent,
                     })
                 })
-                await gpt.respond(message);
+                await gpt.respond(message)
                 conversation.emitter.removeAllListeners();
             }
         }

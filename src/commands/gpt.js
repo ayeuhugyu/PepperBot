@@ -263,7 +263,7 @@ imagedata.addStringOption((option) =>
         .setRequired(false)
 );
 const image = new SubCommand(
-    setpromptdata,
+    imagedata,
     async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
@@ -276,18 +276,18 @@ const image = new SubCommand(
         );
         return args;
     },
-    async function execute(message, args) {
+    async function execute(message, args, gconfig) {
         if (args.get("prompt")) {
             const sent = await action.reply(message, { content: "generating image, please wait...", ephemeral: gconfig.useEphemeralReplies });
             const url = await gpt.generateImage(args.get("prompt"));
             if (typeof url !== "string") {
                 return action.editMessage(sent, {
-                    content: "failed to generate image, your prompt was probably filtered. try again with a different prompt. error: " + url,
+                    content: "failed to generate image. error: " + url.message,
                     ephemeral: gconfig.useEphemeralReplies
                 });
             }
             action.editMessage(sent, {
-                attachments: [url],
+                files: [{ name: "image.png", attachment: url }],
                 content: "here ya go"
             });
         } else {

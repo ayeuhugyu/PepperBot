@@ -59,7 +59,7 @@ export const themes = {
     EASTER: "easter",
     THANKSGIVING: "thanksgiving",
     
-    CURRENT: "WINTER"
+    CURRENT: "winter"
 }
 
 export function getThemeEmoji(theme) {
