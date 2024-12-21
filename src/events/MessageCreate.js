@@ -174,7 +174,7 @@ async function processCommand(message) {
     if (!command) {
         //console.log("command not found")
         action.reply(message, {
-            content: "supply a command, baffon!",
+            content: "supply a command, baffoon!",
         });
         return;
     } // return if command == '' (probably caused by entering just the prefix)

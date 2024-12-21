@@ -51,3 +51,4 @@ p/update more gpt stuff...
 
 **fixes/optimizations:**
 
+- fixed a small typo with the response to messages that contain no command

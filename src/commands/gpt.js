@@ -387,7 +387,8 @@ data.addStringOption((option) =>
             { name: "setprompt", value: "setprompt" },
             { name: "getconversation", value: "getconversation" },
             { name: "clear", value: "clear" },
-            { name: "add", value: "add" }
+            { name: "add", value: "add" },
+            { name: "image", value: "image" }
         )
 );
 data.addStringOption((option) =>
