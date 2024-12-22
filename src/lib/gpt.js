@@ -570,13 +570,19 @@ export async function sanitizeMessage(message) {
 const toolRegex = /\$EXEC_TOOL:\s*"([^"]+)",\s*"({?[^}]+}?)"?\$/gm
 
 export async function run(conversation) {
-    const response = await openai.chat.completions.create({
-        model: conversation.model,
-        messages: conversation.messages,
-        user: getNameFromUser(conversation.id),
-    });
-    conversation.addMessage("assistant", "PepperBot", response.choices[0].message.content);
-    return response.choices[0].message.content;
+    try {
+        const response = await openai.chat.completions.create({
+            model: conversation.model,
+            messages: conversation.messages,
+            user: getNameFromUser(conversation.id),
+        });
+        conversation.addMessage("assistant", "PepperBot", response.choices[0].message.content);
+        return response.choices[0].message.content;
+    } catch (err) {
+        log.error(`internal error while executing GPT: ${err}`);
+        conversation.emitter.emit("fatal_error", `${err.message}`);
+        return;
+    }
 }
 
 export async function handleToolCalls(calls, conversation) {

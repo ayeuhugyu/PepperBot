@@ -133,6 +133,13 @@ async function processGPTResponse(message) {
                         content: sentContent
                     })
                 })
+                conversation.emitter.on("fatal_error", async (message) => {
+                    sentContent += `error: ${message}; debug data will persist`
+                    await action.editMessage(sent, {
+                        content: sentContent
+                    })
+                    conversation.emitter.removeAllListeners();
+                })
                 conversation.emitter.on("tool_call_complete", async (tool) => {
                     sentContent += `\n-# tool call ${tool.id} completed for: ${tool.function}`
                     await action.editMessage(sent, {

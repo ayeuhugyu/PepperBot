@@ -48,6 +48,7 @@ p/update more gpt stuff...
 **actual content:**
 
 - pepperbot now has a tool to generate images
+- added error handling for generating gpt responses (that may or may not work, idk i wasn't able to produce an error)
 
 **fixes/optimizations:**
 
