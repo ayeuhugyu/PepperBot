@@ -59,10 +59,12 @@ const command = new Command(
         const commandUsageEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         commandUsageEmbed.setTitle("Usage");
         commandUsageEmbed.setDescription(`
+            View the statistics in a better format at https://pepperbot.online/statistics
+
             GPT Messages: ${gpt}
             Text Command Usage: ${stats.commandTypeUsage.text}
             Slash Command Usage: ${stats.commandTypeUsage.slash}
-            `);
+        `);
         const commandUsageHumanReadable = Object.keys(commandUsage).map((commandName) => {
             return `${commandName}: ${commandUsage[commandName]}`;
         });
@@ -71,6 +73,7 @@ const command = new Command(
 
         const hourlyUsageEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         hourlyUsageEmbed.setTitle("Hourly Usage");
+        hourlyUsageEmbed.setDescription("View the statistics in a better format at https://pepperbot.online/statistics");
         const hourlyUsageHumanReadable = Object.keys(hourlyUsage).map((hour) => {
             return `${hourToHumanReadable(hour)}: ${hourlyUsage[hour]}`;
         });
@@ -79,6 +82,7 @@ const command = new Command(
         
         const executionTimeEmbed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT);
         executionTimeEmbed.setTitle("Execution Time");
+        executionTimeEmbed.setDescription("View the statistics in a better format at https://pepperbot.online/statistics");
         const executionTimeHumanReadable = Object.keys(executionTime).map((commandName) => {
             const times = executionTime[commandName];
             const average = times.reduce((a, b) => a + b, 0) / times.length;
@@ -101,6 +105,8 @@ const command = new Command(
         });
 
         usersEmbed.setDescription(
+            "View the statistics in a better format at https://pepperbot.online/statistics\n\n" +
+
             `apprx. guild count: ${guilds}\n` +
             `users in guilds count: ${guildUsers}\n` +
             `apprx. user installs: ${installUsers}`

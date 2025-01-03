@@ -225,8 +225,6 @@ async function processCommand(message) {
                 logmsg += `in guild: ${message.guild.id} `;
             }
             const firstNewlineIndex = message.content.indexOf('\n');
-            const logsliced = firstNewlineIndex !== -1 ? message.content.slice(0, firstNewlineIndex) : message.content;
-            logmsg += `full: ${logsliced}`;
             log.debug(logmsg);
         });
 }

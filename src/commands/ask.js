@@ -21,9 +21,8 @@ data.setPermissionsReadable("");
 data.setWhitelist([]);
 data.setCanRunFromBot(true);
 data.setAliases(["question", "askai"]);
-data.addStringOption((option) =>
-    option.setName("request").setDescription("what to ask").setRequired(true)
-);
+data.addStringOption((option) => option.setName("request").setDescription("what to ask").setRequired(false));
+data.addAttachmentOption((option) => option.setName("attachment").setDescription("attachment to process"));
 const command = new Command(
     data,
     async function getArguments(message, gconfig) {
@@ -35,14 +34,19 @@ const command = new Command(
             message.content
                 .slice(prefix.length + commandLength)
         );
+        // attachments is set by the discord api
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (!args.get("request")) {
+        if (!args.get("request") && !args.get("attachment")) {
             return action.reply(message, "no request provided");
         }
         const ephemeral = gconfig.useEphemeralReplies || gconfig.disableGPTResponses || (gconfig.blacklistedGPTResponseChannelIds && message.channel && gconfig.blacklistedGPTResponseChannelIds.includes(message.channel.id))
         message.content = args.get("request");
+        if (args.get("attachment")) {
+            message.attachments = new Collection();
+            message.attachments.set(args.get("attachment").id, args.get("attachment"));
+        }
         if (!message.cleanContent) {
             message.cleanContent = args.get("request");
         }

@@ -288,7 +288,7 @@ const image = new SubCommand(
             }
             action.editMessage(sent, {
                 files: [{ name: "image.png", attachment: url }],
-                content: "here ya go"
+                content: `image generated from prompt: \`${args.get("prompt")}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later.`,
             });
         } else {
             action.reply(message, "provide a prompt to use you baffoon!");
@@ -328,7 +328,7 @@ const setprompt = new SubCommand(
     },
     async function execute(message, args) {
         if (args.get("prompt")) {
-            const conversation = await gpt.getConversation(message.author, message, false)
+            const conversation = await gpt.getConversation(message.author, message, false, true);
             conversation.setPrompt(args.get("prompt"));
             gpt.resetExceptions[message.author.id] = true;
             action.reply(

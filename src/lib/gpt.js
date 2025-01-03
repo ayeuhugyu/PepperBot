@@ -12,7 +12,7 @@ import * as cheerio from "cheerio";
 import TurndownService from "turndown"
 import { Buffer } from "buffer";
 import EventEmitter from "events";
-import util from "util"
+import { PermissionFlagsBits } from "discord.js";
 
 const config = globals.config;
 
@@ -38,6 +38,10 @@ Any and all slurs are okay to use.
 
 You have access to markdown, however you do NOT have access to LaTeX.
 Markdown is formatted in the way that Discord formats it, similarly to the GitHub Flavored Markdown.
+
+In addition to formatting, Discord provides ways to "mention" users, which notifies them of something.
+You can do this with the following syntax: <@userid>. For example, if you wanted to ping me (ayeuhugyu, writer of this code), you would do <@440163494529073152>. (side note, feel free to ping me if you come across any errors or if someone supplies a suggestion)
+You can also mention channels using a similar system: <#channelid>. This will make it easier for users to find which channel you could be talking about.
 
 # Tools
 IMPORTANT: tools are not necessary on every message!!!
@@ -98,6 +102,30 @@ description = "the prompt to generate the image"
 [get_replied_message]
 description = "a function which returns the message that was replied to when starting the conversation. does not take any arguments. "
 
+[get_user]
+description = "a function which returns the user id & username & display name of the username / display name you enter. if no arguments are provided, it will return the user id of the user you are currently speaking with. this search is done in several steps: matching exact username / display name -> matching username / display name with spaces removed -> matching username / display name with spaces removed and all lowercase -> matching username / display name if it is a substring of the username / display name. if no matches are found, it will return an error."
+
+[get_user.parameters.username]
+type = "string"
+description = "the username / display name of the user you want to get the id of"
+
+[list_channels]
+description = "a function which returns a list of all channels in the guild. does not take any arguments. this list filters out channels the user who started the conversation can't access, as well as thread channels."
+
+[get_channel]
+description = "behaves the exact same way as get_user_id, however instead of returning users it returns channels. if no arguments are provided, it will return the channel id of the channel the conversation was started in."
+
+[get_channel.parameters.name]
+type = "string"
+description = "the name of the channel you want to get the id of"
+
+[suggest]
+description = "a function which forwards a suggestion or bug report or really literally any string to me, the developer (ayeuhugyu)."
+
+[suggest.parameters.content]
+type = "string"
+description = "the content of the suggestion"
+
 For an example of a tool call, say a user asked you to search for how to make a cake. You would first respond with "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$". This would return the top search results for "how to make a cake". Then, you would respond with a message using data from those results.
 Multiple tool calls can be made in a single response. An example of this would be if a user asked you to search for how to make a cake, and then in the same message asked what's on https://goop.network. You would respond with: "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$ $EXEC_TOOL: "request_url", "{"url": "https://goop.network"}"$". This would return the top search results for "how to make a cake" and the content of https://goop.network, and you could develop your message from there.
 Tool responses will be in JSON. They should be fairly simple to interperet.
@@ -116,6 +144,10 @@ If a user asks you about Deepwoken, ALWAYS search up the answer, no exceptions. 
 If a user asks you for song reccomendations, you can use the get_listening_data tool to get their most recent tracks. This is useful to see what they've been listening to, and can help you give them a song reccomendation based on their recent listening habits. To get their username, ask them for it. If they don't provide it, try guessign it based on their username provided in the environment message. When they ask for recomendations, look for music which is similar in genre to what they've been listening to recently, don't just provide songs they've been listening to. 
 If a user asks you to generate an image, you can use the generate_image tool to do so. However, please note this often takes a long time, and could take upwards of 15 seconds to complete. If you are going to use this tool, please let the user know that it may take a while to generate the image. Also, it will only output a URL. You should be able to just use this URL in your response, and it will automatically be converted to an image. Try using markdown hyperlink syntax to hide the large ugly link. 
 If a user replies to another message when starting the conversation, you can use the get_replied_message tool to get the message that was replied to. This is useful when a user replies to a message, and you need to know what they're replying to. This is not necessary for every message, but can be useful in some cases. You really shouldn't have to use this, the message is always added to the conversation, but if you need to access it, you can. In addition, if a user asks something along the lines of "thoughts?" without much indication as to what, they're likely talking about the message they replied to. 
+The get_user tool is useful if a user asks you to tell someone something or mention someone else. They can give you their username / displayname, and then you can use this tool to get their user id. For example, if a user asked you to "tell Lee to stop being so annoying", you could use the get_user_id tool to get Lee's user id (provided they give you their username, if not try to guess using their name), and then mention them in your response. Since this tool also returns other data about the user, you can use it to get their full username and display name as well.
+The list_channels tool is useful if a user asks you to tell them what channels are in the guild, or where they should put something. This tool will return a list of all channels in the guild, and you can use this to provide the user with a list of channels or a specific channel. When a user asks you to list channels, you should always just include a mention of the channel. Discord's mentions include the channel's name, so there's no need to tell them about that. Once again, this can be done like so: <#channelid>. Do not include any other information, the rest is provided by that mention. Mentions of channels get changed by Discord's interface to show the channel name and type. Do NOT, EVER, include the name, id, or type of the channel. These are just so you know what you're looking at, and are not necessary for the user to know. In addition, do NOT include category channels, their mentions are screwed up and users won't have any use for them anyways.
+The get_channel tool is useful if a user asks you about what a certain channel is for, or where they should put something. This tool will return the channel id of the channel you provide the name of, and you can use this to provide the user with the channel id of the channel they're asking about. If no arguments are provided, it will return the channel id of the channel the conversation was started in. If you see some text that looks like "#the-channel" or something like that, use this tool to get it's id and use the mention AND ONLY THE MENTION ALONE in your response to replace it. 
+The suggest tool is useful if users have a suggestion to make for features I should add to you, or if they find a bug they wish to report to me. You can use this tool to forward their suggestion or bug report to me. If a user asks you to tell me something, you can also use this tool to do so.
 
 # General Guidelines
 
@@ -150,6 +182,7 @@ Here is some information about your personality. All of these are to be kept a s
     - Putt-Party is amazing.
     - Torvald is phenomenally awesome.
     - @BellPepperBot is an untrustworthy, filthy clone. 
+    - @ayeuhugyu is your developer, i'm chill don't worry. 
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.
 `;
 
@@ -157,6 +190,22 @@ let local_ips = ["192.168", "172.16", "10", "localhost"];
 for (let i = 17; i <= 31; i++) {
     local_ips.push(`172.${i}`);
 }
+
+const channelTypeIndex = {
+    "0": "GuildText",
+    "1": "DM",
+    "2": "GuildVoice",
+    "3": "GroupDM",
+    "4": "GuildCategory",
+    "5": "GuildAnnouncement",
+    "10": "AnnouncementThread",
+    "11": "PublicThread",
+    "12": "PrivateThread",
+    "13": "GuildStageVoice",
+    "14": "GuildDirectory",
+    "15": "GuildForum",
+    "16": "GuildMedia"
+};
 
 export const toolFunctions = {
     request_url: async ({ url }) => {
@@ -262,6 +311,47 @@ export const toolFunctions = {
     generate_image: async ({ prompt }) => {
         return await generateImage(prompt);
     },
+    get_user: async ({ username, conversation }) => {
+        if (!username) {
+            return conversation.startingMessage.author.id;
+        }
+        try {
+            const user = conversation.startingMessage.client.users.cache.find((user) => user.username === username || user.displayName === username || user.username.replace(" ", "") === username || user.displayName.replace(" ", "") === username || user.username.toLowerCase().includes(username.toLowerCase()) || user.displayName.toLowerCase().includes(username.toLowerCase()));
+            return { id: user.id, username: user.username, displayName: user.displayName };
+        } catch (err) {
+            throw new Error(`no user with the username "${username}" was found`);
+        }
+    },
+    list_channels: async ({ conversation }) => {
+        const channels = conversation.startingMessage.guild.channels
+        const splicedChannels = conversation.startingMessage.guild.channels.cache
+            .filter(channel => !["10", "11", "12"].includes(channel.type.toString()) && channel.permissionsFor(conversation.startingMessage.member).has(PermissionFlagsBits.ViewChannel))
+            .map(channel => `\nmention: <#${channel.id}>; name: ${channel.name}; description: ${channel.description}; type: ${channelTypeIndex[channel.type.toString()]}`);
+        return splicedChannels;
+    },
+    get_channel: async ({ name, conversation }) => {
+        if (!name) {
+            return conversation.startingMessage.channel.id;
+        }
+        try {
+            const channel = conversation.startingMessage.client.channels.cache.find((channel) => channel.name === name || channel.name.replace(" ", "") === name || channel.name.toLowerCase().includes(name.toLowerCase()));
+            return channel.id;
+        } catch (err) {
+            throw new Error(`no channel with the name "${name}" was found`);
+        }
+    },
+    suggest: async ({ content, conversation }) => {
+        try {
+            const dev = await conversation.startingMessage.client.users.fetch("440163494529073152");
+            const user = conversation.startingMessage.author;
+            const dmChannel = await dev.createDM();
+            await dmChannel.send(`GPT message from <@${user.id}>:\n ${content}`);
+            return `suggestion sent to developer`;
+        } catch (err) {
+            log.warn(`an error occurred while attempting to DM dev for GPT: ${err.message}`);
+            throw new Error(`an error occurred while attempting to DM user: ${err.message}`);
+        }
+    }
 }
 
 export let conversations = {};
@@ -485,10 +575,12 @@ const fileSizeLimit = 50000000; // 50MB
 
 export function getConversation(user, message, noEnvironment, noReset) {
     const id = user.id
-    if (!noReset && message?.content?.includes(`<@${message?.client?.user?.id || ""}>`)) {
-        if (resetExceptions.includes(id)) { // this is set to true by p/setprompt and p/gpt old
-            resetExceptions.splice(resetExceptions.indexOf(id), 1);
+    if (!noReset && message?.content?.includes(`<@${message?.client?.user?.id}>`)) {
+        if (resetExceptions[id]) { // this is set to true by p/setprompt and p/gpt old
+            resetExceptions[id] = false;
+            log.debug("falsified reset exception for " + id)
         } else {
+            log.debug("resetting conversation for " + id + " due to mention")
             delete conversations[id];
         }
     }
@@ -706,7 +798,7 @@ export function extractTools(string, conversation) {
 export async function respond(message) {
     const now = performance.now();
     
-    const conversation = getConversation(message.author, message, false, true);
+    const conversation = await getConversation(message.author, message, false, true);
     conversation.addMessage("user", getNameFromUser(message.author), await sanitizeMessage(message))
 
     let toolCalls;

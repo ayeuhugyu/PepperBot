@@ -25,3 +25,6 @@ resources/data/webmessages.json
 resources/data/webusers.json
 resources/data/bingos
 resources/data/truebans
+
+# this is unfinished atm
+src/site/images/card_maker_assets
