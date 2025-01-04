@@ -3,29 +3,23 @@ import * as Enum from "./enumDefinitions.js"
 // Data Structures
 
 export class statDistribution {
-    attunement = {
-        flamecharm: 0,
-        frostdraw: 0,
-        thundercall: 0,
-        galebreathe: 0,
-        shadowcast: 0,
-        ironsing: 0,
-        bloodrend: 0,
-        lifeweave: 0
-    }
-    weapon = {
-        light: 0,
-        medium: 0,
-        heavy: 0
-    }
-    base = {
-        strength: 0,
-        fortitude: 0,
-        agility: 0,
-        intelligence: 0,
-        willpower: 0,
-        charisma: 0
-    }
+    flamecharm = 0
+    frostdraw = 0
+    thundercall = 0
+    galebreathe = 0
+    shadowcast = 0
+    ironsing = 0
+    bloodrend = 0
+    lifeweave = 0
+    light = 0
+    medium = 0
+    heavy = 0
+    strength = 0
+    fortitude = 0
+    agility = 0
+    intelligence = 0
+    willpower = 0
+    charisma = 0
     constructor(object) {
         Object.assign(this, object)
     }
