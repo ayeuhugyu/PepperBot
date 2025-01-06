@@ -11,9 +11,9 @@ export class statDistribution {
     ironsing = 0
     bloodrend = 0
     lifeweave = 0
-    light = 0
-    medium = 0
-    heavy = 0
+    light_weapon = 0
+    medium_weapon = 0
+    heavy_weapon = 0
     strength = 0
     fortitude = 0
     agility = 0
@@ -297,6 +297,7 @@ export class equipment {
     "name" = "equipment_name"
     "rich_name" = "Equipment Rich Name"
     "description" = "equipment_description"
+    "type" = Enum.EquipmentType.HEAD
     "requirements" = new characterData()
     "variants" = [
         "equipment_name"
@@ -310,11 +311,17 @@ export class equipment {
         "locations": [
             "location_name"
         ],
-        "npcs": [
-            "npc_name"
+        "enemies": [
+            "enemy_name"
         ],
         "monsters": [
             "monster_name"
+        ],
+        "bosses": [
+            "boss_name"
+        ],
+        "quests": [
+            "quest_name"
         ],
         "other": [
             "other_chest_name"
