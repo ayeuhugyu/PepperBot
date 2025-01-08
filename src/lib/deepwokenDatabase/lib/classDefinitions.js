@@ -323,6 +323,9 @@ export class equipment {
         "quests": [
             "quest_name"
         ],
+        "shops": [
+            "shop_name"
+        ],
         "other": [
             "other_chest_name"
         ]

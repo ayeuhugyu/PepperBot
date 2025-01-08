@@ -4063,7 +4063,7 @@ export default {
                 "aelita",
             ],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -4115,7 +4115,7 @@ export default {
             "bosses": [],
             "quests": [],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -4168,7 +4168,7 @@ export default {
                 "aelita",
             ],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -4221,7 +4221,7 @@ export default {
                 "aelita",
             ],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -4274,7 +4274,7 @@ export default {
                 "aelita",
             ],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -4327,7 +4327,7 @@ export default {
                 "aelita",
             ],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -4380,7 +4380,7 @@ export default {
                 "aelita",
             ],
             "other": [
-                "sea_event"
+                "sea_event_authority_stronghold"
             ]
         },
         "innate": new classes.characterData({
@@ -5300,6 +5300,2963 @@ export default {
             "stats": new classes.statDistribution({}),
             "talents": [
                 "berserker"
+            ],
+            "mantras": []
+        })
+    }),
+    etrean_siege_curiass: new classes.equipment({
+        "name": "etrean_siege_curiass",
+        "rich_name": "Etrean Siege Curiass",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.UNCOMMON,
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale",
+                "saramaed_summit",
+                "miners_landing",
+                "crypt_of_the_unbroken"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 8
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "battle_tendency"
+            ],
+            "mantras": []
+        })
+    }),
+    azure_first_ranger_duster: new classes.equipment({
+        "name": "azure_first_ranger_duster",
+        "rich_name": "Azure First Ranger Duster",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "cloud_first_ranger_duster",
+            "jade_first_ranger_duster",
+            "lavender_first_ranger_duster",
+            "umber_first_ranger_duster"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    cloud_first_ranger_duster: new classes.equipment({
+        "name": "cloud_first_ranger_duster",
+        "rich_name": "Cloud First Ranger Duster",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "azure_first_ranger_duster",
+            "jade_first_ranger_duster",
+            "lavender_first_ranger_duster",
+            "umber_first_ranger_duster"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    jade_first_ranger_duster: new classes.equipment({
+        "name": "jade_first_ranger_duster",
+        "rich_name": "Jade First Ranger Duster",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "azure_first_ranger_duster",
+            "cloud_first_ranger_duster",
+            "lavender_first_ranger_duster",
+            "umber_first_ranger_duster"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    lavender_first_ranger_duster: new classes.equipment({
+        "name": "lavender_first_ranger_duster",
+        "rich_name": "Lavender First Ranger Duster",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "azure_first_ranger_duster",
+            "cloud_first_ranger_duster",
+            "jade_first_ranger_duster",
+            "umber_first_ranger_duster"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    umber_first_ranger_duster: new classes.equipment({
+        "name": "umber_first_ranger_duster",
+        "rich_name": "Umber First Ranger Duster",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "azure_first_ranger_duster",
+            "cloud_first_ranger_duster",
+            "jade_first_ranger_duster",
+            "lavender_first_ranger_duster"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    flameguard_pauldrons: new classes.equipment({
+        "name": "flameguard_pauldrons",
+        "rich_name": "Flameguard Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 7,
+        "rarity": Enum.ItemRarity.COMMON,
+        "pips": [
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [
+                "aratel_island",
+                "minityrsa"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    black_fur_pauldrons: new classes.equipment({
+        "name": "black_fur_pauldrons",
+        "rich_name": "Black Fur Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "white_fur_pauldrons"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [
+                "aratel_island",
+                "erisia"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "dread_serpent",
+                "maestro_evengarde_rest"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    white_fur_pauldrons: new classes.equipment({
+        "name": "white_fur_pauldrons",
+        "rich_name": "White Fur Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "black_fur_pauldrons"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [
+                "aratel_island",
+                "erisia"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    gladiator_pauldrons: new classes.equipment({
+        "name": "gladiator_pauldrons",
+        "rich_name": "Gladiator Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [
+                "erisia"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia"
+            ],
+            "quests": [],
+            "other": [
+                "chime_of_conflict"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 2,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    glassdancer_wraps: new classes.equipment({
+        "name": "glassdancer_wraps",
+        "rich_name": "Glassdancer Wraps",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 6
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 7,
+                "posture": 3
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "lightweight"
+            ],
+            "mantras": []
+        })
+    }),
+    grand_authority_plate: new classes.equipment({
+        "name": "grand_authority_plate",
+        "rich_name": "Grand Authority Plate",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.UNCOMMON,
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale",
+                "miners_landing"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+                "primadon",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 8
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "heavy_haul"
+            ],
+            "mantras": []
+        })
+    }),
+    grand_fisher_plate: new classes.equipment({
+        "name": "grand_fisher_plate",
+        "rich_name": "Grand Authority Plate",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({
+                "fortitude": 5
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 100,
+        "rarity": Enum.ItemRarity.MYTHICAL,
+        "pips": [
+            Enum.PipRarity.LEGENDARY,
+            Enum.PipRarity.LEGENDARY,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [
+                "the_fisherman"
+            ],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "divers_resilience"
+            ],
+            "mantras": []
+        })
+    }),
+    grand_pauldrons: new classes.equipment({
+        "name": "grand_pauldrons",
+        "rich_name": "Grand Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.RARE,
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia",
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    guardian_pauldrons: new classes.equipment({
+        "name": "guardian_pauldrons",
+        "rich_name": "Guardian Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [],
+        "obtained_from": {
+            "locations": [
+                "the_depths"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "primadon"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 2,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    dark_gumshoe_longcoat: new classes.equipment({
+        "name": "dark_gumshoe_longcoat",
+        "rich_name": "Dark Gumshoe Longcoat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({ // None
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "ochre_gumshoe_longcoat",
+            "grey_gumshoe_longcoat",
+            "white_gumshoe_longcoat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "songseeker_wilds",
+                "minitrysa"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    ochre_gumshoe_longcoat: new classes.equipment({
+        "name": "ochre_gumshoe_longcoat",
+        "rich_name": "Ochre Gumshoe Longcoat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({ // None
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_gumshoe_longcoat",
+            "grey_gumshoe_longcoat",
+            "white_gumshoe_longcoat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "songseeker_wilds",
+                "minitrysa"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    grey_gumshoe_longcoat: new classes.equipment({
+        "name": "grey_gumshoe_longcoat",
+        "rich_name": "Grey Gumshoe Longcoat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({ // None
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_gumshoe_longcoat",
+            "ochre_gumshoe_longcoat",
+            "white_gumshoe_longcoat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "songseeker_wilds",
+                "minitrysa"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    white_gumshoe_longcoat: new classes.equipment({
+        "name": "white_gumshoe_longcoat",
+        "rich_name": "White Gumshoe Longcoat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({ // None
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_gumshoe_longcoat",
+            "ochre_gumshoe_longcoat",
+            "grey_gumshoe_longcoat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "songseeker_wilds",
+                "minitrysa"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    hive_scourge_cuirass: new classes.equipment({
+        "name": "hive_scourge_cuirass",
+        "rich_name": "Hive Scourge Cuirass",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipRarity.UNCOMMON,
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+            ],
+            "quests": [],
+            "other": [
+                "merchant_ship"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    ignition_gauntlets: new classes.equipment({
+        "name": "ignition_gauntlets",
+        "rich_name": "Ignition Gauntlets",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 8
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.LEGENDARY,
+        "pips": [
+            Enum.PipRarity.RARE,
+            Enum.PipRarity.LEGENDARY,
+            Enum.PipRarity.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "saramaed_hollow"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 8,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "force_your_way"
+            ],
+            "mantras": []
+        })
+    }),
+    imperial_pauldrons: new classes.equipment({
+        "name": "imperial_pauldrons",
+        "rich_name": "Imperial Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "fort_merit",
+                "the_eternal_gale",
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    iron_pauldrons: new classes.equipment({
+        "name": "iron_pauldrons",
+        "rich_name": "Iron Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "erisia",
+                "fort_merit"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    ironsinger_heavy_plate: new classes.equipment({
+        "name": "ironsinger_heavy_plate",
+        "rich_name": "Ironsinger Heavy Plate",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13,
+            }),
+            "stats": new classes.statDistribution({
+                "fortitude": 15
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.LEGENDARY,
+        "pips": [],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale",
+                "the_depths",
+                "saramaed_hollow"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "ethiron",
+                "chaser"
+            ],
+            "quests": [],
+            "other": [
+                "war_mode",
+                "merchant_ship"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 10,
+                "resistances": {
+                    "iron": 0.05
+                }
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "defiant_until_the_end"
+            ],
+            "mantras": []
+        })
+    }),
+    jet_black_justicar_defender_coat: new classes.equipment({
+        "name": "jet_black_justicar_defender_coat",
+        "rich_name": "Jet BlackJusticar Defender Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "black_justicar_defender_coat", 
+            "faded_justicar_defender_coat", 
+            "orange_justicar_defender_coat", 
+            "purple_justicar_defender_coat", 
+            "red_justicar_defender_coat"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [
+                "ferryman"
+            ],
+            "quests": [
+                "aelita"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    black_justicar_defender_coat: new classes.equipment({
+        "name": "black_justicar_defender_coat",
+        "rich_name": "Black Justicar Defender Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "jet_black_justicar_defender_coat", 
+            "faded_justicar_defender_coat", 
+            "orange_justicar_defender_coat", 
+            "purple_justicar_defender_coat", 
+            "red_justicar_defender_coat"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [
+                "ferryman"
+            ],
+            "quests": [
+                "aelita"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    faded_justicar_defender_coat: new classes.equipment({
+        "name": "faded_justicar_defender_coat",
+        "rich_name": "Faded Justicar Defender Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "jet_black_justicar_defender_coat", 
+            "black_justicar_defender_coat", 
+            "orange_justicar_defender_coat", 
+            "purple_justicar_defender_coat", 
+            "red_justicar_defender_coat"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [
+                "ferryman"
+            ],
+            "quests": [
+                "aelita"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    orange_justicar_defender_coat: new classes.equipment({
+        "name": "orange_justicar_defender_coat",
+        "rich_name": "Orange Justicar Defender Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "jet_black_justicar_defender_coat", 
+            "black_justicar_defender_coat", 
+            "faded_justicar_defender_coat", 
+            "purple_justicar_defender_coat", 
+            "red_justicar_defender_coat"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [
+                "ferryman"
+            ],
+            "quests": [
+                "aelita"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    purple_justicar_defender_coat: new classes.equipment({
+        "name": "purple_justicar_defender_coat",
+        "rich_name": "Purple Justicar Defender Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "jet_black_justicar_defender_coat", 
+            "black_justicar_defender_coat", 
+            "faded_justicar_defender_coat", 
+            "orange_justicar_defender_coat", 
+            "red_justicar_defender_coat"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [
+                "ferryman"
+            ],
+            "quests": [
+                "aelita"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    red_justicar_defender_coat: new classes.equipment({
+        "name": "red_justicar_defender_coat",
+        "rich_name": "Red Justicar Defender Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "jet_black_justicar_defender_coat", 
+            "black_justicar_defender_coat", 
+            "faded_justicar_defender_coat", 
+            "orange_justicar_defender_coat", 
+            "purple_justicar_defender_coat"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "king_thresher"
+            ],
+            "bosses": [
+                "ferryman"
+            ],
+            "quests": [
+                "aelita"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    khan_pauldrons: new classes.equipment({
+        "name": "khan_pauldrons",
+        "rich_name": "Khan Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "aratel_island",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [], // Polite Awakening
+            "mantras": []
+        })
+    }),
+    leather_gloves: new classes.equipment({
+        "name": "leather_gloves",
+        "rich_name": "Leather Gloves",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 7,
+        "rarity": Enum.ItemRarity.COMMON,
+        "pips": [
+            Enum.PipType.UNCOMMON
+        ],
+        "obtained_from": {
+            "locations": [
+                "erisia",
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "other": [
+                "chime_of_conflict",
+                "tutorial"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 1,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    leather_pauldrons: new classes.equipment({
+        "name": "leather_pauldrons",
+        "rich_name": "Leather Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 7,
+        "rarity": Enum.ItemRarity.COMMON,
+        "pips": [],
+        "obtained_from": {
+            "locations": [
+                "erisia"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    legion_phalanx_plate: new classes.equipment({
+        "name": "legion_phalanx_plate",
+        "rich_name": "Legion Phalanx Plate",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({
+                "fortitude": 15
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale",
+                "miners_landing",
+                "the_depths"
+            ],
+            "enemies": [],
+            "monsters": [
+                "deep_widow"
+            ],
+            "bosses": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+                "primadon",
+                "chaser"
+            ],
+            "quests": [],
+            "other": [
+                "pure_ore"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 6,
+                "posture": 2
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "hoplite"
+            ],
+            "mantras": []
+        })
+    }),
+    brown_megalodaunt_coat: new classes.equipment({
+        "name": "brown_megalodaunt_coat",
+        "rich_name": "Brown Megalodaunt Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [ 
+            "blue_megalodaunt_coat", 
+            "peach_megalodaunt_coat", 
+            "red_megalodaunt_coat", 
+            "purple_megalodaunt_coat", 
+            "green_megalodaunt_coat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "megalodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    blue_megalodaunt_coat: new classes.equipment({
+        "name": "blue_megalodaunt_coat",
+        "rich_name": "Blue Megalodaunt Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "brown_megalodaunt_coat",
+            "peach_megalodaunt_coat",
+            "red_megalodaunt_coat",
+            "purple_megalodaunt_coat",
+            "green_megalodaunt_coat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "megalodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    peach_megalodaunt_coat: new classes.equipment({
+        "name": "peach_megalodaunt_coat",
+        "rich_name": "Peach Megalodaunt Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "brown_megalodaunt_coat",
+            "blue_megalodaunt_coat",
+            "red_megalodaunt_coat",
+            "purple_megalodaunt_coat",
+            "green_megalodaunt_coat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "megalodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    red_megalodaunt_coat: new classes.equipment({
+        "name": "red_megalodaunt_coat",
+        "rich_name": "Red Megalodaunt Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "brown_megalodaunt_coat",
+            "blue_megalodaunt_coat",
+            "peach_megalodaunt_coat",
+            "purple_megalodaunt_coat",
+            "green_megalodaunt_coat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "megalodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    purple_megalodaunt_coat: new classes.equipment({
+        "name": "purple_megalodaunt_coat",
+        "rich_name": "Purple Megalodaunt Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "brown_megalodaunt_coat",
+            "blue_megalodaunt_coat",
+            "peach_megalodaunt_coat",
+            "red_megalodaunt_coat",
+            "green_megalodaunt_coat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "megalodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    green_megalodaunt_coat: new classes.equipment({
+        "name": "green_megalodaunt_coat",
+        "rich_name": "Green Megalodaunt Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "brown_megalodaunt_coat",
+            "blue_megalodaunt_coat",
+            "peach_megalodaunt_coat",
+            "red_megalodaunt_coat",
+            "purple_megalodaunt_coat"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "megalodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    mercenarys_garb: new classes.equipment({
+        "name": "mercenarys_garb",
+        "rich_name": "Mercenary's Garb",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "crypt_of_the_unbroken",
+                "miners_landing"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest"
+            ],
+            "quests": [],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "stealth": 0.06
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "kick_off"
+            ],
+            "mantras": []
+        })
+    }),
+    onyx_ministry_cloak: new classes.equipment({
+        "name": "onyx_ministry_cloak",
+        "rich_name": "Onyx Ministry Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "verdant_ministry_cloak", 
+            "yellow_ministry_cloak", 
+            "smoke_ministry_cloak", 
+            "scarlet_ministry_cloak", 
+            "pink_ministry_cloak"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "blizzard_knight" //todo: rename this cuz it comes from the chest not the actual thing
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "ether": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    verdant_ministry_cloak: new classes.equipment({
+        "name": "verdant_ministry_cloak",
+        "rich_name": "Verdant Ministry Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "onyx_ministry_cloak", 
+            "yellow_ministry_cloak", 
+            "smoke_ministry_cloak", 
+            "scarlet_ministry_cloak", 
+            "pink_ministry_cloak"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "blizzard_knight" //todo: rename this cuz it comes from the chest not the actual thing
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "ether": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    yellow_ministry_cloak: new classes.equipment({
+        "name": "yellow_ministry_cloak",
+        "rich_name": "Yellow Ministry Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "onyx_ministry_cloak", 
+            "verdant_ministry_cloak", 
+            "smoke_ministry_cloak", 
+            "scarlet_ministry_cloak", 
+            "pink_ministry_cloak"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "blizzard_knight" //todo: rename this cuz it comes from the chest not the actual thing
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "ether": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    smoke_ministry_cloak: new classes.equipment({
+        "name": "smoke_ministry_cloak",
+        "rich_name": "Smoke Ministry Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "onyx_ministry_cloak", 
+            "verdant_ministry_cloak", 
+            "yellow_ministry_cloak", 
+            "scarlet_ministry_cloak", 
+            "pink_ministry_cloak"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "blizzard_knight" //todo: rename this cuz it comes from the chest not the actual thing
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "ether": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    scarlet_ministry_cloak: new classes.equipment({
+        "name": "scarlet_ministry_cloak",
+        "rich_name": "Scarlet Ministry Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "onyx_ministry_cloak", 
+            "verdant_ministry_cloak", 
+            "yellow_ministry_cloak", 
+            "smoke_ministry_cloak", 
+            "pink_ministry_cloak"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "blizzard_knight" //todo: rename this cuz it comes from the chest not the actual thing
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "ether": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    pink_ministry_cloak: new classes.equipment({
+        "name": "pink_ministry_cloak",
+        "rich_name": "Pink Ministry Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "onyx_ministry_cloak", 
+            "verdant_ministry_cloak", 
+            "yellow_ministry_cloak", 
+            "smoke_ministry_cloak", 
+            "scarlet_ministry_cloak"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [],
+            "enemies": [],
+            "monsters": [
+                "blizzard_knight" //todo: rename this cuz it comes from the chest not the actual thing
+            ],
+            "bosses": [],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5,
+                "ether": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    ministry_operative_cloak: new classes.equipment({
+        "name": "ministry_operative_cloak",
+        "rich_name": "Ministry Operative Cloak",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_eternal_gale",
+                "crypt_of_the_unbroken",
+                "saramaed_hollow"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "stealth": 0.06,
+
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "ether_conduit"
+            ],
+            "mantras": []
+        })
+    }),
+    monastery_champion_robes: new classes.equipment({
+        "name": "monastery_champion_robes",
+        "rich_name": "Monastery Champion Robes",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.LEGENDARY,
+        "pips": [
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "etris_siege",
+                "the_diluvian_mechanism"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest"
+            ],
+            "quests": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 8,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "temple_guard"
+            ], 
+            "mantras": []
+        })
+    }),
+    moonseye_gauntlets: new classes.equipment({
+        "name": "moonseye_gauntlets",
+        "rich_name": "Moonseye Gauntlets",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.LEGENDARY,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths",
+                "the_diluvian_mechanism"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest",
+                "primadon"
+            ],
+            "quests": [],
+            "other": [
+                "sea_event"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 7,
+                "posture": 3
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    novice_brace: new classes.equipment({
+        "name": "novice_brace",
+        "rich_name": "Novice Brace",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "erisia",
+            ],
+            "enemies": [
+                "eastern_tribal_leader",
+                "blacksteel_pirate"
+            ],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "other": [
+                "hell_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    ash_pathfinder_elite: new classes.equipment({
+        "name": "ash_pathfinder_elite",
+        "rich_name": "Ash Pathfinder Elite",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "black_pathfinder_elite", 
+            "crimson_pathfinder_elite", 
+            "sage_pathfinder_elite"
+        ],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_diluvian_mechanism"
+            ],
+            "enemies": [],
+            "monsters": [
+                "nautilodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "shops": [
+                "weird_trader"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    black_pathfinder_elite: new classes.equipment({
+        "name": "black_pathfinder_elite",
+        "rich_name": "Black Pathfinder Elite",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "ash_pathfinder_elite", 
+            "crimson_pathfinder_elite", 
+            "sage_pathfinder_elite"
+        ],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_diluvian_mechanism"
+            ],
+            "enemies": [],
+            "monsters": [
+                "nautilodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "shops": [
+                "weird_trader"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    crimson_pathfinder_elite: new classes.equipment({
+        "name": "crimson_pathfinder_elite",
+        "rich_name": "Crimson Pathfinder Elite",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "ash_pathfinder_elite", 
+            "black_pathfinder_elite", 
+            "sage_pathfinder_elite"
+        ],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_diluvian_mechanism"
+            ],
+            "enemies": [],
+            "monsters": [
+                "nautilodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "shops": [
+                "weird_trader"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    sage_pathfinder_elite: new classes.equipment({
+        "name": "sage_pathfinder_elite",
+        "rich_name": "Sage Pathfinder Elite",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "ash_pathfinder_elite", 
+            "black_pathfinder_elite", 
+            "crimson_pathfinder_elite"
+        ],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_diluvian_mechanism"
+            ],
+            "enemies": [],
+            "monsters": [
+                "nautilodaunt"
+            ],
+            "bosses": [],
+            "quests": [],
+            "shops": [
+                "weird_trader"
+            ],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "dvm": 0.05,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    providence_coat: new classes.equipment({
+        "name": "providence_coat",
+        "rich_name": "Providence Coat",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 50,
+        "rarity": Enum.ItemRarity.LEGENDARY,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "the_depths"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": [
+                "war_mode",
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 5
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "braced_collapse"
+            ],
+            "mantras": []
+        })
+    }),
+    rangers_brace: new classes.equipment({
+        "name": "rangers_brace",
+        "rich_name": "Ranger's Brace",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 8
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": null, // TODO: FIND!!!
+        "rarity": Enum.ItemRarity.RARE, // TODO: VERIFY!!!!
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "erisia"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia",
+                "maestro_evengarde_rest",
+                "dread_serpent",
+                "chaser"
+            ],
+            "quests": [],
+            "shops": [],
+            "other": [
+                "hell_mode",
+                "artifact_chest"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    redsteel_pauldrons: new classes.equipment({
+        "name": "redsteel_pauldrons",
+        "rich_name": "Redsteel Pauldrons",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "summer_isle",
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "primadon",
+                "maestro_evengarde_rest",
+                "dread_serpent"
+            ],
+            "quests": [],
+            "shops": [],
+            "other": [
+                "chime_of_conflict",
+                "sea_event_knives_vs_etrea"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 3,
+                "posture": 1
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    dark_royal_duelist: new classes.equipment({
+        "name": "dark_royal_duelist",
+        "rich_name": "Dark Royal Duelist",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 13
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [ 
+            "faded_royal_duelist", 
+            "red_royal_duelist", 
+            "rose_royal_duelist", 
+            "stained_royal_duelist", 
+            "purple_royal_duelist"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    faded_royal_duelist: new classes.equipment({
+        "name": "faded_royal_duelist",
+        "rich_name": "Faded Royal Duelist",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [ 
+            "dark_royal_duelist", 
+            "red_royal_duelist", 
+            "rose_royal_duelist", 
+            "stained_royal_duelist", 
+            "purple_royal_duelist"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    red_royal_duelist: new classes.equipment({
+        "name": "red_royal_duelist",
+        "rich_name": "Red Royal Duelist",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_royal_duelist",
+            "faded_royal_duelist",
+            "rose_royal_duelist",
+            "stained_royal_duelist",
+            "purple_royal_duelist"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+        }),
+    rose_royal_duelist: new classes.equipment({
+        "name": "rose_royal_duelist",
+        "rich_name": "Rose Royal Duelist",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_royal_duelist",
+            "faded_royal_duelist",
+            "red_royal_duelist",
+            "stained_royal_duelist",
+            "purple_royal_duelist"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    stained_royal_duelist: new classes.equipment({
+        "name": "stained_royal_duelist",
+        "rich_name": "Stained Royal Duelist",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_royal_duelist",
+            "faded_royal_duelist",
+            "red_royal_duelist",
+            "rose_royal_duelist",
+            "purple_royal_duelist"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    purple_royal_duelist: new classes.equipment({
+        "name": "purple_royal_duelist",
+        "rich_name": "Purple Royal Duelist",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "dark_royal_duelist",
+            "faded_royal_duelist",
+            "red_royal_duelist",
+            "rose_royal_duelist",
+            "stained_royal_duelist"
+        ],
+        "selling_price": 14,
+        "rarity": Enum.ItemRarity.UNCOMMON,
+        "pips": [
+            Enum.PipType.RARE,
+            Enum.PipType.RARE
+        ],
+        "obtained_from": {
+            "locations": [
+                "minityrsa",
+                "songseeker_wilds"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        })
+    }),
+    royal_pathfinder: new classes.equipment({
+        "name": "royal_pathfinder",
+        "rich_name": "Royal Pathfinder",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "level": 10,
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "starswept_valley"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "duke_erisia"
+            ],
+            "quests": [],
+            "shops": [],
+            "other": []
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 6
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "ready_or_not"
+            ],
+            "mantras": []
+        })
+    }),
+    sandrunner_wraps: new classes.equipment({
+        "name": "sandrunner_wraps",
+        "rich_name": "Sandrunner Wraps",
+        "type": Enum.EquipmentType.ARMS,
+        "description": "...",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
+            "talents": [],
+            "mantras": []
+        }),
+        "variants": [
+            "back_view_sandrunner_wraps"
+        ],
+        "selling_price": 25,
+        "rarity": Enum.ItemRarity.RARE,
+        "pips": [
+            Enum.PipType.RARE, 
+            Enum.PipType.LEGENDARY
+        ],
+        "obtained_from": {
+            "locations": [
+                "miners_landing",
+                "the_depths"
+            ],
+            "enemies": [],
+            "monsters": [],
+            "bosses": [
+                "maestro_evengarde_rest"
+            ],
+            "quests": [],
+            "shops": [],
+            "other": [
+                "war_mode"
+            ]
+        },
+        "innate": new classes.characterData({
+            "character": new classes.characterStats({
+                "health": 6,
+                "stealth": 0.04,
+                "resistances": {
+                    "fire": 0.08
+                }
+            }),
+            "stats": new classes.statDistribution({}),
+            "talents": [
+                "kick_off"
             ],
             "mantras": []
         })
