@@ -82,6 +82,17 @@ process.on("message", (message) => {
         //console.log(message)
         manager.shards.get(0).send({ action: "messageCreate", message: message.message });
     }
+    if (message.action && message.action === "errorCount") {
+        if (message.type === "errors") {
+            shardErrorCounts[shard.id].errors++;
+        }
+        if (message.type === "warnings") {
+            shardErrorCounts[shard.id].warnings++;
+        }
+        if (message.type === "fatal") {
+            shardErrorCounts[shard.id].fatal++;
+        }
+    }
 });
 
 process.on("uncaughtException", (err) => {
@@ -94,10 +105,18 @@ manager.on("shardCreate", (shard) => {
     log.info(`launched pepperbot shard ${shard.id}`);
 });
 
+let shardErrorCounts = {};
+
 manager.spawn().then((shards) => {
     process.send({ action: "ready" });
     updateSiteStartTimes();
     shards.forEach((shard) => {
+        shardErrorCounts[shard.id] = {
+            errors: 0,
+            warnings: 0,
+            fatal: 0,
+            id: shard.id,
+        };
         shard.on("message", (message) => {
             if (message.action && message.action == "restart") {
                 if (message.process === "shard") {
@@ -144,6 +163,23 @@ manager.spawn().then((shards) => {
                 });
                 
                 return;
+            }
+            if (message.action && message.action === "errorCount") {
+                if (message.type === "errors") {
+                    shardErrorCounts[shard.id].errors++;
+                }
+                if (message.type === "warnings") {
+                    shardErrorCounts[shard.id].warnings++;
+                }
+                if (message.type === "fatal") {
+                    shardErrorCounts[shard.id].fatal++;
+                }
+            }
+            if (message.action && message.action === "getErrorCount") {
+                shard.send({
+                    action: "errorCountResponse",
+                    data: shardErrorCounts,
+                })
             }
             return message._result;
         });

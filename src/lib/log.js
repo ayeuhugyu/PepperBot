@@ -4,6 +4,12 @@ import fs from "fs";
 import fsextra from "fs-extra";
 import process from "node:process";
 
+const errorCounter = {
+    errors: 0,
+    warnings: 0,
+    fatal: 0
+}
+
 const Level = {
     Debug: "Debug",
     Info: "Info",
@@ -39,6 +45,13 @@ function format(thing) {
 }
 
 function log(level, ...message) {
+    if (level === Level.Err) {
+        process.send({ action: "errorCount", type: "errors" });
+    } else if (level === Level.Warn) {
+        process.send({ action: "errorCount", type: "warnings" });
+    } else if (level === Level.Fatal) {
+        process.send({ action: "errorCount", type: "fatal" });
+    }
     const formatted = message
         .map((m) => format(m))
         .reduce(

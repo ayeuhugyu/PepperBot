@@ -586,19 +586,6 @@
                         </div>
                     </details>
                 </details>
-                <details class="commandDetails" id="p/explore">
-                    <summary class="commandName">p/explore<span class="commandCategory">info</span></summary>
-                    <div class="commandDescription">returns a list of servers with pepperbot in them that have the 'exploreVisible' config option enabled, also allows you to generate an invite and join them
-                        <span class="argumentOrder">ARGUMENT ORDER: p/explore <span class="commandArgumentOrderItem">server</span> </span>
-                        <span class="exampleUsage">EXAMPLE 1: p/explore</span>
-                        <span class="exampleUsage">EXAMPLE 2: p/explore 111111111111111111</span>
-                        <span class="commandArgumentProperty">ALIASES: p/servers</span>
-                    </div>
-                    <details class="commandArgument" open>
-                        <summary>server<span class="commandArgumentType">string</span></summary>
-                        <div class="argumentDescription">the id of the server to show more details about</div>
-                    </details>
-                </details>
                 <details class="commandDetails" id="p/force">
                     <summary class="commandName">p/force<span class="commandCategory">fun</span></summary>
                     <div class="commandDescription">allows you to force pepperbot to do something
@@ -788,7 +775,7 @@
                         </details>
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/gpt image</summary>
-                            <div class="commandDescription">generates an image based on an inputted prompt
+                            <div class="commandDescription">generates an image based on an inputted prompt. due to expenses, this has a 4 hour cooldown. 
                                 <span class="argumentOrder">ARGUMENT ORDER: p/gpt image <span class="commandArgumentOrderItem">prompt</span></span>
                                 <span class="exampleUsage">EXAMPLE 1: p/gpt image a cat</span>
                                 <span class="commandArgumentProperty">ALIASES: p/gpt img, p/gpt generateimage, p/gpt imagine</span>
@@ -852,8 +839,15 @@
                         </details>
                         <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/info bot</summary>
-                            <div class="commandDescription">returns info about the bot such as the version, shard ID, and the total running shards
+                            <div class="commandDescription">returns info about the bot such as the version, total servers, and total unique users. 
                                 <span class="exampleUsage">EXAMPLE 1: p/info bot</span>
+                            </div>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/info shard</summary>
+                            <div class="commandDescription">returns info about the bot's shard such as the shard ID and the total number of shards, as well as statuses for each shard
+                                <span class="exampleUsage">EXAMPLE 1: p/info shard</span>
+                                <span class="commandProperty">ALIASES: p/info shards, p/info process, p/info processes</span>
                             </div>
                         </details>
                     </details>
@@ -1224,60 +1218,6 @@
                                 <span class="exampleUsage">EXAMPLE 1: p/random equipment</span>
                                 <span class="commandProperty">NORMAL ALIASES: p/randomequipment</span>
                             </div>
-                        </details>
-                    </details>
-                </details>
-                <details class="commandDetails" id="p/reactionrole">
-                    <summary class="commandName">p/reactionrole<span class="commandCategory">utility</span></summary>
-                    <div class="commandDescription">allows you to give users a role when they react to a message <span class="lesserText">(please do not use this command, it is terrible and discord's onboarding / any other bot does it WAY better than i do) (this command will likely be removed in the near future)</span>
-                        <span class="argumentOrder">ARGUMENT ORDER: p/reactionrole <span class="commandArgumentOrderItem">subcommand</span> <span class="lesserText">[remaining arguments depend on subcommand]</span></span>
-                        <span class="exampleUsage">EXAMPLE 1: p/reactionrole remove 111111111111111111</span>
-                        <span class="commandProperty">ALIASES: p/rr</span>
-                        <span class="commandProperty">PERMISSIONS: Manage Roles</span>
-                    </div>
-                    <details class="commandArgument" open>
-                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
-                        <div class="argumentDescription">the subcommand to use
-                            <span class="commandArgumentProperty">REQUIRED: false</span>
-                            <span class="commandArgumentProperty">OPTIONS: create, remove</span>
-                        </div>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/reactionrole create</summary>
-                            <div class="commandDescription">creates a reaction role
-                                <span class="argumentOrder">ARGUMENT ORDER: p/reactionrole create <span class="commandArgumentOrderItem">emoji</span> <span class="commandArgumentOrderItem">role</span> <span class="commandArgumentOrderItem">text</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/reactionrole create 🎉 &lt;@&111111111111111111&gt; react with 🎉 to get the party role</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>emoji<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the emoji to react with
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>role<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the ID of the role to give when the reaction is added, alternatively you can mention the role
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>text<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the text to display in the message
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/reactionrole remove</summary>
-                            <div class="commandDescription">removes a reaction role
-                                <span class="argumentOrder">ARGUMENT ORDER: p/reactionrole remove <span class="commandArgumentOrderItem">messageid</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/reactionrole remove 111111111111111111</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>messageid<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the ID of the message to remove the reaction role from
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
                         </details>
                     </details>
                 </details>

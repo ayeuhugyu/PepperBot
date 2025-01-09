@@ -8,6 +8,7 @@ import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
 import { Collection } from "discord.js"
+import { set } from "shelljs";
 
 const startedAtTimestamp = Date.now(); // too lazy to export from the sharder and deal with circular dependencies so this is close enough (it will be like 0.15 seconds off but i don't care)
 function padZero(number) {
@@ -179,6 +180,76 @@ const logs = new SubCommand(
     }
 );
 
+let currentShardId = undefined
+
+const sharddata = new SubCommandData();
+sharddata.setName("shard");
+sharddata.setDescription("return info relating to the shards (processes)");
+sharddata.setPermissions([]);
+sharddata.setPermissionsReadable("");
+sharddata.setWhitelist([]);
+sharddata.setNormalAliases();
+sharddata.setAliases(["shards", "processes", "process"]);
+sharddata.setCanRunFromBot(true);
+const shard = new SubCommand(
+    sharddata,
+    async function getArguments(message) {
+        return new Collection();
+    },
+    async function execute(message, args, fromInteraction, gconfig) {
+        if (currentShardId === undefined) {
+            currentShardId = message?.guild?.shardId || undefined
+        }
+        let sent = undefined
+        const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
+            .setTitle("pepperbot info")
+            .setDescription(`shard count: ${message.client.shard.count}\ncurrent shard: ${currentShardId || "???"}`)
+        function errorCountResponseHandler(data) {
+            if (data.message === "errorCountResponse" && !sent) {
+                const response = data.data
+                const fieldValue = ``
+                process.removeListener("message", errorCountResponseHandler)
+                response.forEach((count) => {
+                    let statusEmoji = "🟢"
+                    if (count.fatal === 1) {
+                        statusEmoji = "🟡"
+                    }
+                    if (count.fatal === 2) {
+                        statusEmoji = "🔴"
+                    }
+                    const isThisShard = count.id === currentShardId
+                    fieldValue += `${isThisShard ? "**" : ""}${statusEmoji} ${count.id}: ${count.warnings} warnings, ${count.errors + count.fatal} errors (${count.fatal} fatal)${isThisShard ? "**" : ""}\n`
+                })
+                const field = {
+                    name: "",
+                    value: fieldValue,
+                    inline: true
+                }
+                embed.addFields(field)
+                sent = action.reply(message, {
+                    embeds: [embed],
+                    ephemeral: gconfig.useEphemeralReplies,
+                });
+            }
+        }
+        process.on('message', errorCountResponseHandler)
+        process.send({ action: "getErrorCount"})
+        setTimeout(() => {
+            if (!sent) {
+                embed.addFields({
+                    name: "",
+                    value: "reading error count exceeded time limit",
+                    inline: true
+                })
+                sent = action.reply(message, {
+                    embeds: [embed],
+                    ephemeral: gconfig.useEphemeralReplies,
+                });
+            }
+        }, 2000)
+    }
+);
+
 const botdata = new SubCommandData();
 botdata.setName("bot");
 botdata.setDescription("return info relating to the bot");
@@ -186,6 +257,7 @@ botdata.setPermissions([]);
 botdata.setPermissionsReadable("");
 botdata.setWhitelist([]);
 botdata.setNormalAliases();
+botdata.setAliases();
 botdata.setCanRunFromBot(true);
 const bot = new SubCommand(
     botdata,
@@ -193,12 +265,9 @@ const bot = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        let guilds = await message.client.shard.fetchClientValues(
-            "guilds.cache.size"
-        );
-        const persistent_data = JSON.parse(
-            fs.readFileSync("resources/data/persistent_data.json", "utf-8")
-        );
+        const guilds = await message.client.shard.fetchClientValues("guilds.cache.size");
+        const users = await message.client.shard.fetchClientValues("users.cache.size");
+        const persistent_data = JSON.parse(fs.readFileSync("resources/data/persistent_data.json", "utf-8"));
 
         const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
             .setTitle("pepperbot info")
@@ -209,13 +278,13 @@ const bot = new SubCommand(
                     inline: true,
                 },
                 {
-                    name: "current shard id",
-                    value: `${message.guild ? message.guild.shardId : "N/A"}`,
+                    name: "total guilds",
+                    value: `${guilds.reduce((acc, guildCount) => acc + guildCount, 0)}`,
                     inline: true,
                 },
                 {
-                    name: "total running shards",
-                    value: `${guilds.length}`,
+                    name: "total unique users",
+                    value: `${users.reduce((acc, userCount) => acc + userCount, 0)}`,
                     inline: true,
                 }
             );
@@ -242,7 +311,8 @@ data.addStringOption(option =>
         .addChoices(
             { name: "performance", value: "performance" },
             { name: "logs", value: "logs" },
-            { name: "bot", value: "bot" }
+            { name: "bot", value: "bot" },
+            { name: "shard", value: "shard" }
         )
 )
 const command = new Command(
@@ -258,7 +328,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies,
         })
     },
-    [logs, performance, bot]
+    [logs, performance, bot, shard]
 );
 
 export default command;

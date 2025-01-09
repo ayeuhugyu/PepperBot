@@ -1,10 +1,4 @@
 {
-    "exploreVisible": {
-        "type": "boolean",
-        "default": false,
-        "cleanname": "explore visible",
-        "description": "whether or not your server is hidden to the p/explore command"
-    },
     "disabledCommands": {
         "type": "array",
         "arraytype": "string",

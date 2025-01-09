@@ -43,27 +43,22 @@ shit on the todo list:
 
 to add to todo list:
 
+REMEMBER TO DELETE ON PI: 
+p/reactionrole
+p/explore
+
 p/update there's no specific category for this its just a bunch of random features and bugfixes i've been thinking about for a while
 
 **actual content:**
 
-- winter theme disabled
-- statistics embeds now contain a link to the statistics page
-- p/ask now has an image argument for slash commands
-- p/gpt image responses now include the prompt used to generate the image as well as a warning that it will be deleted by openai in 60 minutes
-- 4 new GPT tools:
-  - get_user, returns user data when given a display/user name
-  - list_channels, returns a list of channels in the server
-  - get_channel, returns channel data when given a channel name
-  - suggest, which forwards a message to me (can also be used for bug reports and some other general stuff)
-- gpt prompt now gives instructions on how to mention users and channels
+- p/gpt image now has a 4 hour cooldown per user
+- added p/info shard, which provides detail about shards
+- added total guilds and total unique users to p/info bot
+- removed p/reactionrole
+- removed p/explore
+p/reactionrole fucking sucked and is done better by literally every other bot with reaction roles and even discord's onboarding thing. also nobody used it
+p/explore's visibility was disabled by default and really the only thing it offered was privacy concerns. people probably dont want their servers being joined without their knowledge. and again, nobody used it. 
 
 **fixes/optimizations:**
-
-- fixed public logs for text commands showing the exact message content
-- p/configure can no longer be used by bots (this allowed anyone to configure anything using p/force say)
-- removed gpt responses for commands you can't use, they were inconsistent and broken and often unclear
-- fixed conversations resetting if you type just "<@>"
-- fixed conversation reset exceptions not working
 
 i am aware that p/preview is broken and i lowkey just do not give a shit they keep making breaking changes to the dw builder api without announcing it :/ 

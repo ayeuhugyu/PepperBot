@@ -246,6 +246,9 @@ const clear = new SubCommand(
     }
 );
 
+let lastUsedImageAt = {};
+const imageCooldown = 1 * 60 * 1000 // // temporary time of 1 minute, use this when done testing 4 * 60 * 60 * 1000; // 4 hours
+
 const imagedata = new SubCommandData();
 imagedata.setName("image");
 imagedata.setDescription("generates an image based on the prompt");
@@ -277,6 +280,12 @@ const image = new SubCommand(
         return args;
     },
     async function execute(message, args, gconfig) {
+        if (lastUsedImageAt[message.author.id] && Date.now() - lastUsedImageAt[message.author.id] < imageCooldown) {
+            return action.reply(message, {
+                content: `you can only generate an image every 4 hours (this stuff's expensive, sorry!). the next time you can generate an image is in <t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:T>).`,
+                ephemeral: gconfig.useEphemeralReplies
+            });
+        }
         if (args.get("prompt")) {
             const sent = await action.reply(message, { content: "generating image, please wait...", ephemeral: gconfig.useEphemeralReplies });
             const url = await gpt.generateImage(args.get("prompt"));
@@ -286,9 +295,10 @@ const image = new SubCommand(
                     ephemeral: gconfig.useEphemeralReplies
                 });
             }
+            lastUsedImageAt[message.author.id] = Date.now();
             action.editMessage(sent, {
                 files: [{ name: "image.png", attachment: url }],
-                content: `image generated from prompt: \`${args.get("prompt")}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later.`,
+                content: `image generated from prompt: \`${args.get("prompt")}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later. the next time you can generate an image is in <t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:T>). (this stuff's expensive, sorry!)`,
             });
         } else {
             action.reply(message, "provide a prompt to use you baffoon!");
