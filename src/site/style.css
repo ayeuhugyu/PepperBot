@@ -13,7 +13,9 @@
     --background-color: rgba(11, 3, 0, 1);
     --midground-color-dark: rgb(23, 12, 0);
     --midground-color: rgba(37, 20, 0, 0.35);
+    --midground-color-no-transparency: rgba(37, 20, 0, 1);
     --midground-color-light: rgba(92, 50, 0, 0.65);
+    --midground-color-light-no-transparency: rgba(92, 50, 0, 1);
     --midground-color-lighter: rgba(130, 72, 0, 0.85);
     --border-color: rgba(255, 145, 0, 1);
     --border-color-light: rgba(255, 145, 0, 0.5);
@@ -113,6 +115,11 @@ body {
     text-decoration: none;
     margin-bottom: 5px
 }
+.activatedSidebarButton {
+    color: var(--highlighted-text-color-lighter);
+    text-decoration: underline;
+    margin-bottom: 5px
+}
 .sidebarButton:hover {
     color: var(--highlighted-text-color);
 }
@@ -138,13 +145,16 @@ body {
     right: 147px;
     z-index: inherit;
     transform: translateY(-50%);
-    background-color: var(--midground-color);
+    background-color: var(--midground-color-no-transparency);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
     padding: 5px;
     cursor: pointer;
     font-family: var(--main-font);
+}
+.toggleSidebarButton:hover {
+    background-color: var(--midground-color-light-no-transparency);
 }
 .toggleSidebarButton:focus {
     border: 1px solid var(--border-color);

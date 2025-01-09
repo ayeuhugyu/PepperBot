@@ -2,138 +2,83 @@
 <html>
     <head>
         <title>Todo</title>
-        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
+        <link rel="stylesheet" type="text/css" href="/style.css" />
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
-        <meta content="ze peppersite" property="og:title" />
-        <meta content="ye" property="og:description" />
-        <meta content="https://pepperbot.online" property="og:url" />
+        <meta content="Todo" property="og:title" />
+        <meta content="my pepperbot todo list" property="og:description" />
+        <meta content="https://pepperbot.online/logs" property="og:url" />
         <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
     </head>
     <body>
-        <div class="sidebar">
-            <script id="definesidebarfunctions">
-                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
-                function redirectTo(url) {
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                    window.location.href = url;
-                }
-                function openInNewTab(url) {
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                    let win = window.open(
-                        url,
-                        "_blank"
-                    );
-                }
-                function showSidebarToggler() {
-                    const sidebarToggler = document.querySelector(".sidebarToggler");
-                    sidebarToggler.style.opacity = "0.25";
-                }
-                function hideSidebarToggler() {
-                    const sidebarToggler = document.querySelector(".sidebarToggler");
-                    sidebarToggler.style.opacity = "0";
-                }
-            </script>
-            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
-            <h2 class="sidebarTitle">NAVIGATION</h2>
-            <div class="sidebarDivider"></div>
-            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
-            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
-            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
-            <div class="sidebarButton" id="/chat" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Chat</div>
-            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
-            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
-            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
-            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
-            <div class="sidebarButton" id="/simulations" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Simulations</div>
-            <div class="sidebarButton" id="/todo" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Todo</div>
-            <div class="sidebarButton" id="/updates" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Updates</div>
-
-            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
-            <script id="sidebarmain">
-                function toggleSidebar() {
-                    document.querySelectorAll(".sidebar").forEach((element) => {
-                        void element.offsetWidth;
-
-                        if (sidebarIsOpen) {
-                            element.style.animation = "slideOpen 0.5s forwards";
-                        } else {
-                            element.style.animation =
-                                "slideClose 0.5s forwards";
-                        }
-                    });
-                    sidebarIsOpen = !sidebarIsOpen;
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                }
-                document.addEventListener("keydown", (event) => {
-                    if (event.key === "k" && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") {
-                        toggleSidebar();
-                    }
-                });
-                document
-                    .querySelectorAll(".sidebarButton")
-                    .forEach((button) => {
-                        button.style.transition = "transform 0.25s ease-in-out";
-                        button.addEventListener("mouseover", () => {
-                            button.style.backgroundColor = "#13131d";
-                            button.style.transform = "translateX(-100px)";
-                        });
-                        button.addEventListener("mouseout", () => {
-                            button.style.backgroundColor = "#1E1E2E";
-                            button.style.transform = "translateX(0px)";
-                        });
-                        button.addEventListener("mousedown", () => {
-                            button.style.backgroundColor = "#616187";
-                        });
-                        button.addEventListener("mouseup", () => {
-                            button.style.backgroundColor = "#616187";
-                        });
-                    });
-                document.addEventListener("DOMContentLoaded", function () {
-                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
-                    if (sidebarIsOpen) {
-                        document
-                            .querySelectorAll(".sidebar")
-                            .forEach((element) => {
-                                element.style.animation =
-                                    "slideClose 0s forwards";
-                            });
-                    }
-                });
-            </script>
+        <script src="/scripts/tv.js"></script>
+        <script src="/scripts/sidebar.js"></script>
+        <div class="outlined logPageContainer">
+            <pre id="todoContent" class="logContent outlined"></pre>
         </div>
-        <div id="centerer" class="container" style="position: absolute; left: 0; top: 0; justify-content: left">
-            <div class="cardcontainer" id="logscontainer" style="width: calc(100vw - 30px); height: calc(100vh - 30px); margin: 15px">
-                <div class="sectionoutline" style="justify-content: center; text-align: center; height: 100%; box-sizing: border-box">
-                    <div class="sectioncontent" style="margin-bottom: -10px; width: 100%; height: calc(100% - 18px); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;">
-                        <h2 class="sectionTitle">todo list</h2>
-                        <div class="logFileContentContainer" style="width: calc(100% - 3px); flex-grow: 1; overflow: hidden;">
-                            <pre class="outlined" id="todocontent" style="width: 100%; height: 100%; overflow: scroll; text-align: left;"></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <script id="sidebarAdjustments">
+            const logContent = document.querySelector('.logContent')
+            function editTextAreaSize(sidebarState) {
+                if (window.innerWidth < 768) {
+                    logContent.style.width = "100%"
+                } else if (sidebarState) {
+                    logContent.style.width = "calc(100% - 143px)"
+                } else {
+                    logContent.style.width = "calc(100% - 12px)"
+                }
+            }
+            bindToSidebarToggle(editTextAreaSize)
+            setButtonPositionOffset(11)
+        </script>
         <script id="todoreader">
             function parseTodoList(list) {
-                let text = "";
-                list.forEach((item, index) => {
-                text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${item.completed ? "~~" : ""}\n`;
-                });
+                if (typeof list !== "object") {
+                    return `error parsing todo list: ${list}`;
+                }
+                try {
+                    let text = "";
+                    list.forEach((item, index) => {
+                        text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${item.completed ? "~~" : ""}\n`;
+                    });
+                } catch (err) {
+                    return `error parsing todo list: ${err}`;
+                }
                 return text;
             }
+            let loaded = false;
             function updateTodo() {
                 const todocontent =
-                    document.getElementById("todocontent");
-                    todocontent.style.maxWidth = `${todocontent.offsetWidth}px`;
+                    document.getElementById("todoContent");
                     todocontent.innerText = `reading todo list...`;
-                fetch(`/api/read-todo`)
-                    .then((response) => response.text())
-                    .then((text) => {
-                        todocontent.innerText = parseTodoList(JSON.parse(text));
+                try {
+                    fetch(`/api/read-todo`)
+                        .then((response) => response.text())
+                        .then((text) => {
+                            if (!text.startsWith("[")) {
+                                todocontent.innerText = text;
+                                if (!loaded) {
+                                    tvStaticAnimation()
+                                }
+                                loaded = true
+                                return;
+                            }
+                            todocontent.innerText = "parsing todo list...";
+                            todocontent.innerText = parseTodoList(JSON.parse(text));
+                            if (!loaded) {
+                                tvStaticAnimation()
+                            }
+                            loaded = true
                     });
+                } catch (err) {
+                    todocontent.innerText = `error reading todo list: ${err}`;
+                }
             }
+            setTimeout(() => {
+                if (!loaded) {
+                    tvStaticAnimation()
+                }
+                loaded = true
+            }, 2000);
             document.addEventListener("DOMContentLoaded", updateTodo);
         </script>
-    </div>
     </body>
 </html>

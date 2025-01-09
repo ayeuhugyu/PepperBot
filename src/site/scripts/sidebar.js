@@ -59,11 +59,11 @@ toggleSidebarButton.innerHTML = '☰';
 toggleSidebarButton.onclick = toggleSidebar;
 document.body.insertBefore(toggleSidebarButton, document.body.firstChild);
 
-
 function createSidebarButton(text, href) {
     const sidebarButton = document.createElement('a');
     sidebarButton.id = 'sidebarButton';
     sidebarButton.className = 'sidebarButton';
+    if (window.location.pathname == href) sidebarButton.className = 'activatedSidebarButton'
     sidebarButton.href = href;
     sidebarButton.innerHTML = text;
     sidebarContainer.appendChild(sidebarButton);

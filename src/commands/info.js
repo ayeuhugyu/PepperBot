@@ -8,7 +8,6 @@ import { stat } from "fs/promises";
 import * as globals from "../lib/globals.js";
 import process from "node:process";
 import { Collection } from "discord.js"
-import { set } from "shelljs";
 
 const startedAtTimestamp = Date.now(); // too lazy to export from the sharder and deal with circular dependencies so this is close enough (it will be like 0.15 seconds off but i don't care)
 function padZero(number) {

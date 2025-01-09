@@ -49,6 +49,17 @@ p/explore
 
 p/update there's no specific category for this its just a bunch of random features and bugfixes i've been thinking about for a while
 
+**website changes:**
+
+- updated style for:
+/todo
+/credits
+/coolsites
+/shame
+/contact
+- new sidebar style now highlights which page you're on
+- new sidebar style button is no longer transparent
+
 **actual content:**
 
 - p/gpt image now has a 4 hour cooldown per user
