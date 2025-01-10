@@ -226,7 +226,10 @@ export const toolFunctions = {
             });
 
             const mainContent = $('article').html() || $('main').html() || $('body').html();
-            const markdown = turndownService.turndown(mainContent);
+            let markdown = turndownService.turndown(mainContent);
+            if (markdown.length > 100000) {
+                return markdown.slice(0, 100000) + " ... (truncated due to length)";
+            }
             return markdown
         } catch (err) {
             
