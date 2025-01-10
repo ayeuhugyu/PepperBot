@@ -247,7 +247,7 @@ const clear = new SubCommand(
 );
 
 let lastUsedImageAt = {};
-const imageCooldown = 1 * 60 * 1000 // // temporary time of 1 minute, use this when done testing 4 * 60 * 60 * 1000; // 4 hours
+const imageCooldown = 4 * 60 * 60 * 1000; // 4 hours
 
 const imagedata = new SubCommandData();
 imagedata.setName("image");
@@ -282,7 +282,7 @@ const image = new SubCommand(
     async function execute(message, args, gconfig) {
         if (lastUsedImageAt[message.author.id] && Date.now() - lastUsedImageAt[message.author.id] < imageCooldown) {
             return action.reply(message, {
-                content: `you can only generate an image every 4 hours (this stuff's expensive, sorry!). the next time you can generate an image is in <t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:T>).`,
+                content: `you can only generate an image every 4 hours (this stuff's expensive, sorry!). the next time you can generate an image is <t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:T>).`,
                 ephemeral: gconfig.useEphemeralReplies
             });
         }
@@ -298,7 +298,7 @@ const image = new SubCommand(
             lastUsedImageAt[message.author.id] = Date.now();
             action.editMessage(sent, {
                 files: [{ name: "image.png", attachment: url }],
-                content: `image generated from prompt: \`${args.get("prompt")}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later. the next time you can generate an image is in <t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:T>). (this stuff's expensive, sorry!)`,
+                content: `image generated from prompt: \`${args.get("prompt")}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later. the next time you can generate an image is <t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[message.author.id] + imageCooldown) / 1000)}:T>). (this stuff's expensive, sorry!)`,
             });
         } else {
             action.reply(message, "provide a prompt to use you baffoon!");

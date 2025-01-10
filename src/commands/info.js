@@ -181,6 +181,15 @@ const logs = new SubCommand(
 
 let currentShardId = undefined
 
+function shardIdResponseHandler(data) {
+    if (data.action === "shardIdResponse") {
+        currentShardId = data.id
+        process.removeListener("message", shardIdResponseHandler)
+    }
+}
+process.on('message', shardIdResponseHandler)
+process.send({ action: "getShardId"})
+
 const sharddata = new SubCommandData();
 sharddata.setName("shard");
 sharddata.setDescription("return info relating to the shards (processes)");
@@ -196,31 +205,28 @@ const shard = new SubCommand(
         return new Collection();
     },
     async function execute(message, args, fromInteraction, gconfig) {
-        if (currentShardId === undefined) {
-            currentShardId = message?.guild?.shardId || undefined
-        }
         let sent = undefined
         const embed = theme.createThemeEmbed(theme.themes[gconfig.theme] || theme.themes.CURRENT)
             .setTitle("pepperbot info")
-            .setDescription(`shard count: ${message.client.shard.count}\ncurrent shard: ${currentShardId || "???"}`)
+            .setDescription(`shard count: ${message.client.shard.count}\ncurrent shard: ${currentShardId}`)
         function errorCountResponseHandler(data) {
-            if (data.message === "errorCountResponse" && !sent) {
-                const response = data.data
-                const fieldValue = ``
+            if (data.action === "errorCountResponse" && !sent) {
+                const response = Object.values(data.data)
+                let fieldValue = "​​​​​"
                 process.removeListener("message", errorCountResponseHandler)
                 response.forEach((count) => {
                     let statusEmoji = "🟢"
                     if (count.fatal === 1) {
                         statusEmoji = "🟡"
                     }
-                    if (count.fatal === 2) {
+                    if (count.fatal >= 2) {
                         statusEmoji = "🔴"
                     }
                     const isThisShard = count.id === currentShardId
                     fieldValue += `${isThisShard ? "**" : ""}${statusEmoji} ${count.id}: ${count.warnings} warnings, ${count.errors + count.fatal} errors (${count.fatal} fatal)${isThisShard ? "**" : ""}\n`
                 })
                 const field = {
-                    name: "",
+                    name: "​​​​",
                     value: fieldValue,
                     inline: true
                 }
@@ -236,7 +242,7 @@ const shard = new SubCommand(
         setTimeout(() => {
             if (!sent) {
                 embed.addFields({
-                    name: "",
+                    name: "​",
                     value: "reading error count exceeded time limit",
                     inline: true
                 })

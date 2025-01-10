@@ -82,17 +82,6 @@ process.on("message", (message) => {
         //console.log(message)
         manager.shards.get(0).send({ action: "messageCreate", message: message.message });
     }
-    if (message.action && message.action === "errorCount") {
-        if (message.type === "errors") {
-            shardErrorCounts[shard.id].errors++;
-        }
-        if (message.type === "warnings") {
-            shardErrorCounts[shard.id].warnings++;
-        }
-        if (message.type === "fatal") {
-            shardErrorCounts[shard.id].fatal++;
-        }
-    }
 });
 
 process.on("uncaughtException", (err) => {
@@ -180,6 +169,12 @@ manager.spawn().then((shards) => {
                     action: "errorCountResponse",
                     data: shardErrorCounts,
                 })
+            }
+            if (message.action && message.action === "getShardId") {
+                shard.send({
+                    action: "shardIdResponse",
+                    id: shard.id
+                });
             }
             return message._result;
         });

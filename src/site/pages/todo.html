@@ -39,10 +39,10 @@
                     list.forEach((item, index) => {
                         text += `${item.completed ? "✅~~" : ""}[${index + 1}] - ${item.value}${item.completed ? "~~" : ""}\n`;
                     });
+                    return text;
                 } catch (err) {
                     return `error parsing todo list: ${err}`;
                 }
-                return text;
             }
             let loaded = false;
             function updateTodo() {

@@ -57,6 +57,7 @@ p/update there's no specific category for this its just a bunch of random featur
 /coolsites
 /shame
 /contact
+/updates
 - new sidebar style now highlights which page you're on
 - new sidebar style button is no longer transparent
 

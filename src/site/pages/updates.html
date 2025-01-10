@@ -13,13 +13,13 @@
         <script src="/scripts/tv.js"></script>
         <script src="/scripts/sidebar.js"></script>
         <script src="/socket.io/socket.io.js"></script>
-        <div class="outlined logPageContainer">
-            <div id="logControllerContainer" class="flex row" style="height: fit-content; align-items: center; margin-top: 0">
+        <div class="outlined logPageContainer" style="max-width: 100vw;">
+            <div id="logControllerContainer" class="flex row" style="height: fit-content; align-items: center; margin-top: 0; max-width: 100vw;">
                 <input id="textbox" type="text" class="outlined" placeholder="version" style="margin: 0"/>
                 <button onclick="readUpdate()" class="outlined">FETCH</button>
                 <span id="status" class="outlined logReaderStatus" style="margin-bottom: 0;">awaiting input...</span>
             </div>
-            <pre id="updatecontent" class="logContent outlined" style="max-width: 100vw;"></pre>
+            <pre id="updatecontent" class="logContent outlined" ></pre>
         </div>
         <script id="sidebarAdjustments">
             const logContent = document.querySelector('#updatecontent')
@@ -27,12 +27,15 @@
                 const logController = document.getElementById("logControllerContainer")
                 if (window.innerWidth < 768) {
                     logContent.style.width = "100%"
+                    logContent.style.maxWidth = "100%"
                     logController.style.width = "100%"
                 } else if (sidebarState) {
                     logContent.style.width = "calc(100% - 143px)"
+                    logContent.style.maxWidth = "calc(100% - 143px)"
                     logController.style.width = "calc(100% - 131px)"
                 } else {
                     logContent.style.width = "calc(100% - 12px)"
+                    logContent.style.maxWidth = "calc(100% - 12px)"
                     logController.style.width = "100%"
                 }
             }
