@@ -883,7 +883,7 @@ export default {
     soulbreaker: new classes.oath({
         "name": "soulbreaker",
         "rich_name": "Soulbreaker",
-        "description": "You vow to see only that which you wish to see. Reality itself is malleable, pliable to your deft hands.",
+        "description": "The sum of your fragments is greater than the whle. Though your very being is splintered and threatening to drift apart, every shard of you Vows to remain One. Your Oath is a solvent that joins all of your distinct selves into the gestalt you.",
         "requirements": new classes.characterData({
             "character": new classes.characterStats({
                 "reputation": {
