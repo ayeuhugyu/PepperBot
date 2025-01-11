@@ -4473,7 +4473,7 @@ export default {
         "description": "Holy Mackerel! That was a tough fight!",
         "requirements": new classes.characterData({
             "character": new classes.characterStats({
-                "level": 15,
+                "level": 13,
             }),
             "stats": new classes.statDistribution({
                 "fortitude": 10

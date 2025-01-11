@@ -7,63 +7,11 @@ export default {
         "rich_name": "Arcwarder",
         "description": "You vow to be a shield for your comrades, to wear your regalia with pride and serve the greater collective. From each according to their ability, to each according to their needs.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": null,
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                }
-            }),
+            "character": new classes.characterStats(),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 20,
-                    "frostdraw": 0,
-                    "thundercall": 20,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 20,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
+                "flamecharm": 20,
+                "thundercall": 20,
+                "fortitude": 20,
             }),
             "talents": [],
             "mantras": []
@@ -135,63 +83,9 @@ export default {
         "rich_name": "Blindseer",
         "description": "You vow to not let the horrors of the world pierce your tightly fastened blindfold. Everything is simply as we choose to percieve it.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": null,
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                }
-            }),
+            "character": new classes.characterStats(),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 40,
-                    "charisma": 0
-                }
+                "willpower": 40,
             }),
             "talents": [
                 "breathing_exercise",
@@ -263,63 +157,14 @@ export default {
         "description": "You vow to carry your blade as an instrument, to lend yourself to any cause it guides you to. Collapse the infinite number of possibilities ahead of you into just one. The blade keeps you as much as you keep it.",
         "cumulative_stats": true,
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-            }),
+            "character": new classes.characterStats(),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
                     "light": 90,
                     "medium": 75,
-                    "heavy": 90
-                },
-                "base": {
+                    "heavy": 90,
                     "strength": 25,
                     "fortitude": 0,
                     "agility": 25,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
             }),
             "talents": [],
             "mantras": []
@@ -378,67 +223,13 @@ export default {
         "description": "Your heart is forever now eternally tied to Zi'eer, the 4th Prophet of the Ministry. You swear to serve under his will, no matter the cost.",
         "requirements": new classes.characterData({
             "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
+                "resonance": "*",
                 "reputation": {
                     "ministry": 1,
                     "etrea": 150
                 }
             }),
-            "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
-            }),
+            "stats": new classes.statDistribution({}),
             "talents": [],
             "mantras": []
         }),
@@ -498,65 +289,14 @@ export default {
         "cumulative_stats": true,
         "requirements": new classes.characterData({
             "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
                 "reputation": {
                     "authority": 150
                 }
             }),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 40,
-                    "fortitude": 40,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 40,
-                    "charisma": 0
-                }
+                "strength": 40,
+                "fortitude": 40,
+                "willpower": 40
             }),
             "talents": [],
             "mantras": []
@@ -584,65 +324,8 @@ export default {
         "rich_name": "Dawnwalker",
         "description": "You vow to forever reach towards the brilliant Light. There is no shadow that your radiance cannot expunge.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
-            "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
-            }),
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
             "talents": [],
             "mantras": []
         }),
@@ -702,65 +385,8 @@ export default {
         "rich_name": "Fadetrimmer",
         "description": "You vow to forever hone your precision with the scissors. There will never be another fringe incident again.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 12,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
-            "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
-            }),
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
             "talents": [],
             "mantras": []
         }),
@@ -800,64 +426,9 @@ export default {
         "rich_name": "Jetstriker",
         "description": "You vow to flow with the Song itself, drifting across where the trails may take you. If the Song permeates everything, then let it be your conduit, and you its master.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
+            "character": new classes.characterStats({}),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 50,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
+                "agility": 50,
             }),
             "talents": [],
             "mantras": []
@@ -935,65 +506,8 @@ export default {
         "rich_name": "Linkstrider",
         "description": "The Entropy Catalyst generated enough force to fundementally change your state of existence. You now exist between two states, your newfound clarity making the imperceptible Bonds between all souls malleable to you.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
-            "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
-            }),
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
             "talents": [],
             "mantras": []
         }),
@@ -1053,65 +567,8 @@ export default {
         "rich_name": "Oathless",
         "description": "You vow to never be bound to any oath; to live your life free of restraint. If free will is an illusion, why not make it a convincing one?",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
-            "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
-            }),
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({}),
             "talents": [],
             "mantras": []
         }),
@@ -1120,7 +577,7 @@ export default {
             "combat": 0,
             "mobility": 0,
             "support": 0,
-            "wildcard": 2
+            "wildcard": 3
         },
         "talents": [],
         "mantras": [],
@@ -1137,64 +594,9 @@ export default {
         "rich_name": "Saltchemist",
         "description": "You vow to dedicate body and mind to the furthering of the Material Arts. Your body is a conduit through which true knowledge shall be siphoned. Knowledge is power, and you shall be its vessel.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
+            "character": new classes.characterStats({}),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 75,
-                    "willpower": 0,
-                    "charisma": 0
-                }
+                "intelligence": 75,
             }),
             "talents": [],
             "mantras": []
@@ -1241,64 +643,14 @@ export default {
         "rich_name": "Silentheart",
         "description": "You vow to reject the Words of the Song, denying yourself if mantras in pursuit of your own path to true strength, no matter the cost. You can wield weapons with half the usual requirements.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
+            "character": new classes.characterStats({}),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 75,
-                    "medium": 75,
-                    "heavy": 75
-                },
-                "base": {
-                    "strength": 25,
-                    "fortitude": 0,
-                    "agility": 25,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 25
-                }
+                "light": 75,
+                "medium": 75,
+                "heavy": 75,
+                "strength": 25,
+                "agility": 25,
+                "charisma": 25
             }),
             "talents": [
                 "ankle_cutter", 
@@ -1323,7 +675,7 @@ export default {
         },
         "talents": [],
         "mantras": [],
-        "progression": [
+        "progression": [ // TODO: find silentheart progression
             new classes.oathProgression({
                 "level": 0,
                 "talents": [],
@@ -1366,64 +718,9 @@ export default {
         "rich_name": "Starkindred",
         "description": "You vow to feel the knowledge of all that is, all at once. Your heart beats with the world itself, as the Stars above watch over you.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
+            "character": new classes.characterStats({}),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 40,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 0
-                }
+                "strength": 40,
             }),
             "talents": [],
             "mantras": []
@@ -1479,73 +776,12 @@ export default {
         "rich_name": "Visionshaper",
         "description": "You vow to see only that which you wish to see. Reality itself is malleable, pliable to your deft hands.",
         "requirements": new classes.characterData({
-            "character": new classes.characterStats({
-                "level": 0,
-                "health": 0,
-                "ether": 0,
-                "sanity": 0,
-                "posture": 0,
-                "carry_load": 0,
-                "dvm": 0,
-                "weapon_type": null,
-                "murmur": null,
-                "oath": null,
-                "resonance": "any",
-                "penetration": {
-                    "melee": 0,
-                    "mantra": 0
-                },
-                "resistance": {
-                    "physical": 0,
-                    "slash": 0,
-                    "blunt": 0,
-                    "elemental": 0,
-                    "fire": 0,
-                    "ice": 0,
-                    "lightning": 0,
-                    "wind": 0,
-                    "shadow": 0,
-                    "iron": 0
-                },
-                "mantra_slots": {
-                    "combat": 0,
-                    "mobility": 0,
-                    "support": 0,
-                    "wildcard": 0
-                },
-                "reputation": {}
-            }),
+            "character": new classes.characterStats({}),
             "stats": new classes.statDistribution({
-                "attunement": {
-                    "flamecharm": 0,
-                    "frostdraw": 0,
-                    "thundercall": 0,
-                    "galebreathe": 0,
-                    "shadowcast": 0,
-                    "ironsing": 0
-                },
-                "weapon": {
-                    "light": 0,
-                    "medium": 0,
-                    "heavy": 0
-                },
-                "base": {
-                    "strength": 0,
-                    "fortitude": 0,
-                    "agility": 0,
-                    "intelligence": 0,
-                    "willpower": 0,
-                    "charisma": 50
-                }
+                "charisma": 50
             }),
-            "talents": [
-                "cheap_trick"
-            ],
-            "mantras": [
-                "illusory_servants",
-                "illusory_counter",
-                "mirror_illusion"
-            ]
+            "talents": [],
+            "mantras": []
         }),
         "oathgiver": "the_nestmind",
         "mantraSlots": {
@@ -1559,9 +795,7 @@ export default {
         "progression": [
             new classes.oathProgression({
                 "level": 0,
-                "talents": [
-                    "death_from_above"
-                ],
+                "talents": [],
                 "mantras": []
             }),
             new classes.oathProgression({
@@ -1592,6 +826,140 @@ export default {
                     "mirror_illusion"
                 ]
             }),
+        ]
+    }),
+    saintsworn: new classes.oath({
+        "name": "saintsworn",
+        "rich_name": "Saintsworn",
+        "description": "A vow to the fallen heros. Press L to switch to Saintsblade.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({}),
+            "stats": new classes.statDistribution({
+                    "flamecharm": 20,
+                    "frostdraw": 20,
+                    "thundercall": 20,
+                    "galebreathe": 20,
+                    "shadowcast": 20,
+                }),
+            "talents": [],
+            "mantras": []
+        }),
+        "oathgiver": "attunement_obelisk",
+        "mantraSlots": {
+            "combat": 2,
+            "mobility": 0,
+            "support": 2,
+            "wildcard": 1
+        },
+        "talents": [],
+        "mantras": [],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [],
+                "mantras": [
+                    "blade_of_saints"
+                ]
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [
+                    "ether_proselyte",
+                    "heros_assist",
+                    "saints_negation"
+                ],
+                "mantras": [],
+            }),
+            new classes.oathProgression({
+                "level": 2,
+                "talents": [
+                    "saints_synergy",
+                    "saints_overload"
+                ],
+                "mantras": []
+            }),
+        ]
+    }),
+    soulbreaker: new classes.oath({
+        "name": "soulbreaker",
+        "rich_name": "Soulbreaker",
+        "description": "You vow to see only that which you wish to see. Reality itself is malleable, pliable to your deft hands.",
+        "requirements": new classes.characterData({
+            "character": new classes.characterStats({
+                "reputation": {
+                    "etrea": 300
+                },
+                "resonance": "*",
+                "murmur": "*"
+            }),
+            "stats": new classes.statDistribution({
+                "charisma": 50,
+                "willpower": 50
+            }),
+            "talents": [],
+            "mantras": []
+        }),
+        "oathgiver": "yunshul",
+        "mantraSlots": {
+            "combat": 2,
+            "mobility": 1,
+            "support": 0,
+            "wildcard": 0
+        },
+        "talents": [],
+        "mantras": [],
+        "progression": [
+            new classes.oathProgression({
+                "level": 0,
+                "talents": [
+                    "murmur_ardour",
+                    "murmur_tacet",
+                    "murmur_rythm"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 1,
+                "talents": [
+                    "formless"
+                ],
+                "mantras": [],
+            }),
+            new classes.oathProgression({
+                "level": 2,
+                "talents": [
+                    "heart_reverb"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 3,
+                "talents": [
+                    "soul_infusion"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 4,
+                "talents": [
+                    "ardour_slicer"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 5,
+                "talents": [
+                    "rythm_advance"
+                ],
+                "mantras": []
+            }),
+            new classes.oathProgression({
+                "level": 6,
+                "talents": [
+                    "tacet_kick"
+                ],
+                "mantras": []
+            }), // TODO: verify progression
         ]
     }),
 }

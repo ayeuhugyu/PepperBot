@@ -43,6 +43,13 @@ export const attunement = {
         "description": "Your ability to harness metal from your sorroundings. Increases Ironsing damage.",
         "shortform": "IRN",
         "category": Enum.StatCategory.ATTUNEMENT
+    }),
+    bloodrend: new classes.stat({
+        "name": "bloodrend",
+        "rich_name": "Bloodrend",
+        "description": "Your ability to wield the blood of yourself and others. Increases Bloodrend damage. ",
+        "shortform": "BLD",
+        "category": Enum.StatCategory.ATTUNEMENT
     })
 }
 export const base = {
