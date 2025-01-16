@@ -1,118 +1,21 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Pepper Site</title>
-        <link rel="stylesheet" type="text/css" href="/newstyle.css" />
-        <link rel="icon" type="image/x-icon" href="./images/favicon.ico" />
-        <meta content="ze peppersite" property="og:title" />
-        <meta content="ye" property="og:description" />
-        <meta content="https://pepperbot.online" property="og:url" />
+        <title>404 - not found</title>
+        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
+        <meta content="404" property="og:title" />
+        <meta content="not found" property="og:description" />
+        <meta content="https://pepperbot.online/logs" property="og:url" />
         <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
     </head>
     <body>
-        <div class="sidebar">
-            <script id="definesidebarfunctions">
-                let sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen');;
-                function redirectTo(url) {
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                    window.location.href = url;
-                }
-                function openInNewTab(url) {
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                    let win = window.open(
-                        url,
-                        "_blank"
-                    );
-                }
-                function showSidebarToggler() {
-                    const sidebarToggler = document.querySelector(".sidebarToggler");
-                    sidebarToggler.style.opacity = "0.25";
-                }
-                function hideSidebarToggler() {
-                    const sidebarToggler = document.querySelector(".sidebarToggler");
-                    sidebarToggler.style.opacity = "0";
-                }
-            </script>
-            <div class="sidebarToggler" onclick="toggleSidebar(); hideSidebarToggler()" onmouseover="showSidebarToggler()" onmouseout="hideSidebarToggler()"></div>
-            <h2 class="sidebarTitle">NAVIGATION</h2>
-            <div class="sidebarDivider"></div>
-            <div class="sidebarButton" id="/" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Home</div>
-            <div class="sidebarButton" id="/statistics" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Statistics</div>
-            <div class="sidebarButton" id="/logs" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Logs</div>
-            <div class="sidebarButton" id="/chat" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Chat</div>
-            <div class="sidebarButton" id="/credits" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Credits</div>
-            <div class="sidebarButton" id="/contact" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Contact</div>
-            <div class="sidebarButton" id="/shame" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Shame</div>
-            <div class="sidebarButton" id="/coolsites" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)">Cool Sites</div>
-
-            <div class="sidebarButton" id="https://github.com/ayeuhugyu/pepperbot" onclick="redirectTo(this.id)" onauxclick="openInNewTab(this.id)" style="position: fixed; bottom: 0;">Source Code</div>
-            <script id="sidebarmain">
-                function toggleSidebar() {
-                    document.querySelectorAll(".sidebar").forEach((element) => {
-                        void element.offsetWidth;
-
-                        if (sidebarIsOpen) {
-                            element.style.animation = "slideOpen 0.5s forwards";
-                        } else {
-                            element.style.animation =
-                                "slideClose 0.5s forwards";
-                        }
-                    });
-                    sidebarIsOpen = !sidebarIsOpen;
-                    sessionStorage.setItem('sidebarIsOpen', sidebarIsOpen);
-                }
-                document.addEventListener("keydown", (event) => {
-                    if (event.key === "k" && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") {
-                        toggleSidebar();
-                    }
-                });
-                document
-                    .querySelectorAll(".sidebarButton")
-                    .forEach((button) => {
-                        button.style.transition = "transform 0.25s ease-in-out";
-                        button.addEventListener("mouseover", () => {
-                            button.style.backgroundColor = "#13131d";
-                            button.style.transform = "translateX(-100px)";
-                        });
-                        button.addEventListener("mouseout", () => {
-                            button.style.backgroundColor = "#1E1E2E";
-                            button.style.transform = "translateX(0px)";
-                        });
-                        button.addEventListener("mousedown", () => {
-                            button.style.backgroundColor = "#616187";
-                        });
-                        button.addEventListener("mouseup", () => {
-                            button.style.backgroundColor = "#616187";
-                        });
-                    });
-                document.addEventListener("DOMContentLoaded", function () {
-                    sidebarIsOpen = sessionStorage.getItem('sidebarIsOpen') === "true";
-                    if (sidebarIsOpen) {
-                        document
-                            .querySelectorAll(".sidebar")
-                            .forEach((element) => {
-                                element.style.animation =
-                                    "slideClose 0s forwards";
-                            });
-                    }
-                });
-            </script>
-        </div>
-
-        <div class="cardcontainer" id="maintitle" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
-            <div class="sectionoutline" style="justify-content: center; align-items: center; text-align: center;">
-                <h2 class="sectionTitle" id="titleTextContent">404 - not found</h2>
-            </div>
-        </div>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const title = document.getElementById("titleTextContent");
-                const urlArgs = new URLSearchParams(window.location.search);
-                const error = urlArgs.get("error");
-                if (error) {
-                    title.innerText = error
-                }
-            })
+        <script src="/scripts/tv.js"></script>
+        <script src="/scripts/sidebar.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <span class="outlined" style="position: fixed; top: 50vh; left: 50vw; transform: translate(-50%, -50%); padding: 7px;">404 - not found</span>
+        <script id="sidebarAdjustments">
+            document.addEventListener('DOMContentLoaded', tvStaticAnimation)
         </script>
     </body>
 </html>

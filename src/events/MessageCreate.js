@@ -117,7 +117,7 @@ async function processGPTResponse(message) {
                     content: sentContent,
                 })
                 conversation.emitter.on("tool_call", async (tool) => {
-                    sentContent += `\n-# processing tool call ${tool.id}: ${tool.function}`
+                    sentContent += `\n-# processing tool call ${tool.id}: ${tool.function} with arguments: ${JSON.stringify(tool.arguments, null, 2).replace(/\n/g, ' ')}`
                     await action.editMessage(sent, {
                         content: sentContent,
                     })

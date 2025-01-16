@@ -683,3 +683,31 @@ details.commandArgument > *:not(summary):not(details) {
     position: absolute;
     border-right: 1px solid var(--border-color-light);
 }
+
+/* Config Page */
+
+.guildObject {
+    width: 100%;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: row;
+}
+
+.guildSummary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.configData {
+    padding: 5px;
+}
+
+.guildSummary > * {
+    margin-right: 5px;
+}
+
+.guildIcon {
+    border-radius: 50%;
+}

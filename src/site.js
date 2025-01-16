@@ -15,6 +15,7 @@ import http from "http";
 import { Server } from "socket.io";
 import * as chat from "./lib/webchat.js"
 import statistics from "./lib/statistics.js";
+import { getGuilds } from "./sharder.js"
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -445,6 +446,31 @@ app.get(`/oauth2/login`, async (req, res) => {
 
 app.get(`/oauth2/getUserInfo`, async (req, res) => {
     const token = req.query.token;
+    if (token == "test") {
+        return res.send({
+            "id": "80351110224678912",
+            "username": "Nelly_Discord",
+            "global_name": "Nelly",
+            "discriminator": "1337",
+            "avatar": "8342729096ea3675442027381ff50dfe",
+            "accent_color": 16711680,
+            "system": false,
+            "bot": false,
+            "verified": true,
+            "email": "nelly@discord.com",
+            "flags": 64,
+            "banner": "06c16474723fe537c283b8efa61a30c8",
+            "accent_color": 16711680,
+            "premium_type": 1,
+            "public_flags": 64,
+            "mfa_enabled": true,
+            "locale": "en-US",
+            "avatar_decoration_data": {
+                "sku_id": "1144058844004233369",
+                "asset": "a_fed43ab12698df65902ba06727e20c0e"
+            }
+        })
+    }
     if (!token) {
         return res.status(400).send("no oauth2 token provided");
     }
@@ -459,6 +485,53 @@ app.get(`/oauth2/getUserInfo`, async (req, res) => {
 
 app.get(`/oauth2/getGuilds`, async (req, res) => {
     const token = req.query.token;
+    const sorted = req.query.sorted;
+    if (token == "test") {
+        
+        const guilds = [
+            {
+                "id": "80351110224678912",
+                "name": "1337 Krew",
+                "icon": "8342729096ea3675442027381ff50dfe",
+                "banner": "bb42bdc37653b7cf58c4c8cc622e76cb",
+                "owner": true,
+                "permissions": "2112",
+                "features": ["COMMUNITY", "NEWS", "ANIMATED_ICON", "INVITE_SPLASH", "BANNER", "ROLE_ICONS"],
+                "approximate_member_count": 3268,
+                "approximate_presence_count": 784
+            },
+            {
+                "id": "10927391298391273",
+                "name": "Torvald Tabletop",
+                "icon": "8342729096ea3675442027381ff50dfe",
+                "banner": "bb42bdc37653b7cf58c4c8cc622e76cb",
+                "owner": false,
+                "permissions": "805314622",
+                "features": ["COMMUNITY"],
+                "approximate_member_count": 3268,
+                "approximate_presence_count": 784
+            },
+            {
+                "id": "10923798172312223",
+                "name": "The Tip Wibblers",
+                "icon": "8342729096ea3675442027381ff50dfe",
+                "banner": "bb42bdc37653b7cf58c4c8cc622e76cb",
+                "owner": false,
+                "permissions": "805314622",
+                "features": ["COMMUNITY", "NEWS", "ANIMATED_ICON", "INVITE_SPLASH", "BANNER", "ROLE_ICONS"],
+                "approximate_member_count": 3268,
+                "approximate_presence_count": 784
+            }
+        ]
+
+        if (sorted) {
+            const botGuilds = await getGuilds();
+            console.log(botGuilds);
+            res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
+        }
+
+        return res.send(guilds)
+    }
     if (!token) {
         return res.status(400).send("no oauth2 token provided");
     }
@@ -468,6 +541,11 @@ app.get(`/oauth2/getGuilds`, async (req, res) => {
         },
     });
     const guilds = await guildsNonJSON.json();
+    if (sorted) {
+        const botGuilds = await getGuilds();
+
+        res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
+    }
     res.send(guilds);
 });
 

@@ -4,6 +4,6 @@ import { Events } from "discord.js";
 export default {
     name: Events.GuildDelete,
     async execute(guild) {
-        log.info(`left guild: ${guild.name} (${guild.id})`);
+        log.info(`removed from guild: ${guild.id}`);
     },
 };

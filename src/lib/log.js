@@ -45,13 +45,15 @@ function format(thing) {
 }
 
 function log(level, ...message) {
-    if (level === Level.Err) {
-        process.send({ action: "errorCount", type: "errors" });
-    } else if (level === Level.Warn) {
-        process.send({ action: "errorCount", type: "warnings" });
-    } else if (level === Level.Fatal) {
-        process.send({ action: "errorCount", type: "fatal" });
-    }
+    try {
+        if (level === Level.Err) {
+            process.send({ action: "errorCount", type: "errors" });
+        } else if (level === Level.Warn) {
+            process.send({ action: "errorCount", type: "warnings" });
+        } else if (level === Level.Fatal) {
+            process.send({ action: "errorCount", type: "fatal" });
+        }
+    } catch (err) {}
     const formatted = message
         .map((m) => format(m))
         .reduce(

@@ -77,6 +77,7 @@ function createSourceCodeButton() {
 
 createSidebarButton('/home', '/');
 createSidebarButton('/guide', '/guide');
+createSidebarButton('/config', '/config');
 createSidebarButton('/statistics', '/statistics');
 createSidebarButton('/logs', '/logs');
 createSidebarButton('/chat', '/chat');

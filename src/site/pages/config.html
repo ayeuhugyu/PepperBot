@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Config</title>
+        <link rel="stylesheet" type="text/css" href="/style.css" />
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico" />
+        <meta content="Config" property="og:title" />
+        <meta content="allows you to edit settings for pepperbot in servers you have admin in" property="og:description" />
+        <meta content="https://pepperbot.online/logs" property="og:url" />
+        <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
+    </head>
+    <body>
+        <script src="/scripts/tv.js"></script>
+        <script src="/scripts/sidebar.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <pre id="debug" style="position: absolute;"></pre>
+        <span class="outlined" id="requestOAuth" style="position: fixed; top: 50vh; left: 50vw; transform: translate(-50%, -50%); padding: 7px; display: none">unable to find OAuth2 token, please <a href="/auth">reauthenticate</a></span>
+        <div class="outlined logPageContainer flex" id="guildList" style="display: none; flex-direction: column;">
+            <span class="outlined" id="loadingMessage" style="position: fixed; top: 50vh; left: 50vw; transform: translate(-50%, -50%); padding: 7px;">loading guilds, please wait...</span>
+        </div>
+        <div class="outlined logPageContainer" id="guildConfigure" style="display: none;"></div>
+        <script id="sidebarAdjustments">
+            document.addEventListener('DOMContentLoaded', tvStaticAnimation)
+            const guildListElement = document.getElementById('guildList');
+            function editTextAreaSize(sidebarState) {
+                if (window.innerWidth < 768) {
+                    guildListElement.style.width = "calc(100% - 12px)"
+                } else if (sidebarState) {
+                    guildListElement.style.width = "calc(100% - 164px)"
+                } else {
+                    guildListElement.style.width = "calc(100% - 22px)"
+                }
+            }
+            bindToSidebarToggle(editTextAreaSize)
+        </script>
+        <script>
+            const debug = document.getElementById('debug');
+            localStorage.setItem('token', "test")
+            // REMOVE ABOVE CODE LATER!!!
+            try {
+                const userOAuthToken = localStorage.getItem('token');
+                if (userOAuthToken == null) {
+                    const requestOAuth = document.getElementById('requestOAuth');
+                    requestOAuth.style.display = 'inherit';
+                } else {
+                    const guildList = document.getElementById('guildList');
+                    guildList.style.display = 'flex';
+                    const userGuildListRaw = fetch('/oauth2/getGuilds?token=' + userOAuthToken + "&sorted=true").then(res => {res.json().then(data => {
+                        const loadingMessage = document.getElementById('loadingMessage');
+                        loadingMessage.style.display = 'none';
+
+                        data.forEach(guild => {
+                            guild.permissions = parseInt(guild.permissions, 16);
+                        });
+
+                        const filteredData = data.filter(guild => guild.permissions & 0x8 || guild.permissions & 0x20);
+                        console.log(filteredData)
+
+                        filteredData.forEach(guild => {
+                            const guildObject = document.createElement('details');
+                            guildObject.id = guild.id;
+                            guildObject.className = 'guildObject normalized';
+
+                            const summary = document.createElement('summary');
+                            summary.className = "guildSummary"
+
+                            const guildIcon = document.createElement('img');
+                            guildIcon.className = 'guildIcon';
+                            guildIcon.src = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+                            summary.appendChild(guildIcon);
+
+                            const guildName = document.createElement('span');
+                            guildName.className = 'guildName';
+                            guildName.innerText = guild.name;
+                            summary.appendChild(guildName);
+
+                            guildObject.appendChild(summary);
+
+                            const configData = document.createElement('div');
+                            configData.className = 'configData';
+                            guildObject.appendChild(configData);
+
+                            const loadingMessage = document.createElement('span');
+                            loadingMessage.className = 'loadingMessage';
+                            loadingMessage.innerText = 'loading guild config...';
+                            configData.appendChild(loadingMessage);
+
+                            guildList.appendChild(guildObject);
+                        });
+                    })})
+                }
+            } catch (e) {
+                debug.innerText = "Whoops! ";
+            }
+        </script>
+    </body>
+</html>

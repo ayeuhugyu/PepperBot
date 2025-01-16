@@ -51,26 +51,16 @@ p/update there's no specific category for this its just a bunch of random featur
 
 **website changes:**
 
-- updated style for:
-/todo
-/credits
-/coolsites
-/shame
-/contact
-/updates
-- new sidebar style now highlights which page you're on
-- new sidebar style button is no longer transparent
+- redid the 404 page with the new style
 
 **actual content:**
 
-- p/gpt image now has a 4 hour cooldown per user
-- added p/info shard, which provides detail about shards
-- added total guilds and total unique users to p/info bot
-- removed p/reactionrole
-- removed p/explore
-p/reactionrole fucking sucked and is done better by literally every other bot with reaction roles and even discord's onboarding thing. also nobody used it
-p/explore's visibility was disabled by default and really the only thing it offered was privacy concerns. people probably dont want their servers being joined without their knowledge. and again, nobody used it. 
+- hopefully improved reply context handling by changing the reply message role to user instead of system
+- removed get_replied_message tool, it never did what i hoped it would solve anyways. 
+- adjusted GPT prompt
+- added argument for request_url tool to NOT remove script tags
+- tool call arguments are now displayed while processing for debug purposes
 
 **fixes/optimizations:**
 
-i am aware that p/preview is broken and i lowkey just do not give a shit they keep making breaking changes to the dw builder api without announcing it :/ 
+- fixed "400 Invalid 'messages[2]'. Image URLs are only allowed for messages with role 'user', but this message with role 'system' contains an image URL.", this was caused by starting a conversation when replying to a message with an embed in it.
