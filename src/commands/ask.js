@@ -76,7 +76,7 @@ const command = new Command(
             })
         })
         conversation.emitter.on("fatal_error", async (message) => {
-            sentContent += `error: ${message}; debug data will persist`
+            sentContent += `\nerror: ${message}; debug data will persist. **if this message continues use p/gpt clear**`
             await action.editMessage(sent, {
                 content: sentContent
             })

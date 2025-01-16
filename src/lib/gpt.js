@@ -406,7 +406,8 @@ The message that started this conversation ${message?.reference ? "was a reply t
             try {
                 channel.messages.fetch(messageId).then((fetchedMessage) => {
                     sanitizeMessage(fetchedMessage).then((sanitizedMessage) => {
-                        const replyMessage = new Message("user", fetchedMessage?.author?.username, sanitizedMessage?.unshift(new MessageContentPart("text", "SYSTEM: The following message was replied to/referenced by the user: ")));
+                        sanitizedMessage.unshift(new MessageContentPart("text", "SYSTEM: The following message was replied to/referenced by the user: "));
+                        const replyMessage = new Message("user", fetchedMessage?.author?.username, sanitizedMessage);
                     this.messages.push(replyMessage);
                     })
                 });
@@ -669,6 +670,7 @@ export async function run(conversation) {
         conversation.addMessage("assistant", "PepperBot", response.choices[0].message.content);
         return response.choices[0].message.content;
     } catch (err) {
+        console.log(conversation)
         log.error(`internal error while executing GPT: ${err}`);
         conversation.emitter.emit("fatal_error", `${err.message}`);
         return;
