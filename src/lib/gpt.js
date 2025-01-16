@@ -382,7 +382,7 @@ export class Conversation {
 
 You are speaking with a user. display name: ${user?.displayName || "unknown"} (username: @${user?.username || "unknown"} / id: ${user?.id || "unknown"})
 Their avatar can be found at ${user?.avatarURL() || "unknown"}
-This user is ${user?.bot ? "a bot, not a human." : "a human, not a bot." || "unknown"}
+This user is ${user?.bot ? "a bot, not a human." : "a human, not a bot."}
 This user has the following badges: ${user?.flags?.toArray().join(", ") || "unknown"}
 The user was created at ${user?.createdAt || "unknown"}
 Current User Activities: ${message?.member?.presence?.activities.map((activity) => `"${activity.name}"`)?.join(", ") || "unknown"}

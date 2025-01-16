@@ -130,7 +130,13 @@
                     localStorage.setItem("expires", expires);
                 }
                 if (token) {
-                    const userData = fetch("/oauth2/getUserInfo?token=" + token)
+                    const userData = fetch("/oauth2/getUserInfo", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "oauth2token": token,
+                        },
+                    })
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.username == undefined || data.id == undefined) {
@@ -139,7 +145,13 @@
                             return;
                         }
                         p.innerHTML = `logged in as ${data.username} (${data.id})`;
-                        const guildData = fetch("/oauth2/getGuilds?token=" + token).then((response) => response.json()).then((data) => {
+                        const guildData = fetch("/oauth2/getGuilds", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "oauth2token": token,
+                            },
+                        }).then((response) => response.json()).then((data) => {
                             if (data.length == 0 || data[0].id == undefined) {
                                 p.innerHTML = "failed to get guild data";
                                 title.innerHTML = "oauth2 login failed";

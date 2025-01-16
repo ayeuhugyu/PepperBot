@@ -17,8 +17,8 @@
         <span class="outlined" id="requestOAuth" style="position: fixed; top: 50vh; left: 50vw; transform: translate(-50%, -50%); padding: 7px; display: none">unable to find OAuth2 token, please <a href="/auth">reauthenticate</a></span>
         <div class="outlined logPageContainer flex" id="guildList" style="display: none; flex-direction: column;">
             <span class="outlined" id="loadingMessage" style="position: fixed; top: 50vh; left: 50vw; transform: translate(-50%, -50%); padding: 7px;">loading guilds, please wait...</span>
+            <h2 style="position: fixed; top: calc(100vh - 12px); left: 50vw; transform: translate(-50%, -100%); padding: 7px; max-width: 100vw; width: 100vw; text-align: center;">THIS PAGE IS NOT FINISHED!!!! im too lazy to finish it rn ill get back to it later</h2>
         </div>
-        <div class="outlined logPageContainer" id="guildConfigure" style="display: none;"></div>
         <script id="sidebarAdjustments">
             document.addEventListener('DOMContentLoaded', tvStaticAnimation)
             const guildListElement = document.getElementById('guildList');
@@ -34,64 +34,89 @@
             bindToSidebarToggle(editTextAreaSize)
         </script>
         <script>
+            let fetched = [];
             const debug = document.getElementById('debug');
-            localStorage.setItem('token', "test")
             // REMOVE ABOVE CODE LATER!!!
-            try {
-                const userOAuthToken = localStorage.getItem('token');
-                if (userOAuthToken == null) {
-                    const requestOAuth = document.getElementById('requestOAuth');
-                    requestOAuth.style.display = 'inherit';
-                } else {
-                    const guildList = document.getElementById('guildList');
-                    guildList.style.display = 'flex';
-                    const userGuildListRaw = fetch('/oauth2/getGuilds?token=' + userOAuthToken + "&sorted=true").then(res => {res.json().then(data => {
-                        const loadingMessage = document.getElementById('loadingMessage');
-                        loadingMessage.style.display = 'none';
+            const userOAuthToken = localStorage.getItem('token');
+            if (userOAuthToken == null) {
+                const requestOAuth = document.getElementById('requestOAuth');
+                requestOAuth.style.display = 'inherit';
+            } else {
+                fetch("/api/get-rich-guild-config-info").then((richGuildConfigInfoRaw) => richGuildConfigInfoRaw.json().then(richGuildConfigInfo => {
+                console.log(richGuildConfigInfo)
 
-                        data.forEach(guild => {
-                            guild.permissions = parseInt(guild.permissions, 16);
+                const guildList = document.getElementById('guildList');
+                guildList.style.display = 'flex';
+                fetch("/oauth2/getGuilds?sorted=true", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'OAuth2Token': userOAuthToken,
+                    },
+                }).then(response => response.json())
+                .then(data => {
+                    const loadingMessage = document.getElementById('loadingMessage');
+                    loadingMessage.style.display = 'none';
+
+                    const filteredData = data.filter(guild => (parseInt(guild.permissions) & 0x8) || (parseInt(guild.permissions) & 0x20));
+                    console.log(filteredData)
+
+                    filteredData.forEach(guild => {
+                        const guildObject = document.createElement('details');
+                        guildObject.id = guild.id;
+                        guildObject.className = 'guildObject normalized';
+
+                        const summary = document.createElement('summary');
+                        summary.className = "guildSummary"
+
+                        const guildIcon = document.createElement('img');
+                        guildIcon.className = 'guildIcon';
+                        guildIcon.src = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+                        summary.appendChild(guildIcon);
+
+                        const guildName = document.createElement('span');
+                        guildName.className = 'guildName';
+                        guildName.innerText = guild.name;
+                        summary.appendChild(guildName);
+
+                        guildObject.appendChild(summary);
+
+                        const configData = document.createElement('div');
+                        configData.className = 'configData';
+                        guildObject.appendChild(configData);
+
+                        const loadingMessage = document.createElement('span');
+                        loadingMessage.className = 'loadingMessage';
+                        loadingMessage.innerText = 'loading guild config...';
+                        configData.appendChild(loadingMessage);
+
+                        guildObject.addEventListener('toggle', () => {
+                            if (guildObject.open) {
+                                if (fetched.includes(guild.id)) return;
+                                fetched.push(guild.id);
+                                const loadingMessage = configData.querySelector('.loadingMessage');
+                                fetch(`/api/get-guild-config?gid=${guild.id}`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'OAuth2Token': userOAuthToken,
+                                    },
+                                }).then(response => response.json())
+                                .then(config => {
+                                    loadingMessage.style.display = 'none';
+                                    // Process and display the config data here
+                                    const configContent = document.createElement('pre');
+                                    configContent.innerText = JSON.stringify(config, null, 2);
+                                    configData.appendChild(configContent);
+                                }).catch(error => {
+                                    loadingMessage.innerText = 'Failed to load config';
+                                });
+                            }
                         });
 
-                        const filteredData = data.filter(guild => guild.permissions & 0x8 || guild.permissions & 0x20);
-                        console.log(filteredData)
-
-                        filteredData.forEach(guild => {
-                            const guildObject = document.createElement('details');
-                            guildObject.id = guild.id;
-                            guildObject.className = 'guildObject normalized';
-
-                            const summary = document.createElement('summary');
-                            summary.className = "guildSummary"
-
-                            const guildIcon = document.createElement('img');
-                            guildIcon.className = 'guildIcon';
-                            guildIcon.src = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
-                            summary.appendChild(guildIcon);
-
-                            const guildName = document.createElement('span');
-                            guildName.className = 'guildName';
-                            guildName.innerText = guild.name;
-                            summary.appendChild(guildName);
-
-                            guildObject.appendChild(summary);
-
-                            const configData = document.createElement('div');
-                            configData.className = 'configData';
-                            guildObject.appendChild(configData);
-
-                            const loadingMessage = document.createElement('span');
-                            loadingMessage.className = 'loadingMessage';
-                            loadingMessage.innerText = 'loading guild config...';
-                            configData.appendChild(loadingMessage);
-
-                            guildList.appendChild(guildObject);
-                        });
-                    })})
-                }
-            } catch (e) {
-                debug.innerText = "Whoops! ";
-            }
+                        guildList.appendChild(guildObject);
+                    });
+                })}))};
         </script>
     </body>
 </html>

@@ -47,11 +47,14 @@ REMEMBER TO DELETE ON PI:
 p/reactionrole
 p/explore
 
-p/update there's no specific category for this its just a bunch of random features and bugfixes i've been thinking about for a while
+p/update reply stuff and website stuff
 
 **website changes:**
 
 - redid the 404 page with the new style
+- oauth2 tokens are now in headers instead of url vars
+- a new /configure is In The Works:tm: but will remain unfinished for quite some time
+you can still go there for... whatever reason..
 
 **actual content:**
 

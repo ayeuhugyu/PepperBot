@@ -53,7 +53,9 @@ function log(level, ...message) {
         } else if (level === Level.Fatal) {
             process.send({ action: "errorCount", type: "fatal" });
         }
-    } catch (err) {}
+    } catch (err) {
+        // Do nothing
+    }
     const formatted = message
         .map((m) => format(m))
         .reduce(

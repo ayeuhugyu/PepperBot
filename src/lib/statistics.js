@@ -3,9 +3,15 @@ import * as log from "./log.js";
 
 const start = performance.now();
 
-let statistics = await JSON.parse(
-    fs.readFileSync(`resources/data/statistics.json`, "utf-8")
-);
+let statistics
+try {
+    statistics = await JSON.parse(
+        fs.readFileSync(`resources/data/statistics.json`, "utf-8")
+    );
+} catch (err) {
+    statistics = {}
+    log.warn(`Failed to read statistics.json: ${err}`)
+}
 
 export default {
     statistics: statistics,

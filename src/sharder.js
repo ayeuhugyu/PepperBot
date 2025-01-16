@@ -84,26 +84,21 @@ process.on("message", (message) => {
     }
 });
 
-process.on("uncaughtException", (err) => {
-    throw new Error(err);
-});
-
 export async function getGuilds() {
     const guilds = [];
     const shardPromises = manager.shards.map((shard) => {
         return new Promise((resolve) => {
-            shard.once("message", (message) => {
-                if (message.action === "guildList") {
-                    resolve(message.guilds);
-                }
+            shard.fetchClientValue("guilds.cache").then((shardGuilds) => {
+                resolve(shardGuilds);
             });
-            shard.send({ action: "getGuilds" });
         });
     });
 
     const shardGuilds = await Promise.all(shardPromises);
     shardGuilds.forEach((shardGuild) => {
-        guilds.push(...shardGuild);
+        shardGuild.forEach((guild) => {
+            guilds.push(guild);
+        });
     });
 
     return guilds;

@@ -412,6 +412,47 @@ app.get("/api/read-todo", (req, res) => {
     }
 });
 
+app.get("/api/get-guild-config", async (req, res) => {
+    const guildid = req.query.guild || req.query.guildid || req.query.gid;
+    const token = req.headers.oauth2token;
+    if (!guildid) {
+        return res.status(400).send("no guild id provided");
+    }
+    if (token == "test") {
+        return fs.readFileSync("./resources/data/defaultGuildConfig.json", "utf8");
+    }
+    if (!token) {
+        return res.status(400).send("no oauth2 token provided");
+    }
+    const guildsNonJSON = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const guilds = await guildsNonJSON.json();
+    if (!guilds.find((g) => g.id == guildid)) {
+        return res.status(403).send("user not in guild");
+    }
+    if (!Array.isArray(guilds)) {
+        return res.send([]);
+    }
+    const filteredGuilds = guilds?.filter(guild => (parseInt(guild.permissions) & 0x8) || (parseInt(guild.permissions) & 0x20)) // Administrator or Manage Server
+    const filteredGuild = filteredGuilds.find((g) => g.id == guildid);
+    if (!filteredGuild) {
+        return res.status(403).send("user not authorized to view guild config");
+    }
+    const guildConfig = fs.readFileSync(`./resources/data/guildConfigs/${guildid}.json`, "utf8");
+    if (!guildConfig) {
+        return res.status(404).send("guild config not found");
+    }
+    res.send(guildConfig);
+})
+
+app.get("/api/get-rich-guild-config-info", (req, res) => {
+    const richGuildConfigInfoFile = fs.readFileSync("./resources/data/guildConfigInformation.json", "utf8");
+    res.send(richGuildConfigInfoFile);
+});
+
 app.get(`/oauth2/login`, async (req, res) => {
     const code = req.query.code;
     if (!code) {
@@ -444,8 +485,8 @@ app.get(`/oauth2/login`, async (req, res) => {
     }
 })
 
-app.get(`/oauth2/getUserInfo`, async (req, res) => {
-    const token = req.query.token;
+app.post(`/oauth2/getUserInfo`, async (req, res) => {
+    const token = req.headers.oauth2token;
     if (token == "test") {
         return res.send({
             "id": "80351110224678912",
@@ -460,7 +501,6 @@ app.get(`/oauth2/getUserInfo`, async (req, res) => {
             "email": "nelly@discord.com",
             "flags": 64,
             "banner": "06c16474723fe537c283b8efa61a30c8",
-            "accent_color": 16711680,
             "premium_type": 1,
             "public_flags": 64,
             "mfa_enabled": true,
@@ -483,11 +523,10 @@ app.get(`/oauth2/getUserInfo`, async (req, res) => {
     res.send(userinfo);
 });
 
-app.get(`/oauth2/getGuilds`, async (req, res) => {
-    const token = req.query.token;
+app.post(`/oauth2/getGuilds`, async (req, res) => {
+    const token = req.headers.oauth2token;
     const sorted = req.query.sorted;
     if (token == "test") {
-        
         const guilds = [
             {
                 "id": "80351110224678912",
@@ -526,8 +565,7 @@ app.get(`/oauth2/getGuilds`, async (req, res) => {
 
         if (sorted) {
             const botGuilds = await getGuilds();
-            console.log(botGuilds);
-            res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
+            return res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
         }
 
         return res.send(guilds)
@@ -543,10 +581,12 @@ app.get(`/oauth2/getGuilds`, async (req, res) => {
     const guilds = await guildsNonJSON.json();
     if (sorted) {
         const botGuilds = await getGuilds();
-
-        res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
+        if (!Array.isArray(guilds)) {
+            return res.send([]);
+        }
+        return res.send(guilds?.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
     }
-    res.send(guilds);
+    return res.send(guilds);
 });
 
 app.use("/cgi-bin", (req, res, next) => {
@@ -604,8 +644,4 @@ process.on("message", (message) => {
         io.emit("log", { level: level, log: log, time: time });
         console.log(`log recieved by site: ${time} ${level.toUpperCase()} ${log}`);
     }
-});
-
-process.on("uncaughtException", (err) => {
-    throw new Error(err);
 });

@@ -31,6 +31,7 @@ async function init() {
     log.info("initializing bot...");
     log.info("logging into discord...");
     try {
+        console.log(process.env.DISCORD_TOKEN);
         await client.login(process.env.DISCORD_TOKEN);
     } catch (err) {
         log.error("failed to login into discord. wifi down? token invalid?");
