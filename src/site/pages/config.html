@@ -41,6 +41,7 @@
             if (userOAuthToken == null) {
                 const requestOAuth = document.getElementById('requestOAuth');
                 requestOAuth.style.display = 'inherit';
+                localStorage.setItem('oauth2Redirect', '/config');
             } else {
                 fetch("/api/get-rich-guild-config-info").then((richGuildConfigInfoRaw) => richGuildConfigInfoRaw.json().then(richGuildConfigInfo => {
                 console.log(richGuildConfigInfo)
@@ -60,6 +61,12 @@
 
                     const filteredData = data.filter(guild => (parseInt(guild.permissions) & 0x8) || (parseInt(guild.permissions) & 0x20));
                     console.log(filteredData)
+                    if (filteredData.length === 0) {
+                        const noGuildsMessage = document.createElement('span');
+                        noGuildsMessage.innerText = 'you do not have the required permissions in any guilds. specifically i\'m looking for the manage server or administrator permissions, get those then come back. ';
+                        guildList.appendChild(noGuildsMessage);
+                        return;
+                    }
 
                     filteredData.forEach(guild => {
                         const guildObject = document.createElement('details');

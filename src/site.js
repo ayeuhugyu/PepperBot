@@ -419,7 +419,7 @@ app.get("/api/get-guild-config", async (req, res) => {
         return res.status(400).send("no guild id provided");
     }
     if (token == "test") {
-        return fs.readFileSync("./resources/data/defaultGuildConfig.json", "utf8");
+        return res.send(fs.readFileSync("./resources/data/defaultGuildConfig.json", "utf8"));
     }
     if (!token) {
         return res.status(400).send("no oauth2 token provided");
@@ -529,7 +529,7 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
     if (token == "test") {
         const guilds = [
             {
-                "id": "80351110224678912",
+                "id": "1337Krew",
                 "name": "1337 Krew",
                 "icon": "8342729096ea3675442027381ff50dfe",
                 "banner": "bb42bdc37653b7cf58c4c8cc622e76cb",
@@ -540,7 +540,7 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
                 "approximate_presence_count": 784
             },
             {
-                "id": "10927391298391273",
+                "id": "TorvaldTabletop",
                 "name": "Torvald Tabletop",
                 "icon": "8342729096ea3675442027381ff50dfe",
                 "banner": "bb42bdc37653b7cf58c4c8cc622e76cb",
@@ -551,7 +551,7 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
                 "approximate_presence_count": 784
             },
             {
-                "id": "10923798172312223",
+                "id": "TheTipWibblers",
                 "name": "The Tip Wibblers",
                 "icon": "8342729096ea3675442027381ff50dfe",
                 "banner": "bb42bdc37653b7cf58c4c8cc622e76cb",
@@ -565,7 +565,7 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
 
         if (sorted) {
             const botGuilds = await getGuilds();
-            return res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
+            //return res.send(guilds.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
         }
 
         return res.send(guilds)

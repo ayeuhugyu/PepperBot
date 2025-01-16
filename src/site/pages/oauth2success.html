@@ -119,7 +119,7 @@
                 const token = urlParams.get("token") || localStorage.getItem("token");
                 const refreshToken = urlParams.get("refreshToken") || localStorage.getItem("refreshToken");
                 const expires = urlParams.get("expires") || localStorage.getItem("expires");
-                const redirect = urlParams.get("redirect") || "/";
+                const redirect = localStorage.get("oauth2Redirect") || "/";
                 if (token) {
                     localStorage.setItem("token", token);
                 }
@@ -159,10 +159,11 @@
                             }
                             p.innerHTML += ` with ${data.length} guilds`;
                             title.innerHTML = "oauth2 login success"
-                            p.innerHTML += `<br>redirecting to ${redirect} in 5 seconds...`
+                            p.innerHTML += `<br>redirecting to ${redirect} in 2 seconds...`
                             setTimeout(() => {
+                                localStorage.setItem("oauth2Redirect", "/");
                                 window.location.href = redirect;
-                            }, 5000);
+                            }, 2000);
                         });
                     });
                 } else {

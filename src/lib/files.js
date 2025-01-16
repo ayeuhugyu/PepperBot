@@ -5,7 +5,7 @@ import * as log from "./log.js";
 
 const config = globals.config;
 
-export async function generateLSText(path, truncateFileExtensions) {
+export function generateLSText(path, truncateFileExtensions) {
     const files = fs.readdirSync(path);
     let text = "";
     for (let file = 0; file < files.length; file++) {

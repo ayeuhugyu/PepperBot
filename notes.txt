@@ -51,19 +51,14 @@ p/update reply stuff and website stuff
 
 **website changes:**
 
-- redid the 404 page with the new style
-- oauth2 tokens are now in headers instead of url vars
-- a new /configure is In The Works:tm: but will remain unfinished for quite some time
-you can still go there for... whatever reason..
-
 **actual content:**
 
-- hopefully improved reply context handling by changing the reply message role to user instead of system
-- removed get_replied_message tool, it never did what i hoped it would solve anyways. 
-- adjusted GPT prompt
-- added argument for request_url tool to NOT remove script tags
-- tool call arguments are now displayed while processing for debug purposes
+- removed p/configure (use the webiste instead!!!!!!!)
+- new p/prompt, houses many new commands relating to gpt prompts:
+  - p/prompt set, equivalent to the previous p/setprompt with one minor difference
+  - p/prompt generate, uses AI to "elaborate" upon a prompt you give it. you'll be suggested to use this when a prompt from p/prompt set is less than 15 words or less than 100 characters. 
+  - p/prompt save, allows you to save a prompt under a certain name
+  - p/prompt load, allows you to load a prompt with a given name
+  - p/prompt get, similar to p/prompt load but instead of changing your prompt to the new one it only returns the prompt. 
 
 **fixes/optimizations:**
-
-- fixed "400 Invalid 'messages[2]'. Image URLs are only allowed for messages with role 'user', but this message with role 'system' contains an image URL.", this was caused by starting a conversation when replying to a message with an embed in it.

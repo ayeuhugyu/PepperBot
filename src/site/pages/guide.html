@@ -280,29 +280,6 @@
                         </details>
                     </details>
                 </details>
-                <details class="commandDetails" id="p/configure">
-                    <summary class="commandName">p/configure<span class="commandCategory">customization</span></summary>
-                    <div class="commandDescription">allows you to configure certain features of pepperbot
-                        <span class="argumentOrder">ARGUMENT ORDER: p/configure <span class="commandArgumentOrderItem">key</span> <span class="commandArgumentOrderItem">value</span></span>
-                        <span class="exampleUsage">EXAMPLE 1: p/configure</span>
-                        <span class="exampleUsage">EXAMPLE 2: p/configure 11 false</span>
-                        <span class="exampleUsage">EXAMPLE 3: p/configure disableGPTResponses false</span>
-                        <span class="commandArgumentProperty">ALIASES: p/config, p/cfg, p/gconfig, p/guildconfig, p/serverconfig</span>
-                        <span class="commandArgumentProperty">PERMISSIONS: Administrator</span>
-                    </div>
-                    <details class="commandArgument" open>
-                        <summary>key<span class="commandArgumentType">string</span></summary>
-                        <div class="argumentDescription">the key in the guild's config to change. can either be the number displayed next to the key in the list, or the key's unenriched name.
-                            <span class="commandArgumentProperty">REQUIRED: true (if configuring)</span>
-                        </div>
-                    </details>
-                    <details class="commandArgument" open>
-                        <summary>value<span class="commandArgumentType">string</span></summary>
-                        <div class="argumentDescription">a formatted string to set the key to; run the command and click the "formatting" button for help formatting the value. make sure that the format you use matches the key's type.
-                            <span class="commandArgumentProperty">REQUIRED: true (if configuring)</span>
-                        </div>
-                    </details>
-                </details>
                 <details class="commandDetails" id="p/corrupt">
                     <summary class="commandName">p/corrupt<span class="commandCategory">fun</span></summary>
                     <div class="commandDescription">fuck up your message, replaces a bunch of stuff with some other things (note: this does not actually corrupt your message, results from that would be incredibly boring). image support soon™
@@ -706,21 +683,6 @@
                             <span class="commandArgumentProperty">OPTIONS: setprompt, clear, getconversation, old</span>
                         </div>
                         <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/gpt setprompt</summary>
-                            <div class="commandDescription">allows you to change the prompt used by the AI
-                                <span class="argumentOrder">ARGUMENT ORDER: p/gpt setprompt <span class="commandArgumentOrderItem">prompt</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/gpt setprompt always respond with "Hello! I am PepperBot!"</span>
-                                <span class="commandArgumentProperty">ALIASES: p/gpt prompt, p/gpt gptprompt, p/gpt sp</span>
-                                <span class="commandArgumentProperty">NORMAL ALIASES: p/setprompt, p/prompt, p/gptprompt, p/sp</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>prompt<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the prompt to set
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
                             <summary class="commandName">p/gpt clear</summary>
                             <div class="commandDescription">clears the current conversation
                                 <span class="argumentOrder">ARGUMENT ORDER: p/gpt clear <span class="commandArgumentOrderItem">context</span> </span>
@@ -1011,6 +973,86 @@
                         <div class="argumentDescription">ID of the build to preview
                             <span class="commandArgumentProperty">REQUIRED: true</span>
                         </div>
+                    </details>
+                </details>
+                <details class="commandDetails" id="p/prompt">
+                    <summary class="commandName">p/prompt<span class="commandCategory">fun</span></summary>
+                    <div class="commandDescription">various actions relating to the gpt prompt
+                        <span class="argumentOrder">ARGUMENT ORDER: p/prompt <span class="commandArgumentOrderItem">subcommand</span> <span class="lesserText">[remaining arguments depend on subcommand]</span></span>
+                        <span class="exampleUsage">EXAMPLE 1: p/prompt generate hi</span>
+                    </div>
+                    <details class="commandArgument" open>
+                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
+                        <div class="argumentDescription">the subcommand to use
+                            <span class="commandArgumentProperty">REQUIRED: true</span>
+                            <span class="commandArgumentProperty">OPTIONS: set, generate, save, load, get</span>
+                        </div>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/prompt set</summary>
+                            <div class="commandDescription">sets the gpt prompt to the one given
+                                <span class="argumentOrder">ARGUMENT ORDER: p/prompt set <span class="commandArgumentOrderItem">prompt</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/prompt set always respond with "test"</span>
+                                <span class="commandArgumentProperty">NORMAL ALIASES: p/setprompt, p/sp</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>prompt<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the prompt to set
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/prompt generate</summary>
+                            <div class="commandDescription">generates a response based on the prompt
+                                <span class="argumentOrder">ARGUMENT ORDER: p/prompt generate <span class="commandArgumentOrderItem">prompt</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/prompt generate bee</span>
+                                <span class="commandProperty">NORMAL ALIASES: p/generateprompt</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>prompt<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the prompt to generate a response from
+                                    <span class="commandArgumentProperty">REQUIRED: false</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/prompt save</summary>
+                            <div class="commandDescription">saves the current prompt undder a given name
+                                <span class="argumentOrder">ARGUMENT ORDER: p/prompt save <span class="commandArgumentOrderItem">name</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/prompt save myprompt</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>name<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the prompt to save
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/prompt load</summary>
+                            <div class="commandDescription">loads a saved prompt
+                                <span class="argumentOrder">ARGUMENT ORDER: p/prompt load <span class="commandArgumentOrderItem">name</span></span>
+                                <span class="exampleUsage">EXAMPLE 1: p/prompt load myprompt</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>name<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the prompt to load
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
+                        <details class="commandDetails subcommand" open>
+                            <summary class="commandName">p/prompt get</summary>
+                            <div class="commandDescription">gets the given prompt; very similar to p/prompt load but it doesn't change the prompt. 
+                                <span class="exampleUsage">EXAMPLE 1: p/prompt get myprompt</span>
+                            </div>
+                            <details class="commandArgument" open>
+                                <summary>name<span class="commandArgumentType">string</span></summary>
+                                <div class="argumentDescription">the name of the prompt to fetch
+                                    <span class="commandArgumentProperty">REQUIRED: true</span>
+                                </div>
+                            </details>
+                        </details>
                     </details>
                 </details>
                 <details class="commandDetails" id="p/queue">
