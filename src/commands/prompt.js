@@ -5,16 +5,12 @@ import {
     SubCommand,
     SubCommandData,
 } from "../lib/types/commands.js";
-import { Collection, PermissionFlagsBits } from "discord.js";
+import { Collection } from "discord.js";
 import fs from "fs";
-import * as log from "../lib/log.js";
 import * as globals from "../lib/globals.js";
 import * as gpt from "../lib/gpt.js";
-import * as stream from "stream";
 import * as files from "../lib/files.js"
 import fsExtra from "fs-extra";
-import * as files from "../lib/files.js";
-import * as util from "util"
 
 const config = globals.config;
 
@@ -89,7 +85,7 @@ loaddata.addStringOption((option) =>
 );
 const load = new SubCommand(
     loaddata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
         const prefix = gconfig.prefix || config.generic.prefix
@@ -115,7 +111,7 @@ const load = new SubCommand(
             action.reply(message, { content: "that prompt doesn't exist", ephemeral: gconfig.useEphemeralReplies });
             return;
         }
-        const prompt = fs.readFileSync(path)
+        const prompt = fs.readFileSync(path, "utf-8");
         let conversation = await gpt.getConversation(message.author, message, false, true);
         conversation.setPrompt(prompt);
         gpt.resetExceptions[message.author.id] = true;
@@ -141,7 +137,7 @@ getdata.addStringOption((option) =>
 );
 const get = new SubCommand(
     getdata,
-    async function getArguments(message) {
+    async function getArguments(message, gconfig) {
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
         const prefix = gconfig.prefix || config.generic.prefix
@@ -199,12 +195,7 @@ const setprompt = new SubCommand(
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
         const prefix = gconfig.prefix || config.generic.prefix
-        args.set(
-            "prompt",
-            message.content
-                .slice(prefix.length + commandLength)
-                .trim() + (await fixIncomingMessage(message))
-        );
+        args.set("prompt", message.content.slice(prefix.length + commandLength)?.trim());
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {
@@ -239,12 +230,7 @@ const generate = new SubCommand(
         const commandLength = message.content.split(" ")[0].length - 1;
         const args = new Collection();
         const prefix = gconfig.prefix || config.generic.prefix
-        args.set(
-            "prompt",
-            message.content
-                .slice(prefix.length + commandLength)
-                .trim() + (await fixIncomingMessage(message))
-        );
+        args.set("prompt", message.content.slice(prefix.length + commandLength)?.trim());
         return args;
     },
     async function execute(message, args, fromInteraction, gconfig) {

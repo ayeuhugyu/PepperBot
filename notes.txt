@@ -44,8 +44,7 @@ shit on the todo list:
 to add to todo list:
 
 REMEMBER TO DELETE ON PI: 
-p/reactionrole
-p/explore
+p/configure BUT ONLY ONCE THE CONFIG PAGE IS DONE!!!
 
 p/update reply stuff and website stuff
 
@@ -53,7 +52,6 @@ p/update reply stuff and website stuff
 
 **actual content:**
 
-- removed p/configure (use the webiste instead!!!!!!!)
 - new p/prompt, houses many new commands relating to gpt prompts:
   - p/prompt set, equivalent to the previous p/setprompt with one minor difference
   - p/prompt generate, uses AI to "elaborate" upon a prompt you give it. you'll be suggested to use this when a prompt from p/prompt set is less than 15 words or less than 100 characters. 
