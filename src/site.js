@@ -453,6 +453,10 @@ app.get("/api/get-rich-guild-config-info", (req, res) => {
     res.send(richGuildConfigInfoFile);
 });
 
+app.get("/auth", (req, res) => {
+    res.redirect("https://discord.com/oauth2/authorize?client_id=1209297323029565470&response_type=code&redirect_uri=https%3A%2F%2Fpepperbot.online%2Foauth2%2Flogin&scope=identify+guilds")
+})
+
 app.get(`/oauth2/login`, async (req, res) => {
     const code = req.query.code;
     if (!code) {
