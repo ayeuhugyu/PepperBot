@@ -22,7 +22,7 @@
         "type": "boolean",
         "default": false,
         "cleanname": "disable diabolical events",
-        "description": "whether or not to entirely disable the \"diabolical events;\" such as the random reactions or Threaded!🧵"
+        "description": "whether or not to entirely disable the \"diabolical events\" such as the random reactions, threads, and replies."
     },
     "configLockedToServerOwner": {
         "type": "boolean",
@@ -33,15 +33,15 @@
     "noticesChannelId": {
         "type": "string",
         "default": "-1",
-        "cleanname": "notices channel ID",
-        "description": "channel ID to which pepperbot should send server notices to. notices are generally things like new config options or things server admins should otherwise know about."
+        "cleanname": "notices channel",
+        "description": "channel to which pepperbot should send server notices to. notices are generally things like new config options or things server admins should otherwise know about."
     },
     "diabolicalEventBlacklistedChannelIds": {
         "type": "array",
         "arraytype": "string",
         "default": [],
         "cleanname": "diabolical event blacklist channels",
-        "description": "list of channel IDs to disable diabolical events within."
+        "description": "list of channel IDs to disable diabolical events within"
     },
     "disableAllCommands": {
         "type": "boolean",
@@ -54,7 +54,7 @@
         "arraytype": "string",
         "default": [],
         "cleanname": "command usage blacklist channels",
-        "description": "list of channel IDs to disable commands within."
+        "description": "list of channels to disable commands within."
     },
     "disableGPTResponses": {
         "type": "boolean",
@@ -67,7 +67,7 @@
         "arraytype": "string",
         "default": [],
         "cleanname": "GPT response blacklist channels",
-        "description": "list of channel IDs to disable GPT responses within."
+        "description": "list of channels to disable GPT responses within."
     },
     "prefix": {
         "type": "string",
@@ -92,30 +92,30 @@
         "arraytype": "string",
         "default": [],
         "cleanname": "auto crosspost channels",
-        "description": "list of ANNOUNCEMENT channels that should automatically crosspost/publish their messages to followers"
+        "description": "list of announcement channels that should automatically crosspost/publish their messages to followers"
     },
     "theme": {
         "type": "string",
         "default": "CURRENT",
         "cleanname": "theme",
-        "description": "the seasonal theme to use for the bot; can only be: CURRENT, SPOOKY, WINTER, EASTER, THANKSGIVING, or DEFAULT."
+        "description": "the seasonal theme to use for the bot"
     },
     "diabolicalReactionEventChance": {
         "type": "number",
         "default": "0.01",
         "cleanname": "diabolical reaction event chance",
-        "description": "percentage chance of a diabolical reaction event happening when a message is sent. default is 1%."
+        "description": "percentage chance of a diabolical reaction event happening when a message is sent."
     },
     "diabolicalThreadEventChance": {
         "type": "number",
         "default": "0.0005",
         "cleanname": "diabolical thread event chance",
-        "description": "percentage chance of a diabolical thread event happening when a message is sent. default is 0.05%."
+        "description": "percentage chance of a diabolical thread event happening when a message is sent."
     },
     "diabolicalReplyEventChance": {
         "type": "number",
         "default": "0.001",
         "cleanname": "diabolical reply event chance",
-        "description": "percentage chance of a diabolical reply event happening when a message is sent. default is 0.1%."
+        "description": "percentage chance of a diabolical reply event happening when a message is sent."
     }
 }

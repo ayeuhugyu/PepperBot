@@ -448,6 +448,54 @@ app.get("/api/get-guild-config", async (req, res) => {
     res.send(guildConfig);
 })
 
+app.post("/api/change-guild-config", async (req, res) => { // TODO: implement checks to prevent changing guild configs to invalid data
+    const gconfig = req.query.config;
+    const guildid = req.query.guild || req.query.guildid || req.query.gid;
+    const token = req.headers.oauth2token;
+    if (!guildid) {
+        return res.status(400).send("no guild id provided");
+    }
+    if (token == "test") {
+        if (guildid == "1337Krew") {
+            fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
+            return res.send();
+        }
+        if (guildid == "TorvaldTabletop") {
+            fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
+            return res.send();
+        }
+        if (guildid == "TheTipWibblers") {
+            return res.status(403).send("user not authorized to edit guild config");
+        }
+        return res.status(404).send("you cant use the test token for that... NOOB!");
+    }
+    if (!token) {
+        return res.status(400).send("no oauth2 token provided");
+    }
+    const guildsNonJSON = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const guilds = await guildsNonJSON.json();
+    if (!guilds.find((g) => g.id == guildid)) {
+        return res.status(403).send("user not in guild");
+    }
+    if (!Array.isArray(guilds)) {
+        return res.send([]);
+    }
+    const filteredGuilds = guilds?.filter(guild => (parseInt(guild.permissions) & 0x8) || (parseInt(guild.permissions) & 0x20)) // Administrator or Manage Server
+    const filteredGuild = filteredGuilds.find((g) => g.id == guildid);
+    if (!filteredGuild) {
+        return res.status(403).send("user not authorized to edit guild config");
+    }
+    fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
+    if (!guildConfig) {
+        return res.status(404).send("guild config not found");
+    }
+    res.status(200).send();
+})
+
 app.get("/api/get-rich-guild-config-info", (req, res) => {
     const richGuildConfigInfoFile = fs.readFileSync("./resources/data/guildConfigInformation.json", "utf8");
     res.send(richGuildConfigInfoFile);

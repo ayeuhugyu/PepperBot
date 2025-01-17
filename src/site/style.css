@@ -686,6 +686,10 @@ details.commandArgument > *:not(summary):not(details) {
 
 /* Config Page */
 
+#guildList {
+    overflow-y: scroll;
+}
+
 .guildObject {
     width: 100%;
     margin-bottom: 5px;
@@ -712,4 +716,61 @@ details.commandArgument > *:not(summary):not(details) {
     border-radius: 50%;
     height: 15px;
     border: 2px solid var(--border-color);
+}
+
+.configPair > * {
+    margin-left: 5px;
+}
+
+.configPair {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+    margin-top: 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.lastConfigPair {
+    border-bottom: none;
+}
+
+.trueFalseButton {
+    background-color: var(--midground-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+    font-family: var(--main-font);
+    font-size: 100%;
+}
+
+.configPairLabelHolder {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.configPairDescription {
+    color: var(--darkened-text-color);
+}
+
+.gconfigControllerContainer {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: space-between;
+}
+
+.gconifgSubmitButton {
+    margin: 0
+}
+
+.gconfigStatusMessage {
+    color: var(--darkened-text-color);
+    text-align: right;
+    flex-grow: 1;
+    padding-top: 6px;
 }

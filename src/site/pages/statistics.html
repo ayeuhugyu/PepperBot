@@ -198,6 +198,8 @@
 
                     refreshCharts();
 
+                    tvStaticAnimation();
+
                     statisticsText.innerText = `version: ${jsonData.version}
 system: ${jsonData.system}
 memory usage: ${jsonData.mem}
@@ -235,7 +237,6 @@ shard uptime: ${formatTime(
                     )}
 
                     `;
-                    tvStaticAnimation();
                     loaded = true;
                 }
             );
