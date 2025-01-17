@@ -490,9 +490,6 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
         return res.status(403).send("user not authorized to edit guild config");
     }
     fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
-    if (!guildConfig) {
-        return res.status(404).send("guild config not found");
-    }
     res.status(200).send();
 })
 

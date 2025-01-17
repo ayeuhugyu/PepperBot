@@ -302,7 +302,6 @@ export const toolFunctions = {
                 url: track.url,
                 date: track.date ? track.date['#text'] : 'Now Playing'
             }));
-            console.log(mapped)
             return mapped
         } catch (err) {
             log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${err.message}`);
@@ -687,7 +686,6 @@ export async function run(conversation) {
         conversation.addMessage("assistant", "PepperBot", response.choices[0].message.content);
         return response.choices[0].message.content;
     } catch (err) {
-        console.log(conversation)
         log.error(`internal error while executing GPT: ${err}`);
         conversation.emitter.emit("fatal_error", `${err.message}`);
         return;
