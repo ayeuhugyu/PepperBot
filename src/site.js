@@ -15,7 +15,7 @@ import http from "http";
 import { Server } from "socket.io";
 import * as chat from "./lib/webchat.js"
 import statistics from "./lib/statistics.js";
-import { getGuilds } from "./sharder.js"
+import { getGuilds, getChannels } from "./sharder.js"
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -279,21 +279,9 @@ app.get("/api/read-statistics", (req, res) => {
                     await dirSize("./resources/ytdl_cache/")
                 ),
                 system: `${process.platform} ${process.arch}`,
-                starts: {
-                    site: {
-                        startedAt: humanReadableDate,
-                        startedAtTimestamp: siteStartedAt,
-                    },
-                },
                 statistics: JSON.parse(data),
                 shardCount: shardCount,
             };
-            if (starts.bot) {
-                object.starts.bot = starts.bot;
-            }
-            if (starts.shard) {
-                object.starts.shard = starts.shard;
-            }
             res.send(object);
         }
     );
@@ -633,7 +621,12 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
         if (!Array.isArray(guilds)) {
             return res.send([]);
         }
-        return res.send(guilds?.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id)));
+        let filteredGuilds = guilds?.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id))
+        let channeledGuilds = await Promise.all(filteredGuilds.map(async (guild) => {
+            guild.channels = await getChannels(guild.id);
+            return guild;
+        }));
+        return res.send(channeledGuilds);
     }
     return res.send(guilds);
 });

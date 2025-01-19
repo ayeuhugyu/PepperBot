@@ -732,6 +732,11 @@ details.commandArgument > *:not(summary):not(details) {
     border-bottom: 1px dashed var(--border-color);
 }
 
+.verticalConfigPair {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .lastConfigPair {
     border-bottom: none;
 }
@@ -773,4 +778,57 @@ details.commandArgument > *:not(summary):not(details) {
     text-align: right;
     flex-grow: 1;
     padding-top: 6px;
+}
+
+.channelButtonsHolder {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: space-between;
+    border-top: dashed 1px var(--border-color-light);
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.channelButton {
+    background-color: var(--midground-color);
+    color: var(--darkened-text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50px 50px 50px 50px;
+    cursor: pointer;
+    font-family: var(--main-font);
+    font-size: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    margin-right: 3px;
+    margin-top: 3px;
+    border-color: var(--border-color-light);
+}
+
+.enabledChannelButton {
+    background-color: var(--midground-color-light);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.channelButton:hover {
+    color: var(--text-color);
+}
+
+.channelIcon {
+    height: 10px;
+    flex-grow: 1;
+    margin: 0;
+    margin-right: 3px;
+    margin-left: 3px;
+}
+
+.channelName {
+    font-size: 0.8em;
+    margin: 0;
+    margin-right: 3px;
 }

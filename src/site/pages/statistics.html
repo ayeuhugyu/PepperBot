@@ -197,9 +197,6 @@
                     console.log(statistics);
 
                     refreshCharts();
-
-                    tvStaticAnimation();
-
                     statisticsText.innerText = `version: ${jsonData.version}
 system: ${jsonData.system}
 memory usage: ${jsonData.mem}
@@ -209,34 +206,8 @@ total commands used: ${totalUsage}
 total slash commands used: ${statisticsData.commandTypeUsage.slash}
 total text commands used: ${statisticsData.commandTypeUsage.text}
 total running shards: ${jsonData.shardCount}
-total request count: ${statisticsData.requestCount}
-
-site started at: ${jsonData.starts.site.startedAt}
-bot started at: ${jsonData.starts.bot.startedAt}
-shard started at: ${jsonData.starts.shard.startedAt}
-site uptime: ${formatTime(
-                        Math.floor(
-                            (Date.now() -
-                                jsonData.starts.site.startedAtTimestamp) /
-                                1000
-                        )
-                    )}
-bot uptime: ${formatTime(
-                        Math.floor(
-                            (Date.now() -
-                                jsonData.starts.bot.startedAtTimestamp) /
-                                1000
-                        )
-                    )}
-shard uptime: ${formatTime(
-                        Math.floor(
-                            (Date.now() -
-                                jsonData.starts.shard.startedAtTimestamp) /
-                                1000
-                        )
-                    )}
-
-                    `;
+total request count: ${statisticsData.requestCount}`;
+                    tvStaticAnimation();
                     loaded = true;
                 }
             );

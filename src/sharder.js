@@ -84,6 +84,27 @@ process.on("message", (message) => {
     }
 });
 
+export async function getChannels(gid) {
+    const channels = [];
+    const shardPromises = manager.shards.map((shard) => {
+        return new Promise((resolve) => {
+            shard.fetchClientValue("channels.cache").then((shardChannels) => {
+                resolve(shardChannels);
+            });
+        });
+    });
+
+    const shardChannels = await Promise.all(shardPromises);
+    shardChannels.forEach((shardChannel) => {
+        shardChannel.forEach((channel) => {
+            if (channel.guildId == gid) {
+                channels.push(channel);
+            }
+        });
+    });
+    return channels;
+}
+
 export async function getGuilds() {
     const guilds = [];
     const shardPromises = manager.shards.map((shard) => {

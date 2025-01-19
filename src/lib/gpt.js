@@ -13,6 +13,7 @@ import TurndownService from "turndown"
 import { Buffer } from "buffer";
 import EventEmitter from "events";
 import { PermissionFlagsBits } from "discord.js";
+import * as mathjs from "mathjs";
 
 const config = globals.config;
 
@@ -130,6 +131,13 @@ description = "a function which forwards a suggestion or bug report or really li
 type = "string"
 description = "the content of the suggestion"
 
+[math]
+description = "a function which takes in a string of a math expression and outputs the result of the expression. this uses the math.js library, so it should be able to handle most math expressions."
+
+[math.parameters.expression]
+type = "string"
+description = "the math expression to evaluate"
+
 For an example of a tool call, say a user asked you to search for how to make a cake. You would first respond with "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$". This would return the top search results for "how to make a cake". Then, you would respond with a message using data from those results.
 Multiple tool calls can be made in a single response. An example of this would be if a user asked you to search for how to make a cake, and then in the same message asked what's on https://goop.network. You would respond with: "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$ $EXEC_TOOL: "request_url", "{"url": "https://goop.network"}"$". This would return the top search results for "how to make a cake" and the content of https://goop.network, and you could develop your message from there.
 Tool responses will be in JSON. They should be fairly simple to interperet.
@@ -152,6 +160,7 @@ The get_user tool is useful if a user asks you to tell someone something or ment
 The list_channels tool is useful if a user asks you to tell them what channels are in the guild, or where they should put something. This tool will return a list of all channels in the guild, and you can use this to provide the user with a list of channels or a specific channel. When a user asks you to list channels, you should always just include a mention of the channel. Discord's mentions include the channel's name, so there's no need to tell them about that. Once again, this can be done like so: <#channelid>. Do not include any other information, the rest is provided by that mention. Mentions of channels get changed by Discord's interface to show the channel name and type. Do NOT, EVER, include the name, id, or type of the channel. These are just so you know what you're looking at, and are not necessary for the user to know. In addition, do NOT include category channels, their mentions are screwed up and users won't have any use for them anyways.
 The get_channel tool is useful if a user asks you about what a certain channel is for, or where they should put something. This tool will return the channel id of the channel you provide the name of, and you can use this to provide the user with the channel id of the channel they're asking about. If no arguments are provided, it will return the channel id of the channel the conversation was started in. If you see some text that looks like "#the-channel" or something like that, use this tool to get it's id and use the mention AND ONLY THE MENTION ALONE in your response to replace it. 
 The suggest tool is useful if users have a suggestion to make for features I should add to you, or if they find a bug they wish to report to me. You can use this tool to forward their suggestion or bug report to me. If a user asks you to tell me something, you can also use this tool to do so.
+The math tool is useful for most math, and even unit conversions. If you need to use math for really just about anything, use this. 
 
 # General Guidelines
 
@@ -347,6 +356,13 @@ export const toolFunctions = {
         } catch (err) {
             log.warn(`an error occurred while attempting to DM dev for GPT: ${err.message}`);
             throw new Error(`an error occurred while attempting to DM user: ${err.message}`);
+        }
+    },
+    math: async ({ expression }) => {
+        try {
+            return mathjs.evaluate(expression);
+        } catch (err) {
+            throw new Error(`an error occurred while attempting to evaluate the expression: ${err.message}`);
         }
     }
 }
@@ -746,9 +762,9 @@ export async function handleToolCalls(calls, conversation) {
                     status: "error",
                     response: `SYSTEM: An error occurred while executing "${call.function}": ${err.message}`
                 });
-                log.error(`internal error while executing "${call.function}"`);
+                log.warn(`error while executing "${call.function}"`);
                 conversation.emitter.emit("error", `internal error while executing tool call: "${call.function}" id: "${call.tool_call_id}"`);
-                log.error(err);
+                log.warn(err.message);
             }
         } else {
             responses.push({

@@ -50,6 +50,9 @@ p/update reply stuff and website stuff
 
 **website changes:**
 
+- fixed statistics page
+- static fx only happens on load, not on focus. 
+
 **actual content:**
 
 - new p/prompt, houses many new commands relating to gpt prompts:

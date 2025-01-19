@@ -28,5 +28,3 @@ function tvStaticAnimation() {
         }, 500);
     }, 15);
 }
-
-window.addEventListener('focus', tvStaticAnimation);
