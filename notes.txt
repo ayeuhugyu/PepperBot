@@ -52,7 +52,9 @@ p/update reply stuff and website stuff
 
 - fixed statistics page
 - static fx only happens on load, not on focus. 
+- /config's ui has been complete*, but the parsers and shit havent yet so it still doesn't work. 
 
+*theme selector is still not done
 **actual content:**
 
 - new p/prompt, houses many new commands relating to gpt prompts:
