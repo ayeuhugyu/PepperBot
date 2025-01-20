@@ -81,12 +81,6 @@
         "cleanname": "use ephemeral replies",
         "description": "whether or not to use ephemeral replies for slash commands"
     },
-    "autoBuildPreview": {
-        "type": "boolean",
-        "default": false,
-        "cleanname": "auto build preview",
-        "description": "whether or not to automatically preview a build for build links posted in chat"
-    },
     "autoCrosspostChannels": {
         "type": "array",
         "arraytype": "string",
@@ -117,5 +111,11 @@
         "default": "0.001",
         "cleanname": "diabolical reply event chance",
         "description": "percentage chance of a diabolical reply event happening when a message is sent."
+    },
+    "enableUntitledClipAnger": {
+        "type": "boolean",
+        "default": false,
+        "cleanname": "enable untitled clip anger",
+        "description": "if enabled untitled medal clips will cause the bot to get angry."
     }
 }

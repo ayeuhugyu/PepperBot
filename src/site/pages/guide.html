@@ -120,166 +120,6 @@
                         </div>
                     </details>
                 </details>
-                <details class="commandDetails" id="p/composite">
-                    <summary class="commandName">p/composite<span class="commandCategory">utility</span></summary>
-                    <div class="commandDescription">allows you to composite multiple images together
-                        <span class="argumentOrder">ARGUMENT ORDER: p/composite <span class="commandArgumentOrderItem">subcommand</span> <span class="lesserText">[remaining arguments depend on subcommand]</span></span>
-                        <span class="exampleUsage">EXAMPLE 1: p/composite preview</span>
-                    </div>
-                    <details class="commandArgument" open>
-                        <summary>subcommand<span class="commandArgumentType">string</span></summary>
-                        <div class="argumentDescription">the subcommand to use
-                            <span class="commandArgumentProperty">REQUIRED: true</span>
-                            <span class="commandArgumentProperty">OPTIONS: add, remove, canvas, output, clear, move, scale, meta, preview</span>
-                        </div>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite add</summary>
-                            <div class="commandDescription">adds an image to the composite and returns its ID afterwards
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite add <span class="commandArgumentOrderItem">image</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite add <span class="lesserText">[attach your file]</span></span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>image<span class="commandArgumentType">attachment</span></summary>
-                                <div class="argumentDescription">the image to add to the composite
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite remove</summary>
-                            <div class="commandDescription">removes an image from the composite
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite remove <span class="commandArgumentOrderItem">imageid</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite remove 0</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageid<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the ID of the image to remove
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite canvas</summary>
-                            <div class="commandDescription">sets the canvas size and background color
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite canvas <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span> <span class="commandArgumentOrderItem">backgroundcolor</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite canvas 1920 1080 #13131d</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>width<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the width of the canvas
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>height<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the height of the canvas
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>backgroundcolor<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the background color of the canvas, must be a hex color code
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite output</summary>
-                            <div class="commandDescription">sets the output format of the composite
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite output <span class="commandArgumentOrderItem">format</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite output png</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>format<span class="commandArgumentType">string</span></summary>
-                                <div class="argumentDescription">the format to output the composite as
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                    <span class="commandArgumentProperty">OPTIONS: jpeg, png, webp, gif, avif, tiff</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite clear</summary>
-                            <div class="commandDescription">clears the composite
-                                <span class="exampleUsage">EXAMPLE 1: p/composite clear</span>
-                            </div>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite move</summary>
-                            <div class="commandDescription">moves an image in the composite
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite move <span class="commandArgumentOrderItem">imageid</span> <span class="commandArgumentOrderItem">x</span> <span class="commandArgumentOrderItem">y</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite move 0 100 100</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageid<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the ID of the image to move
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>x<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the x position to move the image to
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>y<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the y position to move the image to
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite scale</summary>
-                            <div class="commandDescription">scales an image in the composite
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite scale <span class="commandArgumentOrderItem">imageid</span> <span class="commandArgumentOrderItem">width</span> <span class="commandArgumentOrderItem">height</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite scale 0 1920 1080</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageid<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the ID of the image to scale
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>width<span class="commandArgumentType">float</span></summary>
-                                <div class="argumentDescription">the width to scale the image to
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                            <details class="commandArgument" open>
-                                <summary>height<span class="commandArgumentType">float</span></summary>
-                                <div class="argumentDescription">the height to scale the image to
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite meta</summary>
-                            <div class="commandDescription">gets the metadata of an image in the composite
-                                <span class="argumentOrder">ARGUMENT ORDER: p/composite meta <span class="commandArgumentOrderItem">imageid</span></span>
-                                <span class="exampleUsage">EXAMPLE 1: p/composite meta 0</span>
-                            </div>
-                            <details class="commandArgument" open>
-                                <summary>imageid<span class="commandArgumentType">integer</span></summary>
-                                <div class="argumentDescription">the ID of the image to get the metadata of
-                                    <span class="commandArgumentProperty">REQUIRED: true</span>
-                                </div>
-                            </details>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite data</summary>
-                            <div class="commandDescription">returns data about the composite, like the size, background color, format, and some other things.
-                                <span class="exampleUsage">EXAMPLE 1: p/composite preview</span>
-                            </div>
-                        </details>
-                        <details class="commandDetails subcommand" open>
-                            <summary class="commandName">p/composite preview</summary>
-                            <div class="commandDescription">previews the composite
-                                <span class="exampleUsage">EXAMPLE 1: p/composite preview</span>
-                            </div>
-                        </details>
-                    </details>
-                </details>
                 <details class="commandDetails" id="p/corrupt">
                     <summary class="commandName">p/corrupt<span class="commandCategory">fun</span></summary>
                     <div class="commandDescription">fuck up your message, replaces a bunch of stuff with some other things (note: this does not actually corrupt your message, results from that would be incredibly boring). image support soon™
@@ -960,21 +800,6 @@
                         </div>
                     </details>
                 </details>
-                <details class="commandDetails" id="p/preview">
-                    <summary class="commandName">p/preview<span class="commandCategory">utility</span></summary>
-                    <div class="commandDescription">previews a deepwoken build
-                        <span class="argumentOrder">ARGUMENT ORDER: p/preview <span class="commandArgumentOrderItem">buildid</span></span>
-                        <span class="exampleUsage">EXAMPLE 1: p/preview https://deepwoken.co/builder?id=xxxxxxxx</span>
-                        <span class="exampleUsage">EXAMPLE 2: p/preview xxxxxxxx</span>
-                        <span class="commandArgumentProperty">ALIASES: p/buildpreview, p/build</span>
-                    </div>
-                    <details class="commandArgument" open>
-                        <summary>buildid<span class="commandArgumentType">string</span></summary>
-                        <div class="argumentDescription">ID of the build to preview
-                            <span class="commandArgumentProperty">REQUIRED: true</span>
-                        </div>
-                    </details>
-                </details>
                 <details class="commandDetails" id="p/prompt">
                     <summary class="commandName">p/prompt<span class="commandCategory">fun</span></summary>
                     <div class="commandDescription">various actions relating to the gpt prompt
@@ -1651,7 +1476,6 @@
                         <p class="indented">a deepwoken equipment godroll calculator <span class="lesserText smallText">(allows for any pip)</span></p>
                         <p class="indented">a deepwoken build previewer tool <span class="lesserText smallText">(more detailed than Aen's preview)</span></p>
                         <p class="indented">an embed builder</p>
-                        <p class="indented">an image compositor</p>
                         <p class="indented">custom todo lists</p>
                         <p class="indented">reaction roles</p>
                         <p class="indented">a server-owner-only permanent, recursive banning tool</p>

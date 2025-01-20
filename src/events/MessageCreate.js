@@ -259,18 +259,21 @@ async function getIsDisgraceful(message) {
         }
     }
 
-    const medalTvRegex = /https:\/\/medal\.tv[^\s]+/g;
-    const medalTvUrls = message.content.match(medalTvRegex);
-    if (medalTvUrls && medalTvUrls.length > 0) {
-        if (medalTvUrls.length > 5) return false; // it takes a little bit to fetch the titles, so someone could just spam medal links in a message and it would make the bot hang for a long time
-        for (const url of medalTvUrls) {
-            const title = await fetchTitle(url);
-            if (!title) return false;
-            if (title.toLowerCase().trim().startsWith("untitled")) {
-                action.sendMessage(message.channel, {
-                    content: `<@${message.author.id}> TITLE YOUR FUCKING CLIPS YOU FUCKTARD`,
-                });
-                return true;
+    const gconfig = guildConfigs.getGuildConfig(message.guild.id);
+    if (gconfig.enableUntitledClipAnger) {
+        const medalTvRegex = /https:\/\/medal\.tv[^\s]+/g;
+        const medalTvUrls = message.content.match(medalTvRegex);
+        if (medalTvUrls && medalTvUrls.length > 0) {
+            if (medalTvUrls.length > 5) return false; // it takes a little bit to fetch the titles, so someone could just spam medal links in a message and it would make the bot hang for a long time
+            for (const url of medalTvUrls) {
+                const title = await fetchTitle(url);
+                if (!title) return false;
+                if (title.toLowerCase().trim().startsWith("untitled")) {
+                    action.sendMessage(message.channel, {
+                        content: `<@${message.author.id}> TITLE YOUR FUCKING CLIPS YOU FUCKTARD`,
+                    });
+                    return true;
+                }
             }
         }
     }

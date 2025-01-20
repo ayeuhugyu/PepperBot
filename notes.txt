@@ -46,22 +46,19 @@ to add to todo list:
 REMEMBER TO DELETE ON PI: 
 p/configure BUT ONLY ONCE THE CONFIG PAGE IS DONE!!!
 
-p/update reply stuff and website stuff
+p/update trying to remove some of the cluttering commands nobody uses that dont have much reason to exist
 
 **website changes:**
 
-- fixed statistics page
-- static fx only happens on load, not on focus. 
-- /config's ui has been complete*, but the parsers and shit havent yet so it still doesn't work. 
-
-*theme selector is still not done
 **actual content:**
 
-- new p/prompt, houses many new commands relating to gpt prompts:
-  - p/prompt set, equivalent to the previous p/setprompt with one minor difference
-  - p/prompt generate, uses AI to "elaborate" upon a prompt you give it. you'll be suggested to use this when a prompt from p/prompt set is less than 15 words or less than 100 characters. 
-  - p/prompt save, allows you to save a prompt under a certain name
-  - p/prompt load, allows you to load a prompt with a given name
-  - p/prompt get, similar to p/prompt load but instead of changing your prompt to the new one it only returns the prompt. 
+- added new guild config: enableUntitledClipAnger
+disabled by default, makes Extreme Anger occur when untitled medal clips are sent (this has been a thing for a while but tbh most people dont want it)
+- removed p/preview, it's broken and has been used once ever. it's better than aen's shitty build preview, but its too annoying to update and nobody uses it.
+- removed p/composite, it has literally never once been used and is done better by every other bot in existence
+- removed p/setreferencemessage, it does literally nothing and i really just dont feel like finishing it
+- removed p/bingo (you prolly didnt even know this existed...)
+
+ill remove p/corrupt if the poll Succeeds™
 
 **fixes/optimizations:**

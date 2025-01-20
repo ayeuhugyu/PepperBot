@@ -271,10 +271,10 @@
                     return blacklistedChannelTypes.includes(channel.type)
                 }), richGuildConfigInfo["autoCrosspostChannels"], false, true)
                 otherCategory.appendChild(autoCrosspostChannels)
-                const autoBuildPreview = createConfigPair("autoBuildPreview", createTrueFalseInput('autoBuildPreviewInput', gconfig.autoBuildPreview), richGuildConfigInfo["autoBuildPreview"])
-                otherCategory.appendChild(autoBuildPreview)
                 const useEphemeralReplies = createConfigPair("useEphemeralReplies", createTrueFalseInput('useEphemeralRepliesInput', gconfig.useEphemeralReplies), richGuildConfigInfo["useEphemeralReplies"])
                 otherCategory.appendChild(useEphemeralReplies)
+                const enableUntitledClipAnger = createConfigPair("enableUntitledClipAnger", createTrueFalseInput('enableUntitledClipAngerInput', gconfig.enableUntitledClipAnger), richGuildConfigInfo["enableUntitledClipAnger"])
+                otherCategory.appendChild(enableUntitledClipAnger)
                 const noticesChannelId = createConfigPair("noticesChannelId", createChannelSelector('noticesChannelId', guildInfo, [gconfig.noticesChannelId], (channel) => { 
                     const blacklistedChannelTypes = [
                         channelTypesToName.GUILD_CATEGORY,
