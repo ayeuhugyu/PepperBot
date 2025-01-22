@@ -15,7 +15,8 @@ import http from "http";
 import { Server } from "socket.io";
 import * as chat from "./lib/webchat.js"
 import statistics from "./lib/statistics.js";
-import { getGuilds, getChannels } from "./sharder.js"
+import { getGuilds, getChannels } from "./sharder.js";
+import bodyParser from "body-parser";
 
 const blockedIps = {
     "173.12.11.240": "you're the reason i had to add a rate limiter.",
@@ -145,6 +146,9 @@ app.use((err, req, res, next) => {
     log.error(err.stack);
     res.status(500).send("problem? yeah :/");
 });
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 let pages = fs.readdirSync(`${rootPath}/pages`);
 let simulations = fs.readdirSync(`${rootPath}/pages/sims`);
@@ -407,7 +411,18 @@ app.get("/api/get-guild-config", async (req, res) => {
         return res.status(400).send("no guild id provided");
     }
     if (token == "test") {
-        return res.send(fs.readFileSync("./resources/data/defaultGuildConfig.json", "utf8"));
+        if (guildid == "1337Krew") {
+            return res.status(403).send("user not authorized to view guild config");
+        }
+        if (guildid == "TorvaldTabletop") {
+            const guildConfig = fs.readFileSync(`./resources/data/guildConfigs/${guildid}.json`, "utf8");
+            return res.send(guildConfig);
+        }
+        if (guildid == "TheTipWibblers") {
+            const guildConfig = fs.readFileSync(`./resources/data/guildConfigs/${guildid}.json`, "utf8");
+            return res.send(guildConfig);
+        }
+        return res.status(404).send("you cant use the test token for that... NOOB!");
     }
     if (!token) {
         return res.status(400).send("no oauth2 token provided");
@@ -437,19 +452,38 @@ app.get("/api/get-guild-config", async (req, res) => {
 })
 
 app.post("/api/change-guild-config", async (req, res) => { // TODO: implement checks to prevent changing guild configs to invalid data
-    const gconfig = req.query.config;
-    const guildid = req.query.guild || req.query.guildid || req.query.gid;
+    const gconfig = req.body.config
+    const guildid = req.body.gid
     const token = req.headers.oauth2token;
+    const defaultGuildConfig = JSON.parse(fs.readFileSync("./resources/data/defaultGuildConfig.json", "utf8"));
     if (!guildid) {
         return res.status(400).send("no guild id provided");
     }
+    if (!gconfig) {
+        return res.status(400).send("no guild config provided");
+    };
+    for (const [key, value] of Object.entries(gconfig)) {
+        if (typeof gconfig[key] != typeof defaultGuildConfig[key]) {
+            return res.status(400).send(`guild config value types must match the defaults; ${key} (${typeof key}) != ${typeof defaultGuildConfig[key]}`);
+        }
+        if (typeof gconfig[key] == "object") {
+            for (const [subkey, subvalue] of Object.entries(gconfig[key])) {
+                if (typeof gconfig[key][subkey] != typeof defaultGuildConfig[key][subkey]) {
+                    return res.status(400).send(`guild config value types must match the defaults; ${key}.${subkey} (${typeof key}) != ${typeof defaultGuildConfig[key][subkey]}`);
+                }
+            }
+        }
+        if (!Array.isArray(defaultGuildConfig[key]) ^ !Array.isArray(gconfig[key])) {
+            return res.send(400).send(`guild config value types must match the defaults; mismatched array types for ${key}`);
+        }
+    }
     if (token == "test") {
         if (guildid == "1337Krew") {
-            fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
+            fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
             return res.send();
         }
         if (guildid == "TorvaldTabletop") {
-            fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
+            fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
             return res.send();
         }
         if (guildid == "TheTipWibblers") {
@@ -477,7 +511,7 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
     if (!filteredGuild) {
         return res.status(403).send("user not authorized to edit guild config");
     }
-    fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, gconfig);
+    fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
     res.status(200).send();
 })
 
@@ -574,7 +608,14 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
                 "permissions": "2112",
                 "features": ["COMMUNITY", "NEWS", "ANIMATED_ICON", "INVITE_SPLASH", "BANNER", "ROLE_ICONS"],
                 "approximate_member_count": 3268,
-                "approximate_presence_count": 784
+                "approximate_presence_count": 784,
+                "channels": [
+                    {
+                        "id": "1337KrewGeneral",
+                        "name": "general",
+                        "type": 0
+                    }
+                ]
             },
             {
                 "id": "TorvaldTabletop",
@@ -585,7 +626,19 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
                 "permissions": "805314622",
                 "features": ["COMMUNITY"],
                 "approximate_member_count": 3268,
-                "approximate_presence_count": 784
+                "approximate_presence_count": 784,
+                "channels": [
+                    {
+                        "id": "TorvaldTabletopGeneral",
+                        "name": "general",
+                        "type": 0
+                    },
+                    {
+                        "id": "TorvaldTabletopBot",
+                        "name": "bots",
+                        "type": 0
+                    }
+                ]
             },
             {
                 "id": "TheTipWibblers",
@@ -596,7 +649,19 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
                 "permissions": "805314622",
                 "features": ["COMMUNITY", "NEWS", "ANIMATED_ICON", "INVITE_SPLASH", "BANNER", "ROLE_ICONS"],
                 "approximate_member_count": 3268,
-                "approximate_presence_count": 784
+                "approximate_presence_count": 784,
+                "channels": [
+                    {
+                        "id": "TheTipWibblersGeneral",
+                        "name": "general",
+                        "type": 0
+                    },
+                    {
+                        "id": "TheTipWibblersVoice",
+                        "name": "voice",
+                        "type": 2
+                    }
+                ]
             }
         ]
 

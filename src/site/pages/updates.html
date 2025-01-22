@@ -56,8 +56,13 @@
                             const urlParams = new URLSearchParams(window.location.search);
                             const versionParam = urlParams.get('version');
                             const idParam = urlParams.get('id');
-                            updversion.value = versionParam || idParam || text;
-                            ver = versionParam || idParam || text;
+                            if (idParam == "latest") {
+                                updversion.value = text;
+                                ver = text;
+                            } else {
+                                updversion.value = versionParam || idParam || text;
+                                ver = versionParam || idParam || text;
+                            }
                         });
                     readUpdate(ver);
                     if (!loaded) {

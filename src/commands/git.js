@@ -51,13 +51,13 @@ const graph = new SubCommand(
             log.error(output.stderr);
             return;
         }
-        const file = await files.textToFile(output.stdout, "gitlog");
+        const file = await files.textToFile(output.stdout, "gitlog_" + message.id);
         action.editMessage(sent, {
             content: "here's a log of commits to the pepperbot repository",
             files: [
                 {
                     attachment: file,
-                    name: "gitlog.txt",
+                    name: "gitlog" + message.id + ".txt",
                 },
             ],
         });

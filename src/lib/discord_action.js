@@ -58,7 +58,8 @@ export async function fixMsg(msg) {
     //.replaceAll(process.env.VISION_ENDPOINT, "##starfruit"); // this prevents the bot from pinging everyone, and from leaking sensitive information
 
     if (msg.content.length > 2000) {
-        let path = await files.textToFile(msg.content, "overflowtext");
+        const uniqueID = Math.random().toString(36).substring(7);
+        let path = await files.textToFile(msg.content, "overflowtext_" + uniqueID);
         if (!msg.files) {
             msg.files = [];
         }

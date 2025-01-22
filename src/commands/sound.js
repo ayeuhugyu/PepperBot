@@ -182,7 +182,7 @@ const add = new SubCommand(
 
 async function listSounds(message) {
     let sounds = await textfiles.generateLSText("resources/sounds");
-    let soundLsFile = await textfiles.textToFile(sounds, "sounds");
+    let soundLsFile = await textfiles.textToFile(sounds, "sounds_" + message.id);
     action.reply(message, { files: [soundLsFile] });
 }
 

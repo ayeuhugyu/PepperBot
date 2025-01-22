@@ -229,7 +229,7 @@ const list = new SubCommand(
             return;
         }
         const text = await files.generateLSText("resources/images/jaks", true);
-        const file = await files.textToFile(text, "jaks");
+        const file = await files.textToFile(text, "jaks_" + message.id);
         action.reply(message, {
             files: [file],
         });

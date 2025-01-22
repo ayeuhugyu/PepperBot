@@ -51,13 +51,13 @@ const command = new Command(
                 );
                 const lsFile = await textfiles.textToFile(
                     lsText,
-                    "vileimageryls"
+                    "vileimageryls_" + message.id
                 );
                 action.reply(message, {
                     files: [
                         {
                             attachment: lsFile,
-                            name: "vileimageryls.txt",
+                            name: "vileimageryls" + message.id + ".txt",
                         },
                     ],
                 });

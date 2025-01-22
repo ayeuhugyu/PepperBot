@@ -54,6 +54,8 @@ To use tools, respond with the following: "$EXEC_TOOL: "toolname", "{"key": "val
 The dollarsigns stay. The syntax is VERY strict. The args are a JSON formatted object sorrounded by quotation marks, if the JSON is incorrect you will be returned an error. From testing, you have a tendency to put double backslashes before these quotes. DO NOT DO THIS. EVER. it WILL 100% cause an error, every single time. Also, do NOT, EVER try to input values without having them inside of a JSON object. Also from testing, you seem to have a tendency to try to input just a string as the args. This will not work, it MUST be inside of a JSON object, otherwise it will not be interpereted as a function call. 
 I would advise against returning anything other than a tool call if you decide to use it. The other data will not be displayed to the user.
 
+If the message immediately after a tool call isn't a tool call response, that means you didn't format the syntax correctly. Look back at the above guide to see how to format tool calls.
+
 You have access to the following tools: (this list is formatted using TOML, however tool call parameters should be JSON. This is just for reference.)
 # internet/website related tools
 
@@ -67,6 +69,10 @@ description = "the URL to fetch"
 [request_url.parameters.keepScripts]
 type = "boolean"
 description = "whether or not to remove all elements of the following tags: script, style, noscript, iframe. by default they will be removed, if this is set to true they will all be included."
+
+[request_url.parameters.raw]
+type = "boolean"
+description = "whether or not to return the raw HTML of the page. by default this is false, and the page will be formatted with markdown."
 
 [search]
 description = "a function which takes in a string of a search query and outputs the top search results. The results will be returned as an array of objects, each object containing a title, snippet, and link."
@@ -138,6 +144,20 @@ description = "a function which takes in a string of a math expression and outpu
 type = "string"
 description = "the math expression to evaluate"
 
+[get_update]
+description = "a function which takes in a version number and outputs the update log for that version. if no arguments are provided, it will return the update log for the latest version."
+
+[get_update.parameters.version]
+type = "number"
+description = "the version number to get the update log for"
+
+[get_deepwoken_build]
+description = "a function which takes in a build id and outputs the build data for that build. "
+
+[get_deepwoken_build.parameters.id]
+type = "string"
+description = "the build id to get the build data for"
+
 For an example of a tool call, say a user asked you to search for how to make a cake. You would first respond with "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$". This would return the top search results for "how to make a cake". Then, you would respond with a message using data from those results.
 Multiple tool calls can be made in a single response. An example of this would be if a user asked you to search for how to make a cake, and then in the same message asked what's on https://goop.network. You would respond with: "$EXEC_TOOL: "search", "{"query": "how to make a cake"}"$ $EXEC_TOOL: "request_url", "{"url": "https://goop.network"}"$". This would return the top search results for "how to make a cake" and the content of https://goop.network, and you could develop your message from there.
 Tool responses will be in JSON. They should be fairly simple to interperet.
@@ -161,6 +181,8 @@ The list_channels tool is useful if a user asks you to tell them what channels a
 The get_channel tool is useful if a user asks you about what a certain channel is for, or where they should put something. This tool will return the channel id of the channel you provide the name of, and you can use this to provide the user with the channel id of the channel they're asking about. If no arguments are provided, it will return the channel id of the channel the conversation was started in. If you see some text that looks like "#the-channel" or something like that, use this tool to get it's id and use the mention AND ONLY THE MENTION ALONE in your response to replace it. 
 The suggest tool is useful if users have a suggestion to make for features I should add to you, or if they find a bug they wish to report to me. You can use this tool to forward their suggestion or bug report to me. If a user asks you to tell me something, you can also use this tool to do so.
 The math tool is useful for most math, and even unit conversions. If you need to use math for really just about anything, use this. 
+If a user asks you about the latest update, or if you just feel like looking at what was added most recently, you can use the get_update tool to view updates. You can also use it with a specific version to look at that version's log. When describing what the developers are doing, you're referring to me. I'm only one person. Just say he/him or the developer. I dont really care about pronouns, but you might as well use them.
+The get_deepwoken_build tool is useful if a user links a deepwoken build. Build links come in the form of https://deepwoken.co/builder?id=buildidhere. You can use this tool to get the build data for that build. You can use this to provide them with more information about the build. If a user doesn't ask for a summary of the build, don't provide one. If they ask for your opinion about it, just provide your opinion. They don't care about what the build looks like unless they ask for a summary or exactly what it looks like. If you genuinely think the build is bad, tell them that. 
 
 # General Guidelines
 
@@ -221,7 +243,7 @@ const channelTypeIndex = {
 };
 
 export const toolFunctions = {
-    request_url: async ({ url, keepScripts }) => {
+    request_url: async ({ url, keepScripts, raw }) => {
         for (let ipStart of local_ips) {
             if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
                 log.warn(`attempt to access local ip from request_url`);
@@ -231,6 +253,9 @@ export const toolFunctions = {
         try {
             const response = await fetch(url);
             const html = await response.text();
+            if (raw) {
+                return html;
+            }
     
             const $ = cheerio.load(html);
             if (!keepScripts) {
@@ -363,6 +388,26 @@ export const toolFunctions = {
             return mathjs.evaluate(expression);
         } catch (err) {
             throw new Error(`an error occurred while attempting to evaluate the expression: ${err.message}`);
+        }
+    },
+    get_update: async ({ version }) => {
+        try {
+            if (!version) {
+                version = await fetch("https://pepperbot.online/api/get-latest-update").then(res => res.text());
+            }
+            const response = await fetch(`https://pepperbot.online/api/read-update?version=${version}`).then(res => res.text());
+            return "VERSION " + version + "\n\n" + response;
+        } catch (err) {
+            throw new Error(`an error occurred while attempting to fetch the commit data: ${err.message}`);
+        }
+    },
+    get_deepwoken_build: async ({ id }) => {
+        try {
+            const response = await fetch(`https://api.deepwoken.co/build?id=${id}`, { method: "GET" });
+            const JSONresponse = await response.json();
+            return JSONresponse;
+        } catch (err) {
+            throw new Error(`an error occurred while attempting to fetch the build data: ${err.message}`);
         }
     }
 }

@@ -116,14 +116,14 @@ const load = new SubCommand(
         if (args.get("content") == "ls") {
             let text = await files.generateLSText(
                 `resources/data/embeds/`,
-                true
+                true,
             );
-            const file = await files.textToFile(text, "embeds");
+            const file = await files.textToFile(text, "embeds_" + message.id);
             action.reply(message, {
                 content: "here's a list of all the embeds",
                 files: [
                     {
-                        name: "embeds.txt",
+                        name: "embeds_" + message.id + ".txt",
                         attachment: file,
                     },
                 ],

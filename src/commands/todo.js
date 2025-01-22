@@ -230,10 +230,10 @@ const switchc = new SubCommand(
             const fileListWithoutExtensions = fileList.replace(/\.[^.]+$/, "");
             const file = await files.textToFile(
                 fileListWithoutExtensions,
-                "todolists"
+                "todolists_" + message.id
             );
             action.reply(message, {
-                files: [{ attachment: file, name: "todolists.txt" }],
+                files: [{ attachment: file, name: "todolists_" + message.id + ".txt" }],
                 ephemeral: gconfig.useEphemeralReplies,
             });
             return;

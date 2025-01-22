@@ -81,7 +81,7 @@ export function createThemeEmbed(theme) {
 }
 
 export function getTheme(theme) {
-    return themeData[theme];
+    return themeData[theme] || themeData[themes.CURRENT];
 }
 
 

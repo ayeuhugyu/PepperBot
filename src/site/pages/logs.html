@@ -15,13 +15,13 @@
         <script src="/socket.io/socket.io.js"></script>
         <div class="outlined logPageContainer">
             <div id="logControllerContainer" class="logControllerContainer">
-                <button class="logLevelButton" id="GLOBAL" onclick="logLevel = this.id; readNewLog()">GLOBAL</button>
-                <button class="logLevelButton" id="INFO" onclick="logLevel = this.id; readNewLog()">INFO</button>
-                <button class="logLevelButton" id="DEBUG" onclick="logLevel = this.id; readNewLog()">DEBUG</button>
-                <button class="logLevelButton" id="WARN" onclick="logLevel = this.id; readNewLog()">WARN</button>
-                <button class="logLevelButton" id="ERROR" onclick="logLevel = this.id; readNewLog()">ERROR</button>
-                <button class="logLevelButton" id="FATAL" onclick="logLevel = this.id; readNewLog()">FATAL</button>
-                <button class="logLevelButton" id="ACCESS" onclick="logLevel = this.id; readNewLog()">ACCESS</button>
+                <button class="logLevelButton" id="GLOBAL" onclick="logLevel = this.id; readNewLog()" style="color: #FFFFFF;" onmouseover="this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color)'">GLOBAL</button>
+                <button class="logLevelButton" id="INFO" onclick="logLevel = this.id; readNewLog()" style="color: #acdee4;" onmouseover="this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color)'">INFO</button>
+                <button class="logLevelButton" id="DEBUG" onclick="logLevel = this.id; readNewLog()" style="color: #b4bfcf;" onmouseover="this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color)'">DEBUG</button>
+                <button class="logLevelButton" id="WARN" onclick="logLevel = this.id; readNewLog()" style="color: #dfc623;" onmouseover="this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color)'">WARN</button>
+                <button class="logLevelButton" id="ERROR" onclick="logLevel = this.id; readNewLog()" style="color: #d67b51;" onmouseover="this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color)'">ERROR</button>
+                <button class="logLevelButton" id="FATAL" onclick="logLevel = this.id; readNewLog()" style="color: #ff0000;" onmouseover="this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color)'">FATAL</button>
+                <button class="logLevelButton" id="ACCESS" onclick="logLevel = this.id; readNewLog()" style="color: #ccffcc;" onmouseover="if (logLevel == this.id) return; this.style.backgroundColor = 'var(--midground-color-light)'" onmouseleave="this.style.backgroundColor = 'var(--midground-color)'">ACCESS</button>
                 <span class="outlined logReaderStatus">awaiting input...</span>
             </div>
             <pre id="logContent" class="logContent outlined"></pre>
@@ -56,6 +56,12 @@
             async function readNewLog() {
                 console.log(`reading new log with level: ${logLevel}`)
                 readingNew = true
+                const button = document.getElementById(logLevel)
+                const buttons = document.querySelectorAll('.logLevelButton')
+                for (const b of buttons) {
+                    b.style.backgroundColor = 'var(--background-color)'
+                }
+                button.style.backgroundColor = 'var(--midground-color-light)'
                 logContent.innerHTML = ''
                 status.innerText = 'resetting...'
                 previousLineSection = null
@@ -102,7 +108,9 @@
                         }
                         logContent.prepend(linesSection)
                         if (previousLineSection) {
-                            previousLineSection.scrollIntoView({ behavior: "instant", block: "start" })
+                            const scrollLeft = logContent.scrollLeft;
+                            previousLineSection.scrollIntoView({ behavior: "instant", block: "start" });
+                            logContent.scrollLeft = scrollLeft;
                         }
                         console.log(`previousLineSection: ${previousLineSection}`)
                         previousLineSection = linesSection

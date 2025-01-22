@@ -301,10 +301,10 @@ const list = new SubCommand(
             formattedResult += " pips";
             lsmessage += `${key}: ${formattedResult}\n`;
         }
-        const file = await files.textToFile(lsmessage, "equipmentlist");
+        const file = await files.textToFile(lsmessage, "equipmentlist_" + message.id);
         action.reply(message, { content: "here's a list of all deepwoken equipment and their pips", ephemeral: gconfig.useEphemeralReplies, files: [
             {
-                name: "equipmentlist.txt",
+                name: "equipmentlist_" + message.id + ".txt",
                 attachment: file,
             },
         ], });

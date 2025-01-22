@@ -233,14 +233,23 @@
                 const diabolicalReactionEventChance = createConfigPair("diabolicalReactionEventChance", document.createElement('input'), richGuildConfigInfo["diabolicalReactionEventChance"]);
                 diabolicalReactionEventChance.querySelector('input').value = gconfig.diabolicalReactionEventChance * 100 + "%";
                 diabolicalReactionEventChance.querySelector('input').className = 'diabolicalEventChanceInput'
+                diabolicalReactionEventChance.querySelector('input').oninput = () => {
+                    diabolicalReactionEventChance.querySelector('input').value = diabolicalReactionEventChance.querySelector('input').value.replace(/[^0-9.]/g, "") + "%"
+                }
                 diabolicalEventsCategory.appendChild(diabolicalReactionEventChance);
                 const diabolicalReplyEventChance = createConfigPair("diabolicalReplyEventChance", document.createElement('input'), richGuildConfigInfo["diabolicalReplyEventChance"]);
                 diabolicalReplyEventChance.querySelector('input').value = gconfig.diabolicalReplyEventChance * 100 + "%";
                 diabolicalReplyEventChance.querySelector('input').className = 'diabolicalEventChanceInput'
+                diabolicalReplyEventChance.querySelector('input').oninput = () => {
+                    diabolicalReplyEventChance.querySelector('input').value = diabolicalReplyEventChance.querySelector('input').value.replace(/[^0-9.]/g, "") + "%"
+                }
                 diabolicalEventsCategory.appendChild(diabolicalReplyEventChance);
                 const diabolicalThreadEventChance = createConfigPair("diabolicalThreadEventChance", document.createElement('input'), richGuildConfigInfo["diabolicalThreadEventChance"], true);
                 diabolicalThreadEventChance.querySelector('input').value = gconfig.diabolicalThreadEventChance * 100 + "%";
                 diabolicalThreadEventChance.querySelector('input').className = 'diabolicalEventChanceInput'
+                diabolicalThreadEventChance.querySelector('input').oninput = () => {
+                    diabolicalThreadEventChance.querySelector('input').value = diabolicalThreadEventChance.querySelector('input').value.replace(/[^0-9.]/g, "") + "%"
+                }
                 diabolicalEventsCategory.appendChild(diabolicalThreadEventChance);
                 
                 const gptCategory = createCommandCategory('AI');
@@ -262,6 +271,9 @@
                 const otherCategory = createCommandCategory('Other')
                 const prefix = createConfigPair("prefix", document.createElement('input'), richGuildConfigInfo["prefix"])
                 prefix.querySelector('input').value = gconfig.prefix
+                prefix.querySelector('input').oninput = () => {
+                    prefix.querySelector('input').value = prefix.querySelector('input').value.toLowerCase().replaceAll(" ", "")
+                }
                 otherCategory.appendChild(prefix)
                 const autoCrosspostChannels = createConfigPair("autoCrosspostChannels", createChannelSelector('autoCrosspostChannels', guildInfo, gconfig.autoCrosspostChannels, (channel) => { 
                     const blacklistedChannelTypes = [
@@ -298,6 +310,56 @@
                 guildConfigMenu.appendChild(otherCategory)
 
                 statusMessage.innerText = 'awaiting input...'
+                submitButton.onclick = () => {
+                    statusMessage.innerText = 'reading data...';
+                    try {
+
+                    const newConfig = JSON.parse(JSON.stringify(gconfig));
+                    newConfig.disableTextCommands = disableTextCommands.querySelector('button').innerText === 'TRUE';
+                    newConfig.disableSlashCommands = disableSlashCommands.querySelector('button').innerText === 'TRUE';
+                    newConfig.disableAllCommands = disableAllCommands.querySelector('button').innerText === 'TRUE';
+                    newConfig.blacklistedCommandChannelIds = Array.from(blacklistedCommandChannelIds.querySelectorAll('.enabledChannelButton')).map(button => button.id);
+                    newConfig.disableDiabolicalEvents = disableDiabolicalEvents.querySelector('button').innerText === 'TRUE';
+                    newConfig.diabolicalEventBlacklistedChannelIds = Array.from(diabolicalEventBlacklistedChannelIds.querySelectorAll('.enabledChannelButton')).map(button => button.id);
+                    newConfig.diabolicalReactionEventChance = parseFloat(diabolicalReactionEventChance.querySelector('input').value) / 100;
+                    newConfig.diabolicalReplyEventChance = parseFloat(diabolicalReplyEventChance.querySelector('input').value) / 100;
+                    newConfig.diabolicalThreadEventChance = parseFloat(diabolicalThreadEventChance.querySelector('input').value) / 100;
+                    newConfig.disableGPTResponses = disableGPTResponses.querySelector('button').innerText === 'TRUE';
+                    newConfig.blacklistedGPTResponseChannelIds = Array.from(blacklistedGPTResponseChannelIds.querySelectorAll('.enabledChannelButton')).map(button => button.id);
+                    newConfig.prefix = prefix.querySelector('input').value;
+                    newConfig.autoCrosspostChannels = Array.from(autoCrosspostChannels.querySelectorAll('.enabledChannelButton')).map(button => button.id);
+                    newConfig.useEphemeralReplies = useEphemeralReplies.querySelector('button').innerText === 'TRUE';
+                    newConfig.enableUntitledClipAnger = enableUntitledClipAnger.querySelector('button').innerText === 'TRUE';
+                    newConfig.noticesChannelId = noticesChannelId.querySelector('.enabledChannelButton')?.id || "-1";
+
+                    statusMessage.innerText = 'sending data...';
+
+                    fetch('/api/change-guild-config', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'oauth2token': localStorage.getItem('token'),
+                        },
+                        body: JSON.stringify({
+                            gid: guildInfo.id,
+                            config: newConfig,
+                        }),
+                    }).then().then((response) => {
+                        if (!response.ok) {
+                            throw 'failed to update config';
+                        }
+                        statusMessage.innerText = 'config updated successfully';
+                        setTimeout(() => {
+                            statusMessage.innerText = 'awaiting input...';
+                        }, 2000);
+                    }).catch(error => {
+                        statusMessage.innerText = error;
+                    });
+                } catch (error) {
+                    statusMessage.innerText = error;
+                }
+                }
+
                 return guildConfigMenu;
             }
 
@@ -328,7 +390,7 @@
                     console.log(filteredData)
                     if (filteredData.length === 0) {
                         const noGuildsMessage = document.createElement('span');
-                        noGuildsMessage.innerText = 'you do not have the required permissions in any guilds. specifically i\'m looking for the manage server or administrator permissions, get those then come back. ';
+                        noGuildsMessage.innerHTML = 'you do not have the required permissions in any guilds. specifically i\'m looking for the manage server or administrator permissions, get those then come back. \nyou might have to <a href="/auth">reauthenticate</a>.';
                         guildList.appendChild(noGuildsMessage);
                         return;
                     }
@@ -379,7 +441,8 @@
                                     const configContent = createGuildConfigMenu(config, richGuildConfigInfo, guild);
                                     configData.appendChild(configContent);
                                 }).catch(error => {
-                                    loadingMessage.innerText = 'Failed to load config';
+                                    loadingMessage.style.display = 'inherit';
+                                    loadingMessage.innerText = error;
                                 });
                             }
                         });

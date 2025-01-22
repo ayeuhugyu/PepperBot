@@ -46,19 +46,21 @@ to add to todo list:
 REMEMBER TO DELETE ON PI: 
 p/configure BUT ONLY ONCE THE CONFIG PAGE IS DONE!!!
 
-p/update trying to remove some of the cluttering commands nobody uses that dont have much reason to exist
+p/update guild configs have been made 400x easier to change
 
 **website changes:**
 
+- **/config has been completed**, p/configure has been removed because its just 900x better. 
+- logs page now preserves your leftwards scroll amount when reaading more of the log
+- logs page buttons are now color coded
+- logs page buttons are now highlighted when they are the current log level
+
 **actual content:**
 
-- added new guild config: enableUntitledClipAnger
-disabled by default, makes Extreme Anger occur when untitled medal clips are sent (this has been a thing for a while but tbh most people dont want it)
-- removed p/preview, it's broken and has been used once ever. it's better than aen's shitty build preview, but its too annoying to update and nobody uses it.
-- removed p/composite, it has literally never once been used and is done better by every other bot in existence
-- removed p/setreferencemessage, it does literally nothing and i really just dont feel like finishing it
-- removed p/bingo (you prolly didnt even know this existed...)
-
-ill remove p/corrupt if the poll Succeeds™
+- added new gpt tool get_update, which allows the AI to read update logs
+- added new gpt tool get_deepwoken_build, which allows the AI to view deepwoken builds
 
 **fixes/optimizations:**
+
+- hopefully fixed errors caused by reaction event
+- all instances of text being converted to a file (usually LS commands) now have a unique id appended to the end of the filename (usually the message id). this avoids a really rare race condition where if two people executed the command at almost the same time someone could read the file while it was being written. 

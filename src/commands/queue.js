@@ -904,12 +904,12 @@ const load = new SubCommand(
             for (let file = 0; file < filesArr.length; file++) {
                 text += `${filesArr[file].replace(".json", "")}\n`;
             }
-            const file = await files.textToFile(text, "queues");
+            const file = await files.textToFile(text, "queues_" + message.id);
             action.reply(message, {
                 content: "here's a list of all the queues",
                 files: [
                     {
-                        name: "queues.txt",
+                        name: "queues" + message.id + ".txt",
                         attachment: file,
                     },
                 ],
