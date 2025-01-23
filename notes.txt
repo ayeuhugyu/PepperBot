@@ -59,6 +59,7 @@ p/update guild configs have been made 400x easier to change, also website is sli
 - logs page buttons are now highlighted when they are the current log level
 - sidebar "NAVIGATION" label is now a lighter color
 - backgrounds of most clickable things are now completely black
+- fixed guide page typo
 
 **actual content:**
 
