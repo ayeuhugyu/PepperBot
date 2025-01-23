@@ -90,14 +90,9 @@ const remove = new SubCommand(
         if (args.get("user")) {
             if (blacklists.includes(args.get("user"))) {
                 blacklists.splice(blacklists.indexOf(args.get("user")), 1);
-                fs.writeFile(
+                fs.writeFileSync(
                     "resources/data/blacklist.json",
                     JSON.stringify(blacklists),
-                    (err) => {
-                        if (err) {
-                            log.error(err);
-                        }
-                    }
                 );
                 action.reply(message, {
                     content: `removed \`${args.get(
@@ -154,14 +149,9 @@ const add = new SubCommand(
     async function execute(message, args, fromInteraction, gconfig) {
         if (args.get("user")) {
             blacklists.push(args.get("user"));
-            fs.writeFile(
+            fs.writeFileSync(
                 "resources/data/blacklist.json",
                 JSON.stringify(blacklists),
-                (err) => {
-                    if (err) {
-                        log.error(err);
-                    }
-                }
             );
             await action.reply(message, {
                 content: `blacklisted \`${args.get("user")}\``,

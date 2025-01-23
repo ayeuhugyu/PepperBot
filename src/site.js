@@ -295,6 +295,10 @@ app.get("/test", (req, res) => {
     res.send(`${req.ip} test recieved`);
 });
 
+app.get("/invite", (req, res) => {
+    res.redirect("https://discord.com/oauth2/authorize?client_id=1209297323029565470");
+});
+
 const ipv4regex = commonRegex.ipv4regex
 
 app.get("/api/read-log", (req, res) => {

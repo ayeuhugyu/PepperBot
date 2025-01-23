@@ -17,10 +17,9 @@ export default {
     statistics: statistics,
     async writeStatistics() {
         return new Promise((resolve, reject) => {
-            fs.writeFile(
+            fs.writeFileSync(
                 `resources/data/statistics.json`,
                 JSON.stringify(statistics, null, 2),
-                () => {}
             );
             resolve();
         });
@@ -44,6 +43,7 @@ export default {
                 }
             } else {
                 log.warn(`commandUsage missing from statistics; likely old version`);
+                statistics.commandUsage = {};
             }
             if (statistics.hourlyUsage) {
                 const date = new Date();
@@ -55,6 +55,7 @@ export default {
                 }
             } else {
                 log.warn(`hourlyUsage missing from statistics; likely old version`);
+                statistics.hourlyUsage = {};
             }
             if (statistics.executionTime) {
                 if (statistics.executionTime[commandName]) {
@@ -64,6 +65,7 @@ export default {
                 }
             } else {
                 log.warn(`executionTime missing from statistics; likely old version`);
+                statistics.executionTime = {};
             }
             this.writeStatistics();
             resolve();

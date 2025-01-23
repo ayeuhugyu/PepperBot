@@ -51,6 +51,8 @@ p/update guild configs have been made 400x easier to change, also website is sli
 **website changes:**
 
 - **/config has been completed**, p/configure has been removed because its just 900x better. 
+- added /projects
+- added /invite, literally just redirects to the invite link
 - config & guide page padding & margins have been doubled, makes it a lot easier to follow
 - logs page now preserves your leftwards scroll amount when reaading more of the log
 - logs page buttons are now color coded

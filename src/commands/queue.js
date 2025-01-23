@@ -909,7 +909,7 @@ const load = new SubCommand(
                 content: "here's a list of all the queues",
                 files: [
                     {
-                        name: "queues" + message.id + ".txt",
+                        name: "queues_" + message.id + ".txt",
                         attachment: file,
                     },
                 ],

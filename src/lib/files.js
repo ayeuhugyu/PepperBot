@@ -26,10 +26,23 @@ export function generateLSText(path, truncateFileExtensions) {
 }
 
 export async function textToFile(text, name) {
-    await fsextra.ensureFile(`resources/containers/${name}.txt`, () => {});
-    const file = `resources/containers/${name}.txt`;
-    await fs.writeFile(file, text, () => {});
-    return file;
+    return new Promise((resolve, reject) => {
+        const file = `resources/containers/${name}.txt`;
+        fsextra.ensureFile(file, (err) => {
+            if (err) {
+                log.error(err);
+                reject(err);
+            }
+            fs.writeFile(file, text, (err) => {
+                if (err) {
+                    log.error(err);
+                    reject(err);
+                } else {
+                    resolve(file);
+                }
+            });
+        });
+    });
 }
 
 export function fixFileName(name) {

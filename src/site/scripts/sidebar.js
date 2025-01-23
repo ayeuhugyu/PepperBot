@@ -81,6 +81,7 @@ createSidebarButton('/guide', '/guide');
 createSidebarButton('/config', '/config');
 createSidebarButton('/statistics', '/statistics');
 createSidebarButton('/logs', '/logs');
+createSidebarButton('/projects', '/projects');
 createSidebarButton('/chat', '/chat');
 createSidebarButton('/credits', '/credits');
 createSidebarButton('/contact', '/contact');

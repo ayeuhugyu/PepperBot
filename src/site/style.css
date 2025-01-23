@@ -847,3 +847,45 @@ details.commandArgument > *:not(summary):not(details) {
     margin: 0;
     margin-right: 3px;
 }
+
+/* Projects Page */
+
+.project {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    margin-right: 0;
+}
+
+.projectMeta {
+    margin-top: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+    border-bottom: 1px dashed var(--border-color);
+    margin-bottom: 0;
+    padding-bottom: 3px;
+}
+
+.projectDescription {
+    margin: 5px;
+    width: 100%;
+    text-wrap: wrap;
+}
+
+.projectSummary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/*.projectTitle {}*/
+
+.projectStatus {
+    color: var(--darkened-text-color)
+}
+
+.projectStatus::before {
+    content: "status: ";
+    color: var(--darker-darkened-text-color);
+}
