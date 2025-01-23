@@ -478,7 +478,7 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
         }
     }
     if (token == "test") {
-        if (guildid == "1337Krew") {
+        if (guildid == "TheTipWibblers") {
             fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
             return res.send();
         }
@@ -486,7 +486,7 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
             fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
             return res.send();
         }
-        if (guildid == "TheTipWibblers") {
+        if (guildid == "1337Krew") {
             return res.status(403).send("user not authorized to edit guild config");
         }
         return res.status(404).send("you cant use the test token for that... NOOB!");

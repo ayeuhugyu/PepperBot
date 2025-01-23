@@ -183,12 +183,6 @@
                 submitButton.className = 'gconifgSubmitButton';
                 controllerContainer.appendChild(submitButton);
 
-                const unfinishedWarning = document.createElement('span');
-                unfinishedWarning.className = 'gconfigUnfinishedWarning';
-                unfinishedWarning.innerText = 'still not done, this submit button does nothing.';
-                unfinishedWarning.style.marginLeft = '10px';
-                controllerContainer.appendChild(unfinishedWarning);
-
                 const statusMessage = document.createElement('span');
                 statusMessage.className = 'gconfigStatusMessage';
                 controllerContainer.appendChild(statusMessage);
@@ -344,9 +338,9 @@
                             gid: guildInfo.id,
                             config: newConfig,
                         }),
-                    }).then().then((response) => {
+                    }).then((response) => {
                         if (!response.ok) {
-                            throw 'failed to update config';
+                            throw 'ERROR: ' + response.text();
                         }
                         statusMessage.innerText = 'config updated successfully';
                         setTimeout(() => {

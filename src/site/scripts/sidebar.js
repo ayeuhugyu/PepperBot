@@ -21,6 +21,7 @@ sidebarTitle.className = 'sidebarTitle';
 sidebarTitle.innerHTML = 'NAVIGATION';
 sidebarTitle.style.fontSize = '1.25em';
 sidebarTitle.style.marginBottom = '0'
+sidebarTitle.style.color = "var(--highlighted-text-color-light)"
 sidebarContainer.appendChild(sidebarTitle);
 
 const sidebarTitleSeperator = document.createElement('div');

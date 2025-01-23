@@ -23,6 +23,8 @@
     --main-font: 'BPdotsSquareBold', monospace;
     --transparent: rgba(0, 0, 0, 0);
     --heading-margins: 5px;
+    --summary-background-color: rgb(0, 0, 0);
+    --clickable-background-color: rgb(0, 0, 0);
 
     font-family: var(--main-font);
     -webkit-font-smoothing: antialiased;
@@ -145,7 +147,7 @@ body {
     right: 147px;
     z-index: inherit;
     transform: translateY(-50%);
-    background-color: var(--midground-color-no-transparency);
+    background-color: var(--clickable-background-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -187,7 +189,7 @@ details {
 }
 
 summary {
-    background-color: var(--midground-color);
+    background-color: var(--summary-background-color);
     color: var(--text-color);
     padding: 5px;
     cursor: pointer;
@@ -219,8 +221,8 @@ details[open] summary {
 /* borderlessCategory */
 
 summary.borderlessCategory {
-    background-color: var(--transparent);
-    border-radius: 0;
+    background-color: var(--clickable-background-color);
+    border-radius: 5px 5px 0 0;
     border-bottom: 1px solid var(--border-color);
 }
 summary.borderlessCategory:hover {
@@ -299,7 +301,7 @@ p {
 }
 
 button {
-    background-color: var(--midground-color);
+    background-color: var(--clickable-background-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -318,7 +320,7 @@ button:active {
 }
 
 input {
-    background-color: var(--midground-color);
+    background-color: var(--clickable-background-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -422,11 +424,13 @@ details.commandArgument > *:not(summary):not(details) {
     .guideblock {
         height: calc(50% - 32px);
         width: calc(100% - 27px);
-        margin-bottom: 5px;
+        margin-bottom: 7px;
     }
 }
 
 .commandDetails {
+    margin-right: 5px;
+    margin-left: 5px;
     scroll-margin-top: 5px;
 }
 /*
@@ -435,8 +439,9 @@ details.commandArgument > *:not(summary):not(details) {
 }
 */
 .subcommand {
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
     padding: 0;
 }
 .whitelistOnly {
@@ -450,15 +455,16 @@ details.commandArgument > *:not(summary):not(details) {
     color: var(--darker-darkened-text-color);
 }
 .commandDescription {
-    margin-top: 3px;
-    margin-bottom: 3px;
-    padding-left: 6px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding-left: 10px;
     white-space: pre-line;
 }
 .commandArgument {
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
     margin-top: 0px;
+    margin-bottom: 10px;
     padding: 0;
 }
 .commandArgumentType::before {
@@ -694,7 +700,7 @@ details.commandArgument > *:not(summary):not(details) {
 
 .guildObject {
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 7px;
     display: flex;
     flex-direction: row;
 }
@@ -707,7 +713,12 @@ details.commandArgument > *:not(summary):not(details) {
 }
 
 .configData {
-    padding: 5px;
+    padding: 10px;
+    padding-bottom: 0;
+}
+
+.configCommandCategory {
+    margin-bottom: 10px;
 }
 
 .guildSummary > * {
@@ -745,7 +756,7 @@ details.commandArgument > *:not(summary):not(details) {
 }
 
 .trueFalseButton {
-    background-color: var(--midground-color);
+    background-color: var(--clickable-background-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -769,6 +780,7 @@ details.commandArgument > *:not(summary):not(details) {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    margin-bottom: 10px;
     align-items: space-between;
 }
 
@@ -794,7 +806,7 @@ details.commandArgument > *:not(summary):not(details) {
 }
 
 .channelButton {
-    background-color: var(--midground-color);
+    background-color: var(--clickable-background-color);
     color: var(--darkened-text-color);
     border: 1px solid var(--border-color);
     border-radius: 50px 50px 50px 50px;

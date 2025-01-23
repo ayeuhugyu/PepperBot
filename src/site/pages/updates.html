@@ -15,8 +15,8 @@
         <script src="/socket.io/socket.io.js"></script>
         <div class="outlined logPageContainer" style="max-width: 100vw;">
             <div id="logControllerContainer" class="flex row" style="height: fit-content; align-items: center; margin-top: 0; max-width: 100vw;">
-                <input id="textbox" type="text" class="outlined" placeholder="version" style="margin: 0"/>
-                <button onclick="readUpdate()" class="outlined">FETCH</button>
+                <input id="textbox" type="text" placeholder="version" style="margin: 0"/>
+                <button onclick="readUpdate()" >FETCH</button>
                 <span id="status" class="outlined logReaderStatus" style="margin-bottom: 0;">awaiting input...</span>
             </div>
             <pre id="updatecontent" class="logContent outlined" ></pre>

@@ -46,14 +46,17 @@ to add to todo list:
 REMEMBER TO DELETE ON PI: 
 p/configure BUT ONLY ONCE THE CONFIG PAGE IS DONE!!!
 
-p/update guild configs have been made 400x easier to change
+p/update guild configs have been made 400x easier to change, also website is slightly clearer now
 
 **website changes:**
 
 - **/config has been completed**, p/configure has been removed because its just 900x better. 
+- config & guide page padding & margins have been doubled, makes it a lot easier to follow
 - logs page now preserves your leftwards scroll amount when reaading more of the log
 - logs page buttons are now color coded
 - logs page buttons are now highlighted when they are the current log level
+- sidebar "NAVIGATION" label is now a lighter color
+- backgrounds of most clickable things are now completely black
 
 **actual content:**
 
