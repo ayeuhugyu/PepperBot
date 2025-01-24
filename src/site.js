@@ -466,6 +466,7 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
     if (!gconfig) {
         return res.status(400).send("no guild config provided");
     };
+    /*
     for (const [key, value] of Object.entries(gconfig)) {
         if (typeof gconfig[key] != typeof defaultGuildConfig[key]) {
             return res.status(400).send(`guild config value types must match the defaults; ${key} (${typeof key}) != ${typeof defaultGuildConfig[key]}`);
@@ -481,6 +482,7 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
             return res.send(400).send(`guild config value types must match the defaults; mismatched array types for ${key}`);
         }
     }
+    */
     if (token == "test") {
         if (guildid == "TheTipWibblers") {
             fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
