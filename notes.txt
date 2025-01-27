@@ -46,27 +46,13 @@ to add to todo list:
 REMEMBER TO DELETE ON PI: 
 p/configure BUT ONLY ONCE THE CONFIG PAGE IS DONE!!!
 
-p/update guild configs have been made 400x easier to change, also website is slightly clearer now
+p/update
 
 **website changes:**
 
-- **/config has been completed**, p/configure has been removed because its just 900x better. 
-- added /projects
-- added /invite, literally just redirects to the invite link
-- config & guide page padding & margins have been doubled, makes it a lot easier to follow
-- logs page now preserves your leftwards scroll amount when reaading more of the log
-- logs page buttons are now color coded
-- logs page buttons are now highlighted when they are the current log level
-- sidebar "NAVIGATION" label is now a lighter color
-- backgrounds of most clickable things are now completely black
-- fixed guide page typo
-
 **actual content:**
-
-- added new gpt tool get_update, which allows the AI to read update logs
-- added new gpt tool get_deepwoken_build, which allows the AI to view deepwoken builds
 
 **fixes/optimizations:**
 
-- hopefully fixed errors caused by reaction event
-- all instances of text being converted to a file (usually LS commands) now have a unique id appended to the end of the filename (usually the message id). this avoids a really rare race condition where if two people executed the command at almost the same time someone could read the file while it was being written. 
+- fixed /config verifier always counting objects as invalid
+- /config now has a better error message when your oauth2 token has expired

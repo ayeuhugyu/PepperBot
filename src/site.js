@@ -466,14 +466,13 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
     if (!gconfig) {
         return res.status(400).send("no guild config provided");
     };
-    /*
     for (const [key, value] of Object.entries(gconfig)) {
         if (typeof gconfig[key] != typeof defaultGuildConfig[key]) {
             return res.status(400).send(`guild config value types must match the defaults; ${key} (${typeof key}) != ${typeof defaultGuildConfig[key]}`);
         }
         if (typeof gconfig[key] == "object") {
             for (const [subkey, subvalue] of Object.entries(gconfig[key])) {
-                if (typeof gconfig[key][subkey] != typeof defaultGuildConfig[key][subkey]) {
+                if (defaultGuildConfig[key][subkey] && (typeof gconfig[key][subkey] != typeof defaultGuildConfig[key][subkey])) {
                     return res.status(400).send(`guild config value types must match the defaults; ${key}.${subkey} (${typeof key}) != ${typeof defaultGuildConfig[key][subkey]}`);
                 }
             }
@@ -482,7 +481,6 @@ app.post("/api/change-guild-config", async (req, res) => { // TODO: implement ch
             return res.send(400).send(`guild config value types must match the defaults; mismatched array types for ${key}`);
         }
     }
-    */
     if (token == "test") {
         if (guildid == "TheTipWibblers") {
             fs.writeFileSync(`./resources/data/guildConfigs/${guildid}.json`, JSON.stringify(gconfig, null, 4));
@@ -690,7 +688,10 @@ app.post(`/oauth2/getGuilds`, async (req, res) => {
     if (sorted) {
         const botGuilds = await getGuilds();
         if (!Array.isArray(guilds)) {
-            return res.send([]);
+            return res.send({
+                "error": true,
+                "message": guilds.message
+            });
         }
         let filteredGuilds = guilds?.filter((guild) => botGuilds.find((botGuild) => botGuild.id == guild.id))
         let channeledGuilds = await Promise.all(filteredGuilds.map(async (guild) => {
