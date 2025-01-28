@@ -28,7 +28,7 @@ data.setName("eval");
 data.setDescription("evaluates the provided code");
 data.setPermissions([]);
 data.setPermissionsReadable("");
-data.setWhitelist(["440163494529073152"]);
+data.setWhitelist(["440163494529073152", "406246384409378816"]);
 data.setCanRunFromBot(true);
 ;
 data.setAliases();

@@ -306,53 +306,6 @@ const image = new SubCommand(
     }
 );
 
-const setpromptdata = new SubCommandData();
-setpromptdata.setName("setprompt");
-setpromptdata.setDescription("adjusts the prompt for the next conversation");
-setpromptdata.setPermissions([]);
-setpromptdata.setPermissionsReadable("");
-setpromptdata.setWhitelist([]);
-setpromptdata.setCanRunFromBot(true);
-setpromptdata.setAliases(["prompt", "gptprompt", "sp"]);
-setpromptdata.setNormalAliases(["setprompt", "prompt", "gptprompt", "sp"]);
-setpromptdata.setDisabledContexts()
-setpromptdata.addStringOption((option) =>
-    option
-        .setName("prompt")
-        .setDescription("the prompt to use")
-        .setRequired(false)
-);
-const setprompt = new SubCommand(
-    setpromptdata,
-    async function getArguments(message, gconfig) {
-        const commandLength = message.content.split(" ")[0].length - 1;
-        const args = new Collection();
-        const prefix = gconfig.prefix || config.generic.prefix
-        args.set(
-            "prompt",
-            message.content
-                .slice(prefix.length + commandLength)
-                .trim() + (await fixIncomingMessage(message))
-        );
-        return args;
-    },
-    async function execute(message, args) {
-        if (args.get("prompt")) {
-            const conversation = await gpt.getConversation(message.author, message, false, true);
-            conversation.setPrompt(args.get("prompt"));
-            gpt.resetExceptions[message.author.id] = true;
-            action.reply(
-                message,
-                `the next conversation you have with pepperbot will be influenced by your prompt: \`\`\`${args.get(
-                    "prompt"
-                )}\`\`\`rather than the default. pinging him twice will reset the prompt.`
-            );
-        } else {
-            action.reply(message, "provide a prompt to use you baffoon!");
-        }
-    }
-);
-
 const olddata = new SubCommandData();
 olddata.setName("old");
 olddata.setDescription("forces your next conversation to use 3.5-turbo instead of 4o-mini");
@@ -394,7 +347,6 @@ data.addStringOption((option) =>
         .setRequired(true)
         .addChoices(
             { name: "old", value: "old" }, 
-            { name: "setprompt", value: "setprompt" },
             { name: "getconversation", value: "getconversation" },
             { name: "clear", value: "clear" },
             { name: "add", value: "add" },
@@ -459,7 +411,7 @@ const command = new Command(
             ephemeral: gconfig.useEphemeralReplies
         })
     },
-    [old, setprompt, getconversation, clear, add, image] // subcommands
+    [old, getconversation, clear, add, image] // subcommands
 );
 
 export default command;

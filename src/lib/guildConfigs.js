@@ -36,16 +36,13 @@ async function createGuildConfig(guildId) {
 }
 
 function getGuildConfig(guildId) {
-    if (!guildConfigs[guildId]) {
-        if (!fs.existsSync(`resources/data/guildConfigs/${guildId}.json`)) {
-            return JSON.parse(JSON.stringify(defaultGuildConfig));
-        }
-        log.warn(`noncached guild config requested: ${guildId}`);
-        const data = fs.readFileSync(`resources/data/guildConfigs/${guildId}.json`, "utf8");
-        guildConfigs[guildId] = JSON.parse(data);
-        return guildConfigs[guildId]
+    if (!fs.existsSync(`resources/data/guildConfigs/${guildId}.json`)) {
+        return JSON.parse(JSON.stringify(defaultGuildConfig));
     }
-    return guildConfigs[guildId];
+    //log.warn(`noncached guild config requested: ${guildId}`);
+    const data = fs.readFileSync(`resources/data/guildConfigs/${guildId}.json`, "utf8");
+    guildConfigs[guildId] = JSON.parse(data);
+    return guildConfigs[guildId]
 }
 
 function writeGuildConfig(guildId, config) {

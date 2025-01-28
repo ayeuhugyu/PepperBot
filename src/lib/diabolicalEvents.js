@@ -66,6 +66,10 @@ export async function reactionEvent(message) {
     log.info(`diabolical emoji event triggered with AI emojis: ${AIEmoji} on message: ${message.id} with content: ${messageContent}`);
     let AIReactions = AIEmoji.split(',');
     AIReactions.forEach(async (emoji) => {
+        if (!globals.emojis.includes(emoji)) {
+            log.warn(`attempt to react with invalid AI emoji: ${emoji}`);
+            return;
+        }
         try {
             await action.messageReact(message, emoji).catch(err => {
                 log.warn(`could not react to message with AI emoji. AI emoji: ${emoji}`);
