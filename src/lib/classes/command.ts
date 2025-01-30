@@ -1,10 +1,11 @@
+import { fetchGuildConfig, GuildConfig } from "../guild_config_manager";
 import * as log from "../log";
 import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits } from "discord.js";
 
-type GuildConfig = any; // not yet defined
 type PipedData = any; // not yet defined
-export type CommandFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: Partial<CommandInput>) => any;
-export type ExecuteFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
+type CommandFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: Partial<CommandInput>) => any;
+type ExecuteFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
+type GetArgumentsFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
 
 export interface FormattedCommandInteraction extends CommandInteraction {
     author: Message["author"];
@@ -13,6 +14,17 @@ export interface FormattedCommandInteraction extends CommandInteraction {
 export enum InputType {
     Interaction,
     Message,
+}
+
+export enum CommandCategory {
+    AI,
+    Management,
+    Fun,
+    Utility,
+    Info,
+    Voice,
+    Moderation,
+    Other
 }
 
 export interface CommandInput {
@@ -67,6 +79,26 @@ export class CommandOption {
     long_description: string = "no description"
     deployed: boolean = true;
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
+    constructor(data: Partial<CommandOption>) {
+        const validationChecks = [
+            { condition: this.name.length > 32, message: "command option name may not exceed 32 characters", unrecoverable: true },
+            { condition: this.description.length > 100, message: "command option description may not exceed 100 characters", unrecoverable: true },
+            { condition: (this.choices && this.choices.length > 25) || false, message: "command option cannot have more than 25 choices", unrecoverable: true },
+        ];
+        validationChecks.forEach(
+            check => {
+            if (check.condition) {
+                this.validation_errors.push(check);
+            }
+        });
+
+        if (this.validation_errors.length > 0) {
+            return;
+        }
+
+        if (!data.long_description && data.description) data.long_description = data.description;
+        Object.assign(this, { ...data });
+    }
 }
 
 function defaultCommandFunction({ command = "" }) {
@@ -91,10 +123,11 @@ export class Command {
     subcommands: Command[] = [];
     pipable_to: string[] = []; // array of command names which output may be piped to
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
+    category: CommandCategory = CommandCategory.Other;
     _execute_raw: ExecuteFunction = defaultCommandFunction;
-    get_arguments: CommandFunction = defaultCommandFunction;
+    get_arguments: GetArgumentsFunction = defaultCommandFunction;
     execute: CommandFunction = defaultCommandFunction;
-    constructor(data: Partial<Command>, getArguments: CommandFunction, execute: ExecuteFunction) {
+    constructor(data: Partial<Command>, getArguments: GetArgumentsFunction, execute: ExecuteFunction) {
         const validationChecks = [
             { condition: this.name.length > 32, message: "command name may not exceed 32 characters", unrecoverable: true },
             { condition: this.description.length > 100, message: "command description may not exceed 100 characters", unrecoverable: true },
@@ -113,12 +146,14 @@ export class Command {
             return;
         }
 
+        if (!data.long_description && data.description) data.long_description = data.description;
         Object.assign(this, { ...data });
         
         this._execute_raw = execute;
         this.get_arguments = getArguments;
         // #region COMMAND EXECUTION
         this.execute = async (input) => {
+            log.info("executing command " + this.name);
             const { message, input_type } = input;
             if (!message) {
                 log.error("message is undefined in command execution");
@@ -207,17 +242,20 @@ export class Command {
                 }
             }
             if (!isWhitelisted || isBlacklisted) {
+                log.info(accessReply + "for command " + this.name);
                 message.reply(accessReply);
                 return;
             }
 
             if (!this.input_types.includes(input.input_type)) {
+                log.info("invalid input type " + input.input_type + " for command " + this.name);
                 message.reply(`input type ${input.input_type} is not enabled for this command`);
                 return;
             }
 
             if (!this.contexts.includes(InteractionContextType.Guild)) {
                 if (message.guild) {
+                    log.info("guild context is not enabled for command " + this.name);
                     message.reply("this command is not enabled in guilds");
                     return;
                 }
@@ -232,25 +270,25 @@ export class Command {
             }
 
             if (!this.allow_external_guild && !input.bot_is_admin) {
+                log.info("external guilds are not enabled for command " + this.name);
                 message.reply("this command is not enabled in guilds where i dont have administrator");
                 return;
             }
 
             // todo: add subcommand support
-
-            if (!input.args) {
-                input.args = await this.get_arguments(input);
-            }
             if (!input.message) return;
-
-            const finalCommandInput = {
-                message: input.message,
-                guildConfig: input.guildConfig,
-                args: input.args,
+            let finalCommandInput: CommandInput = {
+                message: input.message!,
+                guildConfig: input.guildConfig || await fetchGuildConfig(input.message!.guild?.id || ""),
+                args: input.args || undefined,
                 command: this.name,
                 input_type: input.input_type,
                 bot_is_admin: input.bot_is_admin,
                 piped_data: input.piped_data
+            }
+            if (!finalCommandInput.args) {
+                finalCommandInput.args = await this.get_arguments(finalCommandInput);
+                log.info("fetched arguments for command " + this.name);
             }
 
             return this._execute_raw(finalCommandInput);

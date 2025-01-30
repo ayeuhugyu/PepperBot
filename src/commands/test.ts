@@ -1,11 +1,12 @@
-import { Command } from "../lib/classes/command";
+import { Command, CommandCategory } from "../lib/classes/command";
 
 const command = new Command(
     {
         name: 'test',
         description: 'Test command',
+        category: CommandCategory.Other,
     }, 
-    async function getArguments ({ message }) {
+    async function getArguments () {
         return undefined;
     },
     async function execute ({ message }) {

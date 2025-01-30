@@ -22,9 +22,9 @@ function levelPrefix(level: Level) {
         case Level.Warn:
             return chalk.yellow("WRN");
         case Level.Err:
-            return chalk.red("ERROR");
+            return chalk.red("ERR");
         case Level.Fatal:
-            return chalk.hex("#FC0202").bold.underline("FATAL");
+            return chalk.hex("#FC0202").bold.underline("FTL");
     }
 }
 

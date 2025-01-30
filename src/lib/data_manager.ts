@@ -111,7 +111,7 @@ await database.schema.hasTable("prompts").then(async (exists) => {
     if (!exists) {
         log.warn("creating missing prompts table");
         return await database.schema.createTable("prompts", (table) => {
-            table.string("user").primary().notNullable();
+            table.string("user").notNullable();
             table.string("name").notNullable();
             table.string("text").notNullable();
             table.timestamp("created_at").defaultTo(database.fn.now());
@@ -123,7 +123,7 @@ await database.schema.hasTable("todos").then(async (exists) => {
     if (!exists) {
         log.warn("creating missing todos table");
         return await database.schema.createTable("todos", (table) => {
-            table.string("user").primary().notNullable();
+            table.string("user").notNullable();
             table.string("name").notNullable();
             table.integer("item").notNullable();
             table.string("text").notNullable();
@@ -137,9 +137,10 @@ await database.schema.hasTable("configs").then(async (exists) => {
     if (!exists) {
         log.warn("creating missing configs table");
         return await database.schema.createTable("configs", (table) => {
-            table.string("guild").primary().notNullable();
+            table.string("guild").notNullable();
             table.string("key").notNullable();
             table.json("value").notNullable();
+            table.string("category").notNullable();
         })
     }
 });
@@ -148,7 +149,7 @@ await database.schema.hasTable("queues").then(async (exists) => {
     if (!exists) {
         log.warn("creating missing queues table");
         return await database.schema.createTable("queues", (table) => {
-            table.string("guild").primary()
+            table.string("guild");
             table.string("user");
             table.string("queue_name").notNullable();
             table.integer("index").notNullable();
@@ -164,7 +165,7 @@ await database.schema.hasTable("sounds").then(async (exists) => {
     if (!exists) {
         log.warn("creating missing sounds table");
         return await database.schema.createTable("sounds", (table) => {
-            table.string("guild").primary();
+            table.string("guild");
             table.string("user");
             table.string("name").notNullable();
             table.string("path").notNullable();
