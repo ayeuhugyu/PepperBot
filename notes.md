@@ -2,6 +2,11 @@ LATEST UPDATE
 ---
 **actual content:**
 
+- command data has been overhauled
+  - whitelists are now comprised of users, roles, channels, and guilds rather than just users
+  - blacklists now exist (exact opposite of whitelists)
+  - descriptions are separated into a short and long form, one for display under a slash command and one for all other cases
+
 **technical details:**
 
 - javascript -> typescript
