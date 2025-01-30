@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { config } from 'dotenv';
 import * as log from './lib/log';
 import { Theme, getThemeEmoji } from './lib/theme';
+import fs from "fs";
 //import { startServer } from './lib/communication_manager';
 config();
 
@@ -26,6 +27,15 @@ if (app instanceof Error) {
     log.error(app.message);
     process.exit(1);
 }*/
+
+const eventFiles = fs
+    .readdirSync("src/events")
+for (const file of eventFiles) {
+    (async () => {
+        const event = await import(`./events/${file}`);
+        client.on(event.default.name, event.default.execute);
+    })();
+}
 
 client.once('ready', async () => {
     log.info(`logged in as ${client.user?.tag}; shard ${shardTotal.currentShard}/${shardTotal.totalShards}`);

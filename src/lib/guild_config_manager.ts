@@ -4,6 +4,7 @@ import * as log from "./log"
 
 class GuildCommandsConfig {
     "disable_all_commands": boolean = false;
+    "disable_command_piping": boolean = false;
     "blacklisted_commands": string[] = [];
     "blacklisted_channels": string[] = [];
     "blacklisted_categories": CommandCategory[] = [];
@@ -41,7 +42,6 @@ export class GuildConfig {
         Object.assign(this, { ...config });
     }
     write() {
-        log.info(`writing config for guild ${this.guild}`);
         const promises = [];
         for (const category in this) {
             if (category === "guild") {
@@ -83,7 +83,7 @@ export async function newGuildConfig(guild: string) {
     return config;
 }
 
-export function fetchGuildConfig(guild: string) {
+export function fetchGuildConfig(guild: string = "") {
     return database("configs")
         .where({ guild })
         .select()
@@ -108,7 +108,6 @@ export function fetchGuildConfig(guild: string) {
                     category[row.key] = data
                 }
             }
-            log.info(`fetched config for guild ${guild}`);
             await config.write(); // update any missing keys
             return config;
         });

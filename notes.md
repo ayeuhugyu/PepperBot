@@ -7,6 +7,7 @@ LATEST UPDATE
   - blacklists now exist (exact opposite of whitelists)
   - descriptions are separated into a short and long form, one for display under a slash command and one for all other cases
   - commands can now have categories
+- bots can no longer execute any commands. this was just yet another value i had to think about if it would cause problems or not
 
 **technical details:**
 

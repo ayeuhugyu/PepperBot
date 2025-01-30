@@ -2,10 +2,28 @@ import { fetchGuildConfig, GuildConfig } from "../guild_config_manager";
 import * as log from "../log";
 import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits } from "discord.js";
 
-type PipedData = any; // not yet defined
-type CommandFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: Partial<CommandInput>) => any;
-type ExecuteFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
-type GetArgumentsFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
+export class CommandResponse {
+    error: boolean = false;
+    message: string = "";
+    pipe_data: any = {};
+    from: string = "";
+    constructor(data: Partial<CommandResponse>) {
+        Object.assign(this, { ...data });
+    }
+}
+
+export type CommandFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: Partial<CommandInput>) => any;
+export type ExecuteFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
+export type GetArgumentsFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
+
+export class PipedData {
+    from: string | undefined = "";
+    data: any = {};
+    constructor(from: string | undefined, data: any) {
+        this.from = from;
+        this.data = data;
+    }
+}
 
 export interface FormattedCommandInteraction extends CommandInteraction {
     author: Message["author"];
@@ -28,6 +46,7 @@ export enum CommandCategory {
 }
 
 export interface CommandInput {
+    _response: CommandResponse | undefined;
     message: Message | FormattedCommandInteraction;
     guildConfig: GuildConfig;
     args: Collection<any, any> | undefined,
@@ -35,6 +54,7 @@ export interface CommandInput {
     input_type: InputType;
     bot_is_admin: boolean;
     piped_data: PipedData | undefined;
+    will_be_piped: boolean;
 }
 
 export interface ValidationCheck {
@@ -284,7 +304,9 @@ export class Command {
                 command: this.name,
                 input_type: input.input_type,
                 bot_is_admin: input.bot_is_admin,
-                piped_data: input.piped_data
+                piped_data: input.piped_data || new PipedData(input._response?.from || undefined, input._response?.pipe_data) || undefined,
+                _response: input._response,
+                will_be_piped: input.will_be_piped || false,
             }
             if (!finalCommandInput.args) {
                 finalCommandInput.args = await this.get_arguments(finalCommandInput);
