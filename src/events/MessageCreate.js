@@ -259,7 +259,7 @@ async function getIsDisgraceful(message) {
         }
     }
 
-    const gconfig = guildConfigs.getGuildConfig(message.guild.id);
+    const gconfig = guildConfigs.getGuildConfig(message?.guild?.id);
     if (gconfig.enableUntitledClipAnger) {
         const medalTvRegex = /https:\/\/medal\.tv[^\s]+/g;
         const medalTvUrls = message.content.match(medalTvRegex);
