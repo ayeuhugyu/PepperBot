@@ -28,8 +28,8 @@ async function forkSharder() {
         log.error(`sharder.ts errored: ${error.message}`);
     });
     sharder.on("exit", (code) => {
-        log.fatal(`[PEPPERCRITICAL] sharder.ts exited with code ${code}`);
-        forkSharder();
+        log.fatal(`[PEPPERCRITICAL] sharder exited with code ${code}, restarting in 5 minutes...`);
+        setTimeout(forkSharder, 300000);
     });
 }
 

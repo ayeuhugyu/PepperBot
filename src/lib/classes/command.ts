@@ -12,9 +12,9 @@ export class CommandResponse {
     }
 }
 
-export type CommandFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: Partial<CommandInput>) => any;
-export type ExecuteFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
-export type GetArgumentsFunction = ({ message, guildConfig, args, command, input_type, bot_is_admin }: CommandInput) => any;
+export type CommandFunction = ({}: Partial<CommandInput>) => any;
+export type ExecuteFunction = ({}: CommandInput) => any;
+export type GetArgumentsFunction = ({}: CommandInput) => any;
 
 export class PipedData {
     from: string | undefined = "";
@@ -57,6 +57,11 @@ export interface CommandInput {
     will_be_piped: boolean;
 }
 
+export interface Contributor {
+    name: string;
+    userid: string;
+}
+
 export interface ValidationCheck {
     condition: boolean;
     message: string;
@@ -89,16 +94,17 @@ export interface CommandOptionChoice {
 }
 
 export class CommandOption {
-    name: string = "option"; // 32 char limit; must be unique
-    description: string = "no description"; // 100 char limit
+    name: string = "option";
+    description: string = "no description";
     type: ApplicationCommandOptionType = ApplicationCommandOptionType.String;
     required: boolean = false;
-    choices: CommandOptionChoice[] | undefined = []; // limit 25
+    choices: CommandOptionChoice[] | undefined = [];
     channel_types: ChannelType[] | undefined = undefined;
     /* ↑↑↑ discords shit ↓↓↓ my shit */
     long_description: string = "no description"
     deployed: boolean = true;
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
+
     constructor(data: Partial<CommandOption>) {
         const validationChecks = [
             { condition: this.name.length > 32, message: "command option name may not exceed 32 characters", unrecoverable: true },
@@ -142,11 +148,13 @@ export class Command {
     allow_external_guild: boolean = false; // should it be usable in guilds without administrator permission? (thats the only way to detect it)
     subcommands: Command[] = [];
     pipable_to: string[] = []; // array of command names which output may be piped to
+    contributors: Contributor[] = [{ name: "ayeuhugyu", userid: "440163494529073152"}];
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
     category: CommandCategory = CommandCategory.Other;
     _execute_raw: ExecuteFunction = defaultCommandFunction;
     get_arguments: GetArgumentsFunction = defaultCommandFunction;
     execute: CommandFunction = defaultCommandFunction;
+
     constructor(data: Partial<Command>, getArguments: GetArgumentsFunction, execute: ExecuteFunction) {
         const validationChecks = [
             { condition: this.name.length > 32, message: "command name may not exceed 32 characters", unrecoverable: true },
@@ -189,84 +197,38 @@ export class Command {
                 input.input_type = input_type as InputType;
             }
             // access check
-            let isWhitelisted = true;
-            let isBlacklisted = false;
-            for (const [key, value] of Object.entries(this.access.whitelist)) {
-                if (value.length > 0) isWhitelisted = false;
-            }
-            for (const [key, value] of Object.entries(this.access.blacklist)) {
-                if (value.length > 0) isBlacklisted = true;
-            }
-            let accessReply = "access check failed: ";
-            if (!isWhitelisted) {
-                if (this.access.whitelist.users.includes(message.author.id)) {
-                    isWhitelisted = true;
-                } if (this.access.whitelist.users.length > 0) {
-                    accessReply += "user not in whitelist; "
-                }
-                if (this.access.whitelist.roles.length > 0) {
-                    if (message.member && message.member.roles instanceof GuildMemberRoleManager) {
-                        for (const role of message.member.roles.cache) {
-                            if (role instanceof Role) {
-                                if (this.access.whitelist.roles.includes(role.id)) {
-                                    isWhitelisted = true; // if message has a member, and the member is a role manager, and the role is a role, and the role id is in the whitelist
-                                }
-                            }
-                        }
-                    }
-                    if (!isWhitelisted) {
-                        accessReply += "missing whitelisted roles; "
-                    }
-                }
-                if (this.access.whitelist.channels.includes(message.channel?.id || "")) {
-                    isWhitelisted = true;
-                } else if (this.access.whitelist.channels.length > 0) {
-                    accessReply += "channel not in whitelist; "
-                }
-                if (this.access.whitelist.guilds.includes(message.guild?.id || "")) {
-                    isWhitelisted = true;
-                } else if (this.access.whitelist.guilds.length > 0) {
-                    accessReply += "guild not in whitelist; "
-                }
-            }
-            if (isBlacklisted) {
-                if (!this.access.blacklist.users.includes(message.author.id)) {
-                    isBlacklisted = false;
-                } else if (this.access.blacklist.users.length > 0) {
-                    accessReply += "user in blacklist; "
-                }
-                if (this.access.blacklist.roles.length > 0) {
-                    if (message.member && message.member.roles instanceof GuildMemberRoleManager) {
-                        for (const role of message.member.roles.cache) {
-                            if (role instanceof Role) {
-                                if (!this.access.blacklist.roles.includes(role.id)) {
-                                    isBlacklisted = false; // if message has a member, and the member is a role manager, and the role is a role, and the role id is not in the blacklist
-                                }
-                            }
-                        }
-                    }
+            const { whitelist, blacklist } = this.access;
+            const { author, member, channel, guild } = message;
+            const userRoles = member?.roles instanceof GuildMemberRoleManager ? member.roles.cache.map(role => role.id) : [];
+            const guildId = guild?.id || "";
+            const channelId = channel?.id || "";
+            const userId = author.id;
 
-                    if (isBlacklisted) {
-                        accessReply += "user has blacklisted roles; "
-                    }
-                }
-                if (!this.access.blacklist.channels.includes(message.channel?.id || "")) {
-                    isBlacklisted = false;
-                } else if (this.access.blacklist.channels.length > 0) {
-                    accessReply += "channel in blacklist; "
-                }
-                if (!this.access.blacklist.guilds.includes(message.guild?.id || "")) {
-                    isBlacklisted = false;
-                } else if (this.access.blacklist.guilds.length > 0) {
-                    accessReply += "guild in blacklist; "
-                }
-            }
+            const isWhitelisted = !Object.values(whitelist).some(list => list.length > 0) ||
+                whitelist.users.includes(userId) ||
+                whitelist.roles.some(role => userRoles.includes(role)) ||
+                whitelist.channels.includes(channelId) ||
+                whitelist.guilds.includes(guildId);
+
+            const isBlacklisted = Object.values(blacklist).some(list => list.length > 0) &&
+                (blacklist.users.includes(userId) ||
+                blacklist.roles.some(role => userRoles.includes(role)) ||
+                blacklist.channels.includes(channelId) ||
+                blacklist.guilds.includes(guildId));
+
             if (!isWhitelisted || isBlacklisted) {
+                let accessReply = "access check failed: ";
+                if (!isWhitelisted) {
+                    accessReply += "user/channel/guild not in whitelist; ";
+                }
+                if (isBlacklisted) {
+                    accessReply += "user/channel/guild in blacklist; ";
+                }
                 log.info(accessReply + "for command " + this.name);
                 message.reply(accessReply);
                 return;
             }
-
+            // other checks
             if (!this.input_types.includes(input.input_type)) {
                 log.info("invalid input type " + input.input_type + " for command " + this.name);
                 message.reply(`input type ${input.input_type} is not enabled for this command`);
