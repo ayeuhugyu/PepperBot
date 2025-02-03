@@ -1,8 +1,7 @@
 import * as discord from "discord.js";
 import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import fs from "fs";
-import fsextra from "fs-extra";
+import fs from "fs-extra";
 import process from "process";
 import shell from "shelljs"
 

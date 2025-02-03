@@ -309,7 +309,24 @@ export class Command {
                 }
             }
 
-            const response = this._execute_raw(finalCommandInput);
+            if (finalCommandInput.args instanceof Collection) {
+                if (finalCommandInput.args.get(this.subcommand_argument)) {
+                    const subcommandName = finalCommandInput.args.get(this.subcommand_argument);
+                    const subcommand = this.subcommands.find(subcommand => subcommand.name === subcommandName);
+                    if (subcommand instanceof Command) {
+                        log.info("executing subcommand p/" + this.name + " " + subcommand.name);
+                        const subcommandResponse = await subcommand.execute(finalCommandInput);
+                        log.info("executed subcommand p/" + this.name + " " + subcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+                        return subcommandResponse;
+                    } else {
+                        const response = await this._execute_raw(finalCommandInput);
+                        log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+                        return response;
+                    }
+                }
+            }
+
+            const response = await this._execute_raw(finalCommandInput);
             log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
             return response;
         };

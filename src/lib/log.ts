@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import * as util from "util";
-import fs from "fs";
-import fsextra from "fs-extra";
+import fs from "fs-extra";
 import process from "node:process";
 
 enum Level {
@@ -72,10 +71,10 @@ function log(level: Level, ...message: any) {
             .join(`\n${chalk.grey(formattedDate)} ${prefix}`)}\n`
     );
     const fileWriteString = `${formattedDate} ${Level[level].toUpperCase()} ${formatted.split("\n").join(`\n${formattedDate} ${Level[level].toUpperCase()} `)}\n`
-    fsextra.ensureFile(`././logs/${Level[level].toLowerCase()}.log`, () => {
+    fs.ensureFile(`././logs/${Level[level].toLowerCase()}.log`, () => {
         fs.appendFile(`././logs/${Level[level].toLowerCase()}.log`, fileWriteString, () => {});
     });
-    fsextra.ensureFile("././logs/global.log", () => {
+    fs.ensureFile("././logs/global.log", () => {
         fs.appendFile("././logs/global.log", fileWriteString, () => {});
     });
 }
