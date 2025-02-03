@@ -2,6 +2,8 @@ import { Events, Message } from "discord.js";
 import commands from "../lib/command_manager";
 import { fetchGuildConfig } from "../lib/guild_config_manager";
 import { CommandResponse } from "../lib/classes/command";
+import * as action from "../lib/discord_action";
+import * as util from "util";
 
 async function commandHandler(message: Message) {
     if (message.author.bot) return;
@@ -10,9 +12,9 @@ async function commandHandler(message: Message) {
     const prefix = config.other.prefix;
     if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-    const commandPipingList = message.content.split("|") || [message.content];
+    const commandPipingList = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|')) || [message.content];
     if (commandPipingList.length > 3) {
-        message.reply("piping limit of 3 exceeded");
+        await action.reply(message, "piping limit of 3 exceeded");
         return;
     }
     let lastOutput = undefined;
@@ -20,23 +22,30 @@ async function commandHandler(message: Message) {
     let commandsInPipingList = [];
     
     for (const commandText of commandPipingList) {
-        const command = (commandText.split(" ")[0] || commandText)?.trim().slice(prefix.length);
+        const splitText = (commandText?.trim().split(" ")[0]?.trim() || commandText)?.trim();
+        const command = commandText?.trim()?.startsWith(prefix) 
+            ? splitText?.slice(prefix.length) 
+            : splitText;
         const cmd = commands.get(command);
         commandsInPipingList.push(cmd || command);
     }
     if (commandPipingList.length > 1 && config.command.disable_command_piping) {
-        message.reply("command piping is disabled in this server");
+        action.reply(message, "command piping is disabled in this server");
         return;
     }
     let commandIndex = 0;
     for (const command of commandsInPipingList) {
         if (typeof command === "string") {
-            message.reply(`${prefix}${command} doesnt exist :/`);
+            await action.reply(message, `${prefix}${command} doesnt exist :/`);
             return;
         }
         if (previousCommand && !previousCommand.pipable_to.includes(command.name)) {
-            message.reply(`${prefix}${previousCommand.name} is not pipable to ${prefix}${command.name}`);
+            await action.reply(message, `${prefix}${previousCommand.name} is not pipable to ${prefix}${command.name}`);
             return;
+        }
+        message.content = commandPipingList[commandIndex]?.trim();
+        if (!message.content.startsWith(prefix)) {
+            message.content = `${prefix}${message.content.replaceAll("\\|", "|")}`;
         }
         const commandResponse = await command.execute({
             message,

@@ -1,6 +1,7 @@
 import { fetchGuildConfig, GuildConfig } from "../guild_config_manager";
 import * as log from "../log";
 import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits } from "discord.js";
+import * as action from "../discord_action";
 
 export class CommandResponse {
     error: boolean = false;
@@ -34,6 +35,20 @@ export enum InputType {
     Message,
 }
 
+export enum CommandOptionType {
+    SubCommand = ApplicationCommandOptionType.Subcommand,
+    SubCommandGroup = ApplicationCommandOptionType.SubcommandGroup,
+    String = ApplicationCommandOptionType.String,
+    Integer = ApplicationCommandOptionType.Integer,
+    Boolean = ApplicationCommandOptionType.Boolean,
+    User = ApplicationCommandOptionType.User,
+    Channel = ApplicationCommandOptionType.Channel,
+    Role = ApplicationCommandOptionType.Role,
+    Mentionable = ApplicationCommandOptionType.Mentionable,
+    Number = ApplicationCommandOptionType.Number,
+    Attachment = ApplicationCommandOptionType.Attachment,
+}
+
 export enum CommandCategory {
     AI,
     Management,
@@ -42,6 +57,7 @@ export enum CommandCategory {
     Info,
     Voice,
     Moderation,
+    Debug,
     Other
 }
 
@@ -55,6 +71,7 @@ export interface CommandInput {
     bot_is_admin: boolean;
     piped_data: PipedData | undefined;
     will_be_piped: boolean;
+    self: Command;
 }
 
 export interface Contributor {
@@ -80,11 +97,21 @@ export class CommandAccess {
     blacklist: AccessList;
 
     constructor(
-        whitelist: AccessList = { users: [], roles: [], channels: [], guilds: [] },
-        blacklist: AccessList = { users: [], roles: [], channels: [], guilds: [] }
+        whitelist: Partial<AccessList> = { users: [], roles: [], channels: [], guilds: [] },
+        blacklist: Partial<AccessList> = { users: [], roles: [], channels: [], guilds: [] }
     ) {
-        this.whitelist = whitelist;
-        this.blacklist = blacklist;
+        this.whitelist = {
+            users: whitelist.users || [],
+            roles: whitelist.roles || [],
+            channels: whitelist.channels || [],
+            guilds: whitelist.guilds || []
+        };
+        this.blacklist = {
+            users: blacklist.users || [],
+            roles: blacklist.roles || [],
+            channels: blacklist.channels || [],
+            guilds: blacklist.guilds || []
+        };
     }
 }
 
@@ -96,7 +123,7 @@ export interface CommandOptionChoice {
 export class CommandOption {
     name: string = "option";
     description: string = "no description";
-    type: ApplicationCommandOptionType = ApplicationCommandOptionType.String;
+    type: CommandOptionType = CommandOptionType.String;
     required: boolean = false;
     choices: CommandOptionChoice[] | undefined = [];
     channel_types: ChannelType[] | undefined = undefined;
@@ -149,6 +176,7 @@ export class Command {
     subcommands: Command[] = [];
     pipable_to: string[] = []; // array of command names which output may be piped to
     contributors: Contributor[] = [{ name: "ayeuhugyu", userid: "440163494529073152"}];
+    subcommand_argument: string = "subcommand"
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
     category: CommandCategory = CommandCategory.Other;
     _execute_raw: ExecuteFunction = defaultCommandFunction;
@@ -156,6 +184,8 @@ export class Command {
     execute: CommandFunction = defaultCommandFunction;
 
     constructor(data: Partial<Command>, getArguments: GetArgumentsFunction, execute: ExecuteFunction) {
+        if (!data.long_description && data.description) data.long_description = data.description;
+        Object.assign(this, { ...data });
         const validationChecks = [
             { condition: this.name.length > 32, message: "command name may not exceed 32 characters", unrecoverable: true },
             { condition: this.description.length > 100, message: "command description may not exceed 100 characters", unrecoverable: true },
@@ -173,15 +203,13 @@ export class Command {
         if (this.validation_errors.length > 0) {
             return;
         }
-
-        if (!data.long_description && data.description) data.long_description = data.description;
-        Object.assign(this, { ...data });
         
         this._execute_raw = execute;
         this.get_arguments = getArguments;
         // #region COMMAND EXECUTION
         this.execute = async (input) => {
-            log.info("executing command " + this.name);
+            log.info("executing command p/" + this.name + ((input._response?.from !== undefined) ? " piped from p/" + input._response?.from : ""));
+            const start = performance.now();
             const { message, input_type } = input;
             if (!message) {
                 log.error("message is undefined in command execution");
@@ -225,20 +253,20 @@ export class Command {
                     accessReply += "user/channel/guild in blacklist; ";
                 }
                 log.info(accessReply + "for command " + this.name);
-                message.reply(accessReply);
+                action.reply(message, { content: accessReply, ephemeral: true });
                 return;
             }
             // other checks
             if (!this.input_types.includes(input.input_type)) {
                 log.info("invalid input type " + input.input_type + " for command " + this.name);
-                message.reply(`input type ${input.input_type} is not enabled for this command`);
+                action.reply(message, { content: `input type ${input.input_type} is not enabled for this command`, ephemeral: true });
                 return;
             }
 
             if (!this.contexts.includes(InteractionContextType.Guild)) {
                 if (message.guild) {
                     log.info("guild context is not enabled for command " + this.name);
-                    message.reply("this command is not enabled in guilds");
+                    action.reply(message, { content: "this command is not enabled in guilds", ephemeral: true });
                     return;
                 }
             }
@@ -253,7 +281,7 @@ export class Command {
 
             if (!this.allow_external_guild && !input.bot_is_admin) {
                 log.info("external guilds are not enabled for command " + this.name);
-                message.reply("this command is not enabled in guilds where i dont have administrator");
+                action.reply(message, { content: "this command is not enabled in guilds where i dont have administrator", ephemeral: true });
                 return;
             }
 
@@ -269,13 +297,21 @@ export class Command {
                 piped_data: input.piped_data || new PipedData(input._response?.from || undefined, input._response?.pipe_data) || undefined,
                 _response: input._response,
                 will_be_piped: input.will_be_piped || false,
+                self: this
             }
             if (!finalCommandInput.args) {
-                finalCommandInput.args = await this.get_arguments(finalCommandInput);
-                log.info("fetched arguments for command " + this.name);
+                if (finalCommandInput.input_type === InputType.Interaction) {
+                    log.warn("slash command failed to provide arguments for command " + this.name);
+                } else {
+                    finalCommandInput.message = finalCommandInput.message as Message;
+                    finalCommandInput.args = await this.get_arguments(finalCommandInput);
+                    log.info("fetched arguments for command " + this.name);
+                }
             }
 
-            return this._execute_raw(finalCommandInput);
+            const response = this._execute_raw(finalCommandInput);
+            log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            return response;
         };
     }
 }

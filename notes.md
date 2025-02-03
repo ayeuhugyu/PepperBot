@@ -1,5 +1,12 @@
 LATEST UPDATE
 ---
+the biggest new feature:
+**command piping:**
+
+- commands can now be piped by adding " | p/command" to the end of it. for example: "p/test | p/test | p/test"
+- commands that can now be piped, and their effects:
+  - p/test can now be piped to itself, displaying the full time it took to execute all p/tests at the end
+
 **actual content:**
 
 - command data has been overhauled
@@ -16,3 +23,6 @@ LATEST UPDATE
 - constant resources have been separated into a /constant folder
 - user data has been transformed into a SQL database
 - guild config values are now separated by category
+- most processes now host a server for easy inter-process communication
+- data passed to commands is no longer a list of 4 arguments, instead just one object you can choose what you want from. that also lets me reasonably pass a LOT more data to them
+- im no longer using the slash command builders because they are annoying and i hate them i hate them i hate them get them out of my sight

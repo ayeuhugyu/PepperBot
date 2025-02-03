@@ -4,9 +4,10 @@ import * as action from "../lib/discord_action";
 const command = new Command(
     {
         name: 'test',
-        description: 'Test command',
-        category: CommandCategory.Other,
-        pipable_to: ['test'],
+        description: 'returns the time it takes for a message to be sent and recieved',
+        long_description: 'returns the time it takes for a message to be sent to discord\'s servers and then recieved back',
+        category: CommandCategory.Debug,
+        pipable_to: ['test', 'grep'],
     }, 
     async function getArguments () {
         return undefined;
@@ -24,7 +25,7 @@ const command = new Command(
             return new CommandResponse({});
         } else {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms` })
-            return new CommandResponse({});
+            return new CommandResponse({ pipe_data: { grep_text: `response time: ${(end - start).toFixed(3)}ms` } });
         }
     }
 );
