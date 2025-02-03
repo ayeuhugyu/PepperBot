@@ -33,6 +33,7 @@ const command = new Command(
         long_description: 'returns the github repo for the bot',
         category: CommandCategory.Info,
         pipable_to: ['grep'],
+        argument_order: "<subcommand>",
         subcommands: [
             gitlog
         ]
@@ -48,7 +49,7 @@ const command = new Command(
     async function execute ({ message, guildConfig, args }) {
         const content = (args?.get("subcommand") ? `${args.get("subcommand")} isnt a valid subcommand. anyways, ` : "") + "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/";
         await action.reply(message, { content: content, ephemeral: guildConfig.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { grep_text: "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/" }});
+        return new CommandResponse({});
     }
 );
 

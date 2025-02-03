@@ -7,7 +7,7 @@ const command = new Command(
         description: 'returns the time it takes for a message to be sent and recieved',
         long_description: 'returns the time it takes for a message to be sent to discord\'s servers and then recieved back',
         category: CommandCategory.Debug,
-        pipable_to: ['test', 'grep'],
+        pipable_to: ['test'],
     }, 
     async function getArguments () {
         return undefined;
@@ -19,13 +19,13 @@ const command = new Command(
         const end = performance.now();
         if (will_be_piped) {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms` })
-            return new CommandResponse({ pipe_data: { start: start, grep_text: `response time: ${(end - start).toFixed(3)}ms` } });
+            return new CommandResponse({ pipe_data: { start: start } });
         } else if (piped_data?.data) {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms, totaled to ${(end - piped_data.data.start).toFixed(3)}ms` })
-            return new CommandResponse({ pipe_data: { start: piped_data.data.start, end: end, grep_text: `response time: ${(end - start).toFixed(3)}ms, totaled to ${(end - piped_data.data.start).toFixed(3)}ms` } });
+            return new CommandResponse({ pipe_data: { start: piped_data.data.start, end: end } });
         } else {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms` })
-            return new CommandResponse({ pipe_data: { grep_text: `response time: ${(end - start).toFixed(3)}ms` } });
+            return new CommandResponse({});
         }
     }
 );

@@ -52,13 +52,6 @@ function verifyFile(path: string, folder: boolean = false, unrecoverableIfNotExi
     }
 }
 
-const expected_constants: string[] = [
-    "deepwoken_names.json",
-    "emojis.json",
-    "nouns.json",
-    "verbs.json",
-    "the_english_lexicon.json"
-];
 const expectedOther: string[] = [
     "resources",
     "resources/sounds",
@@ -83,9 +76,6 @@ export function verifyData() {
     let responses: VerificationResponse[] = [];
     for (const folder of expectedOther) {
         responses.push(verifyFile(folder, true, false));
-    }
-    for (const file of expected_constants) {
-        responses.push(verifyFile(`constants/${file}`, false, true));
     }
     for (const file of expectedLogs) {
         responses.push(verifyFile(`logs/${file}`, false, false));
