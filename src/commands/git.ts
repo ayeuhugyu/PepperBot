@@ -21,7 +21,7 @@ const gitlog = new Command({
         const logString = log.all[0].hash
         const path = await textToFile(logString, 'gitlog');
         await action.reply(message, { content: "here's a log of commits to the repo", files: [path], ephemeral: guildConfig.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { grep_text: logString } });
+        return new CommandResponse({ pipe_data: { grep_text: `here's a log of commits to the repo\n${logString}` } });
     }
 );
 

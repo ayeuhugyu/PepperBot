@@ -5,6 +5,7 @@ config();
 import process from "node:process";
 import * as log from "./log";
 import { Stream } from "node:stream";
+import { textToFile } from "./filify";
 
 export interface MessageInput {
     content?: string;
@@ -65,7 +66,10 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
     }
     if (message.content && message.content.length > 2000) {
         log.warn("attempt to send a message longer than 2000 characters")
-        message.content = message.content.slice(0, 2000); // todo: implement decided on behavior by The General Public™
+        const path = textToFile(message.content, "overflowtext");
+        message.content = "message content exceeded 2000 characters, here's a file with the text instead"
+        if (!message.files) message.files = [];
+        message.files.push(path);
     } // todo: check embeds
     return message;
 }

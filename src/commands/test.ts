@@ -19,10 +19,10 @@ const command = new Command(
         const end = performance.now();
         if (will_be_piped) {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms` })
-            return new CommandResponse({ pipe_data: { start: start }});
+            return new CommandResponse({ pipe_data: { start: start, grep_text: `response time: ${(end - start).toFixed(3)}ms` } });
         } else if (piped_data?.data) {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms, totaled to ${(end - piped_data.data.start).toFixed(3)}ms` })
-            return new CommandResponse({});
+            return new CommandResponse({ pipe_data: { start: piped_data.data.start, end: end, grep_text: `response time: ${(end - start).toFixed(3)}ms, totaled to ${(end - piped_data.data.start).toFixed(3)}ms` } });
         } else {
             action.edit(sent, { content: `response time: ${(end - start).toFixed(3)}ms` })
             return new CommandResponse({ pipe_data: { grep_text: `response time: ${(end - start).toFixed(3)}ms` } });

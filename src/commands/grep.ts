@@ -6,7 +6,7 @@ const command = new Command(
     {
         name: 'grep',
         description: 'searches for a string in the piped text',
-        long_description: 'searches for a string in the piped text',
+        long_description: 'searches for a string in the piped text. this command is purely for piping to, and will not work on its own.',
         category: CommandCategory.Utility,
         options: [
             new CommandOption({
@@ -34,6 +34,24 @@ const command = new Command(
         if (piped_data.data.grep_text) {
             const lines = piped_data.data.grep_text.split("\n");
             const search = args?.get("search");
+            if (!search) {
+                await action.reply(message, { content: "no search term provided", ephemeral: guildConfig.other.use_ephemeral_replies });
+                return new CommandResponse({ pipe_data: { grep_text: "no search term provided" } });
+            }
+            const regex = /\/(.*?)\//g;
+            const regexMatches = [...search.matchAll(regex)].map(match => match[1]);
+            if (regexMatches.length > 0) {
+                const regexSearch = regexMatches[0];
+                try {
+                    const r = new RegExp(regexSearch);
+                    const found = lines.filter((line: string) => line.match(r));
+                    await action.reply(message, { content: found.join("\n"), ephemeral: guildConfig.other.use_ephemeral_replies });
+                    return new CommandResponse({ pipe_data: { grep_text: found.join("\n") } });
+                } catch (e: any) {
+                    await action.reply(message, { content: "invalid regex: " + e.message, ephemeral: guildConfig.other.use_ephemeral_replies });
+                    return new CommandResponse({ pipe_data: { grep_text: "invalid regex: " + e.message } });
+                }
+            }
             const found = lines.filter((line: string) => line.includes(search));
             await action.reply(message, { content: found.join("\n"), ephemeral: guildConfig.other.use_ephemeral_replies });
             return new CommandResponse({ pipe_data: { grep_text: found.join("\n") } });

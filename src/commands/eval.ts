@@ -1,9 +1,19 @@
 import * as discord from "discord.js";
 import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import fs from "fs-extra";
+import fsExtra from "fs-extra";
+import fs from "node:fs";
 import process from "process";
-import shell from "shelljs"
+import shell from "shelljs";
+
+const modules = {
+    discord,
+    action,
+    fsExtra,
+    fs,
+    process,
+    shell
+} // this is some weird hacky thing to make bun not omit the modules due to them being unused
 
 const command = new Command(
     {
@@ -38,6 +48,7 @@ const command = new Command(
             return new CommandResponse({ pipe_data: { grep_text: "tf u want me to eval" }});
         }
         try {
+            const value = "hello world"
             const result = await (async function () {
                 return await eval(args.get("code"));
             })();
