@@ -1,14 +1,3 @@
-import { verifyData } from "./lib/data_manager";
-const verificationResponses = verifyData();
-let unrecoverable = verificationResponses.filter((response) => response.unrecoverable);
-if (unrecoverable.length > 0) {
-    console.error("unrecoverable errors found:");
-    unrecoverable.forEach((response) => {
-        console.error(response.message);
-    });
-    console.error("fix the above errors and try again. you may have cloned the repository incorrectly, or you are missing .env properties.");
-    process.exit(1);
-}
 import * as log from "./lib/log";
 import { fork, ChildProcess } from "node:child_process";
 import { startServer } from "./lib/communication_manager";

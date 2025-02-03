@@ -76,6 +76,8 @@ const expectedLogs: string[] = [
     "global.log",
 ]
 
+let dataVerified = false;
+
 export function verifyData() {
     log.info("verifying data...");
     let responses: VerificationResponse[] = [];
@@ -94,8 +96,20 @@ export function verifyData() {
         responses.push({ error: true, message: "missing DISCORD_TOKEN in .env", unrecoverable: true });
     }
     // TODO: verify .env file
-
+    dataVerified = true;
     return responses;
+}
+if (!dataVerified) {
+    const verificationResponses = verifyData();
+    let unrecoverable = verificationResponses.filter((response) => response.unrecoverable);
+    if (unrecoverable.length > 0) {
+        console.error("unrecoverable errors found:");
+        unrecoverable.forEach((response) => {
+            console.error(response.message);
+        });
+        console.error("fix the above errors and try again. you may have cloned the repository incorrectly, or you are missing .env properties.");
+        process.exit(1);
+    }
 }
 
 const database = knex({
