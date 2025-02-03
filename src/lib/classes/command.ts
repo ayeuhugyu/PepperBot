@@ -168,6 +168,7 @@ export class Command {
     contexts: InteractionContextType[] = [ InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel ];
     /* ↑↑↑ discords shit ↓↓↓ my shit */
     aliases: string[] = [];
+    normal_aliases: string[] = [];
     long_description: string = "no description";
     access: CommandAccess = new CommandAccess();
     input_types: InputType[] = [ InputType.Interaction, InputType.Message ]; // which input types to enable usage for (ex. text / slash commands)

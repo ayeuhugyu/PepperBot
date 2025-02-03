@@ -10,7 +10,7 @@ export class CommandManager {
         normal_aliases: new Collection<string, Command>()
     }
     get(name: string): Command | undefined {
-        return this.commands.base.get(name) || this.commands.aliases.get(name);
+        return this.commands.base.get(name) || this.commands.aliases.get(name) || this.commands.normal_aliases.get(name);
     };
     async getCommands() {
         if (this.commands.base.size > 0) return; // avoids circular dependency
@@ -41,6 +41,17 @@ export class CommandManager {
                         continue;
                     }
                     this.commands.aliases.set(alias, command.default);
+                }
+            }
+            if (command.default.subcommands && command.default.subcommands.length > 0) { // todo: change this so that it supports subcommands of subcommands
+                for (const subcommand of command.default.subcommands) {
+                    for (const alias of subcommand.normal_aliases) {
+                        if (this.commands.normal_aliases.has(alias) || this.commands.base.has(alias)) {
+                            log.error(`duplicate normal alias ${alias} for command ${command.default.name}; skipping alias`);
+                            continue;
+                        }
+                        this.commands.normal_aliases.set(alias, command.default);
+                    }
                 }
             }
             log.info(`cached command ${command.default.name} in ${(performance.now() - start).toFixed(3)}ms`);

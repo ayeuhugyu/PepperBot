@@ -10,6 +10,7 @@ const gitlog = new Command({
         long_description: 'creates a graph of all commits to the github repository',
         category: CommandCategory.Info,
         pipable_to: ['grep'],
+        normal_aliases: ['gitlog'],
         subcommands: []
     }, 
     async function getArguments () {
