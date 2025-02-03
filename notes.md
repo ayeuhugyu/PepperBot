@@ -26,3 +26,4 @@ the biggest new feature:
 - most processes now host a server for easy inter-process communication
 - data passed to commands is no longer a list of 4 arguments, instead just one object you can choose what you want from. that also lets me reasonably pass a LOT more data to them
 - im no longer using the slash command builders because they are annoying and i hate them i hate them i hate them get them out of my sight
+- voice connections are now managed by GuildVoiceManagers which automatically create audio players

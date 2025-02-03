@@ -33,10 +33,15 @@ const command = new Command(
         }
         if (piped_data.data.grep_text) {
             const lines = piped_data.data.grep_text.split("\n");
-            const search = args?.get("search");
+            let search = args?.get("search");
             if (!search) {
                 await action.reply(message, { content: "no search term provided", ephemeral: guildConfig.other.use_ephemeral_replies });
                 return new CommandResponse({ pipe_data: { grep_text: "no search term provided" } });
+            }
+            let count = false;
+            if (search.includes("-c") && !search.includes("\\-c")) {
+                search = search.replace("-c", "");
+                count = true
             }
             const regex = /\/(.*?)\//g;
             const regexMatches = [...search.matchAll(regex)].map(match => match[1]);
@@ -45,7 +50,7 @@ const command = new Command(
                 try {
                     const r = new RegExp(regexSearch);
                     const found = lines.filter((line: string) => line.match(r));
-                    await action.reply(message, { content: found.join("\n"), ephemeral: guildConfig.other.use_ephemeral_replies });
+                    await action.reply(message, { content: count ? found.length : found.join("\n"), ephemeral: guildConfig.other.use_ephemeral_replies });
                     return new CommandResponse({ pipe_data: { grep_text: found.join("\n") } });
                 } catch (e: any) {
                     await action.reply(message, { content: "invalid regex: " + e.message, ephemeral: guildConfig.other.use_ephemeral_replies });

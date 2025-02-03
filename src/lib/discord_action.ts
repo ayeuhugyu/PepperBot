@@ -77,9 +77,11 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
 export function reply(message: Message | FormattedCommandInteraction, content: Partial<MessageInput> | string): Promise<Message> | Promise<InteractionResponse> | undefined {
     content = fixMessage(content);
     if (message instanceof Message) {
+        log.info(`replying to message ${message.id} in channel ${message.channel.id}`);
         return message.reply(content as string | MessagePayload | MessageReplyOptions);
     }
     if (message as FormattedCommandInteraction) {
+        log.info(`replying to interaction ${message.id}`);
         return message.reply(content as InteractionReplyOptions);
     }
     return undefined;
@@ -88,6 +90,7 @@ export function reply(message: Message | FormattedCommandInteraction, content: P
 export function send(channel: TextChannel, content: Partial<MessageInput> | string): Promise<Message> | undefined {
     content = fixMessage(content);
     if (channel) {
+        log.info(`sending message to channel ${channel.id}`);
         return channel.send(content as string | MessagePayload | MessageCreateOptions);
     }
     return undefined;
@@ -96,6 +99,7 @@ export function send(channel: TextChannel, content: Partial<MessageInput> | stri
 export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> | undefined {
     content = fixMessage(content);
     if (message) {
+        log.info(`editing message ${message.id}`);
         return message.edit(content as string | MessagePayload | MessageEditOptions);
     }
     return undefined;
