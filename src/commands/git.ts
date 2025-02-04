@@ -1,5 +1,5 @@
 import { Collection, Message } from "discord.js";
-import { Command, CommandCategory, CommandResponse } from "../lib/classes/command";
+import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import simpleGit from "simple-git";
 import { textToFile } from "../lib/filify";
@@ -13,7 +13,6 @@ const gitlog = new Command({
         normal_aliases: ['gitlog'],
         subcommands: [],
         example_usage: "p/git log",
-        slash_example_usage: "/git log",
     }, 
     async function getArguments () {
         return undefined;
@@ -38,7 +37,18 @@ const command = new Command(
         argument_order: "<subcommand>",
         subcommands: [
             gitlog
-        ]
+        ],
+        options: [
+            new CommandOption({
+                name: 'subcommand',
+                description: 'the subcommand to run',
+                type: CommandOptionType.String,
+                required: false,
+                choices: gitlog.subcommands.map(subcommand => { return { name: subcommand.name, value: subcommand.name } })
+            })
+        ],
+        example_usage: "p/git",
+        aliases: ["github", "openpepper", "repo"]
     }, 
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;

@@ -130,6 +130,7 @@ export class CommandOption {
     /* ↑↑↑ discords shit ↓↓↓ my shit */
     long_description: string = "no description"
     deployed: boolean = true;
+    long_requirements: string | undefined = undefined; // more detailed version of the "required" option, allows you to write stuff like "required if b is undefined"
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
 
     constructor(data: Partial<CommandOption>) {
@@ -172,7 +173,6 @@ export class Command {
     long_description: string = "no description";
     argument_order: string = ""; // this is not an array because some commands dont require argument orders or have Strange Ones, but the general convention is to just list the arguments in the order the getArguments function looks for them and then put <> around it, ex. <arg1> <arg2>
     example_usage: string | string[] = ""; // example usage so its easy to know how to use it
-    slash_example_usage: string | string[] = ""; // exact same as example usage but for slash commmands
     access: CommandAccess = new CommandAccess();
     input_types: InputType[] = [ InputType.Interaction, InputType.Message ]; // which input types to enable usage for (ex. text / slash commands)
     deployed: boolean = true; // if it gets deployed as a slash command
@@ -288,7 +288,6 @@ export class Command {
                 return;
             }
 
-            // todo: add subcommand support
             if (!input.message) return;
             let finalCommandInput: CommandInput = {
                 message: input.message!,
@@ -317,6 +316,14 @@ export class Command {
                     const subcommandName = finalCommandInput.args.get(this.subcommand_argument);
                     const subcommand = this.subcommands.find(subcommand => subcommand.name === subcommandName);
                     if (subcommand instanceof Command) {
+                        if (finalCommandInput.message instanceof Message) {
+                            finalCommandInput.message.content = finalCommandInput.message.content
+                                .replace(subcommandName, "")
+                                .replace("  ", " ")
+                                .trim();
+                        }
+                        const subcommandArgs = await subcommand.get_arguments(finalCommandInput);
+                        finalCommandInput.args = subcommandArgs;
                         log.info("executing subcommand p/" + this.name + " " + subcommand.name);
                         const subcommandResponse = await subcommand.execute(finalCommandInput);
                         log.info("executed subcommand p/" + this.name + " " + subcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");

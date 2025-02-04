@@ -9,7 +9,7 @@ const command = new Command(
         category: CommandCategory.Debug,
         pipable_to: ['test'],
         example_usage: "p/test",
-        slash_example_usage: "/test",
+        aliases: ["ping"],
     }, 
     async function getArguments () {
         return undefined;

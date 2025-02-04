@@ -20,7 +20,6 @@ const command = new Command(
         deployed: false,
         pipable_to: ['grep'],
         example_usage: "p/git log | grep months",
-        slash_example_usage: "not usable from slash commands",
     }, 
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;

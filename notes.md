@@ -4,17 +4,27 @@ the biggest new feature:
 **command piping:**
 
 - commands can now be piped by adding " | p/command" to the end of it. for example: "p/test | p/test | p/test"
+- new command p/grep which functions nearly identically to grep on linux, added exclusively for the purpose of piping to it
 - commands that can now be piped, and their effects:
   - p/test can now be piped to itself, displaying the full time it took to execute all p/tests at the end
+  - p/git log can now be piped to grep
+  - p/eval can now be piped to grep
+  - p/chatbubble now has piping support, nothing uses it yet though
 
 **actual content:**
 
 - command data has been overhauled
   - whitelists are now comprised of users, roles, channels, and guilds rather than just users
   - blacklists now exist (exact opposite of whitelists)
-  - descriptions are separated into a short and long form, one for display under a slash command and one for all other cases
-  - commands can now have categories
+  - improved help/tutorial values:
+    - commands can now have categories
+    - descriptions are separated into a short and long form, one for display under a slash command and one for all other cases
+    - requirements can now have longer forms (ex. required if arg2 is undefined)
+    - contributors can be added (basically just to credit people)
+    - commands now have usage examples
+    - commands now have argument orders
 - bots can no longer execute any commands. this was just yet another value i had to think about if it would cause problems or not
+- p/vc join & leave now check for the "speak" permission instead of the "connect" permission
 
 **technical details:**
 

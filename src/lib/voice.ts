@@ -1,4 +1,4 @@
-import { StageChannel, VoiceChannel } from "discord.js";
+import { GuildMember, StageChannel, VoiceChannel } from "discord.js";
 import * as log from "./log"
 import { AudioPlayer, AudioResource, VoiceConnection, joinVoiceChannel as jvc, createAudioResource as createResource } from "@discordjs/voice";
 import fs from "fs";
@@ -25,6 +25,10 @@ export class GuildVoiceManager {
         this.connection?.destroy();
         voiceManagers = voiceManagers.filter(voiceManager => voiceManager.guild !== this.guild);
     }
+}
+
+export function getVoiceManager(guildid: string) {
+    return voiceManagers.find(voiceManager => voiceManager.guild === guildid);
 }
 
 export async function joinVoiceChannel(channel: VoiceChannel | StageChannel) {
@@ -60,4 +64,11 @@ export async function createAudioResource(path: string) {
     const resource: AudioResource | undefined = await createResource(path);
     log.info(`created audio resource from ${path}`);
     return resource;
+}
+
+export function checkMemberPermissionsForVoiceChannel(member: GuildMember, channel: VoiceChannel | StageChannel) {
+    if (!member || !channel) {
+        return false;
+    }
+    return member.permissionsIn(channel).has("Speak");
 }

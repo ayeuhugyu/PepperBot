@@ -11,7 +11,7 @@ const command = new Command(
     {
         name: 'chatbubble',
         description: 'creates a chatbubble out of the provided image or url',
-        long_description: 'creates a chatbubble out of the provided image or url',
+        long_description: 'creates a chatbubble out of the provided image or url. you can specify where the chatbubble should be placed.',
         category: CommandCategory.Utility,
         pipable_to: [],
         argument_order: "any",
@@ -30,12 +30,14 @@ const command = new Command(
                 name: 'image',
                 description: 'the image to create a chatbubble out of',
                 required: false,
+                long_requirements: "if url is undefined",
                 type: CommandOptionType.Attachment
             }),
             new CommandOption({
                 name: 'url',
                 description: 'url of the image to create a chatbubble out of',
                 required: false,
+                long_requirements: "if image is undefined",
                 type: CommandOptionType.String
             }),
             new CommandOption({
@@ -62,7 +64,7 @@ const command = new Command(
             }),
         ],
         example_usage: ["p/chatbubble x=1/3 y=1/4 https://example.com/image.png", "p/chatbubble x=0.5, y=0.25 <attach your image>", "p/chatbubble left <attach your image>"],
-        slash_example_usage: ["/chatbubble image: attachment, x: 1/3, y: 1/4"],
+        aliases: ["cb", "sb", "speechbubble", "bubble"]
     }, 
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;

@@ -35,7 +35,7 @@ const command = new Command(
         }, {}),
         pipable_to: ['grep'],
         example_usage: "p/eval console.log(\"hello world\")",
-        slash_example_usage: "not usable from slash commands",
+        aliases: ["evaluate"]
     }, 
     async function getArguments ({ self, message, guildConfig }) {
         message = message as discord.Message;
