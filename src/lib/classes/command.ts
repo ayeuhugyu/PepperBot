@@ -276,7 +276,6 @@ export class Command {
 
             if (!message.guild?.members.me?.permissions.has(PermissionFlagsBits.Administrator)) {
                 input.bot_is_admin = false;
-                return;
             } else {
                 input.bot_is_admin = true;
             }
