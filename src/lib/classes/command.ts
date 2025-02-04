@@ -171,6 +171,8 @@ export class Command {
     normal_aliases: string[] = [];
     long_description: string = "no description";
     argument_order: string = ""; // this is not an array because some commands dont require argument orders or have Strange Ones, but the general convention is to just list the arguments in the order the getArguments function looks for them and then put <> around it, ex. <arg1> <arg2>
+    example_usage: string = ""; // example usage so its easy to know how to use it
+    slash_example_usage: string = ""; // exact same as example usage but for slash commmands
     access: CommandAccess = new CommandAccess();
     input_types: InputType[] = [ InputType.Interaction, InputType.Message ]; // which input types to enable usage for (ex. text / slash commands)
     deployed: boolean = true; // if it gets deployed as a slash command
