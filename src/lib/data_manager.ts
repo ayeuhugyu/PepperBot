@@ -68,6 +68,15 @@ const expectedLogs: string[] = [
     "fatal.log",
     "global.log",
 ]
+const nonFatalEnvVariables = [
+    { key: "DISCORD_CLIENT_SECRET", message: "missing DISCORD_CLIENT_SECRET in .env; some features may not work" },
+    { key: "WEBHOOK_TOKEN", message: "missing WEBHOOK_TOKEN in .env; some features may not work" },
+    { key: "OPENAI_API_KEY", message: "missing OPENAI_API_KEY in .env; some features may not work" },
+    { key: "GOOGLE_API_KEY", message: "missing GOOGLE_API_KEY in .env; some features may not work" },
+    { key: "GOOGLE_CUSTOM_SEARCH_ENGINE_ID", message: "missing GOOGLE_CUSTOM_SEARCH_ENGINE_ID in .env; some features may not work" },
+    { key: "ADOBE_API_KEY", message: "missing ADOBE_API_KEY in .env; some features may not work" },
+    { key: "LASTFM_API_KEY", message: "missing LASTFM_API_KEY in .env; some features may not work" },
+];
 
 let dataVerified = false;
 
@@ -85,6 +94,14 @@ export function verifyData() {
         log.error("missing DISCORD_TOKEN in .env");
         responses.push({ error: true, message: "missing DISCORD_TOKEN in .env", unrecoverable: true });
     }
+
+    for (const { key, message } of nonFatalEnvVariables) {
+        if (process.env[key] === undefined) {
+            log.error(message);
+            responses.push({ error: true, message, unrecoverable: false });
+        }
+    }
+
     // TODO: verify .env file
     dataVerified = true;
     return responses;
