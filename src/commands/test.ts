@@ -8,6 +8,8 @@ const command = new Command(
         long_description: 'returns the time it takes for a message to be sent to discord\'s servers and then recieved back',
         category: CommandCategory.Debug,
         pipable_to: ['test'],
+        example_usage: "p/test",
+        slash_example_usage: "/test",
     }, 
     async function getArguments () {
         return undefined;

@@ -1,5 +1,5 @@
 import { Collection, Message } from "discord.js";
-import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse, InputType } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 
 const command = new Command(
@@ -16,7 +16,11 @@ const command = new Command(
                 required: true,
             })
         ],
+        input_types: [InputType.Message],
+        deployed: false,
         pipable_to: ['grep'],
+        example_usage: "p/git log | grep months",
+        slash_example_usage: "not usable from slash commands",
     }, 
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;

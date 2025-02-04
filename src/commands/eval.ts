@@ -1,5 +1,5 @@
 import * as discord from "discord.js";
-import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse, InputType } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import fsExtra from "fs-extra";
 import fs from "node:fs";
@@ -28,11 +28,14 @@ const command = new Command(
                 required: true
             })
         ],
+        input_types: [InputType.Message],
         deployed: false,
         access: new CommandAccess({
             users: ["440163494529073152", "406246384409378816"]
         }, {}),
         pipable_to: ['grep'],
+        example_usage: "p/eval console.log(\"hello world\")",
+        slash_example_usage: "not usable from slash commands",
     }, 
     async function getArguments ({ self, message, guildConfig }) {
         message = message as discord.Message;
@@ -48,7 +51,6 @@ const command = new Command(
             return new CommandResponse({ pipe_data: { grep_text: "tf u want me to eval" }});
         }
         try {
-            const value = "hello world"
             const result = await (async function () {
                 return await eval(args.get("code"));
             })();

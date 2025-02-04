@@ -11,7 +11,9 @@ const gitlog = new Command({
         category: CommandCategory.Info,
         pipable_to: ['grep'],
         normal_aliases: ['gitlog'],
-        subcommands: []
+        subcommands: [],
+        example_usage: "p/git log",
+        slash_example_usage: "/git log",
     }, 
     async function getArguments () {
         return undefined;

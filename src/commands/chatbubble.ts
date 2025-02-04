@@ -1,11 +1,9 @@
 import { AttachmentBuilder, Collection, Message } from "discord.js";
 import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import fs from "fs";
 import sharp from "sharp";
 import { evaluate } from "mathjs";
 import * as log from "../lib/log";
-import { get } from "http";
 
 type Gravity = "south" | "north"
 
@@ -62,7 +60,9 @@ const command = new Command(
                     { name: 'north', value: 'north' }
                 ]
             }),
-        ]
+        ],
+        example_usage: ["p/chatbubble x=1/3 y=1/4 https://example.com/image.png", "p/chatbubble x=0.5, y=0.25 <attach your image>", "p/chatbubble left <attach your image>"],
+        slash_example_usage: ["/chatbubble image: attachment, x: 1/3, y: 1/4"],
     }, 
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;
