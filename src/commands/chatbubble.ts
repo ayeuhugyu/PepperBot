@@ -145,7 +145,7 @@ const command = new Command(
         const tailWidth = 40;
         const tailShift = (xPos <= (1/3) || xPos >= (2/3)) ? Math.round(xPos) : xPos;
 
-        const overlayFlipped
+        const overlayFlipped = gravity === "south";
         const overlaySvg = `
             <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
                 <path d="
@@ -156,9 +156,9 @@ const command = new Command(
                         ${overlayFlipped ? height : 0}
                 " fill="white" stroke="none"/>
                 <polygon points="
-                    ${width * tailShift - tailWidth}, 0
-                    ${width * tailShift + tailWidth}, 0
-                    ${width * xPos}, ${height * yPos}
+                    ${width * tailShift - tailWidth}, ${overlayFlipped ? height : 0}
+                    ${width * tailShift + tailWidth}, ${overlayFlipped ? height : 0}
+                    ${width * xPos}, ${height * (overlayFlipped ? (1 - yPos) : (yPos))}
                 " fill="white" stroke="none"/>
             </svg>
         `;
