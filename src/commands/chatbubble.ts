@@ -43,18 +43,21 @@ const command = new Command(
             new CommandOption({
                 name: 'x',
                 description: 'x position of the chatbubble',
+                long_description: 'an expression representing the x position of the end of the tail of the chatbubble. prefixed with "x=", alternatively just type "left", "center", or "right" for 1/4, 1/2, or 3/4 respectively',
                 required: false,
                 type: CommandOptionType.String
             }),
             new CommandOption({
                 name: 'y',
                 description: 'y position of the chatbubble',
+                long_description: 'an expression representing the y position of the end of the tail of the chatbubble. prefixed with "y="',
                 required: false,
                 type: CommandOptionType.String
             }),
             new CommandOption({
                 name: 'gravity',
                 description: 'gravity of the chatbubble',
+                long_description: 'gravity of the chatbubble; whether the chatbubble should be placed at the top or bottom of the image. north is top, south is bottom',
                 required: false,
                 type: CommandOptionType.String,
                 choices: [
@@ -110,7 +113,7 @@ const command = new Command(
                     break;
             }
         }
-        
+        console.log(args)
         const xPos = evaluate(args?.get("x") || "") || (1 / 3);
         const yPos = evaluate(args?.get("y") || "") || (1 / 4);
         if (args?.get("gravity") && !["south", "north"].includes(args?.get("gravity"))) {
@@ -178,7 +181,7 @@ const command = new Command(
             .toBuffer();
         
         action.reply(message, { 
-            content: "here's your chat bubble",
+            content: `here's your chat bubble\n x=\`${args?.get("x") || xPos}\`, y=\`${args?.get("y") || yPos}\`, gravity=\`${gravity}\``,
             files: [new AttachmentBuilder(outputBuffer, { name: "bubble.gif" })]
         })
     }

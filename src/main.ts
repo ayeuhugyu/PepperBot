@@ -27,8 +27,23 @@ if (app instanceof Error) {
     log.error(app.message);
     process.exit(1);
 }
-app.get("/", (req, res) => {
-
+app.get("/kill", (req, res) => {
+    log.warn("kill request received, shutting down...");
+    res.sendStatus(200).send("shutting down...");
+    process.exit(0);
+});
+app.post("/restart", (req, res) => {
+    const processName = req.body.process;
+    log.info(`restarting ${processName}...`);
+    res.sendStatus(200).send(`restarting ${processName}...`);
+    switch (processName) {
+        case "sharder":
+            forkSharder();
+            break;
+        default:
+            log.warn(`unknown process ${processName}`);
+            break;
+    }
 });
 
 forkSharder();
