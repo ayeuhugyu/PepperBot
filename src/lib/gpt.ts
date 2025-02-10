@@ -1,7 +1,8 @@
-import { Message } from "discord.js";
+import { Message, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
+import { string } from "mathjs";
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -142,7 +143,7 @@ async function sanitizeMessage(message: Message): Promise<GPTContentPart[]> {
 let conversations: Conversation[] = [];
 
 export class Conversation {
-    users: string[] = [];
+    users: User[] = [];
     messages: GPTMessage[] = [];
     api_parameters: APIParameters = new APIParameters();
 
@@ -183,6 +184,9 @@ export class Conversation {
     async addMessage(message: Message, role: GPTRole = GPTRole.User): Promise<GPTMessage> {
         const newMessage = new GPTMessage();
         newMessage.discord_message = message;
+        if (this.users.find((user) => user.id === message.author.id) === undefined) {
+            this.users.push(message.author);
+        }
         newMessage.timestamp = message.createdTimestamp || Date.now();
         newMessage.message_id = message.id.toString();
         newMessage.content = await sanitizeMessage(message);
@@ -191,8 +195,23 @@ export class Conversation {
         this.messages.push(newMessage);
         return newMessage;
     }
+
+    constructor(message: Message) {
+
+    }
 }
 
-async function getConversation(message: Message) {
-    
+export function getConversation(message: Message) {
+    let currentConversation = conversations.find((conv) => conv.messages.find((msg) => msg.message_id === message.reference?.messageId)) || conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
+    if (message.mentions.has(message.client.user as User)) {
+        if (currentConversation) {
+            delete conversations[conversations.indexOf(currentConversation)];
+            currentConversation = undefined;
+        }
+    }
+    if (!currentConversation) {
+        currentConversation = new Conversation(message);
+        conversations.push(currentConversation);
+    }
+    return currentConversation;
 }
