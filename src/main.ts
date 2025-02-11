@@ -32,18 +32,18 @@ app.get("/kill", (req, res) => {
     res.sendStatus(200).send("shutting down...");
     process.exit(0);
 });
-app.post("/restart", (req, res) => {
+app.post("/restart", async (req, res) => {
     const processName = req.body.process;
     log.info(`restarting ${processName}...`);
-    res.sendStatus(200).send(`restarting ${processName}...`);
     switch (processName) {
         case "sharder":
-            forkSharder();
+            await forkSharder();
             break;
         default:
             log.warn(`unknown process ${processName}`);
             break;
     }
+    res.sendStatus(200).send(`restarted ${processName}`);
 });
 
 forkSharder();
