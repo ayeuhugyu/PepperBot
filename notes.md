@@ -27,6 +27,7 @@ the biggest new feature:
 - p/vc join & leave now check for the "speak" permission instead of the "connect" permission
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
+- new p/snowflake allows you to extract data from discord snowflakes (user/channel/guild/message/anything's id)
 
 **technical details:**
 
