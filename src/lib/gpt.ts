@@ -1,4 +1,4 @@
-import { Attachment, Collection, Message, User } from "discord.js";
+import { Attachment, ChannelType, Collection, Message, TextChannel, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
@@ -7,27 +7,236 @@ import { RunnableToolFunction } from "openai/lib/RunnableFunction";
 import { ChatCompletionMessageToolCall, ChatCompletionToolMessageParam } from "openai/resources";
 import { FormattedCommandInteraction } from "./classes/command";
 import { config } from "dotenv";
+import TurndownService from "turndown";
+import * as mathjs from "mathjs";
+import * as cheerio from "cheerio";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-const tools: RunnableToolFunction<any>[] = [
-    {
+let local_ips = ["192.168", "172.16", "10", "localhost"];
+for (let i = 17; i <= 31; i++) {
+    local_ips.push(`172.${i}`);
+}
+
+let conversations: Conversation[] = [];
+
+const tools: { [name: string]: RunnableToolFunction<any> } = {
+    get_current_date: {
         type: 'function',
         function: {
-            name: "test",
-            description: "test",
+            name: "get_current_date",
+            description: "returns the current date and time",
             parameters: {},
-            function: async () => {
-                return "test";
+            function: () => {
+                return new Date().toLocaleString();
+            },
+        }
+    },
+    get_listening_data: {
+        type: 'function',
+        function: {
+            name: "get_listening_data",
+            description: "retrieves listening data for a specific user",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    userid: {
+                        type: "string",
+                        description: "ID of the user to retrieve listening data for",
+                    },
+                }
+            },
+            function: async ({ userid }: { userid: string }) => {
+                if (!userid) {
+                    return "ERROR: No user ID provided.";
+                }
+                const url = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${userid}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=5`;
+        
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    if (data.error) {
+                        log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${data.message}`);
+                        return `an error occurred while attempting to fetch Last.fm data: ${data.message}`
+                    }
+                    const mapped = data.recenttracks.track.map((track: any) => ({ // i dont wanna re create lastfms api types so ill just use any for now
+                        artist: track.artist['#text'],
+                        track: track.name,
+                        album: track.album['#text'],
+                        url: track.url,
+                        date: track.date ? track.date['#text'] : 'Now Playing'
+                    }));
+                    return mapped
+                } catch (err: any) {
+                    log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${err.message}`);
+                    return `an error occurred while attempting to fetch Last.fm data: ${err.message}`
+                }
+            },
+        }
+    },
+    math: {
+        type: 'function',
+        function: {
+            name: "math",
+            description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate()",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    expression: {
+                        type: "string",
+                        description: "mathematical expression to evaluate",
+                    },
+                }
+            },
+            function: async ({ expression }: { expression: string }) => {
+                try {
+                    return mathjs.evaluate(expression);
+                } catch (err: any) {
+                    return `an error occurred while attempting to evaluate the expression: ${err.message}`
+                }
+            },
+        }
+    },
+    random: {
+        type: 'function',
+        function: {
+            name: "random",
+            description: "returns a random number between two values",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    min: {
+                        type: "number",
+                        description: "minimum value",
+                    },
+                    max: {
+                        type: "number",
+                        description: "maximum value",
+                    },
+                }
+            },
+            function: async ({ min, max }: { min: number, max: number }) => {
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            },
+        }
+    },
+    request_url: {
+        type: 'function',
+        function: {
+            name: "request_url",
+            description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons.",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    url: {
+                        type: "string",
+                        description: "URL to fetch. Do not input local addresses. IP's are fine, just not local ones.",
+                    },
+                    keepScripts: {
+                        type: "boolean",
+                        description: "whether to keep scripts in the fetched content",
+                        default: false,
+                    },
+                    raw: {
+                        type: "boolean",
+                        description: "whether to return the raw HTML instead of markdown",
+                        default: false,
+                    },
+                }
+            },
+            function: async ({ url, keepScripts, raw }: { url: string, keepScripts: boolean, raw: boolean }) => {
+                if (!url) {
+                    return "ERROR: No URL provided.";
+                }
+                for (let ipStart of local_ips) {
+                    if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
+                        log.warn(`attempt to access local ip from request_url`);
+                        return `refused attempt to access private ip from request_url`;
+                    }
+                }
+                try {
+                    const response = await fetch(url);
+                    const html = await response.text();
+                    if (raw) {
+                        return html;
+                    }
+            
+                    const $ = cheerio.load(html);
+                    if (!keepScripts) {
+                        $('script, style, noscript, iframe').remove();
+                    }
+                    const turndownService = new TurndownService();
+        
+                    $('a[href]').each((_, element) => {
+                        const href = $(element).attr('href');
+                        if (href && (href.startsWith('/') || href.startsWith('./'))) {
+                            const absoluteUrl = new URL(href, url).href;
+                            $(element).attr('href', absoluteUrl);
+                        }
+                    });
+        
+                    const mainContent = $('article').html() || $('main').html() || $('body').html();
+                    if (!mainContent) return "No content found.";
+                    let markdown = turndownService.turndown(mainContent);
+                    if (markdown.length > 100000) {
+                        return markdown.slice(0, 100000) + " ... (truncated due to length)";
+                    }
+                    return markdown
+                } catch (err: any) {
+                    
+                    log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
+                    return `an error occurred while attempting to fetch the URL: ${err.message}`;
+                }
+            },
+        }
+    },
+    search: {
+        type: 'function',
+        function: {
+            name: "search",
+            description: "searches Google for a query and returns the results",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    query: {
+                        type: "string",
+                        description: "query to search for",
+                    },
+                }
+            },
+            function: async ({ query }: { query: string }) => {
+                const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID}`;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    if (data.error) {
+                        log.warn(`an error occurred while attempting to search Google for GPT: ${data.error.message}`);
+                        return `an error occurred while attempting to search Google: ${data.error.message}`;
+                    }
+                    const results = Array.isArray(data.items) ? data.items : [data.items];
+                    let newResults = [];
+                    for (let result of results) {
+                        newResults.push({ title: result.title, snippet: result.snippet, link: result.link })
+                    }
+                    return newResults;
+                } catch (err: any) {
+                    log.warn(`an error occurred while attempting to search Google for GPT: ${err.message}`);
+                    return `an error occurred while attempting to search Google: ${err.message}`;
+                }
             },
         }
     }
-]
+}
 
-const botPrompt = `Prompt unfinished.`
+const botPrompt = `Prompt unfinished. `
 
 export enum GPTRole { // in theory i could import these from openai, but they have a lot of other weird stuff added to them and i dont wanna deal with that
     User = "user",
@@ -185,8 +394,6 @@ export enum ConversationEvents {
     FunctionCallResult = "function_call_result",
 }
 
-let conversations: Conversation[] = [];
-
 export class Conversation {
     users: User[] = [];
     messages: GPTMessage[] = [];
@@ -263,7 +470,7 @@ export class Conversation {
         try {
             const apiInput = this.toApiInput();
             const response = await openai.beta.chat.completions.runTools({
-                tools,
+                tools: Object.values(tools),
                 ...apiInput
             }).on('message', (msg) => {
                 if (msg.role === GPTRole.Tool) {
@@ -355,7 +562,17 @@ export class GPTProcessor {
         } else if (t === GPTProcessorLogType.SentMessage) {
             return await this.sentMessage.edit({ content: content });
         } else if (t === GPTProcessorLogType.FollowUp) {
-            // todo: implement this
+            if (this.repliedMessage instanceof Message) {
+                const channel = this.repliedMessage.channel;
+                if (channel && channel instanceof TextChannel) {
+                    return await channel.send(content);
+                } else {
+                    return await this.sentMessage.edit({ content: this.sentMessage.content + `\n${content}` });
+                }
+            }
+            if ((this.repliedMessage as FormattedCommandInteraction)) {
+                return await this.repliedMessage?.followUp(content);
+            }
         }
     }
 }
@@ -367,7 +584,7 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     const conversation = getConversation(userMessage);
     await conversation.addMessage(userMessage, GPTRole.User);
     conversation.on(ConversationEvents.FunctionCall, async (toolCall: ChatCompletionMessageToolCall) => {
-        await processor.log({ t: GPTProcessorLogType.ToolCall, content: `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ')}` });
+        await processor.log({ t: GPTProcessorLogType.ToolCall, content: `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ').replaceAll("\\", "")}` });
     });
     conversation.on(ConversationEvents.FatalError, async (error: any) => {
         await processor.log({ t: GPTProcessorLogType.Error, content: `fatal error: ${error}; debug data will persist` });
@@ -383,6 +600,8 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     if (messages.length > 1) { // todo: add typing speed to this
         for (let i = 1; i < messages.length; i++) {
             await processor.log({ t: GPTProcessorLogType.FollowUp, content: messages[i] });
+            const typingDelay = (60 / typingSpeedWPM) * 1000 * messages[i].split(' ').length;
+            await new Promise(resolve => setTimeout(resolve, typingDelay));
         }
     }
     conversation.removeAllListeners();
