@@ -1,46 +1,16 @@
-#!/usr/bin/env -S npm run tsn -T
+import { Collection, Message, User } from "discord.js";
+import { GPTProcessor, respond } from "../src/lib/gpt";
 
-import { inspect } from 'node:util';
-import OpenAI from 'openai';
+const fakeMessage = {
+    content: "call the test function im testin shit",
+    id: "123456789012345678",
+    attachments: new Collection(),
+    author: {
+        id: "123456789012345678",
+        username: "ayeuhugyu",
+        discriminator: "0001",
+        avatarURL: () => "https://example.com/avatar.png",
+    } as User,
+} as Message;
 
-const openai = new OpenAI();
-
-function get() {
-    return "test"
-}
-
-async function main() {
-    let ratelimited = false;
-    let messageSinceLastRateLimit = "";
-
-    const runner = await openai.beta.chat.completions
-    .runTools({
-        tools: [{
-            type: 'function',
-            function: {
-                name: 'test',
-                description:
-                "test",
-                parameters: {},
-                function: get,
-                parse: JSON.parse,
-            }
-    }],
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: 'hi, call the test function' }],
-    })
-    .on('message', (data) => {
-        console.log(`message: `);
-        console.log(inspect(data, { depth: Infinity, colors: true }));
-    }).on('functionCall', (functionCall) => {
-        console.log(`function call: `);
-        console.log(functionCall);
-    }).on('functionCallResult', (functionCallResult) => {
-        console.log(`function call result: `);
-        console.log(functionCallResult);
-    })
-    const result = await runner.finalChatCompletion();
-    console.log(result.choices[0].message.content);
-}
-
-main();
+await respond(fakeMessage, console as any) // this is the reason for the "log" function, i can just plug in a logger here and itll work

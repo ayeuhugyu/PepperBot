@@ -1,10 +1,13 @@
-import { Message, User } from "discord.js";
+import { Attachment, Collection, Message, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
 import { EventEmitter } from "node:events";
 import { RunnableToolFunction } from "openai/lib/RunnableFunction";
-import { ChatCompletionMessageToolCall } from "openai/resources";
+import { ChatCompletionMessageToolCall, ChatCompletionToolMessageParam } from "openai/resources";
+import { FormattedCommandInteraction } from "./classes/command";
+import { config } from "dotenv";
+config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -24,6 +27,8 @@ const tools: RunnableToolFunction<any>[] = [
     }
 ]
 
+const botPrompt = `Prompt unfinished.`
+
 export enum GPTRole { // in theory i could import these from openai, but they have a lot of other weird stuff added to them and i dont wanna deal with that
     User = "user",
     Assistant = "assistant",
@@ -34,6 +39,13 @@ export enum GPTRole { // in theory i could import these from openai, but they ha
 export enum GPTContentPartType {
     Text = "text",
     Image = "image_url",
+}
+
+export type GPTFormattedCommandInteraction = FormattedCommandInteraction & {
+    author: User;
+    cleanContent: string;
+    content: string;
+    attachments: Collection<string, Attachment>;
 }
 
 export enum GPTModel {
@@ -69,9 +81,14 @@ export class GPTMessage {
     content: string | GPTContentPart[] = [];
     name: string | undefined;
     message_id: string | undefined;
-    discord_message: Message | undefined;
+    discord_message: Message | GPTFormattedCommandInteraction | undefined;
     timestamp: number = Date.now();
     tool_calls: ChatCompletionMessageToolCall[] | undefined;
+    addDiscordValues(message: Message) {
+        this.discord_message = message;
+        this.message_id = message.id.toString();
+        this.timestamp = message.createdTimestamp || Date.now();
+    }
     constructor (args: Partial<GPTMessage> = {}) {
         Object.assign(this, args);
     }
@@ -139,8 +156,9 @@ function getFileType(filename: string): string {
     return 'none';
 }
 
-async function sanitizeMessage(message: Message): Promise<GPTContentPart[]> {
+async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction): Promise<GPTContentPart[]> {
     let contentParts = [];
+
     if (message.cleanContent || message.content) {
         contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: message.cleanContent || message.content || "Error finding message content. " }));
     }
@@ -174,6 +192,7 @@ export class Conversation {
     messages: GPTMessage[] = [];
     api_parameters: APIParameters = new APIParameters();
     emitter: EventEmitter = new EventEmitter();
+    id: string = Math.random().toString(36).substring(2, 15); // random id for the conversation, may be used to find it later
 
     on = this.emitter.on.bind(this.emitter);
     off = this.emitter.off.bind(this.emitter);
@@ -183,7 +202,6 @@ export class Conversation {
 
     toApiInput() {
         const apiConversation: any = {
-            stream: true, 
             messages: this.messages.map((message) => {
                 const apiMessage: any = {
                     role: message.role,
@@ -192,7 +210,7 @@ export class Conversation {
                     apiMessage.name = message.name;
                 }
                 if (message.content) {
-                    if (typeof message.content === string) {
+                    if (typeof message.content === "string") {
                         apiMessage.content = message.content;
                     } else {
                         message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
@@ -210,6 +228,7 @@ export class Conversation {
                         apiMessage.content = message.content;
                     }
                 }
+                return apiMessage;
             })
         }; // i am not gonna make a whole type for this ngl i do not care enough
         for (const [key, value] of Object.entries(this.api_parameters)) {
@@ -225,7 +244,7 @@ export class Conversation {
         return message;
     }
 
-    async addMessage(message: Message, role: GPTRole = GPTRole.User): Promise<GPTMessage> {
+    async addMessage(message: Message | GPTFormattedCommandInteraction, role: GPTRole = GPTRole.User): Promise<GPTMessage> {
         const newMessage = new GPTMessage();
         newMessage.discord_message = message;
         if (this.users.find((user) => user.id === message.author.id) === undefined) {
@@ -248,8 +267,9 @@ export class Conversation {
                 ...apiInput
             }).on('message', (msg) => {
                 if (msg.role === GPTRole.Tool) {
-                    log.info(`finished processing tool call ${msg.tool_call_id}`);
+                    log.info(`finished processing tool ${msg.tool_call_id}`);
                     this.addNonDiscordMessage(new GPTMessage({ role: GPTRole.Tool, content: msg.content as string }));
+                    this.emitter.emit(ConversationEvents.FunctionCallResult, msg);
                 } else if (msg.role === GPTRole.Assistant) {
                     let message = new GPTMessage()
                     message.name = "PepperBot";
@@ -262,25 +282,44 @@ export class Conversation {
                         message.tool_calls = msg.tool_calls;
                     }
                     message.content = msg.content as string;
-                    this.addNonDiscordMessage(message);
+                    // we dont add the message because its not yet a discord message
                 }
             })
 
             return await response.finalChatCompletion();
         } catch (err: any) {
-            log.error(`internal error while executing GPT: ${err}`);
+            log.error(`internal error while executing GPT:`);
+            log.error(err);
             this.emitter.emit(ConversationEvents.FatalError, `${err.message}`);
             return;
         }
     }
-    constructor(message: Message) {
-
+    constructor(message: Message | GPTFormattedCommandInteraction) {
+        this.users.push(message.author);
+        const prompt = getPrompt(message.author.id);
+        this.messages.push(new GPTMessage({ role: GPTRole.System, content: prompt }));
+        if (message instanceof Message && message.reference && message.reference.messageId) {
+            message.channel.messages.fetch(message.reference.messageId).then((msg) => {
+                if (msg) {
+                    this.addMessage(msg, GPTRole.User);
+                } else {
+                    log.error(`error fetching referenced message: ${message?.reference?.messageId}`);
+                }
+            }).catch((err) => {
+                log.error(`error fetching referenced message: ${err}`);
+            });
+        }
     }
 }
 
-export function getConversation(message: Message) {
-    let currentConversation = conversations.find((conv) => conv.messages.find((msg) => msg.message_id === message.reference?.messageId)) || conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
-    if (message.mentions.has(message.client.user as User)) {
+function getPrompt(user: string): string { // userid
+    // functionality not done
+    return botPrompt
+}
+
+export function getConversation(message: Message | GPTFormattedCommandInteraction) {
+    let currentConversation = conversations.find((conv) => conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId)) || conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
+    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User)) {
         if (currentConversation) {
             delete conversations[conversations.indexOf(currentConversation)];
             currentConversation = undefined;
@@ -291,4 +330,60 @@ export function getConversation(message: Message) {
         conversations.push(currentConversation);
     }
     return currentConversation;
+}
+
+export enum GPTProcessorLogType {
+    ToolCall = "ToolCall",
+    ToolCallResult = "ToolCallResult",
+    SentMessage = "Message",
+    Error = "Error",
+    Warning = "Warning",
+    FollowUp = "FollowUp",
+}
+
+export class GPTProcessor {
+    repliedMessage: Message | FormattedCommandInteraction | undefined = undefined;
+    sentMessage: Message | undefined = undefined;
+    async log({ t, content }: { t: GPTProcessorLogType, content: string }) {
+        if (!this.sentMessage) {
+            log.error(`no sent message to log to`);
+            return;
+        }
+        if (t !== GPTProcessorLogType.SentMessage && t !== GPTProcessorLogType.FollowUp) {
+            const editContent = this.sentMessage.content + `\n-# [${t}] ${content}`;
+            return await this.sentMessage.edit({ content: editContent });
+        } else if (t === GPTProcessorLogType.SentMessage) {
+            return await this.sentMessage.edit({ content: content });
+        } else if (t === GPTProcessorLogType.FollowUp) {
+            // todo: implement this
+        }
+    }
+}
+
+const typingSpeedWPM = 250; // words per minute
+const messageSplitCharacters = "$SPLIT_MESSAGE$"
+
+export async function respond(userMessage: Message | GPTFormattedCommandInteraction, processor: GPTProcessor) {
+    const conversation = getConversation(userMessage);
+    await conversation.addMessage(userMessage, GPTRole.User);
+    conversation.on(ConversationEvents.FunctionCall, async (toolCall: ChatCompletionMessageToolCall) => {
+        await processor.log({ t: GPTProcessorLogType.ToolCall, content: `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ')}` });
+    });
+    conversation.on(ConversationEvents.FatalError, async (error: any) => {
+        await processor.log({ t: GPTProcessorLogType.Error, content: `fatal error: ${error}; debug data will persist` });
+        conversation.removeAllListeners();
+    });
+    conversation.on(ConversationEvents.FunctionCallResult, async (result: ChatCompletionToolMessageParam) => {
+        await processor.log({ t: GPTProcessorLogType.ToolCallResult, content: `completed tool call ${result.tool_call_id}` });
+    }); // no need to log any of these, they're all already logged elsewhere
+    const response = await conversation.run();
+    const fullMessageContent = response?.choices[0]?.message?.content;
+    const messages = fullMessageContent?.split(messageSplitCharacters) || [fullMessageContent || ""];
+    await processor.log({ t: GPTProcessorLogType.SentMessage, content: messages[0] || "no response" });
+    if (messages.length > 1) { // todo: add typing speed to this
+        for (let i = 1; i < messages.length; i++) {
+            await processor.log({ t: GPTProcessorLogType.FollowUp, content: messages[i] });
+        }
+    }
+    conversation.removeAllListeners();
 }
