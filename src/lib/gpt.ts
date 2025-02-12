@@ -2,13 +2,29 @@ import { Message, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
-import { string } from "mathjs";
+import { EventEmitter } from "node:events";
+import { RunnableToolFunction } from "openai/lib/RunnableFunction";
+import { ChatCompletionMessageToolCall } from "openai/resources";
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-export enum GPTRole { 
+const tools: RunnableToolFunction<any>[] = [
+    {
+        type: 'function',
+        function: {
+            name: "test",
+            description: "test",
+            parameters: {},
+            function: async () => {
+                return "test";
+            },
+        }
+    }
+]
+
+export enum GPTRole { // in theory i could import these from openai, but they have a lot of other weird stuff added to them and i dont wanna deal with that
     User = "user",
     Assistant = "assistant",
     System = "system",
@@ -36,13 +52,13 @@ export class GPTContentPart {
     image_url: object | undefined;
     constructor ({ type = GPTContentPartType.Text, text, image_url }: { type?: GPTContentPartType, text?: string, image_url?: string } = {}) {
         this.type = type;
-        if (type === GPTContentPartType.Text) {
+        if (type === GPTContentPartType.Text) { // if type is text, set text to text or "No text provided."
             this.text = text || "No text provided.";
             this.image_url = undefined;
-        } else if (type === GPTContentPartType.Image) {
+        } else if (type === GPTContentPartType.Image) { // if type is image, set image_url to image_url or undefined
             this.text = undefined;
             this.image_url = image_url ? { url: image_url } : undefined;
-        } else {
+        } else { // if type is not text or image, log an error
             log.error(`Invalid type provided: ${type}`);
         }
     }
@@ -50,11 +66,15 @@ export class GPTContentPart {
 
 export class GPTMessage {
     role: GPTRole = GPTRole.User;
-    content: GPTContentPart[] = [];
+    content: string | GPTContentPart[] = [];
     name: string | undefined;
     message_id: string | undefined;
     discord_message: Message | undefined;
     timestamp: number = Date.now();
+    tool_calls: ChatCompletionMessageToolCall[] | undefined;
+    constructor (args: Partial<GPTMessage> = {}) {
+        Object.assign(this, args);
+    }
 }
 
 export const APIParametersDescriptions = {
@@ -65,7 +85,7 @@ export const APIParametersDescriptions = {
     max_completion_tokens: "max number of words to generate",
     presence_penalty: "penalizes new words based on whether they appear in the text so far",
     seed: "random seed for reproducibility",
-}
+} // may or may not be used in the future for a help command
 
 export class APIParameters {
     model: GPTModel = GPTModel.gpt_4o_mini;
@@ -140,15 +160,30 @@ async function sanitizeMessage(message: Message): Promise<GPTContentPart[]> {
     return contentParts;
 }
 
+export enum ConversationEvents {
+    Message = "message",
+    FatalError = "fatal_error",
+    FunctionCall = "function_call",
+    FunctionCallResult = "function_call_result",
+}
+
 let conversations: Conversation[] = [];
 
 export class Conversation {
     users: User[] = [];
     messages: GPTMessage[] = [];
     api_parameters: APIParameters = new APIParameters();
+    emitter: EventEmitter = new EventEmitter();
+
+    on = this.emitter.on.bind(this.emitter);
+    off = this.emitter.off.bind(this.emitter);
+    once = this.emitter.once.bind(this.emitter);
+    emit = this.emitter.emit.bind(this.emitter);
+    removeAllListeners = this.emitter.removeAllListeners.bind(this.emitter);
 
     toApiInput() {
         const apiConversation: any = {
+            stream: true, 
             messages: this.messages.map((message) => {
                 const apiMessage: any = {
                     role: message.role,
@@ -157,19 +192,23 @@ export class Conversation {
                     apiMessage.name = message.name;
                 }
                 if (message.content) {
-                    message.content = message.content.map((content) => {
-                        const apiContent: any = {
-                            type: content.type,
-                        }
-                        if (content.text) {
-                            apiContent.text = content.text;
-                        }
-                        if (content.image_url) {
-                            apiContent.image_url = content.image_url;
-                        }
-                        return apiContent;
-                    })
-                    apiMessage.content = message.content;
+                    if (typeof message.content === string) {
+                        apiMessage.content = message.content;
+                    } else {
+                        message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
+                            const apiContent: any = {
+                                type: content.type,
+                            }
+                            if (content.text) {
+                                apiContent.text = content.text;
+                            }
+                            if (content.image_url) {
+                                apiContent.image_url = content.image_url;
+                            }
+                            return apiContent;
+                        }) : message.content;
+                        apiMessage.content = message.content;
+                    }
                 }
             })
         }; // i am not gonna make a whole type for this ngl i do not care enough
@@ -179,6 +218,11 @@ export class Conversation {
             }
         }
         return apiConversation;
+    }
+
+    addNonDiscordMessage(message: GPTMessage): GPTMessage {
+        this.messages.push(message);
+        return message;
     }
 
     async addMessage(message: Message, role: GPTRole = GPTRole.User): Promise<GPTMessage> {
@@ -196,6 +240,39 @@ export class Conversation {
         return newMessage;
     }
 
+    async run() {
+        try {
+            const apiInput = this.toApiInput();
+            const response = await openai.beta.chat.completions.runTools({
+                tools,
+                ...apiInput
+            }).on('message', (msg) => {
+                if (msg.role === GPTRole.Tool) {
+                    log.info(`finished processing tool call ${msg.tool_call_id}`);
+                    this.addNonDiscordMessage(new GPTMessage({ role: GPTRole.Tool, content: msg.content as string }));
+                } else if (msg.role === GPTRole.Assistant) {
+                    let message = new GPTMessage()
+                    message.name = "PepperBot";
+                    message.role = GPTRole.Assistant;
+                    if (msg.tool_calls) {
+                        for (const toolCall of msg.tool_calls) {
+                            log.info(`processing tool call ${toolCall.function.name} ${toolCall.id}`);
+                            this.emitter.emit(ConversationEvents.FunctionCall, toolCall);
+                        }
+                        message.tool_calls = msg.tool_calls;
+                    }
+                    message.content = msg.content as string;
+                    this.addNonDiscordMessage(message);
+                }
+            })
+
+            return await response.finalChatCompletion();
+        } catch (err: any) {
+            log.error(`internal error while executing GPT: ${err}`);
+            this.emitter.emit(ConversationEvents.FatalError, `${err.message}`);
+            return;
+        }
+    }
     constructor(message: Message) {
 
     }
