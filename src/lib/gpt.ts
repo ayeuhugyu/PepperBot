@@ -402,7 +402,8 @@ export class Conversation {
     messages: GPTMessage[] = [];
     api_parameters: APIParameters = new APIParameters();
     emitter: EventEmitter = new EventEmitter();
-    id: string = Math.random().toString(36).substring(2, 15); // random id for the conversation, may be used to find it later
+    id: string = Math.random().toString(36).substring(2, 15); // there is a 1 in 4294967296 chance this will explode
+    // random id for the conversation, may be used to find it later
 
     on = this.emitter.on.bind(this.emitter);
     off = this.emitter.off.bind(this.emitter);
