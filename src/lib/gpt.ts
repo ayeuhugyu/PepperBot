@@ -11,6 +11,7 @@ import TurndownService from "turndown";
 import * as mathjs from "mathjs";
 import * as cheerio from "cheerio";
 import * as util from "util";
+import * as action from "./discord_action"
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -563,29 +564,29 @@ export class GPTProcessor {
         if (!this.sentMessage) {
             log.error(`no sent message to log to`);
             return;
-        } // TODO: use discord action instead of the default methods
+        }
         if (t !== GPTProcessorLogType.SentMessage && t !== GPTProcessorLogType.FollowUp) {
             const editContent = this.sentMessage.content + `\n-# [${t}] ${content}`;
-            return await this.sentMessage.edit({ content: editContent });
+            return await action.edit(this.sentMessage, { content: editContent });
         } else if (t === GPTProcessorLogType.SentMessage) {
-            return await this.sentMessage.edit({ content: content });
+            return await action.edit(this.sentMessage, { content: content });
         } else if (t === GPTProcessorLogType.FollowUp) {
             if (this.repliedMessage instanceof Message) {
                 const channel = this.repliedMessage.channel;
                 if (channel && channel instanceof TextChannel) {
                     return await channel.send(content);
                 } else {
-                    return await this.sentMessage.edit({ content: this.sentMessage.content + `\n${content}` });
+                    return await action.edit(this.sentMessage, { content: this.sentMessage.content + `\n${content}` });
                 }
             }
             if ((this.repliedMessage as FormattedCommandInteraction)) {
                 const forced_ephemeral = (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
                 if (forced_ephemeral) {
-                    return await this.repliedMessage?.followUp(content);
+                    return await this.repliedMessage?.followUp(content); // i dont feel like makin a whole method for this rn ngl
                 } else {
                     const channel = this.repliedMessage?.channel;
                     if (channel && channel instanceof TextChannel) {
-                        return await channel.send(content);
+                        return await action.send(channel, content);
                     }
                 }
             }
