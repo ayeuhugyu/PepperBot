@@ -1,4 +1,4 @@
-import { Attachment, ChannelType, Collection, Message, TextChannel, User } from "discord.js";
+import { Attachment, ChannelType, Collection, Message, PermissionFlagsBits, TextChannel, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
@@ -10,6 +10,7 @@ import { config } from "dotenv";
 import TurndownService from "turndown";
 import * as mathjs from "mathjs";
 import * as cheerio from "cheerio";
+import * as util from "util";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -39,7 +40,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = {
         type: 'function',
         function: {
             name: "get_listening_data",
-            description: "retrieves listening data for a specific user",
+            description: "retrieves last.fm listening data for a specific user",
             parse: JSON.parse,
             parameters: {
                 type: 'object',
@@ -82,7 +83,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = {
         type: 'function',
         function: {
             name: "math",
-            description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate()",
+            description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate(). This should only be used when you must use math. ",
             parse: JSON.parse,
             parameters: {
                 type: 'object',
@@ -106,7 +107,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = {
         type: 'function',
         function: {
             name: "random",
-            description: "returns a random number between two values",
+            description: "returns a random number between two values. This should only be used when users ask for random values.",
             parse: JSON.parse,
             parameters: {
                 type: 'object',
@@ -287,6 +288,7 @@ export class GPTContentPart {
 
 export class GPTMessage {
     role: GPTRole = GPTRole.User;
+    tool_call_id: string | undefined;
     content: string | GPTContentPart[] = [];
     name: string | undefined;
     message_id: string | undefined;
@@ -412,6 +414,8 @@ export class Conversation {
             messages: this.messages.map((message) => {
                 const apiMessage: any = {
                     role: message.role,
+                    tool_calls: message.tool_calls,
+                    tool_call_id: message.tool_call_id
                 }
                 if (message.name) {
                     apiMessage.name = message.name;
@@ -474,24 +478,27 @@ export class Conversation {
                 ...apiInput
             }).on('message', (msg) => {
                 if (msg.role === GPTRole.Tool) {
-                    log.info(`finished processing tool ${msg.tool_call_id}`);
-                    this.addNonDiscordMessage(new GPTMessage({ role: GPTRole.Tool, content: msg.content as string }));
+                    log.info(`finished processing tool (${msg.tool_call_id})`);
+                    const message = new GPTMessage({ role: GPTRole.Tool, content: msg.content as string, tool_call_id: msg.tool_call_id })
+                    this.addNonDiscordMessage(message);
                     this.emitter.emit(ConversationEvents.FunctionCallResult, msg);
                 } else if (msg.role === GPTRole.Assistant) {
                     let message = new GPTMessage()
                     message.name = "PepperBot";
                     message.role = GPTRole.Assistant;
-                    if (msg.tool_calls) {
+                    if (msg.tool_calls && msg.tool_calls.length >= 1) { // TODO: some of these arent getting added cuz they're not actually discord messages, which makes openai error
                         for (const toolCall of msg.tool_calls) {
-                            log.info(`processing tool call ${toolCall.function.name} ${toolCall.id}`);
+                            log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
                             this.emitter.emit(ConversationEvents.FunctionCall, toolCall);
                         }
                         message.tool_calls = msg.tool_calls;
+                        this.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
                     }
                     message.content = msg.content as string;
+                    console.log(message)
                     // we dont add the message because its not yet a discord message
                 }
-            })
+            });
 
             return await response.finalChatCompletion();
         } catch (err: any) {
@@ -525,10 +532,10 @@ function getPrompt(user: string): string { // userid
 }
 
 export function getConversation(message: Message | GPTFormattedCommandInteraction) {
-    let currentConversation = conversations.find((conv) => conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId)) || conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
-    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User)) {
-        if (currentConversation) {
-            delete conversations[conversations.indexOf(currentConversation)];
+    let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId)) || conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
+    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@!${message.client.user?.id}>`)) { // if the message is a mention of the bot, start a new conversation
+        if (currentConversation) { // TODO: thisll cause issues because someone else can just reply into a conversation with an @ and itll just delete the conversation
+            conversations = conversations.filter((conv) => conv.id !== currentConversation?.id);
             currentConversation = undefined;
         }
     }
@@ -536,6 +543,7 @@ export function getConversation(message: Message | GPTFormattedCommandInteractio
         currentConversation = new Conversation(message);
         conversations.push(currentConversation);
     }
+    console.log(util.inspect(currentConversation.messages, { depth: 1, colors: true }))
     return currentConversation;
 }
 
@@ -551,11 +559,11 @@ export enum GPTProcessorLogType {
 export class GPTProcessor {
     repliedMessage: Message | FormattedCommandInteraction | undefined = undefined;
     sentMessage: Message | undefined = undefined;
-    async log({ t, content }: { t: GPTProcessorLogType, content: string }) {
+    async log({ t, content }: { t: GPTProcessorLogType, content: string }) { // this is named log because then you can literally just plug console into it and itll work
         if (!this.sentMessage) {
             log.error(`no sent message to log to`);
             return;
-        }
+        } // TODO: use discord action instead of the default methods
         if (t !== GPTProcessorLogType.SentMessage && t !== GPTProcessorLogType.FollowUp) {
             const editContent = this.sentMessage.content + `\n-# [${t}] ${content}`;
             return await this.sentMessage.edit({ content: editContent });
@@ -571,13 +579,21 @@ export class GPTProcessor {
                 }
             }
             if ((this.repliedMessage as FormattedCommandInteraction)) {
-                return await this.repliedMessage?.followUp(content);
+                const forced_ephemeral = (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
+                if (forced_ephemeral) {
+                    return await this.repliedMessage?.followUp(content);
+                } else {
+                    const channel = this.repliedMessage?.channel;
+                    if (channel && channel instanceof TextChannel) {
+                        return await channel.send(content);
+                    }
+                }
             }
         }
     }
 }
 
-const typingSpeedWPM = 250; // words per minute
+const typingSpeedWPM = 500; // words per minute
 const messageSplitCharacters = "$SPLIT_MESSAGE$"
 
 export async function respond(userMessage: Message | GPTFormattedCommandInteraction, processor: GPTProcessor) {
@@ -595,13 +611,28 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     }); // no need to log any of these, they're all already logged elsewhere
     const response = await conversation.run();
     const fullMessageContent = response?.choices[0]?.message?.content;
-    const messages = fullMessageContent?.split(messageSplitCharacters) || [fullMessageContent || ""];
-    await processor.log({ t: GPTProcessorLogType.SentMessage, content: messages[0] || "no response" });
-    if (messages.length > 1) { // todo: add typing speed to this
+    let messages = fullMessageContent?.split(messageSplitCharacters) || [fullMessageContent || ""];
+    if (messages.length > 10) {
+        const remainingMessages = messages.slice(10).join('\n');
+        messages = [...messages.slice(0, 10), remainingMessages];
+    }
+    const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: messages[0] || "error while generating GPT response; the error has been logged. " });
+    if (sentEdit) {
+        conversation.addMessage(sentEdit, GPTRole.Assistant);
+    }
+    if (messages.length > 1) {
         for (let i = 1; i < messages.length; i++) {
-            await processor.log({ t: GPTProcessorLogType.FollowUp, content: messages[i] });
-            const typingDelay = (60 / typingSpeedWPM) * 1000 * messages[i].split(' ').length;
+            const typingDelay = Math.min((60 / typingSpeedWPM) * 1000 * messages[i].split(' ').length, 1000);
             await new Promise(resolve => setTimeout(resolve, typingDelay));
+            if (processor.repliedMessage instanceof Message) {
+                if (processor.repliedMessage.channel && processor.repliedMessage.channel instanceof TextChannel) {
+                    await processor.repliedMessage.channel.sendTyping();
+                }
+            }
+            const sentMessage = await processor.log({ t: GPTProcessorLogType.FollowUp, content: messages[i] });
+            if (sentMessage) {
+                conversation.addMessage(sentMessage, GPTRole.Assistant);
+            }
         }
     }
     conversation.removeAllListeners();

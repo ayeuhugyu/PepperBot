@@ -72,6 +72,7 @@ export interface CommandInput {
     piped_data: PipedData | undefined;
     will_be_piped: boolean;
     self: Command;
+    forced_ephemeral: boolean;
 }
 
 export interface Contributor {
@@ -299,7 +300,9 @@ export class Command {
                 piped_data: input.piped_data || new PipedData(input._response?.from || undefined, input._response?.pipe_data) || undefined,
                 _response: input._response,
                 will_be_piped: input.will_be_piped || false,
-                self: this
+                self: this,
+                forced_ephemeral: (((input.message as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (input.message.client.guilds.cache.find((g) => g.id === input.message?.guildId) !== undefined) && input.message.guildId !== undefined) ? true : false // if (bot isnt in the guild || guild is undefined) && member does not have permissions to use external apps. 
+                // we don't need to fetch values from other shards because the only way it would be able to process an interaction from a guild its in is if the shard is processing that guild
             }
             if (!finalCommandInput.args) {
                 if (finalCommandInput.input_type === InputType.Interaction) {
