@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "description": "various testing and experiments of stuff",
     "main": "index.js",
-    "type": "module",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "start": "bun run src/index.ts",
+        "migrate": "knex migrate:latest"
     },
     "author": "",
     "license": "ISC",
