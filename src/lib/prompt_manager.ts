@@ -20,6 +20,7 @@ export interface dbPrompt {
     published: boolean;
     description: string;
     nsfw: boolean;
+    default: boolean;
 }
 
 export class Prompt {
@@ -34,27 +35,35 @@ export class Prompt {
     published: boolean = false;
     description: string = "No description provided.";
     nsfw: boolean = false;
+    default: boolean = false;
 
     constructor(dbObject: Partial<dbPrompt>) {
         Object.assign(this, {
-            name: dbObject.name,
-            content: dbObject.content,
+            name: dbObject.name || "Undefined",
+            content: dbObject.content || "Prompt undefined.",
             created_at: new Date(dbObject.created_at || Date.now()),
             updated_at: new Date(dbObject.updated_at || Date.now()),
             published_at: dbObject.published_at ? new Date(dbObject.published_at) : undefined,
             author: {
-                id: dbObject.author_id,
-                username: dbObject.author_username,
+                id: dbObject.author_id || "0",
+                username: dbObject.author_username || "Unknown",
                 avatar: dbObject.author_avatar || undefined,
             },
             published: Boolean(dbObject.published), // sqlite stores 0/1 for booleans so you gotta do this
-            description: dbObject.description,
+            description: dbObject.description || "No description provided.",
             nsfw: Boolean(dbObject.nsfw),
+            default: Boolean(dbObject.default),
         });
     }
 }
 
-export async function getPrompt(name: string, user: string): Promise<Prompt | undefined> {
+export async function getPrompt(name: string | undefined, user: string): Promise<Prompt | undefined> {
+    if (!name) {
+        return await database("prompts").where({ author_id: user, default: 1 }).first().then((row) => {
+            if (!row) return undefined;
+            return new Prompt(row);
+        });
+    }
     return await database("prompts").where({ name, author_id: user }).first().then((row) => {
         if (!row) return undefined;
         return new Prompt(row);
@@ -83,6 +92,9 @@ export async function writePrompt(prompt: Prompt) {
         .first();
 
     let result;
+    if (prompt.default) {
+        await database("prompts").where({ author_id: prompt.author.id, default: 1 }).update({ default: 0 });
+    }
     if (existingPrompt) {
         result = await database("prompts")
             .where({ name: prompt.name, author_id: prompt.author.id })
@@ -91,9 +103,11 @@ export async function writePrompt(prompt: Prompt) {
                 author_username: prompt.author.username,
                 author_avatar: prompt.author.avatar,
                 updated_at: prompt.updated_at,
+                published_at: prompt.published_at ? prompt.published_at : null,
                 published: Number(prompt.published),
                 description: prompt.description,
                 nsfw: Number(prompt.nsfw),
+                default: Number(prompt.default),
             });
     } else {
         result = await database("prompts")
@@ -105,11 +119,21 @@ export async function writePrompt(prompt: Prompt) {
                 author_avatar: prompt.author.avatar,
                 created_at: prompt.created_at,
                 updated_at: prompt.updated_at,
+                published_at: prompt.published_at,
                 published: Number(prompt.published),
                 description: prompt.description,
                 nsfw: Number(prompt.nsfw),
+                default: Number(prompt.default),
             });
     }
 
     return result;
+}
+
+export async function removeDefaultPrompt(user: string) {
+    return await database("prompts").where({ author_id: user, default: 1 }).update({ default: 0 });
+}
+
+export async function removePrompt(name: string, user: string) {
+    return await database("prompts").where({ author_id: user, name }).del();
 }

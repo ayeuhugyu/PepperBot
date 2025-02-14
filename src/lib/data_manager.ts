@@ -174,6 +174,7 @@ await ensureColumn("prompts", "published_at", (table) => table.timestamp("publis
 await ensureColumn("prompts", "description", (table) => table.string("description").notNullable().defaultTo("No description provided."));
 await ensureColumn("prompts", "published", (table) => table.boolean("published").notNullable().defaultTo(false));
 await ensureColumn("prompts", "nsfw", (table) => table.boolean("nsfw").notNullable().defaultTo(false));
+await ensureColumn("prompts", "default", (table) => table.boolean("default").notNullable().defaultTo(false));
 await finishTable("prompts");
 
 await ensureTable("todos");

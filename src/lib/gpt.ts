@@ -12,7 +12,6 @@ import * as mathjs from "mathjs";
 import * as cheerio from "cheerio";
 import { getPrompt as getDBPrompt, Prompt } from "./prompt_manager";
 import * as action from "./discord_action"
-import { clear } from "node:console";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -24,15 +23,8 @@ for (let i = 17; i <= 31; i++) {
     local_ips.push(`172.${i}`);
 }
 
-export interface UserPromptData {
-    name: string,
-    isDefault: boolean,
-    usedOnce: boolean,
-    promptData: Prompt | undefined;
-}
-
-let userPrompts = new Collection<string, UserPromptData>();
-let conversations: Conversation[] = [];
+export let userPrompts = new Collection<string, string>(); // userid, prompt name
+export let conversations: Conversation[] = [];
 
 const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
     get_current_date: {
@@ -523,48 +515,45 @@ export class Conversation {
             return;
         }
     }
-    constructor(message: Message | GPTFormattedCommandInteraction) {
-        this.users.push(message.author);
-        getPrompt(message.author.id).then((prompt) => {
-            this.messages.push(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
-            if (message instanceof Message && message.reference && message.reference.messageId) {
-                message.channel.messages.fetch(message.reference.messageId).then((msg) => {
-                    if (msg) {
-                        this.addMessage(msg, GPTRole.User);
-                    } else {
-                        log.error(`error fetching referenced message: ${message?.reference?.messageId}`);
-                    }
-                }).catch((err) => {
-                    log.error(`error fetching referenced message: ${err}`);
-                });
-            }
-        });
+    static async create(message: Message | GPTFormattedCommandInteraction) {
+        const conversation = new Conversation();
+        conversation.users.push(message.author);
+        const prompt = await getPrompt(message.author.id)
+        conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        if (message instanceof Message && message.reference && message.reference.messageId) {
+            message.channel.messages.fetch(message.reference.messageId).then((msg) => {
+                if (msg) {
+                    let role = GPTRole.User;
+                    if (msg.author.id === msg.client.user?.id) role = GPTRole.Assistant
+                    conversation.addMessage(msg, role);
+                } else {
+                    log.error(`error fetching referenced message: ${message?.reference?.messageId}`);
+                }
+            }).catch((err) => {
+                log.error(`error fetching referenced message: ${err}`);
+            });
+        }
+        return conversation;
     }
 }
 
 async function getPrompt(user: string): Promise<Prompt> { // userid
-    const prompt = userPrompts.get(user);
-    if (prompt && !prompt.isDefault && prompt.usedOnce) { // if the prompt isn't the default one we delete it
-        userPrompts.delete(user);
-    } else if (prompt) {
-        const dbPrompt = await getDBPrompt(prompt.name, user);
-        prompt.usedOnce = true;
-        if (dbPrompt) {
-            return dbPrompt;
-        } else if (prompt.promptData) {
-            return prompt.promptData;
-        }
+    const userPromptName = userPrompts.get(user);
+    userPrompts.delete(user);
+    const prompt = await getDBPrompt(userPromptName, user);
+    if (!prompt) {
+        return botPrompt;
     }
-    return botPrompt
+    return prompt;
 }
 
-export function getConversation(message: Message | GPTFormattedCommandInteraction) {
+export async function getConversation(message: Message | GPTFormattedCommandInteraction) {
     let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId))
     if (!currentConversation) {
         log.warn("conversation not found with message search, using user search")
         currentConversation = conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
     }
-    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@!${message.client.user?.id}>`)) { // if the message is a mention of the bot, start a new conversation
+    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@${message.client.user?.id}>`)) { // if the message is a mention of the bot, start a new conversation
         if (currentConversation) {
             currentConversation.users = currentConversation.users.filter((user) => user.id !== message.author.id);
             if (currentConversation.users.length === 0) {
@@ -576,7 +565,7 @@ export function getConversation(message: Message | GPTFormattedCommandInteractio
     }
     if (!currentConversation) {
         log.info("did not find conversation, creating new conversation")
-        currentConversation = new Conversation(message);
+        currentConversation = await Conversation.create(message);
         conversations.push(currentConversation);
     }
     return currentConversation;
@@ -632,7 +621,7 @@ const typingSpeedWPM = 500; // words per minute
 const messageSplitCharacters = "$SPLIT_MESSAGE$"
 
 export async function respond(userMessage: Message | GPTFormattedCommandInteraction, processor: GPTProcessor) {
-    const conversation = getConversation(userMessage);
+    const conversation = await getConversation(userMessage);
     await conversation.addMessage(userMessage, GPTRole.User);
     conversation.on(ConversationEvents.FunctionCall, async (toolCall: ChatCompletionMessageToolCall) => {
         await processor.log({ t: GPTProcessorLogType.ToolCall, content: `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ').replaceAll("\\", "")}` });
