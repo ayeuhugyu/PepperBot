@@ -4,7 +4,7 @@
     "description": "various testing and experiments of stuff",
     "main": "index.js",
     "scripts": {
-        "start": "bun run src/index.ts",
+        "start": "bun run src/main.ts",
         "migrate": "knex migrate:latest"
     },
     "author": "",
