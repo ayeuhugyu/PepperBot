@@ -122,91 +122,17 @@ if (!dataVerified) {
 const database = knex({
     client: "sqlite3",
     connection: {
-        filename: "resources/database.db",
+        filename: "./resources/database.db",
     },
     useNullAsDefault: true,
+    log: {
+        warn: log.warn,
+        error: log.error,
+        deprecate: log.warn,
+        debug: log.debug
+    }
 });
 log.info("opened database connection");
-
-await database.schema.hasTable("prompts").then(async (exists) => {
-    if (!exists) {
-        log.warn("creating missing prompts table");
-        return await database.schema.createTable("prompts", (table) => {
-            table.string("user").notNullable();
-            table.string("name").notNullable();
-            table.string("text").notNullable();
-            table.timestamp("created_at").defaultTo(database.fn.now());
-        });
-    }
-})
-
-await database.schema.hasTable("todos").then(async (exists) => {
-    if (!exists) {
-        log.warn("creating missing todos table");
-        return await database.schema.createTable("todos", (table) => {
-            table.string("user").notNullable();
-            table.string("name").notNullable();
-            table.integer("item").notNullable();
-            table.string("text").notNullable();
-            table.boolean("completed").notNullable().defaultTo(false);
-            table.timestamp("created_at").defaultTo(database.fn.now());
-        });
-    }
-});
-
-await database.schema.hasTable("configs").then(async (exists) => {
-    if (!exists) {
-        log.warn("creating missing configs table");
-        return await database.schema.createTable("configs", (table) => {
-            table.string("guild").notNullable();
-            table.string("key").notNullable();
-            table.json("value").notNullable();
-            table.string("category").notNullable();
-        })
-    }
-});
-
-await database.schema.hasTable("queues").then(async (exists) => {
-    if (!exists) {
-        log.warn("creating missing queues table");
-        return await database.schema.createTable("queues", (table) => {
-            table.string("guild");
-            table.string("user");
-            table.string("queue_name").notNullable();
-            table.integer("index").notNullable();
-            table.string("link").notNullable();
-            table.string("title").notNullable();
-            table.string("currentIndex")
-            table.timestamp("created_at").defaultTo(database.fn.now());
-        })
-    }
-});
-
-await database.schema.hasTable("sounds").then(async (exists) => {
-    if (!exists) {
-        log.warn("creating missing sounds table");
-        return await database.schema.createTable("sounds", (table) => {
-            table.string("guild");
-            table.string("user");
-            table.string("name").notNullable();
-            table.string("path").notNullable();
-            table.timestamp("created_at").defaultTo(database.fn.now());
-        })
-    }
-});
-
-await database.schema.hasTable("updates").then(async (exists) => {
-    if (!exists) {
-        log.warn("creating missing updates table");
-        return await database.schema.createTable("updates", (table) => {
-            table.integer("update").primary().notNullable();
-            table.string("text").notNullable();
-            table.timestamp("time").defaultTo(database.fn.now());
-        })
-    }
-});
-
-log.info("database verified");
 
 export default database;
 
