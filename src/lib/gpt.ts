@@ -488,7 +488,7 @@ export class Conversation {
                     let message = new GPTMessage()
                     message.name = "PepperBot";
                     message.role = GPTRole.Assistant;
-                    if (msg.tool_calls && msg.tool_calls.length >= 1) { // TODO: some of these arent getting added cuz they're not actually discord messages, which makes openai error
+                    if (msg.tool_calls && msg.tool_calls.length >= 1) {
                         for (const toolCall of msg.tool_calls) {
                             log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
                             this.emitter.emit(ConversationEvents.FunctionCall, toolCall);
@@ -497,7 +497,6 @@ export class Conversation {
                         this.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
                     }
                     message.content = msg.content as string;
-                    console.log(message)
                     // we dont add the message because its not yet a discord message
                 }
             });
@@ -534,18 +533,26 @@ function getPrompt(user: string): string { // userid
 }
 
 export function getConversation(message: Message | GPTFormattedCommandInteraction) {
-    let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId)) || conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
+    let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId))
+    if (!currentConversation) {
+        log.warn("conversation not found with message search, using user search")
+        currentConversation = conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
+    }
     if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@!${message.client.user?.id}>`)) { // if the message is a mention of the bot, start a new conversation
-        if (currentConversation) { // TODO: thisll cause issues because someone else can just reply into a conversation with an @ and itll just delete the conversation
-            conversations = conversations.filter((conv) => conv.id !== currentConversation?.id);
+        if (currentConversation) {
+            currentConversation.users = currentConversation.users.filter((user) => user.id !== message.author.id);
+            if (currentConversation.users.length === 0) {
+                log.info(`deleting conversation ${currentConversation.id} due to no remaining users`);
+                conversations = conversations.filter((conv) => conv.id !== currentConversation?.id);
+            }
             currentConversation = undefined;
-        }
+        } // if you include a ping, you're removed from the users list in the conversation. if you were the only user in it, the conversation is deleted. 
     }
     if (!currentConversation) {
+        log.info("did not find conversation, creating new conversation")
         currentConversation = new Conversation(message);
         conversations.push(currentConversation);
     }
-    console.log(util.inspect(currentConversation.messages, { depth: 1, colors: true }))
     return currentConversation;
 }
 
@@ -638,4 +645,6 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
         }
     }
     conversation.removeAllListeners();
+
+    return fullMessageContent;
 }
