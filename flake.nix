@@ -17,6 +17,11 @@
           packages = with pkgs; [
             bun
           ];
+
+          # provides libstdc++.so.6, needed for sharp runtime 
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
+            stdenv.cc.cc.lib
+          ]);
         };
   });
 }

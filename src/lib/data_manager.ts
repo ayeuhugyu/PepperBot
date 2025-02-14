@@ -70,7 +70,6 @@ const expectedLogs: string[] = [
 ]
 const nonFatalEnvVariables = [
     { key: "DISCORD_CLIENT_SECRET", message: "missing DISCORD_CLIENT_SECRET in .env; some features may not work" },
-    { key: "WEBHOOK_TOKEN", message: "missing WEBHOOK_TOKEN in .env; some features may not work" },
     { key: "OPENAI_API_KEY", message: "missing OPENAI_API_KEY in .env; some features may not work" },
     { key: "GOOGLE_API_KEY", message: "missing GOOGLE_API_KEY in .env; some features may not work" },
     { key: "GOOGLE_CUSTOM_SEARCH_ENGINE_ID", message: "missing GOOGLE_CUSTOM_SEARCH_ENGINE_ID in .env; some features may not work" },
@@ -132,7 +131,9 @@ async function ensureTable(tableName: string) {
     const exists = await database.schema.hasTable(tableName);
     if (!exists) {
         log.warn(`adding missing table "${tableName}"`);
-        await database.schema.createTable(tableName, () => {});
+        await database.schema.createTable(tableName, (table) => {
+            table.binary("_Dummy") // sqlite errors if you try to create a table with no columns
+        });
     }
 }
 
@@ -140,8 +141,11 @@ async function ensureColumn(tableName: string, columnName: string, columnDefinit
     const exists = await database.schema.hasColumn(tableName, columnName);
     if (!exists) {
         log.warn(`adding missing column "${columnName}" to table "${tableName}"`);
-        await database.schema.table(tableName, (table) => {
-            columnDefinition(table);
+        await database.schema.table(tableName, async (table) => {
+            await columnDefinition(table);
+            if (await database.schema.hasColumn(tableName, "_Dummy")) {
+                table.dropColumn("_Dummy"); // as previously stated sqlite errors if you try to create a table with no columns, so we just delete it as soon as one exists
+            }
         });
     }
 }

@@ -25,7 +25,7 @@ for (let i = 17; i <= 31; i++) {
 
 let conversations: Conversation[] = [];
 
-const tools: { [name: string]: RunnableToolFunction<any> } = {
+const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
     get_current_date: {
         type: 'function',
         function: {
@@ -238,7 +238,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = {
     }
 }
 
-const botPrompt = `Prompt unfinished. `
+const botPrompt = `Prompt unfinished. ` // openai will also error if this is empty or undefined
 
 export enum GPTRole { // in theory i could import these from openai, but they have a lot of other weird stuff added to them and i dont wanna deal with that
     User = "user",

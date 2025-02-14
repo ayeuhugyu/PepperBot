@@ -1,6 +1,8 @@
 import * as log from "./lib/log";
 import { fork, ChildProcess } from "node:child_process";
 import { startServer } from "./lib/communication_manager";
+import { verifyData } from "./lib/data_manager";
+verifyData();
 
 log.info("starting bot...");
 let sharder: ChildProcess;
