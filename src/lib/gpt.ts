@@ -1,4 +1,4 @@
-import { Attachment, ChannelType, Collection, Message, PermissionFlagsBits, TextChannel, User } from "discord.js";
+import { Attachment, Collection, Message, PermissionFlagsBits, TextChannel, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
@@ -10,7 +10,7 @@ import { config } from "dotenv";
 import TurndownService from "turndown";
 import * as mathjs from "mathjs";
 import * as cheerio from "cheerio";
-import * as util from "util";
+import { getPrompt as getDBPrompt, Prompt } from "./prompt_manager";
 import * as action from "./discord_action"
 config(); // incase started using test scripts without bot running
 
@@ -23,6 +23,12 @@ for (let i = 17; i <= 31; i++) {
     local_ips.push(`172.${i}`);
 }
 
+export interface UserPromptData {
+    name: string,
+    isDefault: boolean,
+}
+
+let userPrompts = new Collection<string, UserPromptData>();
 let conversations: Conversation[] = [];
 
 const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
@@ -238,7 +244,12 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
     }
 }
 
-const botPrompt = `Prompt unfinished. ` // openai will also error if this is empty or undefined
+const botPrompt = new Prompt({
+    name: "default",
+    content: `Prompt unfinished. `, // openai will also error if this is empty or undefined
+    author_username: "PepperBot",
+    description: "The default prompt for PepperBot. ",
+})
 
 export enum GPTRole { // in theory i could import these from openai, but they have a lot of other weird stuff added to them and i dont wanna deal with that
     User = "user",
@@ -511,24 +522,33 @@ export class Conversation {
     }
     constructor(message: Message | GPTFormattedCommandInteraction) {
         this.users.push(message.author);
-        const prompt = getPrompt(message.author.id);
-        this.messages.push(new GPTMessage({ role: GPTRole.System, content: prompt }));
-        if (message instanceof Message && message.reference && message.reference.messageId) {
-            message.channel.messages.fetch(message.reference.messageId).then((msg) => {
-                if (msg) {
-                    this.addMessage(msg, GPTRole.User);
-                } else {
-                    log.error(`error fetching referenced message: ${message?.reference?.messageId}`);
-                }
-            }).catch((err) => {
-                log.error(`error fetching referenced message: ${err}`);
-            });
-        }
+        getPrompt(message.author.id).then((prompt) => {
+            this.messages.push(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+            if (message instanceof Message && message.reference && message.reference.messageId) {
+                message.channel.messages.fetch(message.reference.messageId).then((msg) => {
+                    if (msg) {
+                        this.addMessage(msg, GPTRole.User);
+                    } else {
+                        log.error(`error fetching referenced message: ${message?.reference?.messageId}`);
+                    }
+                }).catch((err) => {
+                    log.error(`error fetching referenced message: ${err}`);
+                });
+            }
+        });
     }
 }
 
-function getPrompt(user: string): string { // userid
-    // functionality not done
+async function getPrompt(user: string, clear: boolean = false): Promise<Prompt> { // userid
+    const prompt = userPrompts.get(user);
+    if (clear && prompt && !prompt.isDefault) {
+        userPrompts.delete(user);
+    } else if (prompt) {
+        const dbPrompt = await getDBPrompt(prompt.name, user);
+        if (dbPrompt) {
+            return dbPrompt;
+        }
+    }
     return botPrompt
 }
 
