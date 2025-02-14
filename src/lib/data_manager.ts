@@ -78,6 +78,10 @@ const nonFatalEnvVariables = [
 ];
 
 let dataVerified = false;
+await fetch("http://localhost:50000/verified").then((res) => res.text()).then((text) => { 
+    if (text === "true") dataVerified = true;
+})
+// really messed up way to avoid verifying multiple times (just makes the logs cleaner)
 
 export function verifyData() {
     log.info("verifying data...");
@@ -143,9 +147,15 @@ async function ensureColumn(tableName: string, columnName: string, columnDefinit
         log.warn(`adding missing column "${columnName}" to table "${tableName}"`);
         await database.schema.table(tableName, async (table) => {
             await columnDefinition(table);
-            if (await database.schema.hasColumn(tableName, "_Dummy")) {
-                table.dropColumn("_Dummy"); // as previously stated sqlite errors if you try to create a table with no columns, so we just delete it as soon as one exists
-            }
+        });
+    }
+}
+
+async function finishTable(tableName: string) {
+    if (await database.schema.hasColumn(tableName, "_Dummy")) {
+        await database.schema.table(tableName, (table) => {
+            log.info(`removing dummy column from ${tableName}`);
+            table.dropColumn("_Dummy");
         });
     }
 }
@@ -157,6 +167,7 @@ await ensureColumn("prompts", "text", (table) => table.string("text").notNullabl
 await ensureColumn("prompts", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
 await ensureColumn("prompts", "public", (table) => table.boolean("public").defaultTo(false));
 await ensureColumn("prompts", "is_default", (table) => table.boolean("is_default").defaultTo(false));
+await finishTable("prompts");
 
 await ensureTable("todos");
 await ensureColumn("todos", "user", (table) => table.string("user").notNullable());
@@ -165,12 +176,14 @@ await ensureColumn("todos", "item", (table) => table.integer("item").notNullable
 await ensureColumn("todos", "text", (table) => table.string("text").notNullable());
 await ensureColumn("todos", "completed", (table) => table.boolean("completed").notNullable().defaultTo(false));
 await ensureColumn("todos", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+await finishTable("todos");
 
 await ensureTable("configs");
 await ensureColumn("configs", "guild", (table) => table.string("guild").notNullable());
 await ensureColumn("configs", "key", (table) => table.string("key").notNullable());
 await ensureColumn("configs", "value", (table) => table.json("value").notNullable());
 await ensureColumn("configs", "category", (table) => table.string("category").notNullable());
+await finishTable("configs");
 
 await ensureTable("queues");
 await ensureColumn("queues", "guild", (table) => table.string("guild"));
@@ -181,6 +194,7 @@ await ensureColumn("queues", "link", (table) => table.string("link").notNullable
 await ensureColumn("queues", "title", (table) => table.string("title").notNullable());
 await ensureColumn("queues", "currentIndex", (table) => table.string("currentIndex"));
 await ensureColumn("queues", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+await finishTable("queues");
 
 await ensureTable("sounds");
 await ensureColumn("sounds", "guild", (table) => table.string("guild"));
@@ -188,11 +202,13 @@ await ensureColumn("sounds", "user", (table) => table.string("user"));
 await ensureColumn("sounds", "name", (table) => table.string("name").notNullable());
 await ensureColumn("sounds", "path", (table) => table.string("path").notNullable());
 await ensureColumn("sounds", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+await finishTable("sounds");
 
 await ensureTable("updates");
 await ensureColumn("updates", "update", (table) => table.integer("update").primary().notNullable());
 await ensureColumn("updates", "text", (table) => table.string("text").notNullable());
 await ensureColumn("updates", "time", (table) => table.timestamp("time").defaultTo(database.fn.now()));
+await finishTable("updates");
 
 log.info("database verified");
 

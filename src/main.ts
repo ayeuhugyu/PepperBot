@@ -1,8 +1,6 @@
 import * as log from "./lib/log";
 import { fork, ChildProcess } from "node:child_process";
 import { startServer } from "./lib/communication_manager";
-import { verifyData } from "./lib/data_manager";
-verifyData();
 
 log.info("starting bot...");
 let sharder: ChildProcess;
@@ -47,5 +45,12 @@ app.post("/restart", async (req, res) => {
     }
     res.sendStatus(200).send(`restarted ${processName}`);
 });
+let hasVerified = false;
+app.get("/verified", (req, res) => { // really messed up way to avoid verifying multiple times (just makes the logs cleaner)
+    res.send(hasVerified);
+})
+const database = await import("./lib/data_manager"); // we dont actually need to run verifyData because the script will do that itself
+database.default.destroy();
+hasVerified = true;
 
 forkSharder();
