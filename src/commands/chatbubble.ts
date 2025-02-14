@@ -68,7 +68,7 @@ const command = new Command(
         ],
         example_usage: ["p/chatbubble x=1/3 y=1/4 https://example.com/image.png", "p/chatbubble x=0.5, y=0.25 <attach your image>", "p/chatbubble left <attach your image>"],
         aliases: ["cb", "sb", "speechbubble", "bubble"]
-    }, 
+    },
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;
         const args = new Collection();
@@ -83,15 +83,15 @@ const command = new Command(
         if (gravityMatch) {
             args.set('gravity', gravityMatch[0]);
         }
-        const xMatch = text.match(/ x=([^\s]+)/);
-        if (xMatch) {
-            args.set('x', xMatch[1]);
-        }
         const horizontalMatch = text.match(/(left|center|right)/);
         if (horizontalMatch) {
             args.set('x', horizontalMatch[0]);
         }
-        const yMatch = text.match(/ y=([^\s]+)/);
+        const xMatch = text.match(/x=([^\s]+)/);
+        if (xMatch) {
+            args.set('x', xMatch[1]);
+        }
+        const yMatch = text.match(/y=([^\s]+)/);
         if (yMatch) {
             args.set('y', yMatch[1]);
         }
@@ -113,37 +113,48 @@ const command = new Command(
                     break;
             }
         }
-        console.log(args)
-        const xPos = evaluate(args?.get("x") || "") || (1 / 3);
-        const yPos = evaluate(args?.get("y") || "") || (1 / 4);
+
+        let xPos = 1 / 3;
+        let yPos = 1 / 4;
+        try {
+            xPos = evaluate(args?.get("x") || "");
+            yPos = evaluate(args?.get("y") || "");
+        } catch (err) {
+            log.error(err);
+            await action.reply(message, { content: "error parsing inputs... are they valid math expressions? space seperated?", ephemeral: guildConfig.other.use_ephemeral_replies });
+            return;
+        }
+
         if (args?.get("gravity") && !["south", "north"].includes(args?.get("gravity"))) {
             await action.reply(message, { content: "invalid gravity; must be \"south\" or \"north\", not " + args?.get("gravity"), ephemeral: guildConfig.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
+
         const gravity: Gravity = args?.get("gravity") || "north";
         if (!args?.get("url") && !args?.get("image") && !piped_data?.data?.chatbubble_url) {
             await action.reply(message, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guildConfig.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
+
         const imageUrl = args?.get("url") || args?.get("image")?.url || piped_data?.data?.chatbubble_url;
 
         const inputImageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer());
         const inputImage = await sharp(inputImageBuffer, { animated: true });
-        
+
         let metadata: sharp.Metadata;
         try {
             metadata = await sharp(inputImageBuffer).metadata();
         } catch (err) {
             log.error(err);
-            action.reply(message, { content: "uh oh! invalid image?", ephemeral: guildConfig.other.use_ephemeral_replies });
+            await action.reply(message, { content: "uh oh! invalid image?", ephemeral: guildConfig.other.use_ephemeral_replies });
             return;
         }
-        
+
         // i don't think it's possible for this to be null/undefined
         // i am ignoring it for now 😊
         const width = metadata.width as number;
         const height = metadata.height as number;
-        
+
         const tailCurveDepth = 5 / 8;
         const tailWidth = 40;
         const tailShift = (xPos <= (1/3) || xPos >= (2/3)) ? Math.round(xPos) : xPos;
@@ -165,11 +176,11 @@ const command = new Command(
                 " fill="white" stroke="none"/>
             </svg>
         `;
-        
+
         const overlayBuffer = await sharp(Buffer.from(overlaySvg))
             .png()
             .toBuffer();
-        
+
         const outputBuffer = await inputImage
             .composite([{
                 input: overlayBuffer,
@@ -179,8 +190,8 @@ const command = new Command(
             }])
             .toFormat("gif")
             .toBuffer();
-        
-        action.reply(message, { 
+
+        action.reply(message, {
             content: `here's your chat bubble\n x=\`${args?.get("x") || xPos}\`, y=\`${args?.get("y") || yPos}\`, gravity=\`${gravity}\``,
             files: [new AttachmentBuilder(outputBuffer, { name: "bubble.gif" })]
         })
