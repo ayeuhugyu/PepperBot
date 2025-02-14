@@ -1,0 +1,10 @@
+root = true
+
+[*]
+end_of_line = lf
+indent_style = space
+indent_size = 4
+# i believe it's better to have this on true,
+# but SOMEONE did not insert final new lines so im keeping it off for now
+insert_final_newline = false
+trim_trailing_whitespace = true
