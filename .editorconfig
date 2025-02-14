@@ -8,3 +8,6 @@ indent_size = 4
 # but SOMEONE did not insert final new lines so im keeping it off for now
 insert_final_newline = false
 trim_trailing_whitespace = true
+
+[*.nix]
+indent_size = 2
