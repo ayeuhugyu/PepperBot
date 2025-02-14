@@ -1,10 +1,14 @@
 {
     "compilerOptions": {
-        "moduleResolution": "node",
         "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": true,
         "strict": true,
+
+        "moduleResolution": "node",
         "target": "ESNext",
-        "module": "ESNext"
-    }
+        "module": "ESNext",
+
+        "esModuleInterop": true,
+    },
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules"]
 }
