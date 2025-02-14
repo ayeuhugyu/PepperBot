@@ -63,7 +63,6 @@ const join = new Command(
         const args = new Collection();
         const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
         const channel = message.content.slice(commandLength)?.trim();
-        console.log(channel);
         args.set('channel', channel);
         return args;
     },

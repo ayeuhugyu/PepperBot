@@ -42,7 +42,6 @@ const command = new Command(
         formattedMessage.attachments = formattedMessage.attachments || new Collection();
         formattedMessage as GPTFormattedCommandInteraction;
         const response = await respond(formattedMessage, processor);
-        console.log(response);
         return new CommandResponse({ pipe_data: { grep_text: response } });
     }
 );
