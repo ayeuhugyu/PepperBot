@@ -44,7 +44,7 @@ const command = new Command(
                 description: 'the subcommand to run',
                 type: CommandOptionType.String,
                 required: false,
-                choices: gitlog.subcommands.map(subcommand => { return { name: subcommand.name, value: subcommand.name } })
+                choices: [ { name: 'log', value: 'log' } ]
             })
         ],
         example_usage: "p/git",
