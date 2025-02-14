@@ -125,12 +125,6 @@ const database = knex({
         filename: "resources/database.db",
     },
     useNullAsDefault: true,
-    log: {
-        warn: log.warn,
-        error: log.error,
-        deprecate: log.warn,
-        debug: log.debug
-    }
 });
 log.info("opened database connection");
 
