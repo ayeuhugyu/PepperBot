@@ -17,10 +17,17 @@ the biggest new feature:
   - tool calls can no longer be messed up, so never again will you see $EXEC_TOOL stuff
   - custom prompts can now use tool calls
   - tool calls will take less time to process because the AI doesn't need to spend time writing $EXEC_TOOL or the text he likes to write around it
+- p/prompt has been completely overhauled
+  - prompts are now automatically saved instead of you having to do p/prompt save
+  - prompts can now be published for viewing on the prompt browser
+  - prompts now save when they were last updated & created & published
+  - prompts now have a description property (to be used by the prompt browser)
+  - prompts now have an nsfw property (to be used by the prompt browser)
+  - you can now set the default prompt to a custom one
+  - saved prompts can now be deleted
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
 - new "random" tool allows gpt to generate random numbers
-
 **actual content:**
 
 - command data has been overhauled
