@@ -122,7 +122,7 @@ if (!dataVerified) {
 const database = knex({
     client: "sqlite3",
     connection: {
-        filename: "./resources/database.db",
+        filename: "resources/database.db",
     },
     useNullAsDefault: true,
     log: {
@@ -133,6 +133,70 @@ const database = knex({
     }
 });
 log.info("opened database connection");
+
+async function ensureTable(tableName: string) {
+    const exists = await database.schema.hasTable(tableName);
+    if (!exists) {
+        log.warn(`adding missing table "${tableName}"`);
+        await database.schema.createTable(tableName, () => {});
+    }
+}
+
+async function ensureColumn(tableName: string, columnName: string, columnDefinition: (table: any) => void) {
+    const exists = await database.schema.hasColumn(tableName, columnName);
+    if (!exists) {
+        log.warn(`adding missing column "${columnName}" to table "${tableName}"`);
+        await database.schema.table(tableName, (table) => {
+            columnDefinition(table);
+        });
+    }
+}
+
+await ensureTable("prompts");
+await ensureColumn("prompts", "user", (table) => table.string("user").notNullable());
+await ensureColumn("prompts", "name", (table) => table.string("name").notNullable());
+await ensureColumn("prompts", "text", (table) => table.string("text").notNullable());
+await ensureColumn("prompts", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+await ensureColumn("prompts", "public", (table) => table.boolean("public").defaultTo(false));
+await ensureColumn("prompts", "is_default", (table) => table.boolean("is_default").defaultTo(false));
+
+await ensureTable("todos");
+await ensureColumn("todos", "user", (table) => table.string("user").notNullable());
+await ensureColumn("todos", "name", (table) => table.string("name").notNullable());
+await ensureColumn("todos", "item", (table) => table.integer("item").notNullable());
+await ensureColumn("todos", "text", (table) => table.string("text").notNullable());
+await ensureColumn("todos", "completed", (table) => table.boolean("completed").notNullable().defaultTo(false));
+await ensureColumn("todos", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+
+await ensureTable("configs");
+await ensureColumn("configs", "guild", (table) => table.string("guild").notNullable());
+await ensureColumn("configs", "key", (table) => table.string("key").notNullable());
+await ensureColumn("configs", "value", (table) => table.json("value").notNullable());
+await ensureColumn("configs", "category", (table) => table.string("category").notNullable());
+
+await ensureTable("queues");
+await ensureColumn("queues", "guild", (table) => table.string("guild"));
+await ensureColumn("queues", "user", (table) => table.string("user"));
+await ensureColumn("queues", "queue_name", (table) => table.string("queue_name").notNullable());
+await ensureColumn("queues", "index", (table) => table.integer("index").notNullable());
+await ensureColumn("queues", "link", (table) => table.string("link").notNullable());
+await ensureColumn("queues", "title", (table) => table.string("title").notNullable());
+await ensureColumn("queues", "currentIndex", (table) => table.string("currentIndex"));
+await ensureColumn("queues", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+
+await ensureTable("sounds");
+await ensureColumn("sounds", "guild", (table) => table.string("guild"));
+await ensureColumn("sounds", "user", (table) => table.string("user"));
+await ensureColumn("sounds", "name", (table) => table.string("name").notNullable());
+await ensureColumn("sounds", "path", (table) => table.string("path").notNullable());
+await ensureColumn("sounds", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+
+await ensureTable("updates");
+await ensureColumn("updates", "update", (table) => table.integer("update").primary().notNullable());
+await ensureColumn("updates", "text", (table) => table.string("text").notNullable());
+await ensureColumn("updates", "time", (table) => table.timestamp("time").defaultTo(database.fn.now()));
+
+log.info("database verified");
 
 export default database;
 
