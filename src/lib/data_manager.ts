@@ -165,7 +165,7 @@ async function finishTable(tableName: string) {
 await ensureTable("prompts");
 await ensureColumn("prompts", "name", (table) => table.string("name").notNullable());
 await ensureColumn("prompts", "content", (table) => table.text("content").notNullable());
-await ensureColumn("prompts", "author_id", (table) => table.string("author_id").notNullable().primary());
+await ensureColumn("prompts", "author_id", (table) => table.string("author_id").notNullable());
 await ensureColumn("prompts", "author_username", (table) => table.string("author_username").notNullable());
 await ensureColumn("prompts", "author_avatar", (table) => table.string("author_avatar"));
 await ensureColumn("prompts", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
