@@ -80,7 +80,9 @@ const nonFatalEnvVariables = [
 let dataVerified = false;
 await fetch("http://localhost:50000/verified").then((res) => res.text()).then((text) => { 
     if (text === "true") dataVerified = true;
-})
+}).catch(() => {
+    log.warn("failed to check if data has already been verified with internal server, assuming unverified")
+});
 // really messed up way to avoid verifying multiple times (just makes the logs cleaner)
 
 export function verifyData() {
@@ -161,12 +163,17 @@ async function finishTable(tableName: string) {
 }
 
 await ensureTable("prompts");
-await ensureColumn("prompts", "user", (table) => table.string("user").notNullable());
 await ensureColumn("prompts", "name", (table) => table.string("name").notNullable());
-await ensureColumn("prompts", "text", (table) => table.string("text").notNullable());
+await ensureColumn("prompts", "content", (table) => table.text("content").notNullable());
+await ensureColumn("prompts", "author_id", (table) => table.string("author_id").notNullable());
+await ensureColumn("prompts", "author_username", (table) => table.string("author_username").notNullable());
+await ensureColumn("prompts", "author_avatar", (table) => table.string("author_avatar"));
 await ensureColumn("prompts", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
-await ensureColumn("prompts", "public", (table) => table.boolean("public").defaultTo(false));
-await ensureColumn("prompts", "is_default", (table) => table.boolean("is_default").defaultTo(false));
+await ensureColumn("prompts", "updated_at", (table) => table.timestamp("updated_at").defaultTo(database.fn.now()));
+await ensureColumn("prompts", "published_at", (table) => table.timestamp("published_at"));
+await ensureColumn("prompts", "description", (table) => table.string("description").notNullable().defaultTo("No description provided."));
+await ensureColumn("prompts", "published", (table) => table.boolean("published").notNullable().defaultTo(false));
+await ensureColumn("prompts", "nsfw", (table) => table.boolean("nsfw").notNullable().defaultTo(false));
 await finishTable("prompts");
 
 await ensureTable("todos");
