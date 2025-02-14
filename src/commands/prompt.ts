@@ -14,7 +14,7 @@ async function getUserPrompt(user: User): Promise<Prompt> {
             name: "autosave",
             content: "",
         });
-        writePrompt(prompt);
+        await writePrompt(prompt);
     }
     return prompt;
 }
