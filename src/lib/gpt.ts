@@ -12,6 +12,7 @@ import * as mathjs from "mathjs";
 import * as cheerio from "cheerio";
 import { getPrompt as getDBPrompt, Prompt } from "./prompt_manager";
 import * as action from "./discord_action"
+import { clear } from "node:console";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -26,6 +27,8 @@ for (let i = 17; i <= 31; i++) {
 export interface UserPromptData {
     name: string,
     isDefault: boolean,
+    usedOnce: boolean,
+    promptData: Prompt | undefined;
 }
 
 let userPrompts = new Collection<string, UserPromptData>();
@@ -539,14 +542,17 @@ export class Conversation {
     }
 }
 
-async function getPrompt(user: string, clear: boolean = false): Promise<Prompt> { // userid
+async function getPrompt(user: string): Promise<Prompt> { // userid
     const prompt = userPrompts.get(user);
-    if (clear && prompt && !prompt.isDefault) {
+    if (prompt && !prompt.isDefault && prompt.usedOnce) { // if the prompt isn't the default one we delete it
         userPrompts.delete(user);
     } else if (prompt) {
         const dbPrompt = await getDBPrompt(prompt.name, user);
+        prompt.usedOnce = true;
         if (dbPrompt) {
             return dbPrompt;
+        } else if (prompt.promptData) {
+            return prompt.promptData;
         }
     }
     return botPrompt
