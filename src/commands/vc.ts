@@ -1,5 +1,5 @@
-import { Collection, GuildMember, Message, StageChannel, VoiceChannel } from "discord.js";
-import { Command, CommandCategory, CommandResponse } from "../lib/classes/command";
+import { ChannelType, Collection, GuildMember, Message, StageChannel, VoiceChannel } from "discord.js";
+import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import * as voice from "../lib/voice";
 import { Channel } from "diagnostics_channel";
@@ -49,6 +49,14 @@ const join = new Command(
         category: CommandCategory.Voice,
         example_usage: "p/vc join general",
         allow_external_guild: false,
+        options: [
+            new CommandOption({
+                name: 'channel',
+                description: 'the channel to join',
+                type: CommandOptionType.Channel,
+                required: false,
+            })
+        ]
     },
     async function getArguments({ message, self, guildConfig }) {
         message = message as Message;
@@ -139,6 +147,24 @@ const command = new Command(
         example_usage: "p/vc join",
         subcommands: [join, leave],
         allow_external_guild: false,
+        options: [
+            new CommandOption({
+                name: 'subcommand',
+                description: 'the subcommand to run',
+                type: CommandOptionType.String,
+                required: true,
+                choices: [
+                    { name: 'join', value: 'join' },
+                    { name: 'leave', value: 'leave' }
+                ]
+            }),
+            new CommandOption({
+                name: 'channel',
+                description: 'the channel to join',
+                type: CommandOptionType.Channel,
+                required: false,
+            })
+        ]
     }, 
     async function getArguments ({ message, self, guildConfig }) {
         message = message as Message;
@@ -152,7 +178,7 @@ const command = new Command(
         if (args?.get("subcommand")) {
             action.reply(message, {
                 content: "invalid subcommand: " + args?.get("subcommand"),
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guildConfig.other.use_ephemeral_replies,
             })
             return;
         }
