@@ -39,13 +39,8 @@ const deflt = new Command({
     },
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
-        if (prompt.name === "autosave") {
-            action.reply(message, { content: "you can't make the autosave prompt the default", ephemeral: guildConfig.other.use_ephemeral_replies });
-            return new CommandResponse({})
-        }
         const promptDefault = prompt.default;
         prompt.default = !promptDefault;
-        console.log(prompt, `prompt.default: ${prompt.default}`)
         await savePrompt(prompt, message.author);
         if (!prompt.default) userPrompts.delete(message.author.id);
         action.reply(message, { content: prompt.default ? `prompt \`${prompt.name}\` is now the default prompt` : "prompt reset to base default", ephemeral: guildConfig.other.use_ephemeral_replies });
