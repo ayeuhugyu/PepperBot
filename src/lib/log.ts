@@ -7,27 +7,42 @@ enum Level {
     Debug,
     Info,
     Warn,
-    Err,
-    Deleted,
+    Error,
     Fatal,
 };
+const levelPrefixes = {
+    [Level.Debug]: "DEBUG",
+    [Level.Info]: "INFO",
+    [Level.Warn]: "WARN",
+    [Level.Error]: "ERROR",
+    [Level.Fatal]: "FATAL"
+};
+const levelColors = {
+    [Level.Debug]: chalk.blue,
+    [Level.Info]: chalk.green,
+    [Level.Warn]: chalk.yellow,
+    [Level.Error]: chalk.red,
+    [Level.Fatal]: chalk.redBright
+};
 
-function levelPrefix(level: Level) {
-    switch (level) {
-        case Level.Debug:
-            return chalk.gray("DBG");
-        case Level.Info:
-            return chalk.white("INF");
-        case Level.Warn:
-            return chalk.yellow("WRN");
-        case Level.Err:
-            return chalk.red("ERR");
-        case Level.Fatal:
-            return chalk.hex("#FC0202").bold.underline("FTL");
-    }
+function levelPrefix(level: Level): string {
+    const highestLevelLength = Math.max(...Object.values(levelPrefixes).map(l => l.length));
+
+    return levelColors[level](levelPrefixes[level].padStart(highestLevelLength));
+}
+function datePrefix(date: Date): string{
+    // evil hack to get the date in the format we want, local timezone
+    const timezoneOffset = date.getTimezoneOffset() * 60000; // ms
+    const dateLocal = new Date(date.getTime() - timezoneOffset);
+    const dateFormatted = dateLocal.toISOString().slice(0, -1); // strip Z, Z=zulu=UTC
+
+    return chalk.grey(dateFormatted);
+}
+function fullPrefix(level: Level, date: Date): string {
+    return `${datePrefix(date)} ${levelPrefix(level)}`
 }
 
-function format(thing: any) {
+function format(thing: unknown) {
     if (typeof thing === "string") {
         return thing;
     } else if (thing instanceof Error) {
@@ -37,64 +52,37 @@ function format(thing: any) {
     }
 }
 
-function log(level: Level, ...message: any) {
+function log(level: Level, ...message: unknown[]) {
     const formatted = message
-        .map((m: any) => format(m))
-        .reduce(
-            (l: string, r: string) =>
-                l.includes("\n") || r.includes("\n")
-                    ? l + "\n" + r
-                    : l + " " + r,
-            ""
-        )
+        .map(m => format(m))
+        .reduce((l, r) => l.includes("\n") || r.includes("\n") ? l + "\n" + r : l + " " + r, "")
         .trim();
-    const currentDate = new Date();
-    const formattedDate = `${(currentDate.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}/${currentDate
-        .getDate()
-        .toString()
-        .padStart(2, "0")} ${currentDate
-        .getHours()
-        .toString()
-        .padStart(2, "0")}:${currentDate
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}:${currentDate
-        .getSeconds()
-        .toString()
-        .padStart(2, "0")}`;
-    const prefix = levelPrefix(level) + " ";
-    process.stdout.write(
-        `${chalk.grey(formattedDate)} ${prefix}${formatted
-            .split("\n")
-            .join(`\n${chalk.grey(formattedDate)} ${prefix}`)}\n`
-    );
-    const fileWriteString = `${formattedDate} ${Level[level].toUpperCase()} ${formatted.split("\n").join(`\n${formattedDate} ${Level[level].toUpperCase()} `)}\n`
-    fs.ensureFile(`././logs/${Level[level].toLowerCase()}.log`, () => {
-        fs.appendFile(`././logs/${Level[level].toLowerCase()}.log`, fileWriteString, () => {});
-    });
-    fs.ensureFile("././logs/global.log", () => {
-        fs.appendFile("././logs/global.log", fileWriteString, () => {});
-    });
+
+    const prefix = fullPrefix(level, new Date()) + " ";
+    const cleanPrefix = util.stripVTControlCharacters(prefix);
+
+    const stdoutString = `${prefix}${formatted.split("\n").join("\n" + prefix)}\n`;
+    const fileString = `${cleanPrefix}${formatted.split("\n").join("\n" + cleanPrefix)}\n`;
+
+    process.stdout.write(stdoutString);
+
+    // TODO: catch these?
+    fs.appendFile(`./logs/${Level[level].toLowerCase()}.log`, fileString)
+    fs.appendFile(`./logs/global.log`, fileString)
 }
 
-export function debug(...message: any) {
+export function debug(...message: unknown[]) {
     log(Level.Debug, ...message);
 }
-
-export function info(...message: any) {
+export function info(...message: unknown[]) {
     log(Level.Info, ...message);
 }
-
-export function warn(...message: any) {
+export function warn(...message: unknown[]) {
     log(Level.Warn, ...message);
 }
-
-export function error(...message: any) {
-    log(Level.Err, ...message);
+export function error(...message: unknown[]) {
+    log(Level.Error, ...message);
 }
-
-export function fatal(...message: any) {
+export function fatal(...message: unknown[]) {
     log(Level.Fatal, ...message);
 }
