@@ -5,6 +5,7 @@ export enum GetArgumentsTemplateType {
     DoNothing = "do_nothing",
     SingleStringFirstSpace = "single_string_first_space",
     SingleStringWholeMessage = "single_string_whole_message",
+    TwoStringFirstSpaceSecondWholeMessage = "two_string_first_space_second_whole_message"
 }
 
 export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, argsToGet?: string[]): ((input: CommandInput) => Collection<string, any>)  {
@@ -29,6 +30,20 @@ export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, arg
                     const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
                     const arg = message.content.slice(commandLength)?.trim();
                     args.set(argsToGet[0], arg);
+                    return args;
+                }
+        case GetArgumentsTemplateType.TwoStringFirstSpaceSecondWholeMessage:
+            if (!argsToGet) throw new Error("argsToGet must be defined for TwoStringFirstSpaceSecondWholeMessage template");
+            return ({ message, self, guildConfig }) => {
+                    message = message as Message;
+                    const args = new Collection<string, any>();
+                    const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
+                    const split = message.content.slice(commandLength)?.trim()?.split(" ");
+                    const firstArg = split[0];
+                    split.shift();
+                    const secondArg = split.join(" ");
+                    args.set(argsToGet[0], firstArg);
+                    args.set(argsToGet[1], secondArg);
                     return args;
                 }
     }
