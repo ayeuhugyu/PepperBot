@@ -699,3 +699,19 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
 
     return fullMessageContent;
 }
+
+export async function generateImage(prompt: string) {
+    try {
+        const now = performance.now()
+        const completion = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: prompt,
+            n: 1,
+            size: "1024x1024",
+        });
+        log.info(`generated gpt image in ${(performance.now() - now).toFixed(3)}ms`)
+        return completion.data[0].url;
+    } catch (err) {
+        return err; // 99% of errors are due to filtering
+    }
+}
