@@ -12,6 +12,7 @@ import * as mathjs from "mathjs";
 import * as cheerio from "cheerio";
 import { getPrompt as getDBPrompt, Prompt } from "./prompt_manager";
 import * as action from "./discord_action"
+import { randomUUIDv7 } from "bun";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -267,7 +268,7 @@ export type GPTFormattedCommandInteraction = FormattedCommandInteraction & {
 
 export enum GPTModel {
     gpt_4o_mini = "gpt-4o-mini",
-    gpt_35_turbo = "gpt-3.5-turbo",
+    gpt_35_turbo = "gpt-3.5-turbo", // unused
 }
 
 export enum GPTModality {
@@ -323,7 +324,6 @@ export const APIParametersDescriptions = {
 } // may or may not be used in the future for a help command
 
 export class APIParameters {
-    model: GPTModel = GPTModel.gpt_4o_mini;
     temperature: number = 1;
     top_p: number = 1;
     frequency_penalty: number = 0;
@@ -331,6 +331,7 @@ export class APIParameters {
     presence_penalty: number = 0;
     seed: number | undefined = Math.floor(Math.random() * 1000000); // for reproducibility
     /* // users should not be able to modify these values
+    private model: GPTModel = GPTModel.gpt_4o_mini;
     private store: boolean = false; // whether it should send conversations to openai's statistics and model improvement stuff (no)
     private logprobs: boolean = false;
     private top_logprobs: number | undefined;
@@ -408,17 +409,38 @@ export class Conversation {
     messages: GPTMessage[] = [];
     api_parameters: APIParameters = new APIParameters();
     emitter: EventEmitter = new EventEmitter();
-    id: string = Math.random().toString(36).substring(2, 15); // there is a 1 in 4294967296 chance this will explode
-    // random id for the conversation, may be used to find it later
+    id: string = randomUUIDv7() // random id for the conversation, may be used to find it later
 
-    on = this.emitter.on.bind(this.emitter);
+    on = this.emitter.on.bind(this  .emitter);
     off = this.emitter.off.bind(this.emitter);
     once = this.emitter.once.bind(this.emitter);
     emit = this.emitter.emit.bind(this.emitter);
     removeAllListeners = this.emitter.removeAllListeners.bind(this.emitter);
 
+    toReasonableOutput() {
+        return {
+            messages: this.messages.map((message) => {
+                return {
+                    name: message.name,
+                    role: message.role,
+                    tool_calls: message.tool_calls,
+                    tool_call_id: message.tool_call_id,
+                    content: message.content,
+                    timestamp: message.timestamp,
+                    id: message.message_id,
+                }
+            }),
+            users: this.users.map((user) => {
+                return `@${user.username} (${user.id})`
+            }),
+            api_parameters: this.api_parameters,
+            id: this.id,
+        }
+    }
+
     toApiInput() {
         const apiConversation: any = {
+            model: GPTModel.gpt_4o_mini,
             messages: this.messages.map((message) => {
                 const apiMessage: any = {
                     role: message.role,
