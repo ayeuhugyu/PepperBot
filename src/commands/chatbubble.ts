@@ -138,6 +138,11 @@ const command = new Command(
 
         const imageUrl = args?.get("url") || args?.get("image")?.url || piped_data?.data?.chatbubble_url;
 
+        if (!imageUrl) {
+            await action.reply(message, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guildConfig.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        } // this is just to satisfy typescript i think it should be impossible to get here
+
         const inputImageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer());
         const inputImage = await sharp(inputImageBuffer, { animated: true });
 
