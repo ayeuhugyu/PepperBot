@@ -2,6 +2,7 @@ import { Collection, Message } from "discord.js";
 import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const command = new Command(
     {
@@ -22,14 +23,7 @@ const command = new Command(
             })
         ]
     }, 
-    async function getArguments ({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const search = message.content.slice(commandLength)?.trim();
-        args.set('request', search);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["request"]),
     async function execute ({ args, message, piped_data, will_be_piped, guildConfig }) {
         if (!args?.get('request')) return action.reply(message, { content: "please provide a request", ephemeral: guildConfig.other.use_ephemeral_replies });
         const request = args.get('request');

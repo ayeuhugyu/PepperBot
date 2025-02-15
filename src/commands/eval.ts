@@ -5,6 +5,7 @@ import fsExtra from "fs-extra";
 import fs from "node:fs";
 import process from "process";
 import shell from "shelljs";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const modules = {
     discord,
@@ -37,14 +38,7 @@ const command = new Command(
         example_usage: "p/eval console.log(\"hello world\")",
         aliases: ["evaluate"]
     }, 
-    async function getArguments ({ self, message, guildConfig }) {
-        message = message as discord.Message;
-        const args = new discord.Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const code = message.content.slice(commandLength)?.trim();
-        args.set('code', code);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["code"]),
     async function execute ({ message, args }) {
         if (!args?.get("code")) {
             action.reply(message, "tf u want me to eval");

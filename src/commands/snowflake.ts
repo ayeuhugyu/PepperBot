@@ -3,6 +3,7 @@ import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResp
 import * as action from "../lib/discord_action";
 import simpleGit from "simple-git";
 import { textToFile } from "../lib/filify";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const command = new Command(
     {
@@ -25,14 +26,7 @@ const command = new Command(
         example_usage: "p/snowflake 440163494529073152",
         aliases: ["idextract", "snowflakeextract"]
     }, 
-    async function getArguments ({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const snowflake = message.content.slice(commandLength)?.trim();
-        args.set('snowflake', snowflake);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["snowflake"]),
     async function execute ({ message, guildConfig, args }) {
         const mediaUrlRegex = /https:\/\/media\.discordapp\.net\/attachments\/\d+\/(\d+)\/.+/;
         const messageUrlRegex = /https:\/\/(?:canary|ptb|www)?\.discord(?:app)?\.com\/channels\/\d+\/\d+\/(\d+)/;

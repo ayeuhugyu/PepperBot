@@ -1,6 +1,7 @@
 import { Collection, Message } from "discord.js";
 import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const command = new Command(
     {
@@ -22,14 +23,7 @@ const command = new Command(
             })
         ]
     }, 
-    async function getArguments ({ self, message, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const prcs = message.content.slice(commandLength)?.trim(); // short for process because process is a reserved word
-        args.set('process', prcs);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["process"]),
     async function execute ({ message, args }) {
         if (!args?.get("process")) {
             args?.set("process", "sharder");

@@ -3,6 +3,7 @@ import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResp
 import * as action from "../lib/discord_action";
 import { getPrompt, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
 import { userPrompts } from "../lib/gpt";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -33,10 +34,7 @@ const deflt = new Command({
         options: [],
         example_usage: "p/prompt default",
     }, 
-    async function getArguments() {
-        const args = new Collection();
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
         const promptDefault = prompt.default;
@@ -57,10 +55,7 @@ const get = new Command({
         aliases: [],
         example_usage: "p/prompt get",
     }, 
-    async function getArguments() {
-        const args = new Collection();
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
         action.reply(message, { 
@@ -91,10 +86,7 @@ const publish = new Command({
         aliases: ["unpublish"],
         example_usage: "p/prompt publish",
     }, 
-    async function getArguments() {
-        const args = new Collection();
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
         if (prompt.name === "autosave") {
@@ -118,10 +110,7 @@ const del = new Command({
         aliases: ["del", "remove"],
         example_usage: "p/prompt delete",
     }, 
-    async function getArguments() {
-        const args = new Collection();
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
         if (prompt.name === "autosave") {
@@ -153,14 +142,7 @@ const name = new Command({
         example_usage: "p/prompt name myprompt",
         argument_order: "<content>",
     }, 
-    async function getArguments({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const content = message.content.slice(commandLength)?.trim();
-        args.set('content', content);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
             action.reply(message, {
@@ -190,10 +172,7 @@ const nsfw = new Command({
         options: [],
         example_usage: "p/prompt nsfw",
     }, 
-    async function getArguments() {
-        const args = new Collection();
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
         prompt.nsfw = !prompt.nsfw
@@ -219,14 +198,7 @@ const description = new Command({
         example_usage: "p/prompt description makes him always respond with hi",
         argument_order: "<content>",
     }, 
-    async function getArguments({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const content = message.content.slice(commandLength)?.trim();
-        args.set('content', content);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
             action.reply(message, {
@@ -251,10 +223,7 @@ const list = new Command({
         options: [],
         example_usage: "p/prompt list",
     }, 
-    async function getArguments({}) {
-        const args = new Collection();
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig }) {
         const prompts = await getUserPrompts(message.author.id);
         let reply = "your prompts: ```";
@@ -293,14 +262,7 @@ const use = new Command({
         example_usage: "p/prompt use myprompt",
         argument_order: "<content>",
     }, 
-    async function getArguments({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const content = message.content.slice(commandLength)?.trim();
-        args.set('content', content);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
             action.reply(message, {
@@ -343,14 +305,7 @@ const set = new Command({
         example_usage: "p/prompt set always respond with \"hi\"",
         argument_order: "<content>",
     }, 
-    async function getArguments({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const content = message.content.slice(commandLength)?.trim();
-        args.set('content', content);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
             action.reply(message, {
@@ -395,14 +350,7 @@ const command = new Command(
         example_usage: "p/git",
         aliases: []
     }, 
-    async function getArguments ({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const search = message.content.slice(commandLength)?.trim()?.split(" ")[0]?.trim();
-        args.set('subcommand', search);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ message, guildConfig, args }) {
         if (args?.get("subcommand")) {
             action.reply(message, {

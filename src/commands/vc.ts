@@ -3,6 +3,7 @@ import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResp
 import * as action from "../lib/discord_action";
 import * as voice from "../lib/voice";
 import { Channel } from "diagnostics_channel";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const leave = new Command(
     {
@@ -58,14 +59,7 @@ const join = new Command(
             })
         ]
     },
-    async function getArguments({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const channel = message.content.slice(commandLength)?.trim();
-        args.set('channel', channel);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["channel"]),
     async function execute({ message, args, guildConfig }) {
         if ((args?.get("channel") instanceof VoiceChannel) || (args?.get("channel") instanceof StageChannel)) {
             if (!voice.checkMemberPermissionsForVoiceChannel(message.member as GuildMember, args?.get("channel") as VoiceChannel | StageChannel)) {
@@ -165,14 +159,7 @@ const command = new Command(
             })
         ]
     }, 
-    async function getArguments ({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const search = message.content.slice(commandLength)?.trim();
-        args.set('subcommand', search.split(" ")[0]);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ message, args, piped_data, will_be_piped, guildConfig }) {
         if (args?.get("subcommand")) {
             action.reply(message, {

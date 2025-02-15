@@ -3,6 +3,7 @@ import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResp
 import * as action from "../lib/discord_action";
 import simpleGit from "simple-git";
 import { textToFile } from "../lib/filify";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const gitlog = new Command({
         name: 'log',
@@ -50,14 +51,7 @@ const command = new Command(
         example_usage: "p/git",
         aliases: ["github", "openpepper", "repo"]
     }, 
-    async function getArguments ({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const search = message.content.slice(commandLength)?.trim();
-        args.set('subcommand', search);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ message, guildConfig, args }) {
         const content = (args?.get("subcommand") ? `${args.get("subcommand")} isnt a valid subcommand. anyways, ` : "") + "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/";
         await action.reply(message, { content: content, ephemeral: guildConfig.other.use_ephemeral_replies });

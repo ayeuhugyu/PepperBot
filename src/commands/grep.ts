@@ -1,6 +1,7 @@
 import { Collection, Message } from "discord.js";
 import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse, InputType } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
 const command = new Command(
     {
@@ -21,14 +22,7 @@ const command = new Command(
         pipable_to: ['grep'],
         example_usage: "p/git log | grep months",
     }, 
-    async function getArguments ({ message, self, guildConfig }) {
-        message = message as Message;
-        const args = new Collection();
-        const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-        const search = message.content.slice(commandLength)?.trim();
-        args.set('search', search);
-        return args;
-    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["search"]),
     async function execute ({ message, piped_data, guildConfig, args }) {
         if (!piped_data?.data) {
             await action.reply(message, { content: "this command must be piped", ephemeral: guildConfig.other.use_ephemeral_replies})
