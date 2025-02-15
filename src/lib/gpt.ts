@@ -570,18 +570,26 @@ async function getPrompt(user: string): Promise<Prompt> { // userid
 }
 
 export async function getConversation(message: Message | GPTFormattedCommandInteraction) {
-    let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && msg.message_id === message.reference?.messageId))
+    let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && (msg.message_id === message.reference?.messageId) && (msg.message_id !== undefined) && (message.id !== undefined)));
     if (!currentConversation) {
         log.warn("conversation not found with message search, using user search")
         currentConversation = conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
+        if (!currentConversation) {
+            log.warn("conversation not found with user search")
+        }
     }
     if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@${message.client.user?.id}>`)) { // if the message is a mention of the bot, start a new conversation
+        log.info("starting new conversation due to mention")
         if (currentConversation) {
-            currentConversation.users = currentConversation.users.filter((user) => user.id !== message.author.id);
-            if (currentConversation.users.length === 0) {
-                log.info(`deleting conversation ${currentConversation.id} due to no remaining users`);
-                conversations = conversations.filter((conv) => conv.id !== currentConversation?.id);
-            }
+            conversations.forEach((conv) => {
+                if (conv.users.find((user) => user.id === message.author.id)) {
+                    conv.users = conv.users.filter((user) => user.id !== message.author.id);
+                }
+                if (conv.users.length === 0) {
+                    log.info(`deleting conversation ${conv.id} due to no remaining users`);
+                    conversations = conversations.filter((conv2) => conv2.id !== conv?.id);
+                }
+            });
             currentConversation = undefined;
         } // if you include a ping, you're removed from the users list in the conversation. if you were the only user in it, the conversation is deleted. 
     }
