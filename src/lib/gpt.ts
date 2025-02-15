@@ -537,6 +537,18 @@ export class Conversation {
             return;
         }
     }
+
+    removeUser(user: User) {
+        if (this.users.find((user2) => user2.id === user.id)) {
+            log.info(`removing user ${user.id} from conversation ${this.id}`);
+            this.users = this.users.filter((user2) => user2.id !== user.id);
+        }
+        if (this.users.length === 0) {
+            log.info(`deleting conversation ${this.id} due to no remaining users`);
+            conversations = conversations.filter((conv) => conv.id !== this.id);
+        }
+    }
+
     static async create(message: Message | GPTFormattedCommandInteraction) {
         const conversation = new Conversation();
         conversation.users.push(message.author);
@@ -582,13 +594,7 @@ export async function getConversation(message: Message | GPTFormattedCommandInte
         log.info("starting new conversation due to mention")
         if (currentConversation) {
             conversations.forEach((conv) => {
-                if (conv.users.find((user) => user.id === message.author.id)) {
-                    conv.users = conv.users.filter((user) => user.id !== message.author.id);
-                }
-                if (conv.users.length === 0) {
-                    log.info(`deleting conversation ${conv.id} due to no remaining users`);
-                    conversations = conversations.filter((conv2) => conv2.id !== conv?.id);
-                }
+                conv.removeUser(message.author);
             });
             currentConversation = undefined;
         } // if you include a ping, you're removed from the users list in the conversation. if you were the only user in it, the conversation is deleted. 
