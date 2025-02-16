@@ -3,7 +3,8 @@ import { config } from 'dotenv';
 import * as log from './lib/log';
 import { Theme, getThemeEmoji } from './lib/theme';
 import fs from "fs";
-//import { startServer } from './lib/communication_manager';
+import { startServer as startWebServer } from "./web";
+
 config();
 
 export const client = new Client({
@@ -39,6 +40,11 @@ for (const file of eventFiles) {
 
 client.once('ready', async () => {
     log.info(`logged in as ${client.user?.tag}; shard ${shardTotal.currentShard}/${shardTotal.totalShards}`);
+    // TODO: this is a placeholder port
+    // TODO: find a different location
+    // web server must be started after the bot is logged in to prevent errors when accessing client!
+    startWebServer(50001);
+
     const channel = await client.channels.fetch("1312566483569741896").catch(() => {});
     if (channel) {
         if (channel.isSendable()) {

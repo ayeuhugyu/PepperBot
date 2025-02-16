@@ -1,6 +1,7 @@
 import * as log from "./lib/log";
 import { fork, ChildProcess } from "node:child_process";
-import { startServer } from "./lib/communication_manager";
+import { startServer as startCommunicationServer } from "./lib/communication_manager";
+import { startServer as startWebServer } from "./web";
 
 log.info("starting bot...");
 let sharder: ChildProcess;
@@ -22,7 +23,7 @@ async function forkSharder() {
     });
 }
 
-const app = await startServer("main", 50000);
+const app = await startCommunicationServer("main", 50000);
 if (app instanceof Error) {
     log.error(app.message);
     process.exit(1);
