@@ -28,12 +28,12 @@ export let userPrompts = new Collection<string, string>(); // userid, prompt nam
 export let conversations: Conversation[] = [];
 
 const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
+    // dont use strict mode on any of these unless you know what you're doing, it adds 900 unnecessary checks. for example, you can't have default values for parameters, every value must be required, etc. it's stupid. 
     get_current_date: {
         type: 'function',
         function: {
             name: "get_current_date",
             description: "returns the current date and time",
-            strict: true,
             parameters: {},
             function: () => {
                 return new Date().toLocaleString();
@@ -46,7 +46,6 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "get_listening_data",
             description: "retrieves last.fm listening data for a specific user",
             parse: JSON.parse,
-            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
@@ -123,17 +122,18 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "random",
             description: "returns a random number between two values. This should only be used when users ask for random values.",
             parse: JSON.parse,
-            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
                     min: {
                         type: "number",
                         description: "minimum value, defaults to 0",
+                        default: 0,
                     },
                     max: {
                         type: "number",
                         description: "maximum value, defaults to 100",
+                        default: 100,
                     },
                 },
                 additionalProperties: false,
@@ -154,7 +154,6 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "request_url",
             description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons.",
             parse: JSON.parse,
-            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
@@ -230,7 +229,6 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "search",
             description: "searches Google for a query and returns the results",
             parse: JSON.parse,
-            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
