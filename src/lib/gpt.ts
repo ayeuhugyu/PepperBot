@@ -33,6 +33,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
         function: {
             name: "get_current_date",
             description: "returns the current date and time",
+            strict: true,
             parameters: {},
             function: () => {
                 return new Date().toLocaleString();
@@ -45,6 +46,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "get_listening_data",
             description: "retrieves last.fm listening data for a specific user",
             parse: JSON.parse,
+            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
@@ -52,7 +54,11 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                         type: "string",
                         description: "ID of the user to retrieve listening data for",
                     },
-                }
+                },
+                required: [
+                    "userid"
+                ],
+                additionalProperties: false,
             },
             function: async ({ userid }: { userid: string }) => {
                 if (!userid) {
@@ -88,6 +94,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "math",
             description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate(). This should only be used when you must use math. ",
             parse: JSON.parse,
+            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
@@ -95,7 +102,11 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                         type: "string",
                         description: "mathematical expression to evaluate",
                     },
-                }
+                },
+                required: [
+                    "expression"
+                ],
+                additionalProperties: false,
             },
             function: async ({ expression }: { expression: string }) => {
                 try {
@@ -112,21 +123,28 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "random",
             description: "returns a random number between two values. This should only be used when users ask for random values.",
             parse: JSON.parse,
+            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
                     min: {
                         type: "number",
-                        description: "minimum value",
+                        description: "minimum value, defaults to 0",
                     },
                     max: {
                         type: "number",
-                        description: "maximum value",
+                        description: "maximum value, defaults to 100",
                     },
-                }
+                },
+                additionalProperties: false,
             },
-            function: async ({ min, max }: { min: number, max: number }) => {
-                return Math.floor(Math.random() * (max - min + 1) + min);
+            function: async ({ min = 0, max = 100 }: { min: number, max: number }) => {
+                try {
+                    return Math.floor(Math.random() * (max - min + 1) + min);
+                } catch (err: any) {
+                    log.warn(`error while executing random tool: ${err.mesage}`)
+                    return `an error occurred while attempting to generate a random number: ${err.message}`
+                }
             },
         }
     },
@@ -136,6 +154,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "request_url",
             description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons.",
             parse: JSON.parse,
+            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
@@ -153,7 +172,11 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                         description: "whether to return the raw HTML instead of markdown",
                         default: false,
                     },
-                }
+                },
+                required: [
+                    "url"
+                ],
+                additionalProperties: false,
             },
             function: async ({ url, keepScripts, raw }: { url: string, keepScripts: boolean, raw: boolean }) => {
                 if (!url) {
@@ -207,6 +230,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             name: "search",
             description: "searches Google for a query and returns the results",
             parse: JSON.parse,
+            strict: true,
             parameters: {
                 type: 'object',
                 properties: {
@@ -214,7 +238,11 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                         type: "string",
                         description: "query to search for",
                     },
-                }
+                },
+                required: [
+                    "query"
+                ],
+                additionalProperties: false,
             },
             function: async ({ query }: { query: string }) => {
                 const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID}`;
