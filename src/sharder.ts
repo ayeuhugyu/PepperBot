@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 config();
 import * as log from './lib/log';
 import { startServer } from './lib/communication_manager';
+import { error } from 'console';
 
 const app = await startServer("sharder", 49999);
 if (app instanceof Error) {
@@ -17,6 +18,15 @@ app.get("/totalShards", (req, res) => {
     }
     res.json({ totalShards: manager.totalShards, currentShard: manager.shards.size });
 });
+app.post("/fetchClientValues", async (req, res) => {
+    if (!manager) { // this should realistically never happen
+        log.error("sharding manager not ready when /fetchClientValues requested");
+        res.sendStatus(503).json({ error: "client not ready" });
+        return;
+    }
+    const values = await manager.fetchClientValues(req.body.property);
+    res.json({ data: values });
+})
 
 log.info("starting sharding manager...")
 
