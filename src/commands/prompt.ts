@@ -1,7 +1,7 @@
 import { Collection, Message, User } from "discord.js";
 import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { getPrompt, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
+import { getPrompt, getPromptByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
 import { userPrompts } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 
@@ -155,8 +155,13 @@ const name = new Command({
             action.reply(message, { content: `you can't name your prompt \`${args.get("content")}\`, choose another name`, ephemeral: guildConfig.other.use_ephemeral_replies });
             return new CommandResponse({})
         }
+        if (args.get("content").includes('/')) { // this will be used later for published prompts
+            action.reply(message, { content: "prompt names cannot contain `/`", ephemeral: guildConfig.other.use_ephemeral_replies });
+            return new CommandResponse({})
+        }
         let prompt = await getUserPrompt(message.author);
         prompt.name = args?.get('content') as string;
+        prompt.created_at = new Date();
         await savePrompt(prompt, message.author);
         userPrompts.set(message.author.id, prompt.name);
         action.reply(message, { content: `prompt name set to \`${prompt.name}\`; now using/editing prompt \`${prompt.name}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
@@ -244,6 +249,69 @@ const list = new Command({
     }
 );
 
+const clone = new Command({
+        name: 'clone',
+        description: 'clones another users prompt. formatted as user/prompt',
+        long_description: 'allows you to clone a prompt from another user so long as its published. this is formatted as "username/prompt name", similarly to github repository urls. ',
+        category: CommandCategory.AI,
+        pipable_to: [],
+        aliases: ["copy"],
+        normal_aliases: [],
+        options: [
+            new CommandOption({
+                name: 'content',
+                description: 'the name of the prompt to use',
+                type: CommandOptionType.String,
+                required: true,
+            })
+        ],
+        example_usage: "p/prompt clone PepperBot/default",
+        argument_order: "<content>",
+    }, 
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
+    async function execute ({ message, guildConfig, args }) {
+        if (!args?.get("content")) {
+            action.reply(message, {
+                content: "please supply a prompt to clone",
+                ephemeral: guildConfig.other.use_ephemeral_replies
+            })
+            return new CommandResponse({});
+        }
+        const [username, ...promptname] = (args.get("content") as string).split("/");
+        if (!username) {
+            action.reply(message, { content: "please supply the user to clone the prompt from", ephemeral: guildConfig.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        if (!promptname) {
+            action.reply(message, { content: "please supply the prompt to clone from this user", ephemeral: guildConfig.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        const prompt = await getPromptByUsername(promptname.join("/"), username);
+        if (!prompt) {
+            action.reply(message, { content: `couldn't find prompt \`${promptname}\` from user \`${username}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        if (!prompt.published) {
+            action.reply(message, { content: `prompt \`${promptname}\` from user \`${username}\` is not published and thus cannot be cloned.`, ephemeral: guildConfig.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        const newPrompt = new Prompt({
+            author_id: message.author.id,
+            author_username: message.author.username,
+            author_avatar: message.author.displayAvatarURL(),
+            name: prompt.name,
+            content: prompt.content,
+            description: prompt.description,
+            nsfw: prompt.nsfw,
+            created_at: prompt.created_at,
+            published: false,
+        });
+        await writePrompt(newPrompt);
+        userPrompts.set(message.author.id, newPrompt.name);
+        action.reply(message, { content: `cloned \`${args.get("content")}\`; now using/editing prompt \`${promptname}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+    }
+);
+
 const use = new Command({
         name: 'use',
         description: 'changes which prompt you are using',
@@ -293,6 +361,7 @@ const set = new Command({
         long_description: 'sets the content of your current prompt',
         category: CommandCategory.AI,
         pipable_to: [],
+        aliases: ['content'],
         normal_aliases: ['setprompt'],
         options: [
             new CommandOption({
@@ -321,7 +390,7 @@ const set = new Command({
     }
 );
 
-const subcommands: Command[] = [set, use, list, description, nsfw, name, del, publish, get, deflt];
+const subcommands: Command[] = [set, use, list, description, nsfw, name, del, publish, get, deflt, clone];
 
 const command = new Command(
     {

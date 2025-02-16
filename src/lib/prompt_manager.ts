@@ -70,6 +70,13 @@ export async function getPrompt(name: string | undefined, user: string): Promise
     })
 }
 
+export async function getPromptByUsername(promptName: string, username: string) {
+    return await database("prompts").where({ name: promptName, author_username: username }).first().then((row) => {
+        if (!row) return undefined;
+        return new Prompt(row);
+    })
+}
+
 export async function getUserPrompts(user: string) {
     return await database("prompts").where({ author_id: user }).then((rows) => {
         return rows.map((row) => new Prompt(row));
