@@ -4,14 +4,14 @@ config();
 import * as log from './lib/log';
 import { startServer } from './lib/communication_manager';
 
-const app = await startServer("sharder", 50000 - 1);
+const app = await startServer("sharder", 49999);
 if (app instanceof Error) {
     log.error(`failed to start server: ${app}`);
     process.exit(1);
 }
 app.get("/totalShards", (req, res) => {
-    if (!manager) {
-        log.warn("sharding manager not ready when /totalShards requested");
+    if (!manager) { // this should realistically never happen
+        log.error("sharding manager not ready when /totalShards requested");
         res.sendStatus(503).send("sharding manager not ready");
         return;
     }
@@ -29,4 +29,7 @@ manager.on('shardCreate', shard => {
     log.info(`launched shard ${shard.id + 1}/${manager.totalShards} (id ${shard.id})`);
 });
 
-manager.spawn();
+await manager.spawn();
+if (process.send) { // typescript why do you do this to me it will literally never be undefined
+    process.send("ready");
+}
