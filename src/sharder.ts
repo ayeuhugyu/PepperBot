@@ -24,7 +24,7 @@ app.post("/fetchClientValues", async (req, res) => {
         res.sendStatus(503).json({ error: "client not ready" });
         return;
     }
-    const values = await manager.fetchClientValues(req.body.property);
+    const values = await manager.fetchClientValues(req.body.property); // this could hypothetically return incorrect results if started while shards are still starting, but its a fairly minimal issue so im not gonna worry about it. might add another method later that errors if called before that point
     res.json({ data: values });
 })
 
