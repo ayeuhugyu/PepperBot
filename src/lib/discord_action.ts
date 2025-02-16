@@ -99,7 +99,7 @@ export function send(channel: TextChannel, content: Partial<MessageInput> | stri
 export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> | undefined {
     content = fixMessage(content);
     if (message) {
-        log.info(`editing message ${message.id}`);
+        log.info(`editing message ${message.id} in channel ${'channel' in message ? message.channel.id : "unknown"}`);
         return message.edit(content as string | MessagePayload | MessageEditOptions);
     }
     return undefined;
