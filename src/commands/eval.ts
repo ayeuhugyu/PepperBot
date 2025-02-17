@@ -6,6 +6,8 @@ import fs from "node:fs";
 import process from "process";
 import shell from "shelljs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import * as util from "util";
+import * as gpt from "../lib/gpt";
 
 const modules = {
     discord,
@@ -13,7 +15,9 @@ const modules = {
     fsExtra,
     fs,
     process,
-    shell
+    shell,
+    util,
+    gpt
 } // this is some weird hacky thing to make bun not omit the modules due to them being unused
 
 const command = new Command(
