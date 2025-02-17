@@ -135,10 +135,14 @@ export class CommandOption {
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
 
     constructor(data: Partial<CommandOption>) {
+        if (!data.name || !data.description) {
+            this.validation_errors.push({ condition: true, message: "option data must have a name and description", unrecoverable: true })
+            return
+        }
         const validationChecks = [
-            { condition: this.name.length > 32, message: "command option name may not exceed 32 characters", unrecoverable: true },
-            { condition: this.description.length > 100, message: "command option description may not exceed 100 characters", unrecoverable: true },
-            { condition: (this.choices && this.choices.length > 25) || false, message: "command option cannot have more than 25 choices", unrecoverable: true },
+            { condition: data.name.length > 32, message: "command option name may not exceed 32 characters", unrecoverable: true },
+            { condition: data.description.length > 100, message: "command option description may not exceed 100 characters", unrecoverable: true },
+            { condition: (data.choices && data.choices.length > 25) || false, message: "command option cannot have more than 25 choices", unrecoverable: true },
         ];
         validationChecks.forEach(
             check => {
@@ -148,6 +152,13 @@ export class CommandOption {
         });
 
         if (this.validation_errors.length > 0) {
+            for (const error of this.validation_errors) {
+                if (error.unrecoverable) {
+                    log.error(error.message);
+                } else {
+                    log.warn(error.message);
+                }
+            }
             return;
         }
 
