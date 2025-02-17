@@ -28,6 +28,8 @@ the biggest new feature:
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
 - new "random" tool allows gpt to generate random numbers
+- AI can now see stickers.
+
 **actual content:**
 
 - command data has been overhauled
