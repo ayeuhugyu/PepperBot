@@ -314,7 +314,7 @@ export class Command {
                 command: this.name,
                 input_type: input.input_type,
                 bot_is_admin: input.bot_is_admin,
-                piped_data: input.piped_data || new PipedData(input._response?.from || undefined, input._response?.pipe_data) || undefined,
+                piped_data: input.piped_data || new PipedData(input._response?.from, input._response?.pipe_data),
                 _response: input._response,
                 will_be_piped: input.will_be_piped || false,
                 self: this,
