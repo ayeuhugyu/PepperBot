@@ -300,7 +300,18 @@ export class Command {
                 return;
             }
 
-            if (!input.message) return;
+            if (!input.message) {
+                log.error("message is undefined in command execution");
+                return;
+            };
+
+            let forced_ephemeral = false;
+            if ('memberPermissions' in input.message && input.message.memberPermissions) {
+                forced_ephemeral = 
+                    input.message.memberPermissions.has(PermissionFlagsBits.UseExternalApps) &&
+                    !input.message.client.guilds.cache.find((g) => g.id === input.message!.guildId || "");
+            }
+
             let finalCommandInput: CommandInput = {
                 message: input.message!,
                 guildConfig: input.guildConfig || await fetchGuildConfig(input.message!.guild?.id || ""),
@@ -312,7 +323,7 @@ export class Command {
                 _response: input._response,
                 will_be_piped: input.will_be_piped || false,
                 self: this,
-                forced_ephemeral: (((input.message as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (input.message.client.guilds.cache.find((g) => g.id === input.message?.guildId) !== undefined) && input.message.guildId !== undefined) ? true : false // if (bot isnt in the guild || guild is undefined) && member does not have permissions to use external apps. 
+                forced_ephemeral
                 // we don't need to fetch values from other shards because the only way it would be able to process an interaction from a guild its in is if the shard is processing that guild
             }
             if (!finalCommandInput.args) {
