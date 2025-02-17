@@ -251,70 +251,64 @@ export class Command {
         this.execute = async (input) => {
             log.info(`executing command p/${this.name}${input._response?.from ? ` piped from p/${input._response.from}` : ""}`);
             const start = performance.now();
-            const { message, input_type } = input;
-            if (!message || !input.message) { // these should be the exact same condition but typescript doesnt understand that
+            const { message } = input;
+            if (!message) {
                 log.error("message is undefined in command execution");
                 return;
             }
-            if (input_type === undefined) {
-                if (message instanceof Message) {
-                    input.input_type = InputType.Message;
-                } else {
-                    input.input_type = InputType.Interaction;
-                }
-            } else {
-                input.input_type = input_type as InputType;
+        
+            // Determine input type
+            if (input.input_type === undefined) {
+                input.input_type = message instanceof Message ? InputType.Message : InputType.Interaction;
             }
-            // access check
+        
+            // Access Check
             if (!isUserAllowed(message, this.access)) {
-                const replyMsg = "access check failed: " + 
+                const accessReply = "access check failed: " +
                     (!isUserAllowed(message, { whitelist: this.access.whitelist, blacklist: { users: [], roles: [], channels: [], guilds: [] } })
-                    ? "user/channel/guild not in whitelist; " 
-                    : "") +
-                  (/* add any additional info for blacklisting */ "");
-                log.info(`${replyMsg} for command ${this.name}`);
-                action.reply(message, { content: replyMsg, ephemeral: true });
+                        ? "user/channel/guild not in whitelist; "
+                        : "") +
+                    "or in blacklist; ";
+                log.info(`${accessReply} for command ${this.name}`);
+                action.reply(message, { content: accessReply, ephemeral: true });
                 return;
             }
-            // other checks
+        
+            // Input Type Check
             if (!this.input_types.includes(input.input_type)) {
-                log.info("invalid input type " + input.input_type + " for command " + this.name);
+                log.info(`invalid input type ${input.input_type} for command ${this.name}`);
                 action.reply(message, { content: `input type ${input.input_type} is not enabled for this command`, ephemeral: true });
                 return;
             }
-
-            if (!this.contexts.includes(InteractionContextType.Guild)) {
-                if (message.guild) {
-                    log.info("guild context is not enabled for command " + this.name);
-                    action.reply(message, { content: "this command is not enabled in guilds", ephemeral: true });
-                    return;
-                }
-            }
-            // todo: add context checks for bot dm and private channel
-
-            if (!message.guild?.members.me?.permissions.has(PermissionFlagsBits.Administrator)) {
-                input.bot_is_admin = false;
-            } else {
-                input.bot_is_admin = true;
-            }
-
-            if (!this.allow_external_guild && !input.bot_is_admin) {
-                log.info("external guilds are not enabled for command " + this.name);
-                action.reply(message, { content: "this command is not enabled in guilds where i dont have administrator", ephemeral: true });
+        
+            // Context Check: Only allow if guild context is enabled
+            if (!this.contexts.includes(InteractionContextType.Guild) && message.guild) {
+                log.info(`guild context is not enabled for command ${this.name}`);
+                action.reply(message, { content: "this command is not enabled in guilds", ephemeral: true });
                 return;
             }
-
+        
+            // Bot Admin Check
+            input.bot_is_admin = !!message.guild?.members.me?.permissions.has(PermissionFlagsBits.Administrator);
+            if (!this.allow_external_guild && !input.bot_is_admin) {
+                log.info(`external guilds are not enabled for command ${this.name}`);
+                action.reply(message, { content: "this command is not enabled in guilds where i don't have administrator", ephemeral: true });
+                return;
+            }
+        
+            // Forced Ephemeral: using the provided code snippet
             let forced_ephemeral = false;
             if ('memberPermissions' in input.message! && input.message.memberPermissions) {
-                forced_ephemeral = 
+                forced_ephemeral =
                     input.message.memberPermissions.has(PermissionFlagsBits.UseExternalApps) &&
                     !input.message.client.guilds.cache.has(input.message!.guildId || "");
             }
-
-            let finalCommandInput: CommandInput = {
-                message: input.message!,
-                guildConfig: input.guildConfig || await fetchGuildConfig(input.message!.guild?.id || ""),
-                args: input.args || undefined,
+        
+            // Build final command input
+            const finalCommandInput: CommandInput = {
+                message,
+                guildConfig: input.guildConfig || await fetchGuildConfig(message.guild?.id || ""),
+                args: input.args,
                 command: this.name,
                 input_type: input.input_type,
                 bot_is_admin: input.bot_is_admin,
@@ -322,46 +316,41 @@ export class Command {
                 _response: input._response,
                 will_be_piped: input.will_be_piped || false,
                 self: this,
-                forced_ephemeral
-                // we don't need to fetch values from other shards because the only way it would be able to process an interaction from a guild its in is if the shard is processing that guild
-            }
+                forced_ephemeral,
+            };
+        
+            // Retrieve arguments if needed
             if (!finalCommandInput.args) {
                 if (finalCommandInput.input_type === InputType.Interaction) {
-                    log.warn("slash command failed to provide arguments for command " + this.name);
+                    log.warn(`slash command failed to provide arguments for command ${this.name}`);
                 } else {
-                    finalCommandInput.message = finalCommandInput.message as Message;
                     finalCommandInput.args = await this.get_arguments(finalCommandInput);
-                    log.info("fetched arguments for command " + this.name);
+                    log.info(`fetched arguments for command ${this.name}`);
                 }
             }
-
-            if (finalCommandInput.args instanceof Collection) {
-                if (finalCommandInput.args.get(this.subcommand_argument)) {
-                    const subcommandName = finalCommandInput.args.get(this.subcommand_argument);
-                    const subcommand = this.subcommands.find(subcommand => subcommand.name === subcommandName);
-                    if (subcommand instanceof Command) {
-                        if (finalCommandInput.message instanceof Message) {
-                            finalCommandInput.message.content = finalCommandInput.message.content
-                                .replace(subcommandName, "")
-                                .replace("  ", " ")
-                                .trim();
-                        }
-                        const subcommandArgs = await subcommand.get_arguments(finalCommandInput);
-                        finalCommandInput.args = subcommandArgs;
-                        log.info("executing subcommand p/" + this.name + " " + subcommand.name);
-                        const subcommandResponse = await subcommand.execute(finalCommandInput);
-                        log.info("executed subcommand p/" + this.name + " " + subcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
-                        return subcommandResponse;
-                    } else {
-                        const response = await this._execute_raw(finalCommandInput);
-                        log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
-                        return response;
+        
+            // Subcommand handling
+            if (finalCommandInput.args instanceof Collection && finalCommandInput.args.get(this.subcommand_argument)) {
+                const subcommandName = finalCommandInput.args.get(this.subcommand_argument);
+                const subcommand = this.subcommands.find(sub => sub.name === subcommandName);
+                if (subcommand) {
+                    if (message instanceof Message) {
+                        message.content = message.content
+                            .replace(subcommandName, "")
+                            .replace("  ", " ")
+                            .trim();
                     }
+                    finalCommandInput.args = await subcommand.get_arguments(finalCommandInput);
+                    log.info(`executing subcommand p/${this.name} ${subcommand.name}`);
+                    const subcommandResponse = await subcommand.execute(finalCommandInput);
+                    log.info(`executed subcommand p/${this.name} ${subcommand.name} in ${(performance.now() - start).toFixed(3)}ms`);
+                    return subcommandResponse;
                 }
             }
-
+        
+            // Execute main command
             const response = await this._execute_raw(finalCommandInput);
-            log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            log.info(`executed command p/${this.name} in ${(performance.now() - start).toFixed(3)}ms`);
             return response;
         };
     }
