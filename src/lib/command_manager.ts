@@ -8,53 +8,90 @@ export class CommandManager {
         base: new Collection<string, Command>(),
         aliases: new Collection<string, Command>(),
         normal_aliases: new Collection<string, Command>()
-    }
-    get(name: string): Command | undefined {
-        return this.commands.base.get(name) || this.commands.aliases.get(name) || this.commands.normal_aliases.get(name);
     };
+
+    get(name: string): Command | undefined {
+        return (
+            this.commands.base.get(name) ||
+            this.commands.aliases.get(name) ||
+            this.commands.normal_aliases.get(name)
+        );
+    }
+
     async getCommands() {
         if (this.commands.base.size > 0) return; // avoids circular dependency
+
         const startOfAll = performance.now();
         const commandFiles = fs
             .readdirSync("src/commands")
-            .filter(file => file.endsWith(".ts"));
+            .filter((file) => file.endsWith(".ts"));
+
+        Promise.all(commandFiles.map(async (file) => {
+            
+        }));
+
         for (const file of commandFiles) {
             const start = performance.now();
-            const command = await import(`../commands/${file}`);
-            if (!command.default) {
+            let imported;
+            try {
+                imported = await import(`../commands/${file}`);
+            } catch (error) {
+                log.error(`failed to import ${file}: ${error}`);
+                continue;
+            }
+
+            if (!imported.default) {
                 log.error(`command ${file} has no default export`);
                 continue;
             }
-            if (this.commands.base.has(command.default.name)) {
-                log.error(`duplicate command name ${command.default.name}; skipping cache`);
+
+            const cmd: Command = imported.default;
+
+            if (this.commands.base.has(cmd.name)) {
+                log.error(`duplicate command name ${cmd.name}; skipping cache`);
                 continue;
             }
-            if (command.default.validation_errors.length > 0 && command.default.validation_errors.some((error: ValidationCheck) => error.unrecoverable)) {
-                log.error(`unrecoverable validation errors found in ${command.default.name}; skipping cache; errors: ${command.default.validation_errors.map((error: ValidationCheck) => error.message).join(", ")}`);
+
+            if (
+                cmd.validation_errors.length > 0 &&
+                cmd.validation_errors.some((error: ValidationCheck) => error.unrecoverable)
+            ) {
+                log.error(
+                    `unrecoverable validation errors found in ${cmd.name}; skipping cache; errors: ${cmd.validation_errors
+                        .map((error: ValidationCheck) => error.message)
+                        .join(", ")}`
+                );
                 continue;
             }
-            this.commands.base.set(command.default.name, command.default);
-            if (command.default.aliases) {
-                for (const alias of command.default.aliases) {
+
+            // Cache the command
+            this.commands.base.set(cmd.name, cmd);
+
+            // Cache any aliases
+            if (cmd.aliases) {
+                for (const alias of cmd.aliases) {
                     if (this.commands.aliases.has(alias)) {
-                        log.error(`duplicate alias ${alias} for command ${command.default.name}; skipping alias`);
+                        log.error(`duplicate alias ${alias} for command ${cmd.name}; skipping alias`);
                         continue;
                     }
-                    this.commands.aliases.set(alias, command.default);
+                    this.commands.aliases.set(alias, cmd);
                 }
             }
-            if (command.default.subcommands && command.default.subcommands.length > 0) { // todo: change this so that it supports subcommands of subcommands
-                for (const subcommand of command.default.subcommands) {
+
+            // Cache normal aliases for subcommands (todo: support subcommands of subcommands)
+            if (cmd.subcommands && cmd.subcommands.length > 0) {
+                for (const subcommand of cmd.subcommands) {
                     for (const alias of subcommand.normal_aliases) {
                         if (this.commands.normal_aliases.has(alias) || this.commands.base.has(alias)) {
-                            log.error(`duplicate normal alias ${alias} for command ${command.default.name}; skipping alias`);
+                            log.error(`duplicate normal alias ${alias} for command ${cmd.name}; skipping alias`);
                             continue;
                         }
-                        this.commands.normal_aliases.set(alias, command.default);
+                        this.commands.normal_aliases.set(alias, cmd);
                     }
                 }
             }
-            log.info(`cached command ${command.default.name} in ${(performance.now() - start).toFixed(3)}ms`);
+
+            log.info(`cached command ${cmd.name} in ${(performance.now() - start).toFixed(3)}ms`);
         }
         log.info(`cached all commands in ${(performance.now() - startOfAll).toFixed(3)}ms`);
     }
