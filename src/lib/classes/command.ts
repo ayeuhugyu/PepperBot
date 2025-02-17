@@ -171,6 +171,31 @@ function defaultCommandFunction({ command = "" }) {
     log.error("undefined command function for " + command)
 }
 
+function isUserAllowed(message: Message | FormattedCommandInteraction, access: CommandAccess): boolean {
+    const { whitelist, blacklist } = access;
+    const { author, member, channel, guild } = message;
+    const userRoles = member?.roles instanceof GuildMemberRoleManager 
+        ? member.roles.cache.map(role => role.id) 
+        : [];
+    const guildId = guild?.id || "";
+    const channelId = channel?.id || "";
+    const userId = author.id;
+
+    const isWhitelisted = !Object.values(whitelist).some(list => list.length > 0) ||
+        whitelist.users.includes(userId) ||
+        whitelist.roles.some(role => userRoles.includes(role)) ||
+        whitelist.channels.includes(channelId) ||
+        whitelist.guilds.includes(guildId);
+
+    const isBlacklisted = Object.values(blacklist).some(list => list.length > 0) &&
+        (blacklist.users.includes(userId) ||
+        blacklist.roles.some(role => userRoles.includes(role)) ||
+        blacklist.channels.includes(channelId) ||
+        blacklist.guilds.includes(guildId));
+
+    return isWhitelisted && !isBlacklisted;
+}
+
 export class Command {
     name: string = "cmd";
     description: string = "no description";
@@ -241,35 +266,14 @@ export class Command {
                 input.input_type = input_type as InputType;
             }
             // access check
-            const { whitelist, blacklist } = this.access;
-            const { author, member, channel, guild } = message;
-            const userRoles = member?.roles instanceof GuildMemberRoleManager ? member.roles.cache.map(role => role.id) : [];
-            const guildId = guild?.id || "";
-            const channelId = channel?.id || "";
-            const userId = author.id;
-
-            const isWhitelisted = !Object.values(whitelist).some(list => list.length > 0) ||
-                whitelist.users.includes(userId) ||
-                whitelist.roles.some(role => userRoles.includes(role)) ||
-                whitelist.channels.includes(channelId) ||
-                whitelist.guilds.includes(guildId);
-
-            const isBlacklisted = Object.values(blacklist).some(list => list.length > 0) &&
-                (blacklist.users.includes(userId) ||
-                blacklist.roles.some(role => userRoles.includes(role)) ||
-                blacklist.channels.includes(channelId) ||
-                blacklist.guilds.includes(guildId));
-
-            if (!isWhitelisted || isBlacklisted) {
-                let accessReply = "access check failed: ";
-                if (!isWhitelisted) {
-                    accessReply += "user/channel/guild not in whitelist; ";
-                }
-                if (isBlacklisted) {
-                    accessReply += "user/channel/guild in blacklist; ";
-                }
-                log.info(accessReply + "for command " + this.name);
-                action.reply(message, { content: accessReply, ephemeral: true });
+            if (!isUserAllowed(message, this.access)) {
+                const replyMsg = "access check failed: " + 
+                    (!isUserAllowed(message, { whitelist: this.access.whitelist, blacklist: { users: [], roles: [], channels: [], guilds: [] } })
+                    ? "user/channel/guild not in whitelist; " 
+                    : "") +
+                  (/* add any additional info for blacklisting */ "");
+                log.info(`${replyMsg} for command ${this.name}`);
+                action.reply(message, { content: replyMsg, ephemeral: true });
                 return;
             }
             // other checks
