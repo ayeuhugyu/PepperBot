@@ -227,7 +227,7 @@ export class Command {
             log.info("executing command p/" + this.name + ((input._response?.from !== undefined) ? " piped from p/" + input._response?.from : ""));
             const start = performance.now();
             const { message, input_type } = input;
-            if (!message) {
+            if (!message || !input.message) { // these should be the exact same condition but typescript doesnt understand that
                 log.error("message is undefined in command execution");
                 return;
             }
