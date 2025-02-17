@@ -20,7 +20,12 @@ export const client = new Client({
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
-const shardTotal = await fetch("http://localhost:49999/totalShards").then(async (response) => await response.json())
+let shardTotal: any = { totalShards: 1, currentShard: 0 };
+try {
+    shardTotal = await fetch("http://localhost:49999/totalShards").then(async (response) => await response.json())
+} catch (err) {
+    log.error(err)
+}
 
 /*const app = await startServer("shard" + shardTotal.currentShard, 50000 + shardTotal.currentShard);
 if (app instanceof Error) {
