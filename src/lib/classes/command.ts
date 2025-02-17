@@ -224,7 +224,7 @@ export class Command {
         this.get_arguments = getArguments;
         // #region COMMAND EXECUTION
         this.execute = async (input) => {
-            log.info("executing command p/" + this.name + ((input._response?.from !== undefined) ? " piped from p/" + input._response?.from : ""));
+            log.info(`executing command p/${this.name}${input._response?.from ? ` piped from p/${input._response.from}` : ""}`);
             const start = performance.now();
             const { message, input_type } = input;
             if (!message || !input.message) { // these should be the exact same condition but typescript doesnt understand that
