@@ -304,7 +304,7 @@ export class Command {
             if ('memberPermissions' in input.message! && input.message.memberPermissions) {
                 forced_ephemeral = 
                     input.message.memberPermissions.has(PermissionFlagsBits.UseExternalApps) &&
-                    !input.message.client.guilds.cache.find((g) => g.id === input.message!.guildId || "");
+                    !input.message.client.guilds.cache.has(input.message!.guildId || "");
             }
 
             let finalCommandInput: CommandInput = {
