@@ -34,7 +34,7 @@ async function forkWeb() {
     // mb
     // TODO: implement error handling and restart on crash
 
-    // TODO: this is a placeholder port 
+    // TODO: this is a placeholder port
     // jsyk i've been using 53134 for http and 443 for https, so those are already port forwarded. my port 80 is occupied by fucking ghost apache or something like that
     // TODO: find a different location
     // web server must be started after the bot is logged in to prevent errors when accessing client!
@@ -73,4 +73,4 @@ database.default.destroy();
 hasVerified = true;
 
 await forkSharder();
-forkWeb();
+await forkWeb();

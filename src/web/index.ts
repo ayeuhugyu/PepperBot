@@ -1,9 +1,12 @@
 import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
+import { getGuilds, getUsers } from "../lib/client_values_helpers";
 
 class HttpException extends Error {
-    public status: number;
+    public status?: number;
+    // message is not nullable, it is already in the Error class
+    // yayy :heart:
     public message: string;
 
     constructor(status: number, message: string) {
@@ -13,7 +16,7 @@ class HttpException extends Error {
     }
 }
 
-export async function startServer(port: number) {
+export async function startServer(port: number): Promise<void> {
     const app = express();
     const hbs = create();
 
@@ -21,48 +24,18 @@ export async function startServer(port: number) {
     app.set("view engine", "handlebars");
     app.set("views", "./views");
 
-    app.use(express.static("public"));
-
     // lander
 
-    app.get("/", async (_req, res) => {
-        const guildsResponse: { data: number[] } | { error: string } = await fetch("http://localhost:49999/fetchClientValues", { method: "POST", 
-            body: JSON.stringify({ property: "guilds.cache.size" }), 
-            headers: { "Content-Type": "application/json" } }).then(async (response) => await response.json());
-        const usersResponse: { data: number[] } | { error: string } = await fetch("http://localhost:49999/fetchClientValues", { method: "POST", 
-            body: JSON.stringify({ property: "users.cache.size" }), 
-            headers: { "Content-Type": "application/json" } }).then(async (response) => await response.json());
-
-        if ("error" in guildsResponse || "error" in usersResponse) {
-            let errorMessage
-            if ("error" in guildsResponse) errorMessage = guildsResponse.error;
-            else if ("error" in usersResponse) errorMessage = usersResponse.error; // theres probably a more elegant way of doing this but i dont care enough
-
-            return res.render("error", { // realistically this should never happen. also this might not be the appropriatte error handling i dunno how ur shit works
-                title: "error",
-                status: 500,
-                path: _req.path,
-                message: "failed to fetch data: " + errorMessage
-            })
+    app.get("/", async (_req, res, next) => {
+        try {
+            res.render("index", {
+                title: "landing",
+                guilds: await getGuilds(),
+                users: await getUsers()
+            });
+        } catch (err) {
+            next(err);
         }
-
-        if (!Array.isArray(guildsResponse.data) || !Array.isArray(usersResponse.data)) {
-            return res.render("error", { // realistically this should never happen. also this might not be the appropriatte error handling i dunno how ur shit works
-                title: "error",
-                status: 500,
-                path: _req.path,
-                message: "guild or user response was not valid"
-            })
-        }
-        // you could probably turn most of the above stuff into helper functions so its usable in other things easily but im lazy asf
-        const guilds = guildsResponse.data.reduce((prev, val) => prev + val, 0);
-        const users = usersResponse.data.reduce((prev, val) => prev + val, 0);
-
-        res.render("index", {
-            title: "landing",
-            guilds: guilds,
-            users: users
-        });
     })
 
     // api endpoints (json)
@@ -76,6 +49,8 @@ export async function startServer(port: number) {
     //     })
     // })
 
+    app.use(express.static("public"));
+
     // errors
 
     app.use((req, _res, next) => {
@@ -85,10 +60,13 @@ export async function startServer(port: number) {
     })
 
     app.use((err: HttpException, req: Request, res: Response, _next: NextFunction) => {
-        log.error(err);
+        // only log errors / 500s
+        if (!err.status || (err.status < 600 && err.status >= 500)) {
+            log.error(err);
+        }
 
         const status = err.status ?? 500;
-        const message = err.message ?? "internal server error";
+        const message = err.message;
 
         res.status(status).render("error", {
             title: "error",

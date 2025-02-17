@@ -3,17 +3,16 @@ import { config } from 'dotenv';
 config();
 import * as log from './lib/log';
 import { startServer } from './lib/communication_manager';
-import { error } from 'console';
 
 const app = await startServer("sharder", 49999);
 if (app instanceof Error) {
     log.error(`failed to start server: ${app}`);
     process.exit(1);
 }
-app.get("/totalShards", (req, res) => {
+app.get("/totalShards", (_req, res) => {
     if (!manager) { // this should realistically never happen
         log.error("sharding manager not ready when /totalShards requested");
-        res.sendStatus(503).send("sharding manager not ready");
+        res.sendStatus(500).json({ error: "sharding manager not ready" });
         return;
     }
     res.json({ totalShards: manager.totalShards, currentShard: manager.shards.size });
@@ -21,12 +20,14 @@ app.get("/totalShards", (req, res) => {
 app.post("/fetchClientValues", async (req, res) => {
     if (!manager) { // this should realistically never happen
         log.error("sharding manager not ready when /fetchClientValues requested");
-        res.sendStatus(503).json({ error: "client not ready" });
+        // TODO: actually do something with these error messages.. OR
+        // use something like HttpException from the front facing web server
+        res.sendStatus(500).json({ error: "client not ready" });
         return;
     }
     const values = await manager.fetchClientValues(req.body.property); // this could hypothetically return incorrect results if started while shards are still starting, but its a fairly minimal issue so im not gonna worry about it. might add another method later that errors if called before that point
     res.json({ data: values });
-})
+});
 
 log.info("starting sharding manager...")
 
