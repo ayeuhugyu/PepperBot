@@ -4,6 +4,7 @@ import { startServer as startCommunicationServer } from "./lib/communication_man
 import { startServer as startWebServer } from "./web";
 
 log.info("starting bot...");
+process.on("warning", log.warn);
 let sharder: ChildProcess;
 
 async function forkSharder() {
@@ -15,9 +16,6 @@ async function forkSharder() {
         }
         sharder = await fork("./src/sharder.js");
         log.info("forked sharder.ts");
-        sharder.on("error", (error) => {
-            log.error(`sharder.ts errored: ${error.message}`);
-        });
         sharder.on("exit", (code) => {
             log.fatal(`[PEPPERCRITICAL] sharder exited with code ${code}, restarting in 5 minutes...`);
             setTimeout(forkSharder, 300000);

@@ -44,9 +44,9 @@ for (const file of eventFiles) {
 
 client.once('ready', async () => {
     log.info(`logged in as ${client.user?.tag}; shard ${shardTotal.currentShard}/${shardTotal.totalShards}`);
-    
+
     // web server starting has been moved to index.ts because in here it would start one for every single shard
-    
+
     const channel = await client.channels.fetch("1312566483569741896").catch(() => {});
     if (channel) {
         if (channel.isSendable()) {
@@ -66,3 +66,12 @@ async function init() {
     }
 }
 init();
+
+process.on("warning", log.warn);
+["unhandledRejection", "uncaughtException"].forEach((event) => {
+    process.on(event, (err) => {
+        log.fatal(`[PEPPERCRITICAL] bot.ts errored on ${event}: `);
+        log.fatal(err);
+        process.exit(1);
+    });
+})

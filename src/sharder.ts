@@ -44,3 +44,12 @@ await manager.spawn();
 if (process.send) { // typescript why do you do this to me it will literally never be undefined
     process.send("ready");
 }
+
+process.on("warning", log.warn);
+["unhandledRejection", "uncaughtException"].forEach((event) => {
+    process.on(event, (err) => {
+        log.fatal(`[PEPPERCRITICAL] sharder.ts errored on ${event}: `);
+        log.fatal(err);
+        process.exit(1);
+    });
+})
