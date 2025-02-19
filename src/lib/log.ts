@@ -17,12 +17,15 @@ const levelPrefixes = {
     [Level.Error]: "ERROR",
     [Level.Fatal]: "FATAL"
 };
+
 const levelColors = {
     [Level.Debug]: chalk.blue,
     [Level.Info]: chalk.green,
     [Level.Warn]: chalk.yellow,
-    [Level.Error]: chalk.red,
-    [Level.Fatal]: chalk.redBright
+    [Level.Error]: chalk.redBright,
+    [Level.Fatal]: (text: string) => {
+        return chalk.bold(chalk.underline(chalk.red(text)));
+    }
 };
 
 function levelPrefix(level: Level): string {
@@ -36,7 +39,7 @@ function datePrefix(date: Date): string{
     const dateLocal = new Date(date.getTime() - timezoneOffset);
     const dateFormatted = dateLocal.toISOString().slice(0, -1); // strip Z, Z=zulu=UTC
     const dateSpaced = dateFormatted.replace("T", " "); // adds a space between the date and the time (ex. 2023-07-17 14:45:30.000)
-    
+
     return chalk.grey(dateSpaced);
 }
 function fullPrefix(level: Level, date: Date): string {
