@@ -114,8 +114,11 @@ const command = new Command(
             }
         }
 
-        let xPos = 1 / 3;
-        let yPos = 1 / 4;
+        let xPos
+        let yPos
+        if (!args?.get("x")) args?.set("x", "1/3");
+        if (!args?.get("y")) args?.set("y", "1/4");
+
         try {
             xPos = evaluate(args?.get("x") || "");
             yPos = evaluate(args?.get("y") || "");
