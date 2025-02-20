@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import { getGuilds, getUsers } from "../lib/client_values_helpers";
+import Fingerprint from "express-fingerprint";
 
 class HttpException extends Error {
     public status?: number;
@@ -23,6 +24,7 @@ export async function startServer(port: number): Promise<void> {
     app.engine("handlebars", hbs.engine);
     app.set("view engine", "handlebars");
     app.set("views", "./views");
+    app.use(Fingerprint())
 
     // lander
 
