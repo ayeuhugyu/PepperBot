@@ -1,6 +1,20 @@
 LATEST UPDATE
 ---
-the biggest new feature:
+it has finally been done! the rewrite is complete!
+
+lets start off with the bad stuff so you'll forget about it by the time you finish reading
+**removals:**
+- p/cleanup
+- p/notice
+- p/trueban  (as well as systems related to it)
+- p/blacklist
+- p/pepperannouncement
+- p/subupdate (p/update automatically splits now )
+- p/embed
+- p/corrupt (it was so ass)
+- p/jak (soloed by booru.soy)
+
+the biggest new base feature
 **command piping:**
 
 - commands can now be piped by adding " | p/command" to the end of it. for example: "p/test | p/test | p/test"
