@@ -4,7 +4,7 @@ export interface dbUpdate {
     update: number;
     text: string;
     message_id: string;
-    timestamp: Date;
+    time: Date;
 }
 
 export class Update {
@@ -15,7 +15,7 @@ export class Update {
     constructor(dbObject: Partial<dbUpdate>) {
         Object.assign(this, {
             id: dbObject.update || 0,
-            timestamp: new Date(dbObject.timestamp || 0),
+            timestamp: new Date(dbObject.time || 0),
             text: dbObject.text || "Update undefined.",
             message_id: dbObject.message_id || "0",
         });
@@ -47,15 +47,19 @@ export async function writeUpdate(update: Update): Promise<void> {
         await database("updates").where({ update: update.id }).update({
             text: update.text,
             message_id: update.message_id,
-            timestamp: update.timestamp
+            time: update.timestamp
         });
     } else {
         await database("updates").insert({
             update: update.id,
             text: update.text,
             message_id: update.message_id,
-            timestamp: update.timestamp
+            time: update.timestamp
         });
     }
 }
 
+export async function getCurrentUpdateNumber() {
+    const result = await database("updates").count("id as cnt").first();
+    return result ? parseInt(result.cnt.toString()) : 0;
+}
