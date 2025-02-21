@@ -33,7 +33,7 @@ const deflt = new Command({
         pipable_to: [],
         options: [],
         example_usage: "p/prompt default",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
@@ -54,11 +54,11 @@ const get = new Command({
         options: [],
         aliases: [],
         example_usage: "p/prompt get",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
-        action.reply(message, { 
+        action.reply(message, {
             content: `\`\`\`
 name: ${prompt.name}
 description: ${prompt.description}
@@ -69,8 +69,8 @@ last updated at: ${new Date(prompt.updated_at).toLocaleString()}
 ${prompt.published ? `published at: ${new Date(prompt.published_at || "").toLocaleString()}\n` : ""}
 nsfw: ${prompt.nsfw ? "true" : "false"}
 default: ${prompt.default ? "true" : "false"}
-\`\`\``, 
-            ephemeral: guildConfig.other.use_ephemeral_replies 
+\`\`\``,
+            ephemeral: guildConfig.other.use_ephemeral_replies
         });
         return new CommandResponse({ pipe_data: { grep_text: prompt.content }});
     }
@@ -85,7 +85,7 @@ const publish = new Command({
         options: [],
         aliases: ["unpublish"],
         example_usage: "p/prompt publish",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
@@ -107,9 +107,9 @@ const del = new Command({
         category: CommandCategory.AI,
         pipable_to: [],
         options: [],
-        aliases: ["del", "remove"],
+        aliases: ["del", "remove", "rem", "rm"],
         example_usage: "p/prompt delete",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
@@ -141,7 +141,7 @@ const name = new Command({
         ],
         example_usage: "p/prompt name myprompt",
         argument_order: "<content>",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
@@ -176,7 +176,7 @@ const nsfw = new Command({
         pipable_to: [],
         options: [],
         example_usage: "p/prompt nsfw",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig, args }) {
         let prompt = await getUserPrompt(message.author);
@@ -202,7 +202,7 @@ const description = new Command({
         ],
         example_usage: "p/prompt description makes him always respond with hi",
         argument_order: "<content>",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
@@ -227,7 +227,7 @@ const list = new Command({
         pipable_to: [],
         options: [],
         example_usage: "p/prompt list",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ message, guildConfig }) {
         const prompts = await getUserPrompts(message.author.id);
@@ -267,7 +267,7 @@ const clone = new Command({
         ],
         example_usage: "p/prompt clone PepperBot/default",
         argument_order: "<content>",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
@@ -329,7 +329,7 @@ const use = new Command({
         ],
         example_usage: "p/prompt use myprompt",
         argument_order: "<content>",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
@@ -373,7 +373,7 @@ const set = new Command({
         ],
         example_usage: "p/prompt set always respond with \"hi\"",
         argument_order: "<content>",
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ message, guildConfig, args }) {
         if (!args?.get("content")) {
@@ -418,7 +418,7 @@ const command = new Command(
         ],
         example_usage: "p/git",
         aliases: []
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ message, guildConfig, args }) {
         if (args?.get("subcommand")) {
