@@ -59,6 +59,7 @@ async function init() {
     log.info("logging into discord...");
     try {
         await client.login(process.env.DISCORD_TOKEN);
+        client.user?.setActivity("pepper whisperers.", { type: 2 });
     } catch (err) {
         log.error("failed to login into discord. wifi down? token invalid?");
         log.error(err);
