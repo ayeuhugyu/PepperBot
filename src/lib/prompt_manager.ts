@@ -144,3 +144,6 @@ export async function removeDefaultPrompt(user: string) {
 export async function removePrompt(name: string, user: string) {
     return await database("prompts").where({ author_id: user, name }).del();
 }
+
+const officialPromptsModule = await import("./official_prompts"); // has to be done like this to avoid race conditions
+officialPromptsModule.writeOfficialPrompts();

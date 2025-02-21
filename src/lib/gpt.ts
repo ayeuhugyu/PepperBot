@@ -816,7 +816,7 @@ export class Conversation {
         const conversation = new Conversation();
         conversation.users.push(message.author);
         const prompt = await getPrompt(message.author.id)
-        conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        if (prompt.content.length > 0 && prompt.content !== "Prompt undefined.") /* this is the default prompt content */ conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
         if (message instanceof Message && message.reference && message.reference.messageId) {
             message.channel.messages.fetch(message.reference.messageId).then((msg) => {
                 if (msg) {
