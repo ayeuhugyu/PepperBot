@@ -37,26 +37,17 @@ export async function deleteUpdate(id: number): Promise<void> {
 export async function createUpdate(text: string, message_id: string): Promise<Update> {
     const result = await database("updates").count("id as cnt").first();
     const id = (result ? parseInt(result.cnt.toString()) : 0) + 1;
-    await database("updates").insert({ id: id, text: text, message_id: message_id });
-    return new Update({ update: id, text: text, message_id: message_id });
+    await database("updates").insert({ id: id, text: text, message_id: message_id, time: new Date() });
+    return new Update({ update: id, text: text, message_id: message_id, time: new Date() });
 }
 
 export async function writeUpdate(update: Update): Promise<void> {
-    const existingUpdate = await database("updates").where({ update: update.id }).first();
-    if (existingUpdate) {
-        await database("updates").where({ update: update.id }).update({
-            text: update.text,
-            message_id: update.message_id,
-            time: update.timestamp
-        });
-    } else {
-        await database("updates").insert({
-            update: update.id,
-            text: update.text,
-            message_id: update.message_id,
-            time: update.timestamp
-        });
-    }
+    return await database("updates").insert({
+        update: update.id,
+        text: update.text,
+        message_id: update.message_id,
+        time: update.timestamp
+    });
 }
 
 export async function getCurrentUpdateNumber() {

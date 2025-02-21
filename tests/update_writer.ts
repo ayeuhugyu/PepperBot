@@ -23,12 +23,14 @@ const main = async () => {
 
         const updateData = new Update({
             update: parseInt(updateId || (await getCurrentUpdateNumber()).toString()),
-            time: new Date(timestamp),
+            time: new Date(timestamp || Date.now()),
             message_id: messageId,
             text: fileContent
         });
 
-        writeUpdate(updateData);
+        console.log(updateData)
+
+        console.log(await writeUpdate(updateData));
 
         console.log('Update created successfully!');
     } catch (error) {
@@ -38,5 +40,5 @@ const main = async () => {
     }
 };
 
-main();
+await main();
 process.exit(0);
