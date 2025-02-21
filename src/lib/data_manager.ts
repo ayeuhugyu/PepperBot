@@ -78,7 +78,7 @@ const nonFatalEnvVariables = [
 ];
 
 let dataVerified = false;
-await fetch("http://localhost:50000/verified").then((res) => res.text()).then((text) => { 
+await fetch("http://localhost:50000/verified").then((res) => res.text()).then((text) => {
     if (text === "true") dataVerified = true;
 }).catch(() => {
     log.warn("failed to check if data has already been verified with internal server, assuming unverified")
@@ -216,6 +216,7 @@ await ensureTable("updates");
 await ensureColumn("updates", "update", (table) => table.integer("update").primary().notNullable());
 await ensureColumn("updates", "text", (table) => table.string("text").notNullable());
 await ensureColumn("updates", "time", (table) => table.timestamp("time").defaultTo(database.fn.now()));
+await ensureColumn("updates", "message_id", (table) => table.string("message_id"));
 await finishTable("updates");
 
 log.info("database verified");
