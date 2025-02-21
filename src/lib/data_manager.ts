@@ -217,6 +217,7 @@ await ensureColumn("updates", "update", (table) => table.integer("update").prima
 await ensureColumn("updates", "text", (table) => table.string("text").notNullable());
 await ensureColumn("updates", "time", (table) => table.timestamp("time").defaultTo(database.fn.now()));
 await ensureColumn("updates", "message_id", (table) => table.string("message_id"));
+await ensureColumn("updates", "major", (table) => table.boolean("major").notNullable().defaultTo(false));
 await finishTable("updates");
 
 log.info("database verified");
