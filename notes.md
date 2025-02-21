@@ -51,6 +51,7 @@ lets start off with the bad stuff so you'll forget about it by the time you fini
 - p/pepperannouncement
 - p/setversion
 - p/subupdate (p/update automatically splits now )
+- p/patch
 - p/corrupt (it was so ass)
 - p/jak (soloed by booru.soy)
 - p/embed
@@ -81,10 +82,12 @@ the biggest new base feature
   - prompts now have an nsfw property (to be used by the prompt browser)
   - you can now set the default prompt to a custom one
   - saved prompts can now be deleted
+- gpt now has a completely new prompt
+  - if you for some reason want to use the old prompt, you still can by running `p/prompt clone PepperBot/old`
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
 - new "random" tool allows gpt to generate random numbers
-- AI can now see stickers.
+- AI can now see stickers
 
 **actual content:**
 
@@ -100,7 +103,6 @@ the biggest new base feature
     - commands now have argument orders
 - bots can no longer execute any commands. this was just yet another value i had to think about if it would cause problems or not
 - p/vc join & leave now check for the "speak" permission instead of the "connect" permission
-- new p/snowflake allows you to extract data from discord snowflakes (user/channel/guild/message/anything's id)
 
 **technical details:**
 
@@ -109,49 +111,8 @@ the biggest new base feature
 - constant resources have been separated into a /constant folder
 - user data has been transformed into a SQL database
 - guild config values are now separated by category
-- most processes now host a server for easy inter-process communication
+- most processes now host a server for easy inter-process communication (because oh my god the default is so insanely terrible)
 - data passed to commands is no longer a list of 4 arguments, instead just one object you can choose what you want from. that also lets me reasonably pass a LOT more data to them
 - im no longer using the slash command builders because they are annoying and i hate them i hate them i hate them get them out of my sight
 - voice connections are now managed by GuildVoiceManagers which automatically create audio players
 - the GPT script's file type checker thing no longer uses my own stupid thing and instead now uses mime-types
-
-​
-p/ask
-p/cleanup
-p/deploycommands
-p/equipment
-p/git
-p/info
-p/notice
-p/playurl
-p/random
-p/sound
-p/test
-p/undeploycommands
-p/vileimagery
-​
-p/blacklist
-p/corrupt
-p/describe
-p/eval
-p/gpt
-p/jak
-p/patch
-p/prompt
-p/restart
-p/statistics
-p/todo
-p/update
-​
-p/chatbubble
-p/cquery
-p/embed
-p/force
-p/help
-p/markov
-p/pepperannouncement
-p/queue
-p/setversion
-p/subupdate
-p/trueban
-p/vc
