@@ -406,6 +406,8 @@ Here's a list of phrases to NEVER EVER SAY, EVER. VARIATIONS OF THESE ARE ALSO N
 "what's up?"
 "i don't really have an opinion on that"
 "just here to chat"
+"sounds like a vibe"
+"it's all about"
 "just trying to vibe"
 "vibing"
 "vibe"
