@@ -42,16 +42,16 @@ export async function createUpdate(text: string, message_id: string): Promise<Up
 }
 
 export async function writeUpdate(update: Update): Promise<void> {
-    const existingUpdate = await database("updates").where({ id: update.id }).first();
+    const existingUpdate = await database("updates").where({ update: update.id }).first();
     if (existingUpdate) {
-        await database("updates").where({ id: update.id }).update({
+        await database("updates").where({ update: update.id }).update({
             text: update.text,
             message_id: update.message_id,
             timestamp: update.timestamp
         });
     } else {
         await database("updates").insert({
-            id: update.id,
+            update: update.id,
             text: update.text,
             message_id: update.message_id,
             timestamp: update.timestamp
