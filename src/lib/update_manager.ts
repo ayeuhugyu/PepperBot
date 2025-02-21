@@ -4,7 +4,7 @@ export interface dbUpdate {
     update: number;
     text: string;
     message_id: string;
-    timestamp: number;
+    timestamp: Date;
 }
 
 export class Update {
@@ -39,5 +39,23 @@ export async function createUpdate(text: string, message_id: string): Promise<Up
     const id = (result ? parseInt(result.cnt.toString()) : 0) + 1;
     await database("updates").insert({ id: id, text: text, message_id: message_id });
     return new Update({ update: id, text: text, message_id: message_id });
+}
+
+export async function writeUpdate(update: Update): Promise<void> {
+    const existingUpdate = await database("updates").where({ id: update.id }).first();
+    if (existingUpdate) {
+        await database("updates").where({ id: update.id }).update({
+            text: update.text,
+            message_id: update.message_id,
+            timestamp: update.timestamp
+        });
+    } else {
+        await database("updates").insert({
+            id: update.id,
+            text: update.text,
+            message_id: update.message_id,
+            timestamp: update.timestamp
+        });
+    }
 }
 
