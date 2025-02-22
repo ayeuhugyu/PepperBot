@@ -416,7 +416,7 @@ const command = new Command(
                 required: false,
             })
         ],
-        example_usage: "p/git",
+        example_usage: "p/prompt set always respond with \"hi\"",
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
