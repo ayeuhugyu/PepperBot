@@ -42,7 +42,7 @@ export async function startServer(port: number): Promise<void> {
     })
 
     // oauth2 auth
-    const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(process.env.IS_DEV == 'True' ? `localhost%3A${port}` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
+    const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(process.env.IS_DEV == 'True' ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
     app.get("/auth", async (req, res, next) => {
         const code = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
         if (!code || typeof code !== 'string') {
@@ -55,7 +55,7 @@ export async function startServer(port: number): Promise<void> {
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': (process.env.IS_DEV == 'True') ? `http://localhost:${port}/auth` : 'https://pepperbot.online/auth',
-            'scope': 'identify',
+            'scope': 'identify+guilds',
         });
         const headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -68,11 +68,15 @@ export async function startServer(port: number): Promise<void> {
         });
         const output = await response.json(); // todo: implement types
         if (output.error) {
+            if (output.error_description && output.error_description === "Invalid \"code\" in request.") {
+                return next(new HttpException(403, "Invalid OAuth2 code, try reauthenticating. "))
+            }
             return next(new HttpException(500, output.error));
         } else {
             //res.redirect(`/oauth2success?token=${output.access_token}&refreshToken=${output.refresh_token}&expires=${output.expires_in}`);
             res.cookie('token', output.access_token, { maxAge: output.expires_in * 1000 });
             res.cookie('refreshToken', output.refresh_token, { maxAge: output.expires_in * 1000 }); // todo: research if this is correct, i think it should be infinite.
+            res.redirect('/'); // todo: implement a redirect system
         }
     });
 
