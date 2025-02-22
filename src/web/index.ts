@@ -4,7 +4,7 @@ import * as log from "../lib/log";
 import { getGuilds, getUsers } from "../lib/client_values_helpers";
 import url from "url";
 
-const oauth2url = "https://discord.com/oauth2/authorize?client_id=1209297323029565470&response_type=code&redirect_uri=https%3A%2F%2Fpepperbot.online%2Foauth2%2Flogin&scope=identify+guilds";
+const botId = (process.env.IS_DEV == 'True') ? "1148796261793800303" : "1209297323029565470" // todo: fetch this from the client
 
 class HttpException extends Error {
     public status?: number;
@@ -42,7 +42,7 @@ export async function startServer(port: number): Promise<void> {
     })
 
     // oauth2 auth
-
+    const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(process.env.IS_DEV == 'True' ? `localhost%3A${port}` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
     app.get("/auth", async (req, res, next) => {
         const code = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
         if (!code || typeof code !== 'string') {
@@ -50,7 +50,7 @@ export async function startServer(port: number): Promise<void> {
             return res.redirect(oauth2url);
         }
         const data = new url.URLSearchParams({
-            'client_id': (process.env.IS_DEV == 'True') ? "1148796261793800303" : "1209297323029565470", // todo: fetch the client id instead of putting it as a string
+            'client_id': botId,
             'client_secret': process.env.DISCORD_CLIENT_SECRET || '',
             'grant_type': 'authorization_code',
             'code': code,
