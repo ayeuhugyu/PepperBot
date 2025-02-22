@@ -37,6 +37,7 @@ update manager - add all past updates
 
 things to fix:
 normal aliases
+piping allowlist for subcommands not ignoring parent's
 
 LATEST UPDATE
 ---
