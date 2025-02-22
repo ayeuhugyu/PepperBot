@@ -9,7 +9,7 @@ const command = new Command(
         name: 'ask',
         description: 'ask the ai something',
         long_description: 'ask the ai something',
-        category: CommandCategory.Debug,
+        category: CommandCategory.AI,
         pipable_to: ['grep'],
         example_usage: "p/ask hi there",
         argument_order: "<question>",
@@ -22,7 +22,7 @@ const command = new Command(
                 required: true,
             })
         ]
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["request"]),
     async function execute ({ args, message, piped_data, will_be_piped, guildConfig }) {
         if (!args?.get('request')) return action.reply(message, { content: "please provide a request", ephemeral: guildConfig.other.use_ephemeral_replies });

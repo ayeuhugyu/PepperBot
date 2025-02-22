@@ -5,7 +5,8 @@ export enum GetArgumentsTemplateType {
     DoNothing = "do_nothing",
     SingleStringFirstSpace = "single_string_first_space",
     SingleStringWholeMessage = "single_string_whole_message",
-    TwoStringFirstSpaceSecondWholeMessage = "two_string_first_space_second_whole_message"
+    TwoStringFirstSpaceSecondWholeMessage = "two_string_first_space_second_whole_message",
+    FirstAttachment = "first_attachment"
 }
 
 export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, argsToGet?: string[]): ((input: CommandInput) => Collection<string, any>)  {
@@ -44,6 +45,14 @@ export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, arg
                     const secondArg = split.join(" ");
                     args.set(argsToGet[0], firstArg);
                     args.set(argsToGet[1], secondArg);
+                    return args;
+                }
+        case GetArgumentsTemplateType.FirstAttachment:
+            if (!argsToGet) throw new Error("argsToGet must be defined for FirstAttachment template");
+            return ({ message }) => {
+                    message = message as Message;
+                    const args = new Collection<string, any>();
+                    args.set(argsToGet[0], message.attachments.first());
                     return args;
                 }
     }
