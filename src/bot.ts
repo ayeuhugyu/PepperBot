@@ -73,6 +73,7 @@ process.on("warning", log.warn);
     process.on(event, (err) => {
         log.fatal(`[PEPPERCRITICAL] bot.ts errored on ${event}: `);
         log.fatal(err);
+        console.error(err) // incase of the stupid fucking combined error bullshit discordjs returns for embed errors
         process.exit(1);
     });
 })
