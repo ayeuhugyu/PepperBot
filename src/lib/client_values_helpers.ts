@@ -25,3 +25,13 @@ export async function getUsers(): Promise<number> {
 
     return jsonData.reduce((prev, val) => prev + val, 0)
 }
+
+export async function getClientId() {
+    return await fetch("http://localhost:49999/fetchClientValues", {
+        method: "POST",
+        body: JSON.stringify({ property: "user.id" }),
+        headers: { "Content-Type": "application/json" }
+    })
+        .then(res => res.json())
+        .then(json => json.data[0]) as string;
+}

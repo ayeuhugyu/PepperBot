@@ -1,12 +1,13 @@
 import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
-import { getGuilds, getUsers } from "../lib/client_values_helpers";
+import { getGuilds, getUsers, getClientId } from "../lib/client_values_helpers";
 import url from "url";
 import cookieParser from "cookie-parser";
 
 const isDev = (process.env.IS_DEV?.toLowerCase() == 'true');
-const botId = isDev ? "1148796261793800303" : "1209297323029565470" // todo: fetch this from the client'
+const botId = await getClientId();
+console.log(botId);
 const port = 53134
 
 class HttpException extends Error {
