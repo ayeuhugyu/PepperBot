@@ -3,8 +3,10 @@ import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import { getGuilds, getUsers } from "../lib/client_values_helpers";
 import url from "url";
+import cookieParser from "cookie-parser";
 
-const botId = (process.env.IS_DEV == 'True') ? "1148796261793800303" : "1209297323029565470" // todo: fetch this from the client
+const isDev = (process.env.IS_DEV?.toLowerCase() == 'true');
+const botId = isDev ? "1148796261793800303" : "1209297323029565470" // todo: fetch this from the client
 
 class HttpException extends Error {
     public status?: number;
@@ -19,6 +21,51 @@ class HttpException extends Error {
     }
 }
 
+enum GrantType {
+    AuthorizationCode = 'authorization_code',
+    RefreshToken = 'refresh_token'
+}
+
+interface OAuth2Response {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    error?: string;
+    error_description?: string;
+}
+
+async function oauth2(code: string, grant_type: GrantType, port: number) {
+    const codeType = (grant_type === GrantType.RefreshToken) ? 'refresh_token' : 'code'
+    const data = new url.URLSearchParams({
+        'client_id': botId,
+        'client_secret': process.env.DISCORD_CLIENT_SECRET || '',
+        'grant_type': grant_type,
+        [codeType]: code,
+        'redirect_uri': isDev ? `http://localhost:${port}/auth` : 'https://pepperbot.online/auth',
+    });
+
+    if (grant_type !== GrantType.RefreshToken) {
+        data.append('scope', 'identify+guilds'); // refresh tokens error if you try to include scope
+    }
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': process.env.DISCORD_TOKEN || '',
+    };
+    const response = await fetch(`https://discord.com/api/v10/oauth2/token`, {
+        method: 'POST',
+        body: data.toString(),
+        headers: headers,
+    });
+    return await response.json() as OAuth2Response;
+}
+
+const infinite_cookie_age = 2147483647; // 2^31 - 1
+function setAuthCookies(res: Response, output: any) {
+    res.cookie('token', output.access_token, { maxAge: output.expires_in * 1000 });
+    res.cookie('refreshToken', output.refresh_token, { maxAge: infinite_cookie_age });
+}
+
+
 export async function startServer(port: number): Promise<void> {
     const app = express();
     const hbs = create();
@@ -26,6 +73,8 @@ export async function startServer(port: number): Promise<void> {
     app.engine("handlebars", hbs.engine);
     app.set("view engine", "handlebars");
     app.set("views", "./views");
+
+    app.use(cookieParser());
 
     // lander
 
@@ -42,41 +91,31 @@ export async function startServer(port: number): Promise<void> {
     })
 
     // oauth2 auth
-    const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(process.env.IS_DEV == 'True' ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
+    const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(isDev ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
+
     app.get("/auth", async (req, res, next) => {
+        if (req.cookies.refreshToken && !req.cookies.token) {
+            const output = await oauth2(req.cookies.refreshToken, GrantType.RefreshToken, port);
+            if (output.error) {
+                return next(new HttpException(500, output.error + "; you may have to reauthenticate."));
+            } else {
+                setAuthCookies(res, output);
+                return res.redirect('/'); // todo: implement redirect system
+            }
+        }
         const code = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
         if (!code || typeof code !== 'string') {
-            // todo: implement refresh token
             return res.redirect(oauth2url);
         }
-        const data = new url.URLSearchParams({
-            'client_id': botId,
-            'client_secret': process.env.DISCORD_CLIENT_SECRET || '',
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': (process.env.IS_DEV == 'True') ? `http://localhost:${port}/auth` : 'https://pepperbot.online/auth',
-            'scope': 'identify+guilds',
-        });
-        const headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': process.env.DISCORD_TOKEN || '',
-        };
-        const response = await fetch(`https://discord.com/api/v10/oauth2/token`, {
-            method: 'POST',
-            body: data.toString(),
-            headers: headers,
-        });
-        const output = await response.json(); // todo: implement types
+        const output = await oauth2(code, GrantType.AuthorizationCode, port);
         if (output.error) {
             if (output.error_description && output.error_description === "Invalid \"code\" in request.") {
                 return next(new HttpException(403, "Invalid OAuth2 code, try reauthenticating. "))
             }
             return next(new HttpException(500, output.error));
         } else {
-            //res.redirect(`/oauth2success?token=${output.access_token}&refreshToken=${output.refresh_token}&expires=${output.expires_in}`);
-            res.cookie('token', output.access_token, { maxAge: output.expires_in * 1000 });
-            res.cookie('refreshToken', output.refresh_token, { maxAge: output.expires_in * 1000 }); // todo: research if this is correct, i think it should be infinite.
-            res.redirect('/'); // todo: implement a redirect system
+            setAuthCookies(res, output);
+            return res.redirect('/'); // todo: implement redirect system
         }
     });
 
