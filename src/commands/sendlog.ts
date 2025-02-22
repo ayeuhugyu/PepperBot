@@ -1,0 +1,59 @@
+import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import * as action from "../lib/discord_action";
+import fs from "fs";
+import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+
+
+function replaceLast(str: string, search: string, replacement: string): string {
+    const lastIndex = str.lastIndexOf(search);
+    if (lastIndex === -1) return str; // search string not found
+    return str.substring(0, lastIndex) + replacement + str.substring(lastIndex + search.length);
+}
+
+const command = new Command(
+    {
+        name: 'sendlog',
+        description: 'sends a log file',
+        long_description: 'uploads a log file, allowing you to pipe its contents to grep',
+        category: CommandCategory.Debug,
+        pipable_to: ['grep'],
+        example_usage: "p/sendlog global",
+        argument_order: "<log>",
+        aliases: ["log", "getlog"],
+        options: [
+            new CommandOption({
+                name: 'log',
+                description: 'the file to upload',
+                type: CommandOptionType.String,
+                required: true,
+                choices: [
+                    { name: "global.log", value: "global.log" },
+                    { name: "fatal.log", value: "fatal.log" },
+                    { name: "error.log", value: "error.log" },
+                    { name: "warn.log", value: "warn.log" },
+                    { name: "info.log", value: "info.log" },
+                    { name: "debug.log", value: "debug.log" },
+                ]
+            })
+        ]
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["log"]),
+    async function execute ({ args, message, piped_data, will_be_piped, guildConfig }) {
+        if (!args || !args.get("log")) {
+            action.reply(message, { content: "you need to specify a log file to send", ephemeral: true });
+            return new CommandResponse({});
+        }
+        const log = replaceLast(args.get("log"), ".log", "").replace(/[^a-z0-9]/gi, '');
+        const log_file = `./logs/${log}.log`;
+        if (!fs.existsSync(log_file)) {
+            action.reply(message, { content: `the log file \`${log_file}\` does not exist`, ephemeral: true });
+            return new CommandResponse({});
+        }
+        const sent = await action.reply(message, { content: `uploading...` });
+        if (!sent) return;
+        action.edit(sent, { content: `${log}${log.endsWith(".log") ? "" : ".log"}:`, files: [log_file] });
+        return new CommandResponse({ pipe_data: { grep_text: fs.readFileSync(log_file, "utf8") } });
+    }
+);
+
+export default command;
