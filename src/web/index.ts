@@ -1,13 +1,10 @@
 import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
-import { getGuilds, getUsers, getClientId } from "../lib/client_values_helpers";
-import url from "url";
+import { getGuilds, getUsers } from "../lib/client_values_helpers";
 import cookieParser from "cookie-parser";
+import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 
-const isDev = (process.env.IS_DEV?.toLowerCase() == 'true');
-const botId = await getClientId();
-console.log(botId);
 const port = 53134
 
 class HttpException extends Error {
@@ -22,51 +19,6 @@ class HttpException extends Error {
         this.message = message;
     }
 }
-
-enum GrantType {
-    AuthorizationCode = 'authorization_code',
-    RefreshToken = 'refresh_token'
-}
-
-interface OAuth2Response {
-    access_token: string;
-    refresh_token: string;
-    expires_in: number;
-    error?: string;
-    error_description?: string;
-}
-
-async function oauth2(code: string, grant_type: GrantType, port: number) {
-    const codeType = (grant_type === GrantType.RefreshToken) ? 'refresh_token' : 'code'
-    const data = new url.URLSearchParams({
-        'client_id': botId,
-        'client_secret': process.env.DISCORD_CLIENT_SECRET || '',
-        'grant_type': grant_type,
-        [codeType]: code,
-        'redirect_uri': isDev ? `http://localhost:${port}/auth` : 'https://pepperbot.online/auth',
-    });
-
-    if (grant_type !== GrantType.RefreshToken) {
-        data.append('scope', 'identify+guilds'); // refresh tokens error if you try to include scope
-    }
-    const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': process.env.DISCORD_TOKEN || '',
-    };
-    const response = await fetch(`https://discord.com/api/v10/oauth2/token`, {
-        method: 'POST',
-        body: data.toString(),
-        headers: headers,
-    });
-    return await response.json() as OAuth2Response;
-}
-
-const infinite_cookie_age = 2147483647; // 2^31 - 1
-function setAuthCookies(res: Response, output: any) {
-    res.cookie('token', output.access_token, { maxAge: output.expires_in * 1000 });
-    res.cookie('refreshToken', output.refresh_token, { maxAge: infinite_cookie_age });
-}
-
 
 const app = express();
 const hbs = create();
@@ -92,30 +44,35 @@ app.get("/", async (_req, res, next) => {
 })
 
 // oauth2 auth
-const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(isDev ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
 
 app.get("/auth", async (req, res, next) => {
     if (req.cookies.refreshToken && !req.cookies.token) {
-        const output = await oauth2(req.cookies.refreshToken, GrantType.RefreshToken, port);
-        if (output.error) {
-            return next(new HttpException(500, output.error + "; you may have to reauthenticate."));
+        const token = await getRefreshToken(req.cookies.refreshToken);
+        // assume the refresh token is invalid, and not internal server error
+        // we still log the error in above func just in case lol
+        // see what we did below mayb
+        if (token.error) {
+            return res.redirect(oauth2Url);
         } else {
-            setAuthCookies(res, output);
+            updateCookies(res, token.access_token, token.refresh_token);
             return res.redirect('/'); // todo: implement redirect system
         }
     }
+
+    // ???
+    // Black magic
     const code = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
     if (!code || typeof code !== 'string') {
-        return res.redirect(oauth2url);
+        return res.redirect(oauth2Url);
     }
-    const output = await oauth2(code, GrantType.AuthorizationCode, port);
-    if (output.error) {
-        if (output.error_description && output.error_description === "Invalid \"code\" in request.") {
-            return next(new HttpException(403, "Invalid OAuth2 code, try reauthenticating. "))
-        }
-        return next(new HttpException(500, output.error));
+
+    const token = await getToken(code);
+    if (token.error) {
+        // do something like this in the above part (refresh token)
+        if (token.error_description === 'Invalid "code" in request.') { return res.redirect(oauth2Url); }
+        else { return next(new HttpException(500, token.error)); }
     } else {
-        setAuthCookies(res, output);
+        updateCookies(res, token.access_token, token.refresh_token);
         return res.redirect('/'); // todo: implement redirect system
     }
 });
