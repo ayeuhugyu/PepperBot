@@ -1,11 +1,11 @@
 import * as log from "./lib/log";
 import { fork, ChildProcess } from "node:child_process";
 import { startServer as startCommunicationServer } from "./lib/communication_manager";
-import { startServer as startWebServer } from "./web";
 
 log.info("starting bot...");
 process.on("warning", log.warn);
 let sharder: ChildProcess;
+let web: ChildProcess;
 
 async function forkSharder() {
     return new Promise(async (resolve) => {
@@ -28,15 +28,22 @@ async function forkSharder() {
 }
 
 async function forkWeb() {
-    log.info("forking web interface..."); // The Notepocalypse. The Webening. The Webpocalypse. (Web 3: Revenge of the Sith) (Web 4: A New Hope) (Web 5: The Empire Strikes Back) (Web 6: Return of the Jedi) (Web 7: The Force Awakens) (Web 8: The Last Jedi) (Web 9: The Rise of Skywalker) (Web 10: The Phantom Menace) (Web 11: Attack of the Clones) (Web 12: Revenge of the Sith) (Web 13: A New Hope) (Web 14: The Empire Strikes Back) (Web 15: Return of the Jedi) (Web 16: The Force Awakens) (Web 17: The Last Jedi) (Web 18: The Rise of Skywalker) (Web 19: The Phantom Menace) (Web 20: Attack of the Clones) (Web 21: Revenge of the Sith) (Web 22: A New Hope) (Web 23: The Empire Strikes Back) (Web 24: Return of the Jedi) (Web 25: The Force Awakens) (Web 26: The Last Jedi) (Web 27: The Rise of Skywalker) -- Github Copilot (Darth Vader): It is pointless to resist. Your life, the poetry. Surrender to the dark side of the Force. It is the only way you can save your world. -- Anakin Skywalker (Darth Vader) -- Github Copilot. (-- Darth Plagueis the Wise) -- Github Copilot. -- Emperor Palpatine (Darth Sidious) -- Github Copilot. -- Yoda -- Github Copilot. -- Obi-Wan Kenobi -- Github Copilot. -- Qui-Gon Jinn -- Github Copilot. -- Mace Windu -- Github Copilot. -- Kit Fisto -- Github Copilot
-    // mb
-    // TODO: implement error handling and restart on crash
-
-    // TODO: this is a placeholder port
-    // jsyk i've been using 53134 for http and 443 for https, so those are already port forwarded. my port 80 is occupied by fucking ghost apache or something like that
+    log.info("forking web interface...");
     // TODO: find a different location
-    // web server must be started after the bot is logged in to prevent errors when accessing client!
-    startWebServer(50001); // may replace in the future with a child process, but for now its just gonna be this
+    if (web) {
+        log.info("killing old web interface...");
+        web.kill();
+    }
+    web = await fork("./src/web/index.ts");
+    log.info("forked web interface");
+    web.on("exit", (code) => {
+        log.fatal(`[PEPPERCRITICAL] web interface exited with code ${code}, restarting in 5 minutes...`);
+        setTimeout(forkWeb, 300000);
+    });
+
+    web.on("message", (msg) => {
+        if (msg === "ready") log.info("web interface ready");
+    });
 }
 
 const app = await startCommunicationServer("main", 50000);

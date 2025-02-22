@@ -6,7 +6,8 @@ import url from "url";
 import cookieParser from "cookie-parser";
 
 const isDev = (process.env.IS_DEV?.toLowerCase() == 'true');
-const botId = isDev ? "1148796261793800303" : "1209297323029565470" // todo: fetch this from the client
+const botId = isDev ? "1148796261793800303" : "1209297323029565470" // todo: fetch this from the client'
+const port = 53134
 
 class HttpException extends Error {
     public status?: number;
@@ -66,96 +67,94 @@ function setAuthCookies(res: Response, output: any) {
 }
 
 
-export async function startServer(port: number): Promise<void> {
-    const app = express();
-    const hbs = create();
+const app = express();
+const hbs = create();
 
-    app.engine("handlebars", hbs.engine);
-    app.set("view engine", "handlebars");
-    app.set("views", "./views");
+app.engine("handlebars", hbs.engine);
+app.set("view engine", "handlebars");
+app.set("views", "./views");
 
-    app.use(cookieParser());
+app.use(cookieParser());
 
-    // lander
+// lander
 
-    app.get("/", async (_req, res, next) => {
-        try {
-            res.render("index", {
-                title: "landing",
-                guilds: await getGuilds(),
-                users: await getUsers()
-            });
-        } catch (err) {
-            next(err);
-        }
-    })
+app.get("/", async (_req, res, next) => {
+    try {
+        res.render("index", {
+            title: "landing",
+            guilds: await getGuilds(),
+            users: await getUsers()
+        });
+    } catch (err) {
+        next(err);
+    }
+})
 
-    // oauth2 auth
-    const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(isDev ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
+// oauth2 auth
+const oauth2url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(isDev ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
 
-    app.get("/auth", async (req, res, next) => {
-        if (req.cookies.refreshToken && !req.cookies.token) {
-            const output = await oauth2(req.cookies.refreshToken, GrantType.RefreshToken, port);
-            if (output.error) {
-                return next(new HttpException(500, output.error + "; you may have to reauthenticate."));
-            } else {
-                setAuthCookies(res, output);
-                return res.redirect('/'); // todo: implement redirect system
-            }
-        }
-        const code = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
-        if (!code || typeof code !== 'string') {
-            return res.redirect(oauth2url);
-        }
-        const output = await oauth2(code, GrantType.AuthorizationCode, port);
+app.get("/auth", async (req, res, next) => {
+    if (req.cookies.refreshToken && !req.cookies.token) {
+        const output = await oauth2(req.cookies.refreshToken, GrantType.RefreshToken, port);
         if (output.error) {
-            if (output.error_description && output.error_description === "Invalid \"code\" in request.") {
-                return next(new HttpException(403, "Invalid OAuth2 code, try reauthenticating. "))
-            }
-            return next(new HttpException(500, output.error));
+            return next(new HttpException(500, output.error + "; you may have to reauthenticate."));
         } else {
             setAuthCookies(res, output);
             return res.redirect('/'); // todo: implement redirect system
         }
-    });
-
-    // api endpoints (json)
-    // use these for client-side ui, etc
-    // try and do as much as possible server-side
-
-    // app.get("/api/status", (_req, res) => {
-    //     res.json({
-    //         guilds: client.guilds.cache.size,
-    //         users: client.users.cache.size
-    //     })
-    // })
-
-    app.use(express.static("public"));
-
-    // errors
-
-    app.use((req, _res, next) => {
-        const error = new HttpException(404, `${req.path} not found`);
-
-        next(error);
-    })
-
-    app.use((err: HttpException, req: Request, res: Response, _next: NextFunction) => {
-        // only log errors / 500s
-        if (!err.status || (err.status < 600 && err.status >= 500)) {
-            log.error(err);
+    }
+    const code = Array.isArray(req.query.code) ? req.query.code[0] : req.query.code;
+    if (!code || typeof code !== 'string') {
+        return res.redirect(oauth2url);
+    }
+    const output = await oauth2(code, GrantType.AuthorizationCode, port);
+    if (output.error) {
+        if (output.error_description && output.error_description === "Invalid \"code\" in request.") {
+            return next(new HttpException(403, "Invalid OAuth2 code, try reauthenticating. "))
         }
+        return next(new HttpException(500, output.error));
+    } else {
+        setAuthCookies(res, output);
+        return res.redirect('/'); // todo: implement redirect system
+    }
+});
 
-        const status = err.status ?? 500;
-        const message = err.message;
+// api endpoints (json)
+// use these for client-side ui, etc
+// try and do as much as possible server-side
 
-        res.status(status).render("error", {
-            title: "error",
-            path: req.path,
-            status: status,
-            message: message
-        });
-    })
+// app.get("/api/status", (_req, res) => {
+//     res.json({
+//         guilds: client.guilds.cache.size,
+//         users: client.users.cache.size
+//     })
+// })
 
-    app.listen(port, () => log.info(`web interface started on port ${port}`));
-}
+app.use(express.static("public"));
+
+// errors
+
+app.use((req, _res, next) => {
+    const error = new HttpException(404, `${req.path} not found`);
+
+    next(error);
+})
+
+app.use((err: HttpException, req: Request, res: Response, _next: NextFunction) => {
+    // only log errors / 500s
+    if (!err.status || (err.status < 600 && err.status >= 500)) {
+        log.error(err);
+    }
+
+    const status = err.status ?? 500;
+    const message = err.message;
+
+    res.status(status).render("error", {
+        title: "error",
+        path: req.path,
+        status: status,
+        message: message
+    });
+})
+
+app.listen(port, () => log.info(`web interface started on port ${port}`));
