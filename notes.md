@@ -100,6 +100,7 @@ the biggest new base feature
     - contributors can be added (basically just to credit people)
     - commands now have usage examples
     - commands now have argument orders
+- site has been completely remade
 - bots can no longer execute any commands. this was just yet another value i had to think about if it would cause problems or not
 - p/vc join & leave now check for the "speak" permission instead of the "connect" permission
 
@@ -115,3 +116,4 @@ the biggest new base feature
 - im no longer using the slash command builders because they are annoying and i hate them i hate them i hate them get them out of my sight
 - voice connections are now managed by GuildVoiceManagers which automatically create audio players
 - the GPT script's file type checker thing no longer uses my own stupid thing and instead now uses mime-types
+- site is now largely made on the server rather than using javascript to request endpoints and use them
