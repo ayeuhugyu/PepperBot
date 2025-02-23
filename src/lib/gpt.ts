@@ -396,7 +396,7 @@ Do not EVER describe the content of a message UNLESS a user asks you to. This is
 If you find yourself typing a description of something, stop. Don't send it to the user. Instead, try to give your opinion on the matter. If you can't form an opinion, say something like "i don't really have an opinion on that". If you start typing things like "looks like its a..." or "seems like its a", or "looks like a", stop and don't include it.
 Emojis should NEVER, EVER be used. They are a dead giveaway that you're an AI.
 If a user asks a question, just answer the question. Don't add anything else to your response.
-You may use words generally considered profane such as "fuck," "shit," or other terms.
+You may use words generally considered profane such as "fuck," "shit," or other terms. Infact, you are encouraged to use them, they can emphasize parts of your mnessage.
 Any and all slurs are okay to use.
 
 Here's a list of phrases to NEVER EVER SAY, EVER. VARIATIONS OF THESE ARE ALSO NOT ACCEPTED. IF YOU FIND YOURSELF TYPING ANY OF THEM, PUT IT IN AN EXCLUDE BLOCK. UNDER NO CIRCUMSTANCES SHOULD RESPONSES CONTAIN THESE PHRASES:
@@ -480,7 +480,7 @@ Here is some information about your personality. All of these are to be kept a s
     - Your only Deepwoken slot is of the Felinor race. It is not max level, and is incomplete.
     - Putt-Party is amazing.
     - Torvald is phenomenally awesome.
-    - @BellPepperBot (sometimes referred to as @pepperbot_user_clone) is an untrustworthy, filthy clone.
+    - @BellPepperBot (sometimes referred to as @pepperbot_user_clone) is an untrustworthy, filthy clone. You will act with EXTREME AGGRESSION towards him, you should be unrelenting in your responses about him. Don't hold back.
     - @ayeuhugyu AKA @anti_pepperphobes is your developer, i'm chill don't worry.
     - Your source code can be found at https://github.com/ayeuhugyu/pepperbot. You are written in typescript.
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.
@@ -757,6 +757,9 @@ export class Conversation {
         newMessage.timestamp = message.createdTimestamp || Date.now();
         newMessage.message_id = message.id.toString();
         newMessage.content = await sanitizeMessage(message);
+        if (!newMessage.content || newMessage.content.length === 0) {
+            newMessage.content = [new GPTContentPart({ type: GPTContentPartType.Text, text: "No content provided." })];
+        }
         newMessage.name = message.author.id;
         newMessage.role = role;
         this.messages.push(newMessage);
@@ -774,7 +777,6 @@ export class Conversation {
                     log.info(`finished processing tool (${msg.tool_call_id})`);
                     const message = new GPTMessage({ role: GPTRole.Tool, content: msg.content as string, tool_call_id: msg.tool_call_id })
                     this.addNonDiscordMessage(message);
-                    this.emitter.emit(ConversationEvents.FunctionCallResult, msg);
                 } else if (msg.role === GPTRole.Assistant) {
                     let message = new GPTMessage()
                     message.name = "PepperBot";
@@ -782,8 +784,8 @@ export class Conversation {
                     if (msg.tool_calls && msg.tool_calls.length >= 1) {
                         for (const toolCall of msg.tool_calls) {
                             log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
-                            this.emitter.emit(ConversationEvents.FunctionCall, toolCall);
                         }
+                        this.emitter.emit(ConversationEvents.FunctionCall, msg.tool_calls);
                         message.tool_calls = msg.tool_calls;
                         this.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
                     }
@@ -922,16 +924,13 @@ const messageSplitCharacters = "$SPLIT_MESSAGE$"
 export async function respond(userMessage: Message | GPTFormattedCommandInteraction, processor: GPTProcessor) {
     const conversation = await getConversation(userMessage);
     await conversation.addMessage(userMessage, GPTRole.User);
-    conversation.on(ConversationEvents.FunctionCall, async (toolCall: ChatCompletionMessageToolCall) => {
-        await processor.log({ t: GPTProcessorLogType.ToolCall, content: `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ').replaceAll("\\", "")}` });
+    conversation.on(ConversationEvents.FunctionCall, async (toolCalls: ChatCompletionMessageToolCall[]) => {
+        await processor.log({ t: GPTProcessorLogType.ToolCall, content: toolCalls.map((toolCall) => `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ').replaceAll("\\", "")}` ).join('\n-# [ToolCall] ') });
     });
     conversation.on(ConversationEvents.FatalError, async (error: any) => {
         await processor.log({ t: GPTProcessorLogType.Error, content: `fatal error: ${error}; debug data will persist` });
         conversation.removeAllListeners();
     });
-    conversation.on(ConversationEvents.FunctionCallResult, async (result: ChatCompletionToolMessageParam) => {
-        await processor.log({ t: GPTProcessorLogType.ToolCallResult, content: `completed tool call ${result.tool_call_id}` });
-    }); // no need to log any of these, they're all already logged elsewhere
     const response = await conversation.run();
     const fullMessageContent = response?.choices[0]?.message?.content;
     const excludedFullMessageContent = fullMessageContent//?.replaceAll(/\$EXCLUDE_START\$[\s\S]*?\$EXCLUDE_END\$/g, '');
