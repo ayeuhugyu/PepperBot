@@ -529,11 +529,11 @@ export class GPTContentPart {
     constructor ({ type = GPTContentPartType.Text, text, image_url }: { type?: GPTContentPartType, text?: string, image_url?: string } = {}) {
         this.type = type;
         if (type === GPTContentPartType.Text) { // if type is text, set text to text or "No text provided."
-            this.text = text || "No text provided.";
+            this.text = text?.slice(0, 1048576) || "No text provided.";
             this.image_url = undefined;
         } else if (type === GPTContentPartType.Image) { // if type is image, set image_url to image_url or undefined
             this.text = undefined;
-            this.image_url = image_url ? { url: image_url } : undefined;
+            this.image_url = image_url?.slice(0, 1048576) ? { url: image_url } : undefined;
         } else { // if type is not text or image, log an error
             log.error(`Invalid type provided: ${type}`);
         }
@@ -635,7 +635,7 @@ async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction
                 contentParts.push(new GPTContentPart({ type: GPTContentPartType.Image, image_url: attachment.url }));
             } else if (fileType === ("text")) {
                 const text = await fetch(attachment.url).then((response) => response.text());
-                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name}: ${text}` }));
+                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name}: ${text.slice(0, 1048500)}` }));
             } else if (fileType.startsWith("other: ")) {
                 contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name} is of type ${fileType.substring(7)} and cannot be processed.` }));
             }
