@@ -110,7 +110,7 @@ const get = new Command({
         category: CommandCategory.Info,
         pipable_to: ['grep'],
         aliases: ['content'],
-        normal_aliases: [],
+        root_aliases: [],
         options: [
             new CommandOption({
                 name: 'content',

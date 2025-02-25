@@ -256,7 +256,7 @@ const clone = new Command({
         category: CommandCategory.AI,
         pipable_to: [],
         aliases: ["copy"],
-        normal_aliases: [],
+        root_aliases: [],
         options: [
             new CommandOption({
                 name: 'content',
@@ -318,7 +318,7 @@ const use = new Command({
         long_description: 'changes which prompt you are using',
         category: CommandCategory.AI,
         pipable_to: [],
-        normal_aliases: ['useprompt'],
+        root_aliases: ['useprompt'],
         options: [
             new CommandOption({
                 name: 'content',
@@ -362,7 +362,7 @@ const set = new Command({
         category: CommandCategory.AI,
         pipable_to: [],
         aliases: ['content'],
-        normal_aliases: ['setprompt'],
+        root_aliases: ['setprompt'],
         options: [
             new CommandOption({
                 name: 'content',

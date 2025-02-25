@@ -34,7 +34,7 @@ statistics
 update manager - add all past updates
 
 things to fix:
-normal aliases
+root aliases
 piping allowlist for subcommands not ignoring parent's
 
 LATEST UPDATE
@@ -117,3 +117,4 @@ the biggest new base feature
 - voice connections are now managed by GuildVoiceManagers which automatically create audio players
 - the GPT script's file type checker thing no longer uses my own stupid thing and instead now uses mime-types
 - site is now largely made on the server rather than using javascript to request endpoints and use them
+- normal aliases have been renamed to root aliases

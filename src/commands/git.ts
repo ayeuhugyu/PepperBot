@@ -11,10 +11,10 @@ const gitlog = new Command({
         long_description: 'creates a graph of all commits to the github repository',
         category: CommandCategory.Info,
         pipable_to: ['grep'],
-        normal_aliases: ['gitlog'],
+        root_aliases: ['gitlog'],
         subcommands: [],
         example_usage: "p/git log",
-    }, 
+    },
     async function getArguments () {
         return undefined;
     },
@@ -50,7 +50,7 @@ const command = new Command(
         ],
         example_usage: "p/git",
         aliases: ["github", "openpepper", "repo"]
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ message, guildConfig, args }) {
         const content = (args?.get("subcommand") ? `${args.get("subcommand")} isnt a valid subcommand. anyways, ` : "") + "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/";

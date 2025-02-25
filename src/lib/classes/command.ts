@@ -132,7 +132,7 @@ export class CommandOption {
     long_description: string = "no description"
     deployed: boolean = true;
     long_requirements: string | undefined = undefined; // more detailed version of the "required" option, allows you to write stuff like "required if b is undefined"
-    validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
+    validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS!
 
     constructor(data: Partial<CommandOption>) {
         if (!data.name || !data.description) {
@@ -174,8 +174,8 @@ function defaultCommandFunction({ command = "" }) {
 function isUserAllowed(message: Message | FormattedCommandInteraction, access: CommandAccess): boolean {
     const { whitelist, blacklist } = access;
     const { author, member, channel, guild } = message;
-    const userRoles = member?.roles instanceof GuildMemberRoleManager 
-        ? member.roles.cache.map(role => role.id) 
+    const userRoles = member?.roles instanceof GuildMemberRoleManager
+        ? member.roles.cache.map(role => role.id)
         : [];
     const guildId = guild?.id || "";
     const channelId = channel?.id || "";
@@ -206,7 +206,7 @@ export class Command {
     contexts: InteractionContextType[] = [ InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel ];
     /* ↑↑↑ discords shit ↓↓↓ my shit */
     aliases: string[] = [];
-    normal_aliases: string[] = [];
+    root_aliases: string[] = [];
     long_description: string = "no description";
     argument_order: string = ""; // this is not an array because some commands dont require argument orders or have Strange Ones, but the general convention is to just list the arguments in the order the getArguments function looks for them and then put <> around it, ex. <arg1> <arg2>
     example_usage: string | string[] = ""; // example usage so its easy to know how to use it
@@ -218,7 +218,7 @@ export class Command {
     pipable_to: string[] = []; // array of command names which output may be piped to
     contributors: Contributor[] = [{ name: "ayeuhugyu", userid: "440163494529073152"}];
     subcommand_argument: string = "subcommand"
-    validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS! 
+    validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS!
     category: CommandCategory = CommandCategory.Other;
     _execute_raw: ExecuteFunction = defaultCommandFunction;
     get_arguments: GetArgumentsFunction = defaultCommandFunction;
@@ -244,7 +244,7 @@ export class Command {
         if (this.validation_errors.length > 0) {
             return;
         }
-        
+
         this._execute_raw = execute;
         this.get_arguments = getArguments;
         // #region COMMAND EXECUTION
@@ -256,12 +256,12 @@ export class Command {
                 log.error("message is undefined in command execution");
                 return;
             }
-        
+
             // Determine input type
             if (input.input_type === undefined) {
                 input.input_type = message instanceof Message ? InputType.Message : InputType.Interaction;
             }
-        
+
             // Access Check
             if (!isUserAllowed(message, this.access)) {
                 const accessReply = "access check failed: " +
@@ -273,21 +273,21 @@ export class Command {
                 action.reply(message, { content: accessReply, ephemeral: true });
                 return;
             }
-        
+
             // Input Type Check
             if (!this.input_types.includes(input.input_type)) {
                 log.info(`invalid input type ${input.input_type} for command ${this.name}`);
                 action.reply(message, { content: `input type ${input.input_type} is not enabled for this command`, ephemeral: true });
                 return;
             }
-        
+
             // Context Check: Only allow if guild context is enabled
             if (!this.contexts.includes(InteractionContextType.Guild) && message.guild) {
                 log.info(`guild context is not enabled for command ${this.name}`);
                 action.reply(message, { content: "this command is not enabled in guilds", ephemeral: true });
                 return;
             }
-        
+
             // Bot Admin Check
             input.bot_is_admin = !!message.guild?.members.me?.permissions.has(PermissionFlagsBits.Administrator);
             if (!this.allow_external_guild && !input.bot_is_admin) {
@@ -295,7 +295,7 @@ export class Command {
                 action.reply(message, { content: "this command is not enabled in guilds where i don't have administrator", ephemeral: true });
                 return;
             }
-        
+
             // Forced Ephemeral: using the provided code snippet
             let forced_ephemeral = false;
             if ('memberPermissions' in input.message! && input.message.memberPermissions) {
@@ -303,7 +303,7 @@ export class Command {
                     input.message.memberPermissions.has(PermissionFlagsBits.UseExternalApps) &&
                     !input.message.client.guilds.cache.has(input.message!.guildId || "");
             }
-        
+
             // Build final command input
             const finalCommandInput: CommandInput = {
                 message,
@@ -318,7 +318,7 @@ export class Command {
                 self: this,
                 forced_ephemeral,
             };
-        
+
             // Retrieve arguments if needed
             if (!finalCommandInput.args) {
                 if (finalCommandInput.input_type === InputType.Interaction) {
@@ -328,7 +328,7 @@ export class Command {
                     log.info(`fetched arguments for command ${this.name}`);
                 }
             }
-        
+
             // Subcommand handling
             if (finalCommandInput.args instanceof Collection && finalCommandInput.args.get(this.subcommand_argument)) {
                 const subcommandName = finalCommandInput.args.get(this.subcommand_argument);
@@ -347,7 +347,7 @@ export class Command {
                     return subcommandResponse;
                 }
             }
-        
+
             // Execute main command
             const response = await this._execute_raw(finalCommandInput);
             log.info(`executed command p/${this.name} in ${(performance.now() - start).toFixed(3)}ms`);

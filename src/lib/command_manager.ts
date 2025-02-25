@@ -7,14 +7,14 @@ export class CommandManager {
     commands = {
         base: new Collection<string, Command>(),
         aliases: new Collection<string, Command>(),
-        normal_aliases: new Collection<string, Command>()
+        root_aliases: new Collection<string, Command>()
     };
 
     get(name: string): Command | undefined {
         return (
             this.commands.base.get(name) ||
             this.commands.aliases.get(name) ||
-            this.commands.normal_aliases.get(name)
+            this.commands.root_aliases.get(name)
         );
     }
 
@@ -27,7 +27,7 @@ export class CommandManager {
             .filter((file) => file.endsWith(".ts"));
 
         Promise.all(commandFiles.map(async (file) => {
-            
+
         }));
 
         for (const file of commandFiles) {
@@ -78,15 +78,15 @@ export class CommandManager {
                 }
             }
 
-            // Cache normal aliases for subcommands (todo: support subcommands of subcommands)
+            // Cache root aliases for subcommands (todo: support subcommands of subcommands)
             if (cmd.subcommands && cmd.subcommands.length > 0) {
                 for (const subcommand of cmd.subcommands) {
-                    for (const alias of subcommand.normal_aliases) {
-                        if (this.commands.normal_aliases.has(alias) || this.commands.base.has(alias)) {
+                    for (const alias of subcommand.root_aliases) {
+                        if (this.commands.root_aliases.has(alias) || this.commands.base.has(alias)) {
                             log.error(`duplicate normal alias ${alias} for command ${cmd.name}; skipping alias`);
                             continue;
                         }
-                        this.commands.normal_aliases.set(alias, cmd);
+                        this.commands.root_aliases.set(alias, cmd);
                     }
                 }
             }
