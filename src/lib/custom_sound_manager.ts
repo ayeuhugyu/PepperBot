@@ -76,7 +76,7 @@ export function addSound(guildId: string | null, userId: string | null, url: str
     });
 }
 
-export async function getSound(name: string): Promise<CustomSound | null> {
+export async function getSoundNoAutocorrect(name: string): Promise<CustomSound | null> {
     return await database("sounds")
         .where({ name })
         .first()
@@ -86,6 +86,22 @@ export async function getSound(name: string): Promise<CustomSound | null> {
             }
             return new CustomSound(data);
         });
+}
+
+export async function getSound(name: string): Promise<CustomSound | null> {
+    let sound = await getSoundNoAutocorrect(fixFileName(name));
+    if (!sound) {
+        sound = await database("sounds")
+            .where("name", "like", `%${name}%`)
+            .first()
+            .then((data) => {
+                if (!data) {
+                    return null;
+                }
+                return new CustomSound(data);
+            });
+    }
+    return sound;
 }
 
 export async function listSounds() {
