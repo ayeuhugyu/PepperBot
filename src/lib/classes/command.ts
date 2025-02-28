@@ -4,7 +4,7 @@ import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitFie
 import * as contributors from "../../../constants/contributors.json";
 import * as action from "../discord_action";
 import { Channel } from "diagnostics_channel";
-import { InvokerType, SubcommandDeploymentApproach, CommandCategory, CommandOptionType } from "./command_enums";
+import { InvokerType, SubcommandDeploymentApproach, CommandCategory, CommandOptionType, CommandEntryType } from "./command_enums";
 
 let guildConfigManager
 if (!guildConfigManager) { // avoids circular dependency
@@ -58,7 +58,8 @@ interface ExtraCommandInputData {
     alias_used?: string;
     will_be_piped: boolean,
     piped_data?: PipedData,
-    previous_response?: CommandResponse
+    previous_response?: CommandResponse,
+    command_entry_type?: CommandEntryType,
 }
 
 export class CommandInput<
@@ -102,6 +103,7 @@ export class CommandInput<
         ) as I;
 
         this.command_name_used = extra.alias_used ?? command.name;
+        this.command_entry_type = extra.command_entry_type ?? CommandEntryType.Command;
         this.message = (invoker instanceof Message ? invoker : null) as I extends InvokerType.Message ? Message<true> : null;
         this.interaction = (invoker instanceof Message ? null : invoker) as I extends InvokerType.Interaction ? FormattedCommandInteraction : null;
 
@@ -136,6 +138,8 @@ export class CommandInput<
     previous_response: CommandResponse | undefined;
     piped_data?: PipedData;
     will_be_piped!: boolean;
+
+    command_entry_type: CommandEntryType;
 
     /**
      * If the bot isn't in the guild / the guild is undefined, and the member does not have permissions to use external apps.
@@ -349,6 +353,8 @@ export class Command<
     subcommand_argument = "subcommand"
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS!
     category: CommandCategory = CommandCategory.Other;
+    is_sub_command: boolean = false;
+    parent_command: string | undefined = undefined;
     execute: CommandFunction<F, P, I> = defaultCommandFunction as never;
 
     toJSON(): Record<string, unknown> {
@@ -408,9 +414,15 @@ export class Command<
                 break
             }
         }
+        if (this.subcommands?.list) {
+            this.subcommands.list.forEach(subcommand => {
+                subcommand.is_sub_command = true;
+                subcommand.parent_command = this.name;
+            });
+        }
         // #region COMMAND EXECUTION
         this.execute = async (input: CommandInput<F, P, I, false>) => {
-            log.info("executing command p/" + this.name + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
+            log.info("executing command p/" + self.name + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
             const start = performance.now();
             const { invoker } = input;
             if (!invoker) return log.error("invoker is undefined in command execution");
@@ -470,10 +482,14 @@ export class Command<
                 }
 
                 if (input.is_message()) {
+                    input.invoker.content = input.invoker.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this makes get arguments functions easily standardizable
+                    input.message.content = input.message.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this will not affect subcommands executed with root aliases due to the space, this is intentional though
+                    console.log(input.args[this.subcommand_argument])
                     input.enrich(subcommand.parse_arguments?.(input) ?? {})
                 }
 
                 log.info("executing subcommand p/" + this.name + " " + subcommand.name);
+
                 const response = await subcommand.execute(input);
                 log.info("executed subcommand p/" + this.name + " " + subcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
                 return response;

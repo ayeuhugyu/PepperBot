@@ -76,3 +76,24 @@ export namespace CommandOptionType {
 
     export type ChoicesUsable = Numeric | ApplicationCommandOptionType.String
 }
+
+export const enum CommandEntryType {
+    /**
+     * A non-aliased identifier for a command; the primary name of the command.
+     */
+    Command = "command",
+
+    /**
+     * An alias that points to a command.
+     */
+    CommandAlias = "command alias",
+
+    /**
+     * An "subcommand root alias" refers to an alias which points to a command's subcommand.
+     *
+     * For example, if you had a `p/warn` command that had a subcommand of `view <user>` to view warnings of a user,
+     * you could add a root alias of `p/warns` to the `view` subcommand so that `p/warns <user>` would be equivalent
+     * to `p/warn view <user>`.
+     */
+    SubcommandRootAlias = "subcommand root alias",
+}

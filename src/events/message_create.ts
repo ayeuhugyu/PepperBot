@@ -4,6 +4,7 @@ import { fetchGuildConfig } from "../lib/guild_config_manager";
 import { Command, CommandInput, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { respond, GPTProcessor } from "../lib/gpt";
+import { CommandEntryType } from "../lib/classes/command_enums";
 
 async function gptHandler(message: Message) {
     // Only process if the bot is mentioned.
@@ -84,7 +85,14 @@ async function commandHandler(message: Message<true>) {
         if (!message.content.startsWith(prefix)) {
             message.content = `${prefix}${message.content.replaceAll("\\|", "|")}`;
         }
+        const commandEntryType = commands.getEntryType(provided_name);
+        let alias = undefined;
+        if (commandEntryType === CommandEntryType.CommandAlias || commandEntryType === CommandEntryType.SubcommandRootAlias) {
+            alias = provided_name;
+        }
         const input: CommandInput = await CommandInput.new(message, command, undefined!, {
+            command_entry_type: commandEntryType,
+            alias_used: alias,
             previous_response,
             will_be_piped: (segments.length > 1) && (commandIndex < segments.length - 1),
         });
