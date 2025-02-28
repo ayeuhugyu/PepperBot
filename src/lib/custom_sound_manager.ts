@@ -1,6 +1,6 @@
 import stream from "stream";
 import database from "./data_manager";
-import { fixFileName } from "./user_files_helpers";
+import { fixFileName } from "./attachment_manager";
 import fs from "fs-extra";
 
 export interface dbSound {

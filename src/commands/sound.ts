@@ -3,7 +3,7 @@ import { Command, CommandOption, CommandResponse } from "../lib/classes/command"
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
-import { fixFileName } from "../lib/user_files_helpers";
+import { fixFileName } from "../lib/attachment_manager";
 import * as voice from "../lib/voice";
 import { CommandCategory, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 
