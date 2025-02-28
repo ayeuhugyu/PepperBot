@@ -1,6 +1,6 @@
-import { GuildMember, StageChannel, VoiceChannel } from "discord.js";
+import { GuildMember, StageChannel, VoiceChannel, VoiceState } from "discord.js";
 import * as log from "./log"
-import { AudioPlayer, AudioResource, VoiceConnection, joinVoiceChannel as jvc, createAudioResource as createResource } from "@discordjs/voice";
+import { AudioPlayer, AudioResource, VoiceConnection, joinVoiceChannel as jvc, createAudioResource as createResource, VoiceConnectionState, VoiceConnectionStatus } from "@discordjs/voice";
 import fs from "fs";
 
 let voiceManagers: GuildVoiceManager[] = [];
@@ -14,6 +14,24 @@ export class GuildVoiceManager {
         this.guild = guild;
         voiceManagers.push(this);
     }
+
+    private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
+        if (
+            (oldState.channelId === this.channel?.id) &&
+            (newState.channelId !== this.channel?.id) &&
+            (this.channel?.members.size === 1) &&
+            (this.channel?.members.get(this.channel.client.user.id))
+        ) {
+            log.info(`leaving voice channel ${this.channel?.id} in guild ${this.guild} due to no members remaining`);
+            this.channel.send("no members remain in voice channel; leaving")
+            this.destroy();
+        }
+    }
+    setConnection(connection: VoiceConnection) {
+        this.connection = connection;
+        this.connection.subscribe(this.audio_player);
+        this.channel?.client.on('voiceStateUpdate', this.onVoiceStateUpdate.bind(this));
+    }
     play(audio: AudioResource) {
         this.audio_player.play(audio);
     }
@@ -23,6 +41,9 @@ export class GuildVoiceManager {
     destroy() {
         this.audio_player.stop();
         this.connection?.destroy();
+        this.connection = null;
+        this.channel?.client.off('voiceStateUpdate', this.onVoiceStateUpdate.bind(this));
+        this.channel = null;
         voiceManagers = voiceManagers.filter(voiceManager => voiceManager.guild !== this.guild);
     }
 }
@@ -37,12 +58,11 @@ export async function joinVoiceChannel(channel: VoiceChannel | StageChannel) {
         voiceManager = new GuildVoiceManager(channel.guild.id);
     }
     voiceManager.channel = channel;
-    voiceManager.connection = await jvc({
+    voiceManager.setConnection(await jvc({
         channelId: channel.id,
         guildId: channel.guild.id,
         adapterCreator: channel.guild.voiceAdapterCreator,
-    });
-    voiceManager.connection.subscribe(voiceManager.audio_player);
+    }));
     log.info(`joined voice channel ${channel.id} in guild ${channel.guild.id}`);
     return voiceManager;
 }
