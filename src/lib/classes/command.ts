@@ -484,7 +484,6 @@ export class Command<
                 if (input.is_message()) {
                     input.invoker.content = input.invoker.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this makes get arguments functions easily standardizable
                     input.message.content = input.message.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this will not affect subcommands executed with root aliases due to the space, this is intentional though
-                    console.log(input.args[this.subcommand_argument])
                     input.enrich(subcommand.parse_arguments?.(input) ?? {})
                 }
 
