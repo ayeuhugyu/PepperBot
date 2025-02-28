@@ -1,5 +1,5 @@
 import * as discord from "discord.js";
-import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse, InputType } from "../lib/classes/command";
+import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import fsExtra from "fs-extra";
 import fs from "node:fs";
@@ -8,6 +8,7 @@ import shell from "shelljs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import * as util from "util";
 import * as gpt from "../lib/gpt";
+import { CommandCategory, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 
 const modules = {
     discord,
@@ -33,24 +34,23 @@ const command = new Command(
                 required: true
             })
         ],
-        input_types: [InputType.Message],
-        deployed: false,
+        input_types: [InvokerType.Message],
         access: new CommandAccess({
             users: ["440163494529073152", "406246384409378816"]
         }, {}),
         pipable_to: ['grep'],
         example_usage: "p/eval console.log(\"hello world\")",
         aliases: ["evaluate"]
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["code"]),
     async function execute ({ message, args }) {
-        if (!args?.get("code")) {
+        if (!args.code) {
             action.reply(message, "tf u want me to eval");
             return new CommandResponse({ pipe_data: { grep_text: "tf u want me to eval" }});
         }
         try {
             const result = await (async function () {
-                return await eval(args.get("code"));
+                return await eval(args.code);
             })();
             if (result !== undefined) {
                 action.reply(message, `result: \`\`\`${result}\`\`\``);

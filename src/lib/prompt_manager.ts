@@ -1,4 +1,5 @@
 import database from "./data_manager";
+import officialPrompts from "../../constants/official_prompts.json" assert { type: "json" };
 
 export interface PromptAuthor {
     id: string;
@@ -145,5 +146,7 @@ export async function removePrompt(name: string, user: string) {
     return await database("prompts").where({ author_id: user, name }).del();
 }
 
-const officialPromptsModule = await import("./official_prompts"); // has to be done like this to avoid race conditions
-officialPromptsModule.writeOfficialPrompts();
+(officialPrompts as dbPrompt[]).forEach((officialPrompt: dbPrompt) => {
+    const prompt = new Prompt(officialPrompt);
+    if (!getPrompt(prompt.name, prompt.author.id)) writePrompt(prompt);
+});

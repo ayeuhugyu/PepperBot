@@ -1,103 +1,160 @@
-import { Collection } from "discord.js";
+import { REST, Routes, Collection } from "discord.js";
 import fs from "fs";
-import { Command, ValidationCheck } from "./classes/command";
 import * as log from "./log";
+import { client } from "../bot";
+import { Command, ValidationCheck } from "./classes/command";
+import { InvokerType } from "./classes/command_enums";
+import { inspect } from "util";
+
+const enum CommandEntryType {
+    /**
+     * A non-aliased identifier for a command; the primary name of the command.
+     */
+    Command = "command",
+
+    /**
+     * An alias that points to a command.
+     */
+    CommandAlias = "command alias",
+
+    /**
+     * An "subcommand root alias" refers to an alias which points to a command's subcommand.
+     *
+     * For example, if you had a `p/warn` command that had a subcommand of `view <user>` to view warnings of a user,
+     * you could add a root alias of `p/warns` to the `view` subcommand so that `p/warns <user>` would be equivalent
+     * to `p/warn view <user>`.
+     */
+    SubcommandRootAlias = "subcommand root alias",
+}
+
+/**
+ * Greater indices have greater priority; that means the last element is the most prioritized.
+ */
+const COMMAND_ENTRY_TYPE_ORDERING = Object.seal([
+    CommandEntryType.SubcommandRootAlias,
+    CommandEntryType.CommandAlias,
+    CommandEntryType.Command,
+] as const);
+
+interface CommandEntry {
+    command: Command,
+    type: CommandEntryType,
+    name: string,
+}
 
 export class CommandManager {
-    commands = {
-        base: new Collection<string, Command>(),
-        aliases: new Collection<string, Command>(),
-        root_aliases: new Collection<string, Command>()
+    mappings = new Collection<string, CommandEntry>();
+    get(name: string): Command | undefined {
+        return this.mappings.get(name)?.command
     };
 
-    get(name: string): Command | undefined {
-        return (
-            this.commands.base.get(name) ||
-            this.commands.aliases.get(name) ||
-            this.commands.root_aliases.get(name)
+    async load() {
+        if (this.mappings.size > 0) return; // avoids circular dependency
+        const start = performance.now();
+        const files = fs
+            .readdirSync("src/commands")
+            .filter(file => file.endsWith(".ts"));
+
+        for (const file of files) {
+            const start = performance.now();
+            let command
+            try {
+                command = (await import(`../commands/${file}`))?.default as unknown;
+            } catch (e) {
+                log.error(`failed to load command ${file}: `);
+                log.error(e);
+                continue;
+            }
+            if (!command) { log.error(`command ${file} has no default export`); continue; }
+            if (!(command instanceof Command)) { log.error(`command ${file} has a default export that isn't a command`); continue; }
+
+            if (command.validation_errors.length > 0 && command.validation_errors.some((error: ValidationCheck) => error.unrecoverable)) {
+                log.error(`unrecoverable validation errors found in ${command.name}; skipping cache; errors: ${command.validation_errors.map((error: ValidationCheck) => error.message).join(", ")}`);
+                continue;
+            }
+
+            this.assign(command, CommandEntryType.Command, command.name)
+
+            for (const alias of command.aliases) {
+                this.assign(command, CommandEntryType.CommandAlias, alias)
+            }
+
+            const subcommandDescendants = Array.from<Command>(command.subcommands?.list ?? []); // shallow clone so deeper instances can be appended as a queue
+
+            while (subcommandDescendants.length !== 0) {
+                const subcommand = subcommandDescendants.pop()!;
+
+                for (const alias of subcommand.root_aliases) {
+                    this.assign(subcommand, CommandEntryType.SubcommandRootAlias, alias);
+                }
+
+                subcommandDescendants.push(...subcommand.subcommands?.list ?? []);
+            }
+
+            log.info(`loaded command ${command.name} in ${(performance.now() - start).toFixed(3)}ms`);
+        }
+
+        log.info(`loaded all commands in ${(performance.now() - start).toFixed(3)}ms`);
+    }
+
+    /**
+     * @param target target guild to deploy to. if undefined, deploy globally
+     */
+    async deploy(target?: string) {
+        const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
+        const json = Array.from(this.mappings.values())
+            .filter(({ command, type }) => type === CommandEntryType.Command && command.input_types.includes(InvokerType.Interaction))
+            .map(({ command }) => command.toJSON())
+
+        const route = target
+            ? Routes.applicationGuildCommands
+            : Routes.applicationCommands;
+
+        await rest.put(
+            route(client.user!.id, target!),
+            { body: json },
         );
     }
 
-    async getCommands() {
-        if (this.commands.base.size > 0) return; // avoids circular dependency
+    /**
+     * @param target target guild to deploy to. if undefined, deploy globally
+     */
+    async undeploy(target?: string) {
+        const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
+        const route = target
+            ? Routes.applicationGuildCommands
+            : Routes.applicationCommands;
 
-        const startOfAll = performance.now();
-        const commandFiles = fs
-            .readdirSync("src/commands")
-            .filter((file) => file.endsWith(".ts"));
+        await rest.put(
+            route(client.user!.id, target!),
+            { body: [] },
+        );
+    }
 
-        Promise.all(commandFiles.map(async (file) => {
-
-        }));
-
-        for (const file of commandFiles) {
-            const start = performance.now();
-            let imported;
-            try {
-                imported = await import(`../commands/${file}`);
-            } catch (error) {
-                log.error(`failed to import ${file}: ${error}`);
-                continue;
-            }
-
-            if (!imported.default) {
-                log.error(`command ${file} has no default export`);
-                continue;
-            }
-
-            const cmd: Command = imported.default;
-
-            if (this.commands.base.has(cmd.name)) {
-                log.error(`duplicate command name ${cmd.name}; skipping cache`);
-                continue;
-            }
-
-            if (
-                cmd.validation_errors.length > 0 &&
-                cmd.validation_errors.some((error: ValidationCheck) => error.unrecoverable)
-            ) {
-                log.error(
-                    `unrecoverable validation errors found in ${cmd.name}; skipping cache; errors: ${cmd.validation_errors
-                        .map((error: ValidationCheck) => error.message)
-                        .join(", ")}`
+    /**
+     * @returns whether assignment was successful
+     */
+    private assign(command: Command, type: CommandEntryType, name: string) {
+        const existing = this.mappings.get(name);
+        if (existing) {
+            const priority = COMMAND_ENTRY_TYPE_ORDERING.indexOf(type);
+            const priorityExisting = COMMAND_ENTRY_TYPE_ORDERING.indexOf(existing.type);
+            const lesserPriority = priorityExisting > priority;
+            if (lesserPriority || (priorityExisting === priority)) {
+                console.error(
+                    `cannot add a ${type} w/ name "${name}" because it already exists as a ${existing.type}` +
+                    (lesserPriority ? `, which takes priority.` : ".") + " keeping previous assignment"
                 );
-                continue;
+                return false;
             }
+        };
 
-            // Cache the command
-            this.commands.base.set(cmd.name, cmd);
-
-            // Cache any aliases
-            if (cmd.aliases) {
-                for (const alias of cmd.aliases) {
-                    if (this.commands.aliases.has(alias)) {
-                        log.error(`duplicate alias ${alias} for command ${cmd.name}; skipping alias`);
-                        continue;
-                    }
-                    this.commands.aliases.set(alias, cmd);
-                }
-            }
-
-            // Cache root aliases for subcommands (todo: support subcommands of subcommands)
-            if (cmd.subcommands && cmd.subcommands.length > 0) {
-                for (const subcommand of cmd.subcommands) {
-                    for (const alias of subcommand.root_aliases) {
-                        if (this.commands.root_aliases.has(alias) || this.commands.base.has(alias)) {
-                            log.error(`duplicate normal alias ${alias} for command ${cmd.name}; skipping alias`);
-                            continue;
-                        }
-                        this.commands.root_aliases.set(alias, cmd);
-                    }
-                }
-            }
-
-            log.info(`cached command ${cmd.name} in ${(performance.now() - start).toFixed(3)}ms`);
-        }
-        log.info(`cached all commands in ${(performance.now() - startOfAll).toFixed(3)}ms`);
+        this.mappings.set(name, { command, type, name });
+        return true
     }
 }
 
 const manager = new CommandManager();
-await manager.getCommands();
+await manager.load();
 
 export default manager;

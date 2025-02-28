@@ -1,5 +1,6 @@
-import { Collection, Message } from "discord.js";
-import { CommandInput } from "./classes/command";
+import { Attachment, Collection, Message } from "discord.js";
+import { CommandInput, CommandInvoker, GetArgumentsFunction } from "./classes/command";
+import { InvokerType } from "./classes/command_enums";
 
 export enum GetArgumentsTemplateType {
     DoNothing = "do_nothing",
@@ -9,50 +10,50 @@ export enum GetArgumentsTemplateType {
     FirstAttachment = "first_attachment"
 }
 
-export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, argsToGet?: string[]): ((input: CommandInput) => Collection<string, any>)  {
+export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, argsToGet?: string[]): GetArgumentsFunction<Record<string, any>, InvokerType.Message>  {
     switch (templateType) {
         case GetArgumentsTemplateType.DoNothing:
-            return () => new Collection<string, any>();
+            return () => ({});
         case GetArgumentsTemplateType.SingleStringFirstSpace:
             if (!argsToGet) throw new Error("argsToGet must be defined for SingleStringFirstSpace template");
-            return ({ message, self, guildConfig }) => {
-                    message = message as Message;
-                    const args = new Collection<string, any>();
-                    const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-                    const arg = message.content.slice(commandLength)?.trim()?.split(" ")[0]?.trim();
-                    args.set(argsToGet[0], arg);
+            return ({ invoker, command_name_used, guild_config }) => {
+                    invoker = invoker as CommandInvoker<InvokerType.Message>;
+                    const args: Record<string, string | undefined> = {};
+                    const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+                    const arg = invoker.content.slice(commandLength)?.trim()?.split(" ")[0]?.trim();
+                    args[argsToGet[0]] = arg;
                     return args;
                 }
         case GetArgumentsTemplateType.SingleStringWholeMessage:
             if (!argsToGet) throw new Error("argsToGet must be defined for SingleStringWholeMessage template");
-            return ({ message, self, guildConfig }) => {
-                    message = message as Message;
-                    const args = new Collection<string, any>();
-                    const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-                    const arg = message.content.slice(commandLength)?.trim();
-                    args.set(argsToGet[0], arg);
+            return ({ invoker, command_name_used, guild_config }) => {
+                    invoker = invoker as CommandInvoker<InvokerType.Message>;
+                    const args: Record<string, string | undefined> = {};
+                    const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+                    const arg = invoker.content.slice(commandLength)?.trim();
+                    args[argsToGet[0]] = arg;
                     return args;
                 }
         case GetArgumentsTemplateType.TwoStringFirstSpaceSecondWholeMessage:
             if (!argsToGet) throw new Error("argsToGet must be defined for TwoStringFirstSpaceSecondWholeMessage template");
-            return ({ message, self, guildConfig }) => {
-                    message = message as Message;
-                    const args = new Collection<string, any>();
-                    const commandLength = `${guildConfig.other.prefix}${self.name}`.length;
-                    const split = message.content.slice(commandLength)?.trim()?.split(" ");
+            return ({ invoker, command_name_used, guild_config }) => {
+                    invoker = invoker as CommandInvoker<InvokerType.Message>;
+                    const args: Record<string, string | undefined> = {};
+                    const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+                    const split = invoker.content.slice(commandLength)?.trim()?.split(" ");
                     const firstArg = split[0];
                     split.shift();
                     const secondArg = split.join(" ");
-                    args.set(argsToGet[0], firstArg);
-                    args.set(argsToGet[1], secondArg);
+                    args[argsToGet[0]] = firstArg;
+                    args[argsToGet[1]] = secondArg;
                     return args;
                 }
         case GetArgumentsTemplateType.FirstAttachment:
             if (!argsToGet) throw new Error("argsToGet must be defined for FirstAttachment template");
-            return ({ message }) => {
-                    message = message as Message;
-                    const args = new Collection<string, any>();
-                    args.set(argsToGet[0], message.attachments.first());
+            return ({ invoker }) => {
+                    invoker = invoker as CommandInvoker<InvokerType.Message>;
+                    const args: Record<string, Attachment | undefined> = {};
+                    args[argsToGet[0]] = invoker.attachments.first();
                     return args;
                 }
     }

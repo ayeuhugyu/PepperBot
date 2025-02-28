@@ -1,5 +1,7 @@
-import { Command, CommandCategory, CommandResponse } from "../lib/classes/command";
+import { Command, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
+import { CommandCategory } from "../lib/classes/command_enums";
+
 
 const command = new Command(
     {
@@ -10,13 +12,13 @@ const command = new Command(
         pipable_to: ['test'],
         example_usage: "p/test",
         aliases: ["ping"],
-    }, 
+    },
     async function getArguments () {
         return undefined;
     },
-    async function execute ({ message, piped_data, will_be_piped, guildConfig }) {
+    async function execute ({ invoker, piped_data, will_be_piped, guild_config }) {
         const start = performance.now();
-        const sent = await action.reply(message, { content: "awaiting response...", ephemeral: guildConfig.other.use_ephemeral_replies });
+        const sent = await action.reply(invoker, { content: "awaiting response...", ephemeral: guild_config.other.use_ephemeral_replies });
         if (!sent) return;
         const end = performance.now();
         if (will_be_piped) {

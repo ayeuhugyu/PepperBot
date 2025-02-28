@@ -1,7 +1,9 @@
-import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import fs from "fs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
+
 
 
 function replaceLast(str: string, search: string, replacement: string): string {
@@ -38,18 +40,18 @@ const command = new Command(
         ]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["log"]),
-    async function execute ({ args, message, piped_data, will_be_piped, guildConfig }) {
-        if (!args || !args.get("log")) {
-            action.reply(message, { content: "you need to specify a log file to send", ephemeral: true });
+    async function execute ({ args, invoker, piped_data, will_be_piped, guild_config }) {
+        if (!args || !args.log) {
+            action.reply(invoker, { content: "you need to specify a log file to send", ephemeral: true });
             return new CommandResponse({});
         }
-        const log = replaceLast(args.get("log"), ".log", "").replace(/[^a-z0-9]/gi, '');
+        const log = replaceLast(args.log, ".log", "").replace(/[^a-z0-9]/gi, '');
         const log_file = `./logs/${log}.log`;
         if (!fs.existsSync(log_file)) {
-            action.reply(message, { content: `the log file \`${log_file}\` does not exist`, ephemeral: true });
+            action.reply(invoker, { content: `the log file \`${log_file}\` does not exist`, ephemeral: true });
             return new CommandResponse({});
         }
-        const sent = await action.reply(message, { content: `uploading...` });
+        const sent = await action.reply(invoker, { content: `uploading...` });
         if (!sent) return;
         action.edit(sent, { content: `${log}${log.endsWith(".log") ? "" : ".log"}:`, files: [log_file] });
         return new CommandResponse({ pipe_data: { grep_text: fs.readFileSync(log_file, "utf8") } });

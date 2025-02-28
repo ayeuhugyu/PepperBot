@@ -1,4 +1,4 @@
-import { CommandCategory, InputType } from "./classes/command";
+import type { CommandCategory, InvokerType } from "./classes/command_enums";
 import database from "./data_manager";
 import * as log from "./log"
 
@@ -8,7 +8,7 @@ class GuildCommandsConfig {
     "blacklisted_commands": string[] = [];
     "blacklisted_channels": string[] = [];
     "blacklisted_categories": CommandCategory[] = [];
-    "disabled_input_types": InputType[] = [];
+    "disabled_input_types": InvokerType[] = [];
     constructor(config: any) {
         Object.assign(this, { ...config });
     }

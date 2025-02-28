@@ -161,66 +161,69 @@ async function finishTable(tableName: string) {
         });
     }
 }
+if (!dataVerified) {
+    log.info("verifying database...");
 
-await ensureTable("prompts");
-await ensureColumn("prompts", "name", (table) => table.string("name").notNullable());
-await ensureColumn("prompts", "content", (table) => table.text("content").notNullable());
-await ensureColumn("prompts", "author_id", (table) => table.string("author_id").notNullable());
-await ensureColumn("prompts", "author_username", (table) => table.string("author_username").notNullable());
-await ensureColumn("prompts", "author_avatar", (table) => table.string("author_avatar"));
-await ensureColumn("prompts", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
-await ensureColumn("prompts", "updated_at", (table) => table.timestamp("updated_at").defaultTo(database.fn.now()));
-await ensureColumn("prompts", "published_at", (table) => table.timestamp("published_at"));
-await ensureColumn("prompts", "description", (table) => table.string("description").notNullable().defaultTo("No description provided."));
-await ensureColumn("prompts", "published", (table) => table.boolean("published").notNullable().defaultTo(false));
-await ensureColumn("prompts", "nsfw", (table) => table.boolean("nsfw").notNullable().defaultTo(false));
-await ensureColumn("prompts", "default", (table) => table.boolean("default").notNullable().defaultTo(false));
-await finishTable("prompts");
+    await ensureTable("prompts");
+    await ensureColumn("prompts", "name", (table) => table.string("name").notNullable());
+    await ensureColumn("prompts", "content", (table) => table.text("content").notNullable());
+    await ensureColumn("prompts", "author_id", (table) => table.string("author_id").notNullable());
+    await ensureColumn("prompts", "author_username", (table) => table.string("author_username").notNullable());
+    await ensureColumn("prompts", "author_avatar", (table) => table.string("author_avatar"));
+    await ensureColumn("prompts", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+    await ensureColumn("prompts", "updated_at", (table) => table.timestamp("updated_at").defaultTo(database.fn.now()));
+    await ensureColumn("prompts", "published_at", (table) => table.timestamp("published_at"));
+    await ensureColumn("prompts", "description", (table) => table.string("description").notNullable().defaultTo("No description provided."));
+    await ensureColumn("prompts", "published", (table) => table.boolean("published").notNullable().defaultTo(false));
+    await ensureColumn("prompts", "nsfw", (table) => table.boolean("nsfw").notNullable().defaultTo(false));
+    await ensureColumn("prompts", "default", (table) => table.boolean("default").notNullable().defaultTo(false));
+    await finishTable("prompts");
 
-await ensureTable("todos");
-await ensureColumn("todos", "user", (table) => table.string("user").notNullable());
-await ensureColumn("todos", "name", (table) => table.string("name").notNullable());
-await ensureColumn("todos", "item", (table) => table.integer("item").notNullable());
-await ensureColumn("todos", "text", (table) => table.string("text").notNullable());
-await ensureColumn("todos", "completed", (table) => table.boolean("completed").notNullable().defaultTo(false));
-await ensureColumn("todos", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
-await finishTable("todos");
+    await ensureTable("todos");
+    await ensureColumn("todos", "user", (table) => table.string("user").notNullable());
+    await ensureColumn("todos", "name", (table) => table.string("name").notNullable());
+    await ensureColumn("todos", "item", (table) => table.integer("item").notNullable());
+    await ensureColumn("todos", "text", (table) => table.string("text").notNullable());
+    await ensureColumn("todos", "completed", (table) => table.boolean("completed").notNullable().defaultTo(false));
+    await ensureColumn("todos", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+    await finishTable("todos");
 
-await ensureTable("configs");
-await ensureColumn("configs", "guild", (table) => table.string("guild").notNullable());
-await ensureColumn("configs", "key", (table) => table.string("key").notNullable());
-await ensureColumn("configs", "value", (table) => table.json("value").notNullable());
-await ensureColumn("configs", "category", (table) => table.string("category").notNullable());
-await finishTable("configs");
+    await ensureTable("configs");
+    await ensureColumn("configs", "guild", (table) => table.string("guild").notNullable());
+    await ensureColumn("configs", "key", (table) => table.string("key").notNullable());
+    await ensureColumn("configs", "value", (table) => table.json("value").notNullable());
+    await ensureColumn("configs", "category", (table) => table.string("category").notNullable());
+    await finishTable("configs");
 
-await ensureTable("queues");
-await ensureColumn("queues", "guild", (table) => table.string("guild"));
-await ensureColumn("queues", "user", (table) => table.string("user"));
-await ensureColumn("queues", "queue_name", (table) => table.string("queue_name").notNullable());
-await ensureColumn("queues", "index", (table) => table.integer("index").notNullable());
-await ensureColumn("queues", "link", (table) => table.string("link").notNullable());
-await ensureColumn("queues", "title", (table) => table.string("title").notNullable());
-await ensureColumn("queues", "currentIndex", (table) => table.string("currentIndex"));
-await ensureColumn("queues", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
-await finishTable("queues");
+    await ensureTable("queues");
+    await ensureColumn("queues", "guild", (table) => table.string("guild"));
+    await ensureColumn("queues", "user", (table) => table.string("user"));
+    await ensureColumn("queues", "queue_name", (table) => table.string("queue_name").notNullable());
+    await ensureColumn("queues", "index", (table) => table.integer("index").notNullable());
+    await ensureColumn("queues", "link", (table) => table.string("link").notNullable());
+    await ensureColumn("queues", "title", (table) => table.string("title").notNullable());
+    await ensureColumn("queues", "currentIndex", (table) => table.string("currentIndex"));
+    await ensureColumn("queues", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+    await finishTable("queues");
 
-await ensureTable("sounds");
-await ensureColumn("sounds", "guild", (table) => table.string("guild"));
-await ensureColumn("sounds", "user", (table) => table.string("user"));
-await ensureColumn("sounds", "name", (table) => table.string("name").notNullable());
-await ensureColumn("sounds", "path", (table) => table.string("path").notNullable());
-await ensureColumn("sounds", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
-await finishTable("sounds");
+    await ensureTable("sounds");
+    await ensureColumn("sounds", "guild", (table) => table.string("guild"));
+    await ensureColumn("sounds", "user", (table) => table.string("user"));
+    await ensureColumn("sounds", "name", (table) => table.string("name").notNullable());
+    await ensureColumn("sounds", "path", (table) => table.string("path").notNullable());
+    await ensureColumn("sounds", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+    await finishTable("sounds");
 
-await ensureTable("updates");
-await ensureColumn("updates", "update", (table) => table.integer("update").primary().notNullable());
-await ensureColumn("updates", "text", (table) => table.string("text").notNullable());
-await ensureColumn("updates", "time", (table) => table.timestamp("time").defaultTo(database.fn.now()));
-await ensureColumn("updates", "message_id", (table) => table.string("message_id"));
-await ensureColumn("updates", "major", (table) => table.boolean("major").notNullable().defaultTo(false));
-await finishTable("updates");
+    await ensureTable("updates");
+    await ensureColumn("updates", "update", (table) => table.integer("update").primary().notNullable());
+    await ensureColumn("updates", "text", (table) => table.string("text").notNullable());
+    await ensureColumn("updates", "time", (table) => table.timestamp("time").defaultTo(database.fn.now()));
+    await ensureColumn("updates", "message_id", (table) => table.string("message_id"));
+    await ensureColumn("updates", "major", (table) => table.boolean("major").notNullable().defaultTo(false));
+    await finishTable("updates");
 
-log.info("database verified");
+    log.info("database verified");
+}
 
 export default database;
 

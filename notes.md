@@ -118,3 +118,4 @@ the biggest new base feature
 - the GPT script's file type checker thing no longer uses my own stupid thing and instead now uses mime-types
 - site is now largely made on the server rather than using javascript to request endpoints and use them
 - normal aliases have been renamed to root aliases
+- text converted to attachments is no longer stored in a cache file

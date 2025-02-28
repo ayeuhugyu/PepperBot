@@ -1,8 +1,9 @@
 import { Collection, Message } from "discord.js";
-import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
 
 const command = new Command(
     {
@@ -24,13 +25,16 @@ const command = new Command(
         ]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["request"]),
-    async function execute ({ args, message, piped_data, will_be_piped, guildConfig }) {
-        if (!args?.get('request')) return action.reply(message, { content: "please provide a request", ephemeral: guildConfig.other.use_ephemeral_replies });
-        const request = args.get('request');
+    async function execute ({ args, invoker, guild_config }) {
+        if (!args || !args.request) {
+            action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
+            return;
+        }
+        const request = args.request;
         const processor = new GPTProcessor()
-        processor.repliedMessage = message;
-        processor.sentMessage = await action.reply(message, { content: "processing..." }) as Message;
-        let formattedMessage: any = message
+        processor.repliedMessage = invoker;
+        processor.sentMessage = await action.reply(invoker, { content: "processing..." }) as Message;
+        let formattedMessage: any = invoker
         formattedMessage.content = request as string;
         if (!formattedMessage.cleanContent) formattedMessage.cleanContent = request as string;
         formattedMessage.attachments = formattedMessage.attachments || new Collection();

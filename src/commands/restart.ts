@@ -1,7 +1,9 @@
 import { Collection, Message } from "discord.js";
-import { Command, CommandAccess, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
+
 
 const command = new Command(
     {
@@ -22,22 +24,22 @@ const command = new Command(
                 type: CommandOptionType.String
             })
         ]
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["process"]),
-    async function execute ({ message, args }) {
-        if (!args?.get("process")) {
-            args?.set("process", "sharder");
+    async function execute ({ invoker, args }) {
+        if (!args.process) {
+            args.process = "sharder";
         }
-        if (args?.get("process") === "sharder" || args?.get("process") === "site") {
+        if (args.process === "sharder" || args.process === "site") {
             fetch("http://localhost:50000/restart", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ process: args?.get("process") })
+                body: JSON.stringify({ process: args.process })
             }).then(async (response) => {
                 const content = await response.text();
-                action.reply(message, content);
+                action.reply(invoker, content);
             })
         }
     }

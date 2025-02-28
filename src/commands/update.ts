@@ -1,9 +1,11 @@
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import * as action from "../lib/discord_action";
-import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import { getCurrentUpdateNumber, getUpdate, Update } from "../lib/update_manager";
 import { createThemeEmbed, Theme } from "../lib/theme";
 import { EmbedBuilder } from "@discordjs/builders";
+import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+
 
 function sectionedEmbed(text: string) {
     let sections = [];
@@ -123,34 +125,32 @@ const get = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ message, guildConfig, args }) {
-        const updateNumber = parseInt(args?.get("content").toString()) || await getCurrentUpdateNumber();
+    async function execute ({ invoker, guild_config, args }) {
+        const updateNumber = parseInt(args.content.toString()) || await getCurrentUpdateNumber();
         const update = await getUpdate(updateNumber);
         if (!update) {
-            action.reply(message, {
+            action.reply(invoker, {
                 content: `update ${updateNumber} not found`,
-                ephemeral: guildConfig.other.use_ephemeral_replies,
+                ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
         const embeds = embedUpdate(update);
         if (Array.isArray(embeds) && embeds[0] && 'embeds' in embeds[0]) {
-            action.reply(message, {
+            action.reply(invoker, {
                 content: `update #${updateNumber} (<t:${update.timestamp.getTime() * 0.001}:D>) https://canary.discord.com/channels/1112819622505365556/1171660137946157146/${update.message_id} (too large to display)`,
-                ephemeral: guildConfig.other.use_ephemeral_replies,
+                ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
-        action.reply(message, {
+        action.reply(invoker, {
             content: `${update.major ? "major update" : "patch"} #${updateNumber} (<t:${update.timestamp.getTime() * 0.001}:D>) https://canary.discord.com/channels/1112819622505365556/1171660137946157146/${update.message_id}`,
             embeds: embeds as EmbedBuilder[],
-            ephemeral: guildConfig.other.use_ephemeral_replies,
+            ephemeral: guild_config.other.use_ephemeral_replies,
         }); // when online update viewer is finished, link to that
         return new CommandResponse({ pipe_data: { grep_text: update.text } });
     }
 );
-
-const subcommands: Command[] = [get];
 
 const command = new Command( // todo change descriptions
     {
@@ -158,39 +158,28 @@ const command = new Command( // todo change descriptions
         description: 'manages updates',
         long_description: 'allows you to fetch specific updates, as well as allowing developers to create updates. ',
         category: CommandCategory.Info,
-        pipable_to: [],
         argument_order: "<subcommand> <content?>",
-        subcommands,
-        options: [
-            new CommandOption({
-                name: 'subcommand',
-                description: 'the subcommand to run',
-                type: CommandOptionType.String,
-                required: true,
-                choices: subcommands.map(subcommand => { return { name: subcommand.name, value: subcommand.name } })
-            }),
-            new CommandOption({ // may change this later when mister subcommand thing is done
-                name: 'content',
-                description: 'the content to pass to the subcommand',
-                type: CommandOptionType.String,
-                required: false,
-            })
-        ],
+        subcommands: {
+            deploy: SubcommandDeploymentApproach.Split,
+            list: [get],
+            self: "update",
+        },
+        options: [],
         example_usage: "p/git",
-        aliases: ['grep'] // todo: allow for subcommands to be piped without parents
+        pipable_to: ['grep'] // todo: allow for subcommands to be piped without parents
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (args?.get("subcommand")) {
-            action.reply(message, {
-                content: "invalid subcommand: " + args?.get("subcommand"),
-                ephemeral: guildConfig.other.use_ephemeral_replies,
+    async function execute ({ invoker, guild_config, args }) {
+        if (args.subcommand) {
+            action.reply(invoker, {
+                content: "invalid subcommand: " + args.subcommand,
+                ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return;
         }
-        action.reply(message, {
+        action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guildConfig.other.use_ephemeral_replies
+            ephemeral: guild_config.other.use_ephemeral_replies
         })
     }
 );

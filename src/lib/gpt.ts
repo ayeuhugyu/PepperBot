@@ -32,7 +32,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
     get_date: {
         type: 'function',
         function: {
-            name: "get_current_date",
+            name: "get_date",
             description: "returns a formatted version of the date/time inputted. if no input is given, returns the current date. ",
             parse: JSON.parse,
             parameters: {
@@ -330,7 +330,7 @@ Discord provides a bit of syntax that isn't included in standard markdown that o
 
 ATTENTION!!!! THE ABOVE REFORMATTED HAS **NOT BEEN IMPLEMENTED YET.** it is merely a planned feature right now, do not attempt to do it.
 
-In addition to these, Discord provides a timestamp format. You can use the get_current_date function to get the current unix timestamp, and then use this table to format it correctly. The tool might return something with a decimal place at the end, just omit everything beyond the decimal place. Discord only has precision up until the second. If put into this format, don't tell the user the date in a string afterwards. The date will be displayed by the timestamp.
+In addition to these, Discord provides a timestamp format. You can use the get_date function with no arguments to get the current unix timestamp, and then use this table to format it correctly. The tool might return something with a decimal place at the end, just omit everything beyond the decimal place. Discord only has precision up until the second. If put into this format, don't tell the user the date in a string afterwards. The date will be displayed by the timestamp.
 | Style             | Input             | Output (12-hour clock)            | Output (24-hour clock)           |
 |-------------------|-------------------|-----------------------------------|----------------------------------|
 | Default           | <t:1543392060>    | November 28, 2018 9:01 AM         | 28 November 2018 09:01           |

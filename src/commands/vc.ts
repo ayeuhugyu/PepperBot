@@ -1,9 +1,11 @@
 import { ChannelType, Collection, GuildMember, Message, StageChannel, VoiceChannel } from "discord.js";
-import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import * as voice from "../lib/voice";
 import { Channel } from "diagnostics_channel";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+
 
 const leave = new Command(
     {
@@ -17,25 +19,25 @@ const leave = new Command(
     async function getArguments () {
         return undefined;
     },
-    async function execute ({ message, guildConfig }) {
-        const voiceManager = voice.getVoiceManager(message.guild?.id || "");
+    async function execute ({ invoker, guild_config }) {
+        const voiceManager = voice.getVoiceManager(invoker.guild?.id || "");
         if (voiceManager) {
-            if (!voice.checkMemberPermissionsForVoiceChannel(message.member as GuildMember, voiceManager.channel as VoiceChannel | StageChannel)) {
-                action.reply(message, {
+            if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, voiceManager.channel as VoiceChannel | StageChannel)) {
+                action.reply(invoker, {
                     content: "you don't have permission to make me leave the voice channel",
-                    ephemeral: guildConfig.other.use_ephemeral_replies
+                    ephemeral: guild_config.other.use_ephemeral_replies
                 })
                 return new CommandResponse({});
             }
-            action.reply(message, {
+            action.reply(invoker, {
                 content: "left voice channel <#" + voiceManager.channel?.id + ">",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
-            voice.leaveVoiceChannel(message.guild?.id || "");
+            voice.leaveVoiceChannel(invoker.guild?.id || "");
         } else {
-            action.reply(message, {
+            action.reply(invoker, {
                 content: "im not in a voice channel",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
         }
         return new CommandResponse({});
@@ -60,71 +62,71 @@ const join = new Command(
         ]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["channel"]),
-    async function execute({ message, args, guildConfig }) {
-        if ((args?.get("channel") instanceof VoiceChannel) || (args?.get("channel") instanceof StageChannel)) {
-            if (!voice.checkMemberPermissionsForVoiceChannel(message.member as GuildMember, args?.get("channel") as VoiceChannel | StageChannel)) {
-                action.reply(message, {
+    async function execute({ invoker, args, guild_config }) {
+        if ((args.channel instanceof VoiceChannel) || (args.channel instanceof StageChannel)) {
+            if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, args.channel as VoiceChannel | StageChannel)) {
+                action.reply(invoker, {
                     content: "you don't have permission to make me join the voice channel",
-                    ephemeral: guildConfig.other.use_ephemeral_replies
+                    ephemeral: guild_config.other.use_ephemeral_replies
                 })
                 return new CommandResponse({});
             }
-            voice.joinVoiceChannel(args?.get("channel") as VoiceChannel);
-            action.reply(message, {
-                content: "joined voice channel: <#" + (args?.get("channel") as VoiceChannel).id + ">",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+            voice.joinVoiceChannel(args.channel as VoiceChannel);
+            action.reply(invoker, {
+                content: "joined voice channel: <#" + (args.channel as VoiceChannel).id + ">",
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        if (typeof args?.get("channel") === "string") {
+        if (typeof args.channel === "string") {
             let channel;
             try {
-                channel = message.guild?.channels.cache.find(channel => channel.name.toLowerCase().startsWith(args?.get("channel").toLowerCase()));
+                channel = invoker.guild?.channels.cache.find(channel => channel.name.toLowerCase().startsWith(args.channel.toLowerCase()));
                 if (!channel) {
-                    channel = await message.guild?.channels.fetch(args?.get("channel"));
+                    channel = await invoker.guild?.channels.fetch(args.channel);
                 }
             } catch (err) {
-                action.reply(message, {
-                    content: "channel not found: " + args?.get("channel"),
-                    ephemeral: guildConfig.other.use_ephemeral_replies
+                action.reply(invoker, {
+                    content: "channel not found: " + args.channel,
+                    ephemeral: guild_config.other.use_ephemeral_replies
                 })
                 return new CommandResponse({});
             }
             if (channel && (channel instanceof VoiceChannel || channel instanceof StageChannel)) {
-                if (!voice.checkMemberPermissionsForVoiceChannel(message.member as GuildMember, channel as VoiceChannel | StageChannel)) {
-                    action.reply(message, {
+                if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, channel as VoiceChannel | StageChannel)) {
+                    action.reply(invoker, {
                         content: "you don't have permission to make me join the voice channel",
-                        ephemeral: guildConfig.other.use_ephemeral_replies
+                        ephemeral: guild_config.other.use_ephemeral_replies
                     })
                     return new CommandResponse({});
                 }
                 voice.joinVoiceChannel(channel as VoiceChannel);
-                action.reply(message, {
+                action.reply(invoker, {
                     content: "joined voice channel: <#" + (channel as VoiceChannel).id + ">",
-                    ephemeral: guildConfig.other.use_ephemeral_replies
+                    ephemeral: guild_config.other.use_ephemeral_replies
                 })
                 return new CommandResponse({});
             }
         }
-        if (!args?.get("channel") && message?.member instanceof GuildMember && message.member.voice.channel) {
-            if (!voice.checkMemberPermissionsForVoiceChannel(message.member as GuildMember, message.member.voice.channel)) {
-                action.reply(message, {
+        if (!args.channel && invoker?.member instanceof GuildMember && invoker.member.voice.channel) {
+            if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, invoker.member.voice.channel)) {
+                action.reply(invoker, {
                     content: "you don't have permission to make me join the voice channel",
-                    ephemeral: guildConfig.other.use_ephemeral_replies
+                    ephemeral: guild_config.other.use_ephemeral_replies
                 })
                 return new CommandResponse({});
             }
-            voice.joinVoiceChannel(message.member.voice.channel);
-            action.reply(message, {
-                content: "joined voice channel: <#" + message.member.voice.channel.id + ">",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+            voice.joinVoiceChannel(invoker.member.voice.channel);
+            action.reply(invoker, {
+                content: "joined voice channel: <#" + invoker.member.voice.channel.id + ">",
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        if (!args?.get("channel")) {
-            action.reply(message, {
+        if (!args.channel) {
+            action.reply(invoker, {
                 content: "please supply a voice channel",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
@@ -138,7 +140,11 @@ const command = new Command(
         long_description: 'make the bot join or leave a specific voice channel',
         category: CommandCategory.Voice,
         example_usage: "p/vc join",
-        subcommands: [join, leave],
+        subcommands: {
+            deploy: SubcommandDeploymentApproach.Split,
+            list: [join, leave],
+            self: "vc",
+        },
         allow_external_guild: false,
         options: [
             new CommandOption({
@@ -158,19 +164,19 @@ const command = new Command(
                 required: false,
             })
         ]
-    }, 
+    },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
-    async function execute ({ message, args, piped_data, will_be_piped, guildConfig }) {
-        if (args?.get("subcommand")) {
-            action.reply(message, {
-                content: "invalid subcommand: " + args?.get("subcommand"),
-                ephemeral: guildConfig.other.use_ephemeral_replies,
+    async function execute ({ invoker, args, piped_data, will_be_piped, guild_config }) {
+        if (args.subcommand) {
+            action.reply(invoker, {
+                content: "invalid subcommand: " + args.subcommand,
+                ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return;
         }
-        action.reply(message, {
+        action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guildConfig.other.use_ephemeral_replies
+            ephemeral: guild_config.other.use_ephemeral_replies
         })
     }
 );

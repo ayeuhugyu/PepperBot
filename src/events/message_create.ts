@@ -1,7 +1,7 @@
 import { Events, Message } from "discord.js";
 import commands from "../lib/command_manager";
 import { fetchGuildConfig } from "../lib/guild_config_manager";
-import { CommandResponse } from "../lib/classes/command";
+import { Command, CommandInput, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { respond, GPTProcessor } from "../lib/gpt";
 
@@ -32,92 +32,77 @@ async function gptHandler(message: Message) {
     await respond(message, processor);
 }
 
-async function commandHandler(message: Message) {
-    // Ignore bot messages.
-    if (message.author.bot) {
-        return;
-    }
-
+async function commandHandler(message: Message<true>) {
+    if (message.author.bot) return;
     const config = await fetchGuildConfig(message.guild?.id);
+
     const prefix = config.other.prefix;
+    if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-    // Process only messages that start with the prefix.
-    if (!message.content.startsWith(prefix)) {
-        return;
-    }
-
-    // Split the message into segments using unescaped pipes as delimiters.
-    const commandPipingList = message.content
-        .split(/(?<!\\)\|/)
-        .map((part) => part.replace(/\\\|/g, "|")) || [message.content];
-
-    if (commandPipingList.length > 3) {
+    const segments = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|')) || [message.content];
+    if (segments.length > 3) {
         await action.reply(message, "piping limit of 3 exceeded");
         return;
     }
 
-    let lastOutput;
-    let previousCommand;
-    const commandsInPipingList = [];
-
-    // Parse each command segment.
-    for (const commandText of commandPipingList) {
-        const trimmedText = commandText.trim();
-        const firstWord = trimmedText.split(" ")[0].trim();
-        // Remove the prefix if present.
-        const commandName = trimmedText.startsWith(prefix)
-            ? firstWord.slice(prefix.length)
-            : firstWord;
-        const cmd = commands.get(commandName);
-        commandsInPipingList.push(cmd || commandName);
+    interface Queued {
+        command?: Command,
+        provided_name: string
     }
 
-    if (commandPipingList.length > 1 && config.command.disable_command_piping) {
-        await action.reply(message, "command piping is disabled in this server");
+    let previous_response = undefined;
+    let previous_command = undefined;
+    let queue: Queued[] = [];
+
+    for (const segment of segments) {
+        const first_word = segment.trim().split(" ")[0];
+        const provided_name = first_word.startsWith(prefix)
+            ? first_word?.slice(prefix.length)
+            : first_word;
+        const command = commands.get(provided_name);
+        queue.push({
+            provided_name,
+            command
+        });
+    }
+    if (segments.length > 1 && config.command.disable_command_piping) {
+        action.reply(message, "command piping is disabled in this server");
         return;
     }
-
-    // Execute each command in the piping list.
     let commandIndex = 0;
-    for (const command of commandsInPipingList) {
-        // If the command wasn't found, reply and exit.
-        if (typeof command === "string") {
-            await action.reply(message, `${prefix}${command} doesn't exist :/`);
+    for (const { command, provided_name } of queue) {
+        if (!command) {
+            await action.reply(message, `${prefix}${provided_name} doesn't exist :/`);
             return;
         }
 
-        // Ensure that piped commands are allowed.
-        if (previousCommand && !previousCommand.pipable_to.includes(command.name)) {
-            await action.reply(message, `${prefix}${previousCommand.name} is not pipable to ${prefix}${command.name}`);
+        if (previous_command && !previous_command.pipable_to.includes(command.name)) {
+            await action.reply(message, `${prefix}${command.name} is not pipable to ${prefix}${provided_name}`);
             return;
         }
-
-        // Prepare the command text for this segment.
-        let currentCommandText = commandPipingList[commandIndex].trim();
-        if (!currentCommandText.startsWith(prefix)) {
-            currentCommandText = `${prefix}${currentCommandText.replaceAll("\\|", "|")}`;
+        message.content = segments[commandIndex]?.trim();
+        if (!message.content.startsWith(prefix)) {
+            message.content = `${prefix}${message.content.replaceAll("\\|", "|")}`;
         }
-        // Optionally update message.content if needed for parsing.
-        message.content = currentCommandText;
-
-        const commandResponse = await command.execute({
-            message,
-            _response: lastOutput,
-            will_be_piped: commandPipingList.length > 1 && commandIndex < commandPipingList.length - 1,
+        const input: CommandInput = await CommandInput.new(message, command, undefined!, {
+            previous_response,
+            will_be_piped: (segments.length > 1) && (commandIndex < segments.length - 1),
         });
-        lastOutput = commandResponse || new CommandResponse({});
-        lastOutput.from = command.name;
-        previousCommand = command;
+
+        const response = await command.execute(input);
+        previous_response = response ?? new CommandResponse({});
+        previous_response.from = command.name;
+        previous_command = command;
         commandIndex++;
     }
 }
 
 export default {
     name: Events.MessageCreate,
-    async execute(message: Message) {
-        // Wait for all handlers to finish. 
+    async execute(message: Message<true>) {
+        // Wait for all handlers to finish.
         return await Promise.all([
-            gptHandler(message), 
+            gptHandler(message),
             commandHandler(message)
         ]);
     },

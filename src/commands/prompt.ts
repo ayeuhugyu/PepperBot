@@ -1,9 +1,10 @@
 import { Collection, Message, User } from "discord.js";
-import { Command, CommandCategory, CommandOption, CommandOptionType, CommandResponse } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
 import { userPrompts } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -35,13 +36,13 @@ const deflt = new Command({
         example_usage: "p/prompt default",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ message, guildConfig, args }) {
-        let prompt = await getUserPrompt(message.author);
+    async function execute ({ invoker, guild_config, args }) {
+        let prompt = await getUserPrompt(invoker.author);
         const promptDefault = prompt.default;
         prompt.default = !promptDefault;
-        await savePrompt(prompt, message.author);
-        if (!prompt.default) userPrompts.delete(message.author.id);
-        action.reply(message, { content: prompt.default ? `prompt \`${prompt.name}\` is now the default prompt` : "prompt reset to base default", ephemeral: guildConfig.other.use_ephemeral_replies });
+        await savePrompt(prompt, invoker.author);
+        if (!prompt.default) userPrompts.delete(invoker.author.id);
+        action.reply(invoker, { content: prompt.default ? `prompt \`${prompt.name}\` is now the default prompt` : "prompt reset to base default", ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -56,9 +57,9 @@ const get = new Command({
         example_usage: "p/prompt get",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ message, guildConfig, args }) {
-        let prompt = await getUserPrompt(message.author);
-        action.reply(message, {
+    async function execute ({ invoker, guild_config, args }) {
+        let prompt = await getUserPrompt(invoker.author);
+        action.reply(invoker, {
             content: `\`\`\`
 name: ${prompt.name}
 description: ${prompt.description}
@@ -70,7 +71,7 @@ ${prompt.published ? `published at: ${new Date(prompt.published_at || "").toLoca
 nsfw: ${prompt.nsfw ? "true" : "false"}
 default: ${prompt.default ? "true" : "false"}
 \`\`\``,
-            ephemeral: guildConfig.other.use_ephemeral_replies
+            ephemeral: guild_config.other.use_ephemeral_replies
         });
         return new CommandResponse({ pipe_data: { grep_text: prompt.content }});
     }
@@ -87,16 +88,16 @@ const publish = new Command({
         example_usage: "p/prompt publish",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ message, guildConfig, args }) {
-        let prompt = await getUserPrompt(message.author);
+    async function execute ({ invoker, guild_config, args }) {
+        let prompt = await getUserPrompt(invoker.author);
         if (prompt.name === "autosave") {
-            action.reply(message, { content: "you can't publish the autosave prompt", ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: "you can't publish the autosave prompt", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({})
         }
         prompt.published = !prompt.published;
         prompt.published_at = prompt.published ? new Date() : undefined;
-        await savePrompt(prompt, message.author);
-        await action.reply(message, { content: `prompt \`${prompt.name}\` is now ${prompt.published ? "" : "no longer"} published`, ephemeral: guildConfig.other.use_ephemeral_replies });
+        await savePrompt(prompt, invoker.author);
+        await action.reply(invoker, { content: `prompt \`${prompt.name}\` is now ${prompt.published ? "" : "no longer"} published`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -111,15 +112,15 @@ const del = new Command({
         example_usage: "p/prompt delete",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ message, guildConfig, args }) {
-        let prompt = await getUserPrompt(message.author);
+    async function execute ({ invoker, guild_config, args }) {
+        let prompt = await getUserPrompt(invoker.author);
         if (prompt.name === "autosave") {
-            action.reply(message, { content: "you can't delete the autosave prompt", ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: "you can't delete the autosave prompt", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({})
         }
-        await removePrompt(prompt.name, message.author.id);
-        userPrompts.delete(message.author.id);
-        action.reply(message, { content: `prompt \`${prompt.name}\` deleted; now using/editing default`, ephemeral: guildConfig.other.use_ephemeral_replies });
+        await removePrompt(prompt.name, invoker.author.id);
+        userPrompts.delete(invoker.author.id);
+        action.reply(invoker, { content: `prompt \`${prompt.name}\` deleted; now using/editing default`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -143,28 +144,28 @@ const name = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (!args?.get("content")) {
-            action.reply(message, {
+    async function execute ({ invoker, guild_config, args }) {
+        if (!args.content) {
+            action.reply(invoker, {
                 content: "please supply a description",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        if (nameBlacklists.includes(args?.get('content') as string)) {
-            action.reply(message, { content: `you can't name your prompt \`${args.get("content")}\`, choose another name`, ephemeral: guildConfig.other.use_ephemeral_replies });
+        if (nameBlacklists.includes(args.content as string)) {
+            action.reply(invoker, { content: `you can't name your prompt \`${args.content}\`, choose another name`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({})
         }
-        if (args.get("content").includes('/')) { // this will be used later for published prompts
-            action.reply(message, { content: "prompt names cannot contain `/`", ephemeral: guildConfig.other.use_ephemeral_replies });
+        if (args.content.includes('/')) { // this will be used later for published prompts
+            action.reply(invoker, { content: "prompt names cannot contain `/`", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({})
         }
-        let prompt = await getUserPrompt(message.author);
-        prompt.name = args?.get('content') as string;
+        let prompt = await getUserPrompt(invoker.author);
+        prompt.name = args.content as string;
         prompt.created_at = new Date();
-        await savePrompt(prompt, message.author);
-        userPrompts.set(message.author.id, prompt.name);
-        action.reply(message, { content: `prompt name set to \`${prompt.name}\`; now using/editing prompt \`${prompt.name}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+        await savePrompt(prompt, invoker.author);
+        userPrompts.set(invoker.author.id, prompt.name);
+        action.reply(invoker, { content: `prompt name set to \`${prompt.name}\`; now using/editing prompt \`${prompt.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -178,11 +179,11 @@ const nsfw = new Command({
         example_usage: "p/prompt nsfw",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ message, guildConfig, args }) {
-        let prompt = await getUserPrompt(message.author);
+    async function execute ({ invoker, guild_config, args }) {
+        let prompt = await getUserPrompt(invoker.author);
         prompt.nsfw = !prompt.nsfw
-        await savePrompt(prompt, message.author);
-        action.reply(message, { content: `prompt \`${prompt.name}\` is ${prompt.nsfw ? "now marked as nsfw" : "no longer marked as nsfw"}`, ephemeral: guildConfig.other.use_ephemeral_replies });
+        await savePrompt(prompt, invoker.author);
+        action.reply(invoker, { content: `prompt \`${prompt.name}\` is ${prompt.nsfw ? "now marked as nsfw" : "no longer marked as nsfw"}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -204,18 +205,18 @@ const description = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (!args?.get("content")) {
-            action.reply(message, {
+    async function execute ({ invoker, guild_config, args }) {
+        if (!args.content) {
+            action.reply(invoker, {
                 content: "please supply a description",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        let prompt = await getUserPrompt(message.author);
-        prompt.description = args?.get('content') as string;
-        await savePrompt(prompt, message.author);
-        action.reply(message, { content: `prompt description of ${prompt.name} set to \`\`\`${prompt.description}\`\`\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+        let prompt = await getUserPrompt(invoker.author);
+        prompt.description = args.content as string;
+        await savePrompt(prompt, invoker.author);
+        action.reply(invoker, { content: `prompt description of ${prompt.name} set to \`\`\`${prompt.description}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -229,8 +230,8 @@ const list = new Command({
         example_usage: "p/prompt list",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ message, guildConfig }) {
-        const prompts = await getUserPrompts(message.author.id);
+    async function execute ({ invoker, guild_config }) {
+        const prompts = await getUserPrompts(invoker.author.id);
         let reply = "your prompts: ```";
         if (prompts.length < 10) {
             prompts.forEach(prompt => {
@@ -244,7 +245,7 @@ const list = new Command({
             });
         }
         reply += "```";
-        action.reply(message, { content: reply, ephemeral: guildConfig.other.use_ephemeral_replies });
+        action.reply(invoker, { content: reply, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({ pipe_data: { grep_text: reply }});
     }
 );
@@ -269,36 +270,36 @@ const clone = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (!args?.get("content")) {
-            action.reply(message, {
+    async function execute ({ invoker, guild_config, args }) {
+        if (!args.content) {
+            action.reply(invoker, {
                 content: "please supply a prompt to clone",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        const [username, ...promptname] = (args.get("content") as string).split("/");
+        const [username, ...promptname] = (args.content as string).split("/");
         if (!username) {
-            action.reply(message, { content: "please supply the user to clone the prompt from", ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: "please supply the user to clone the prompt from", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
         if (!promptname) {
-            action.reply(message, { content: "please supply the prompt to clone from this user", ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: "please supply the prompt to clone from this user", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
         const prompt = await getPromptByUsername(promptname.join("/"), username);
         if (!prompt) {
-            action.reply(message, { content: `couldn't find prompt \`${promptname}\` from user \`${username}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: `couldn't find prompt \`${promptname}\` from user \`${username}\``, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
         if (!prompt.published) {
-            action.reply(message, { content: `prompt \`${promptname}\` from user \`${username}\` is not published and thus cannot be cloned.`, ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: `prompt \`${promptname}\` from user \`${username}\` is not published and thus cannot be cloned.`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
         const newPrompt = new Prompt({
-            author_id: message.author.id,
-            author_username: message.author.username,
-            author_avatar: message.author.displayAvatarURL(),
+            author_id: invoker.author.id,
+            author_username: invoker.author.username,
+            author_avatar: invoker.author.displayAvatarURL(),
             name: prompt.name,
             content: prompt.content,
             description: prompt.description,
@@ -307,8 +308,8 @@ const clone = new Command({
             published: false,
         });
         await writePrompt(newPrompt);
-        userPrompts.set(message.author.id, newPrompt.name);
-        action.reply(message, { content: `cloned \`${args.get("content")}\`; now using/editing prompt \`${promptname}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+        userPrompts.set(invoker.author.id, newPrompt.name);
+        action.reply(invoker, { content: `cloned \`${args.content}\`; now using/editing prompt \`${promptname}\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -331,26 +332,26 @@ const use = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (!args?.get("content")) {
-            action.reply(message, {
+    async function execute ({ invoker, guild_config, args }) {
+        if (!args.content) {
+            action.reply(invoker, {
                 content: "please supply a prompt to use",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        if ((args.get("content") === "default") || (args.get("content") === "reset")) {
-            userPrompts.delete(message.author.id);
-            action.reply(message, { content: "now using default prompt", ephemeral: guildConfig.other.use_ephemeral_replies });
+        if ((args.content === "default") || (args.content === "reset")) {
+            userPrompts.delete(invoker.author.id);
+            action.reply(invoker, { content: "now using default prompt", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
-        const prompt = await getPrompt(args.get("content") as string, message.author.id);
+        const prompt = await getPrompt(args.content as string, invoker.author.id);
         if (!prompt) {
-            action.reply(message, { content: `couldn't find prompt: \`${args.get("content")}\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+            action.reply(invoker, { content: `couldn't find prompt: \`${args.content}\``, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
-        userPrompts.set(message.author.id, prompt.name);
-        action.reply(message, { content: "now using/editing prompt `" + prompt.name + "`", ephemeral: guildConfig.other.use_ephemeral_replies });
+        userPrompts.set(invoker.author.id, prompt.name);
+        action.reply(invoker, { content: "now using/editing prompt `" + prompt.name + "`", ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
@@ -375,22 +376,20 @@ const set = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (!args?.get("content")) {
-            action.reply(message, {
+    async function execute ({ invoker, guild_config, args }) {
+        if (!args.content) {
+            action.reply(invoker, {
                 content: "please supply content",
-                ephemeral: guildConfig.other.use_ephemeral_replies
+                ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({});
         }
-        let prompt = await getUserPrompt(message.author);
-        prompt.content = args?.get('content') as string;
-        await savePrompt(prompt, message.author);
-        action.reply(message, { content: `prompt content of \`${prompt.name}\` set to \`\`\`${prompt.content}\`\`\``, ephemeral: guildConfig.other.use_ephemeral_replies });
+        let prompt = await getUserPrompt(invoker.author);
+        prompt.content = args.content as string;
+        await savePrompt(prompt, invoker.author);
+        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`${prompt.content}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
-
-const subcommands: Command[] = [set, use, list, description, nsfw, name, del, publish, get, deflt, clone];
 
 const command = new Command(
     {
@@ -400,37 +399,27 @@ const command = new Command(
         category: CommandCategory.AI,
         pipable_to: [],
         argument_order: "<subcommand> <content?>",
-        subcommands,
-        options: [
-            new CommandOption({
-                name: 'subcommand',
-                description: 'the subcommand to run',
-                type: CommandOptionType.String,
-                required: true,
-                choices: subcommands.map(subcommand => { return { name: subcommand.name, value: subcommand.name } })
-            }),
-            new CommandOption({ // may change this later when mister subcommand thing is done
-                name: 'content',
-                description: 'the content to pass to the subcommand',
-                type: CommandOptionType.String,
-                required: false,
-            })
-        ],
+        subcommands: {
+            deploy: SubcommandDeploymentApproach.Split,
+            list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone],
+            self: "prompt",
+        },
+        options: [],
         example_usage: "p/prompt set always respond with \"hi\"",
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
-    async function execute ({ message, guildConfig, args }) {
-        if (args?.get("subcommand")) {
-            action.reply(message, {
-                content: "invalid subcommand: " + args?.get("subcommand"),
-                ephemeral: guildConfig.other.use_ephemeral_replies,
+    async function execute ({ invoker, guild_config, args }) {
+        if (args.subcommand) {
+            action.reply(invoker, {
+                content: "invalid subcommand: " + args.subcommand,
+                ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return;
         }
-        action.reply(message, {
+        action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guildConfig.other.use_ephemeral_replies
+            ephemeral: guild_config.other.use_ephemeral_replies
         })
     }
 );
