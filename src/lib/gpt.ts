@@ -29,11 +29,11 @@ export let conversations: Conversation[] = [];
 
 const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
     // dont use strict mode on any of these unless you know what you're doing, it adds 900 unnecessary checks. for example, you can't have default values for parameters, every value must be required, etc. it's stupid.
-    get_date: {
+    date_to_timestamp: {
         type: 'function',
         function: {
             name: "get_date",
-            description: "returns a formatted version of the date/time inputted. if no input is given, returns the current date. ",
+            description: "formats the inputted date into a unix timestamp. this should ONLY be used to convert to discord's timestamp display format. Do not use this for any other reason.",
             parse: JSON.parse,
             parameters: {
                 type: 'object',
@@ -56,7 +56,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                 if (hour !== undefined) date.setHours(hour);
                 if (minute !== undefined) date.setMinutes(minute);
                 if (second !== undefined) date.setSeconds(second);
-                return date.toISOString() + " timestamp: " + Math.floor(date.getTime() / 1000); // return ISO string and unix timestamp
+                return Math.floor(date.getTime() / 1000); // return unix timestamp
             },
         }
     },
@@ -247,7 +247,7 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
         type: 'function',
         function: {
             name: "search",
-            description: "searches Google for a query and returns the results",
+            description: "searches Google for a query and returns the results. snippets will never be enough to provide accurate information, so always use this in conjunction with request_url to provide further information. do not simply link users to the results, actually follow them.",
             parse: JSON.parse,
             parameters: {
                 type: 'object',
@@ -467,6 +467,7 @@ B: are asked for information on a topic.
 D: are in need of a list of results.
 E: are in need of further details.
 Try to use this when answering most questions, it will make your answers seem more authentic and then if users ask for sources later you can provide it.
+This should always be used in conjunction with request_url. Snippets will never be enough to provide enough information. Visit the websites and tell the users what they want to know from it, not where they can find it.
 
 # Personality
 
