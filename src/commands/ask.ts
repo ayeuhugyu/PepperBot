@@ -3,15 +3,15 @@ import { Command, CommandOption, CommandResponse } from "../lib/classes/command"
 import * as action from "../lib/discord_action";
 import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
 
 const command = new Command(
     {
         name: 'ask',
         description: 'ask the ai something',
         long_description: 'ask the ai something',
-        category: CommandCategory.AI,
-        pipable_to: ['grep'],
+        tags: [CommandTag.AI],
+        pipable_to: [CommandTag.TextPipable],
         example_usage: "p/ask hi there",
         argument_order: "<question>",
         aliases: ["question", "askai"],
@@ -40,7 +40,7 @@ const command = new Command(
         formattedMessage.attachments = formattedMessage.attachments || new Collection();
         formattedMessage as GPTFormattedCommandInteraction;
         const response = await respond(formattedMessage, processor);
-        return new CommandResponse({ pipe_data: { grep_text: response } });
+        return new CommandResponse({ pipe_data: { input_text: response } });
     }
 );
 

@@ -2,7 +2,7 @@ import { Command, CommandOption, CommandResponse } from "../lib/classes/command"
 import * as action from "../lib/discord_action";
 import fs from "fs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
 
 
 
@@ -17,8 +17,8 @@ const command = new Command(
         name: 'sendlog',
         description: 'sends a log file',
         long_description: 'uploads a log file, allowing you to pipe its contents to grep',
-        category: CommandCategory.Debug,
-        pipable_to: ['grep'],
+        tags: [CommandTag.Debug],
+        pipable_to: [CommandTag.TextPipable],
         example_usage: "p/sendlog global",
         argument_order: "<log>",
         aliases: ["log", "getlog"],
@@ -54,7 +54,7 @@ const command = new Command(
         const sent = await action.reply(invoker, { content: `uploading...` });
         if (!sent) return;
         action.edit(sent, { content: `${log}${log.endsWith(".log") ? "" : ".log"}:`, files: [log_file] });
-        return new CommandResponse({ pipe_data: { grep_text: fs.readFileSync(log_file, "utf8") } });
+        return new CommandResponse({ pipe_data: { input_text: fs.readFileSync(log_file, "utf8") } });
     }
 );
 

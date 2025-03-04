@@ -4,7 +4,7 @@ import { Command, CommandOption, CommandResponse } from "../lib/classes/command"
 import { getCurrentUpdateNumber, getUpdate, Update } from "../lib/update_manager";
 import { createThemeEmbed, Theme } from "../lib/theme";
 import { EmbedBuilder } from "@discordjs/builders";
-import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
 
 
 function sectionedEmbed(text: string) {
@@ -109,8 +109,8 @@ const get = new Command({
         name: 'get',
         description: 'fetches a specific update',
         long_description: 'fetches a specific update by its number',
-        category: CommandCategory.Info,
-        pipable_to: ['grep'],
+        tags: [CommandTag.Info],
+        pipable_to: [CommandTag.TextPipable],
         aliases: ['content'],
         root_aliases: [],
         options: [
@@ -148,7 +148,7 @@ const get = new Command({
             embeds: embeds as EmbedBuilder[],
             ephemeral: guild_config.other.use_ephemeral_replies,
         }); // when online update viewer is finished, link to that
-        return new CommandResponse({ pipe_data: { grep_text: update.text } });
+        return new CommandResponse({ pipe_data: { input_text: update.text } });
     }
 );
 
@@ -157,7 +157,7 @@ const command = new Command( // todo change descriptions
         name: 'update',
         description: 'manages updates',
         long_description: 'allows you to fetch specific updates, as well as allowing developers to create updates. ',
-        category: CommandCategory.Info,
+        tags: [CommandTag.Info],
         argument_order: "<subcommand> <content?>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
