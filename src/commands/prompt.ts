@@ -386,7 +386,7 @@ const set = new Command({
             return new CommandResponse({});
         }
         let prompt = await getUserPrompt(invoker.author);
-        prompt.content = args.content as string;
+        prompt.content = content as string;
         await savePrompt(prompt, invoker.author);
         action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`${prompt.content}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
