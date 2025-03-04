@@ -4,7 +4,7 @@ import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitFie
 import * as contributors from "../../../constants/contributors.json";
 import * as action from "../discord_action";
 import { Channel } from "diagnostics_channel";
-import { InvokerType, SubcommandDeploymentApproach, CommandCategory, CommandOptionType, CommandEntryType } from "./command_enums";
+import { InvokerType, SubcommandDeploymentApproach, CommandTag, CommandOptionType, CommandEntryType } from "./command_enums";
 
 let guildConfigManager
 if (!guildConfigManager) { // avoids circular dependency
@@ -57,6 +57,8 @@ export type CommandInvoker<T extends InvokerType = InvokerType> = {
 interface ExtraCommandInputData {
     alias_used?: string;
     will_be_piped: boolean,
+    piping_to?: string,
+    next_pipe_message?: string,
     piped_data?: PipedData,
     previous_response?: CommandResponse,
     command_entry_type?: CommandEntryType,
@@ -348,14 +350,15 @@ export class Command<
     input_types: I[] = [ InvokerType.Interaction, InvokerType.Message ] as I[];
     allow_external_guild = false; // should it be usable in guilds without administrator permission? (thats the only way to detect it)
     subcommands?: D;
-    pipable_to: string[] = []; // array of command names which output may be piped to
+    pipable_to: (string | CommandTag)[] = []; // array of command names | tags which output may be piped to; the check for it has been disabled for now so its purely visual.
     contributors: Contributor[] = [contributors.ayeuhugyu];
     subcommand_argument = "subcommand"
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS!
-    category: CommandCategory = CommandCategory.Other;
+    tags: CommandTag[] = [CommandTag.Other];
     is_sub_command: boolean = false;
     parent_command: string | undefined = undefined;
     execute: CommandFunction<F, P, I> = defaultCommandFunction as never;
+    getSubcommand: () => Command<S, D, I, F, P> | undefined = () => undefined;
 
     toJSON(): Record<string, unknown> {
         const json = pick(this, ["name", "description", "type", "options", "default_member_permissions", "integration_types", "nsfw"]);
@@ -365,7 +368,7 @@ export class Command<
 
     constructor(
         data: Partial<Omit<Command<S, D, I, F, P>, "name">> & { name: string },
-        private parse_arguments: GetArgumentsFunction<P, I>,
+        public parse_arguments: GetArgumentsFunction<P, I>,
         private execute_internal: ExecuteFunction<F, P, I>
     ) {
         if (!data.long_description && data.description) data.long_description = data.description;
@@ -420,6 +423,7 @@ export class Command<
                 subcommand.parent_command = this.name;
             });
         }
+
         // #region COMMAND EXECUTION
         this.execute = async (input: CommandInput<F, P, I, false>) => {
             log.info("executing command p/" + self.name + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));

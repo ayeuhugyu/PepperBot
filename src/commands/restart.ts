@@ -2,14 +2,14 @@ import { Collection, Message } from "discord.js";
 import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
 
 
 const command = new Command(
     {
         name: 'restart',
         description: 'restarts the given process',
-        category: CommandCategory.Debug,
+        tags: [CommandTag.Debug],
         pipable_to: [],
         example_usage: "p/restart sharder",
         aliases: [],

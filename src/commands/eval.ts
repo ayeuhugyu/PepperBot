@@ -8,7 +8,7 @@ import shell from "shelljs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import * as util from "util";
 import * as gpt from "../lib/gpt";
-import { CommandCategory, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 
 const modules = {
     discord,
@@ -25,7 +25,7 @@ const command = new Command(
     {
         name: 'eval',
         description: 'evaluates the provided code',
-        category: CommandCategory.Debug,
+        tags: [CommandTag.Debug],
         options: [
             new CommandOption({
                 name: 'code',
@@ -38,7 +38,7 @@ const command = new Command(
         access: new CommandAccess({
             users: ["440163494529073152", "406246384409378816"]
         }, {}),
-        pipable_to: ['grep'],
+        pipable_to: [CommandTag.TextPipable],
         example_usage: "p/eval console.log(\"hello world\")",
         aliases: ["evaluate"]
     },
@@ -46,7 +46,7 @@ const command = new Command(
     async function execute ({ message, args }) {
         if (!args.code) {
             action.reply(message, "tf u want me to eval");
-            return new CommandResponse({ pipe_data: { grep_text: "tf u want me to eval" }});
+            return new CommandResponse({ pipe_data: { input_text: "tf u want me to eval" }});
         }
         try {
             const result = await (async function () {
@@ -54,13 +54,13 @@ const command = new Command(
             })();
             if (result !== undefined) {
                 action.reply(message, `result: \`\`\`${result}\`\`\``);
-                return new CommandResponse({ pipe_data: { grep_text: `result: \`\`\`${result}\`\`\`` }});
+                return new CommandResponse({ pipe_data: { input_text: `result: \`\`\`${result}\`\`\`` }});
             }
             action.reply(message, "no error generated, no result returned.");
             return;
         } catch (e) {
             action.reply(message, `\`\`\`${e}\`\`\``);
-            return new CommandResponse({ pipe_data: { grep_text: `\`\`\`${e}\`\`\`` }});
+            return new CommandResponse({ pipe_data: { input_text: `\`\`\`${e}\`\`\`` }});
         }
     }
 );

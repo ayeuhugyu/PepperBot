@@ -4,7 +4,7 @@ import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
 import { userPrompts } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -30,7 +30,7 @@ const deflt = new Command({
         name: 'default',
         description: 'toggles your prompt being used as the default prompt',
         long_description: 'toggles whether or not your prompt is used as the default prompt',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         options: [],
         example_usage: "p/prompt default",
@@ -50,8 +50,8 @@ const get = new Command({
         name: 'get',
         description: 'returns your current prompt',
         long_description: 'returns your current prompt',
-        category: CommandCategory.AI,
-        pipable_to: ['grep'],
+        tags: [CommandTag.AI],
+        pipable_to: [CommandTag.TextPipable],
         options: [],
         aliases: [],
         example_usage: "p/prompt get",
@@ -73,7 +73,7 @@ default: ${prompt.default ? "true" : "false"}
 \`\`\``,
             ephemeral: guild_config.other.use_ephemeral_replies
         });
-        return new CommandResponse({ pipe_data: { grep_text: prompt.content }});
+        return new CommandResponse({ pipe_data: { input_text: prompt.content }});
     }
 );
 
@@ -81,7 +81,7 @@ const publish = new Command({
         name: 'publish',
         description: 'publishes your current prompt',
         long_description: 'publishes your current prompt',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         options: [],
         aliases: ["unpublish"],
@@ -105,7 +105,7 @@ const del = new Command({
         name: 'delete',
         description: 'deletes your current prompt',
         long_description: 'deletes your current prompt',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         options: [],
         aliases: ["del", "remove", "rem", "rm"],
@@ -130,7 +130,7 @@ const name = new Command({
         name: 'name',
         description: 'sets the name of your prompt',
         long_description: 'sets the name of your current prompt',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         options: [
             new CommandOption({
@@ -173,7 +173,7 @@ const nsfw = new Command({
         name: 'nsfw',
         description: 'toggles your prompt being marked as nsfw',
         long_description: 'toggles whether or not your prompt is marked as nsfw',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         options: [],
         example_usage: "p/prompt nsfw",
@@ -191,7 +191,7 @@ const description = new Command({
         name: 'description',
         description: 'sets the description of the prompt',
         long_description: 'sets the description of your current prompt',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         options: [
             new CommandOption({
@@ -224,8 +224,8 @@ const list = new Command({
         name: 'list',
         description: 'lists your prompts',
         long_description: 'lists your prompts',
-        category: CommandCategory.AI,
-        pipable_to: [],
+        tags: [CommandTag.AI],
+        pipable_to: [CommandTag.TextPipable],
         options: [],
         example_usage: "p/prompt list",
     },
@@ -246,7 +246,7 @@ const list = new Command({
         }
         reply += "```";
         action.reply(invoker, { content: reply, ephemeral: guild_config.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { grep_text: reply }});
+        return new CommandResponse({ pipe_data: { input_text: reply }});
     }
 );
 
@@ -254,7 +254,7 @@ const clone = new Command({
         name: 'clone',
         description: 'clones another users prompt. formatted as user/prompt',
         long_description: 'allows you to clone a prompt from another user so long as its published. this is formatted as "username/prompt name", similarly to github repository urls. ',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         aliases: ["copy"],
         root_aliases: [],
@@ -317,7 +317,7 @@ const use = new Command({
         name: 'use',
         description: 'changes which prompt you are using',
         long_description: 'changes which prompt you are using',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         root_aliases: ['useprompt'],
         options: [
@@ -360,7 +360,7 @@ const set = new Command({
         name: 'set',
         description: 'sets the content of the prompt',
         long_description: 'sets the content of your current prompt',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI, CommandTag.TextPipable],
         pipable_to: [],
         aliases: ['content'],
         root_aliases: ['setprompt'],
@@ -376,8 +376,9 @@ const set = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ invoker, guild_config, args }) {
-        if (!args.content) {
+    async function execute ({ invoker, guild_config, args, piped_data }) {
+        const content = args.content || piped_data?.data?.input_text
+        if (!content) {
             action.reply(invoker, {
                 content: "please supply content",
                 ephemeral: guild_config.other.use_ephemeral_replies
@@ -396,7 +397,7 @@ const command = new Command(
         name: 'prompt',
         description: 'various commands relating to your custom prompts',
         long_description: 'allows you to manage your custom prompts, with subcommands to set the content, description, name, as well as publish them for others to use.',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         pipable_to: [],
         argument_order: "<subcommand> <content?>",
         subcommands: {

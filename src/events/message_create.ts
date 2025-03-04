@@ -76,11 +76,12 @@ async function commandHandler(message: Message<true>) {
             await action.reply(message, `${prefix}${provided_name} doesn't exist :/`);
             return;
         }
-
+        /*
         if (previous_command && !previous_command.pipable_to.includes(command.name)) {
             await action.reply(message, `${prefix}${command.name} is not pipable to ${prefix}${provided_name}`);
             return;
         }
+        */ // should be checking for subcommand pipability, but im ngl im just too lazy to do allat rn and it doesn't really matter if this doesn't happen, some arguments will just be possibly undefined
         message.content = segments[commandIndex]?.trim();
         if (!message.content.startsWith(prefix)) {
             message.content = `${prefix}${message.content.replaceAll("\\|", "|")}`;
@@ -95,6 +96,8 @@ async function commandHandler(message: Message<true>) {
             alias_used: alias,
             previous_response,
             will_be_piped: (segments.length > 1) && (commandIndex < segments.length - 1),
+            piping_to: queue[commandIndex + 1]?.command?.name,
+            next_pipe_message: segments[commandIndex + 1]?.trim()
         });
 
         const response = await command.execute(input);

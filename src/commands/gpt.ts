@@ -4,7 +4,7 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { APIParameters, getConversation, generateImage } from "../lib/gpt";
 import { textToAttachment } from "../lib/attachment_manager";
-import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
 
 const templateAPIParameters = new APIParameters();
 
@@ -16,7 +16,7 @@ const image = new Command(
         name: 'image',
         description: 'various gpt related commands',
         long_description: 'allows you to manipulate your conversation with the AI',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         example_usage: "p/gpt get",
         options: [
             new CommandOption({
@@ -26,7 +26,7 @@ const image = new Command(
                 required: true,
             }),
         ],
-        pipable_to: ["chatbubble"]
+        pipable_to: [CommandTag.ImagePipable]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["prompt"]),
     async function execute ({ invoker, args, piped_data, will_be_piped, guild_config }) {
@@ -52,7 +52,7 @@ const image = new Command(
                 files: [{ name: "image.png", attachment: url }],
                 content: `image generated from prompt: \`${args.prompt}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later. the next time you can generate an image is <t:${Math.floor((lastUsedImageAt[invoker.author.id] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[invoker.author.id] + imageCooldown) / 1000)}:T>). (this stuff's expensive, sorry!)`,
             });
-            return new CommandResponse({ pipe_data: { chatbubble_url: url }});
+            return new CommandResponse({ pipe_data: { image_url: url }});
         } else {
             action.reply(invoker, "provide a prompt to use you baffoon!");
             return;
@@ -65,7 +65,7 @@ const setparam = new Command(
         name: 'setparam',
         description: 'allows you to change parameters for the gpt conversation',
         long_description: 'allows you to change parameters for the gpt conversation, notably things like temperature ad top_p',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         example_usage: "p/gpt setparam temperature 1",
         options: [
             new CommandOption({
@@ -151,9 +151,9 @@ const get = new Command(
         name: 'get',
         description: 'returns your gpt conversation',
         long_description: 'returns your gpt conversation',
-        category: CommandCategory.Debug,
+        tags: [CommandTag.Debug],
         example_usage: "p/gpt get",
-        pipable_to: ["grep"]
+        pipable_to: [CommandTag.TextPipable]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ invoker, guild_config }) {
@@ -161,7 +161,7 @@ const get = new Command(
         const output = conversation.toReasonableOutput();
         const file = textToAttachment(JSON.stringify(output, null, 2), "conversation.txt");
         await action.reply(invoker, { content: "here's your conversation", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { grep_text: JSON.stringify(output, null, 2) } });
+        return new CommandResponse({ pipe_data: { input_text: JSON.stringify(output, null, 2) } });
     }
 );
 
@@ -170,7 +170,7 @@ const clear = new Command(
         name: 'clear',
         description: 'removes you from your current conversation',
         long_description: 'removes your from your current conversation',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         example_usage: "p/gpt clear",
         pipable_to: []
     },
@@ -188,7 +188,7 @@ const command = new Command(
         name: 'gpt',
         description: 'various gpt related commands',
         long_description: 'allows you to manipulate your conversation with the AI',
-        category: CommandCategory.AI,
+        tags: [CommandTag.AI],
         example_usage: "p/gpt get",
         subcommands: {
             deploy:  SubcommandDeploymentApproach.Split,
@@ -196,7 +196,7 @@ const command = new Command(
             self: "gpt",
         },
         options: [],
-        pipable_to: ["grep", "chatbubble"] // todo: fix this so it just works on subcommands
+        pipable_to: [] // todo: fix this so it just works on subcommands
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ invoker, args, guild_config }) {

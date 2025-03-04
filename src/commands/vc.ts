@@ -4,7 +4,7 @@ import * as action from "../lib/discord_action";
 import * as voice from "../lib/voice";
 import { Channel } from "diagnostics_channel";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandCategory, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
 
 
 const leave = new Command(
@@ -12,7 +12,7 @@ const leave = new Command(
         name: 'leave',
         description: 'leave a voice channel',
         long_description: 'make the bot leave the current voice channel',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         example_usage: "p/vc leave",
         allow_external_guild: false,
     },
@@ -49,7 +49,7 @@ const join = new Command(
         name: 'join',
         description: 'join a voice channel',
         long_description: 'make the bot join a specific voice channel',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         example_usage: "p/vc join general",
         allow_external_guild: false,
         options: [
@@ -138,7 +138,7 @@ const command = new Command(
         name: 'vc',
         description: 'join / leave a vc',
         long_description: 'make the bot join or leave a specific voice channel',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         example_usage: "p/vc join",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,

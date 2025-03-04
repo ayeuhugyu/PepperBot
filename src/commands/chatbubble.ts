@@ -4,7 +4,7 @@ import * as action from "../lib/discord_action";
 import sharp from "sharp";
 import { evaluate } from "mathjs";
 import * as log from "../lib/log";
-import { CommandCategory, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
 
 type Gravity = "south" | "north"
 
@@ -13,7 +13,7 @@ const command = new Command(
         name: 'chatbubble',
         description: 'creates a chatbubble out of the provided image or url',
         long_description: 'creates a chatbubble out of the provided image or url. you can specify where the chatbubble should be placed.',
-        category: CommandCategory.Utility,
+        tags: [CommandTag.Utility, CommandTag.ImagePipable],
         pipable_to: [],
         argument_order: "any",
         contributors: [
@@ -135,12 +135,12 @@ const command = new Command(
         }
 
         const gravity: Gravity = (args.gravity as Gravity) || "north";
-        if (!args.url && !args.image && !piped_data?.data?.chatbubble_url) {
+        if (!args.url && !args.image && !piped_data?.data?.image_url) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
 
-        const imageUrl = args.url || args.image?.url || piped_data?.data?.chatbubble_url;
+        const imageUrl = args.url || args.image?.url || piped_data?.data?.image_url;
 
         if (!imageUrl) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });

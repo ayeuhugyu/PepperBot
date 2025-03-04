@@ -5,14 +5,14 @@ import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates
 import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
 import { fixFileName } from "../lib/attachment_manager";
 import * as voice from "../lib/voice";
-import { CommandCategory, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 
 const list = new Command({
         name: 'list',
         description: 'lists sounds',
         long_description: 'lists all the sounds available',
-        category: CommandCategory.Voice,
-        pipable_to: ['grep'],
+        tags: [CommandTag.Voice],
+        pipable_to: [CommandTag.TextPipable],
         aliases: ['ls'],
         root_aliases: [],
         options: [],
@@ -39,7 +39,7 @@ const list = new Command({
             content: reply,
             ephemeral: guild_config.other.use_ephemeral_replies,
         });
-        return new CommandResponse({ pipe_data: { grep_text: reply }});
+        return new CommandResponse({ pipe_data: { input_text: reply }});
     }
 );
 
@@ -47,7 +47,7 @@ const play = new Command({
         name: 'play',
         description: 'plays a sound',
         long_description: 'plays the requested sound',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         pipable_to: [],
         aliases: [],
         root_aliases: [],
@@ -110,7 +110,7 @@ const add = new Command({
         name: 'add',
         description: 'adds a sound',
         long_description: 'adds a sound to the bot',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         pipable_to: [],
         aliases: [],
         root_aliases: ['addsound'],
@@ -159,7 +159,7 @@ const get = new Command({
         name: 'get',
         description: 'returns a sound',
         long_description: 'returns the requested sound',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         pipable_to: [],
         aliases: ['upload'],
         root_aliases: ["getsound"],
@@ -208,7 +208,7 @@ const command = new Command(
         name: 'sound',
         description: 'various commands relating to custom sounds',
         long_description: 'allows you to manage custom sounds, such as uploading, listing, and playing them',
-        category: CommandCategory.Voice,
+        tags: [CommandTag.Voice],
         pipable_to: [],
         argument_order: "<subcommand> <content?>",
         subcommands: {

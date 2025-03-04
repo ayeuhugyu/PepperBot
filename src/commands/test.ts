@@ -1,6 +1,6 @@
 import { Command, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { CommandCategory } from "../lib/classes/command_enums";
+import { CommandTag } from "../lib/classes/command_enums";
 
 
 const command = new Command(
@@ -8,7 +8,7 @@ const command = new Command(
         name: 'test',
         description: 'returns the time it takes for a message to be sent and recieved',
         long_description: 'returns the time it takes for a message to be sent to discord\'s servers and then recieved back',
-        category: CommandCategory.Debug,
+        tags: [CommandTag.Debug],
         pipable_to: ['test'],
         example_usage: "p/test",
         aliases: ["ping"],
