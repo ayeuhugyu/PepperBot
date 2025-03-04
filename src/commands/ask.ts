@@ -3,7 +3,7 @@ import { Command, CommandOption, CommandResponse } from "../lib/classes/command"
 import * as action from "../lib/discord_action";
 import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 const command = new Command(
     {
@@ -17,7 +17,7 @@ const command = new Command(
         aliases: ["question", "askai"],
         options: [
             new CommandOption({
-                name: 'question',
+                name: 'request',
                 description: 'the question to ask the ai',
                 type: CommandOptionType.String,
                 required: true,
@@ -25,7 +25,7 @@ const command = new Command(
         ]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["request"]),
-    async function execute ({ args, invoker, guild_config }) {
+    async function execute ({ args, invoker, guild_config, invoker_type }) {
         if (!args || !args.request) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
             return;
@@ -33,7 +33,9 @@ const command = new Command(
         const request = args.request;
         const processor = new GPTProcessor()
         processor.repliedMessage = invoker;
-        processor.sentMessage = await action.reply(invoker, { content: "processing..." }) as Message;
+        processor.isEphemeral = guild_config.other.use_ephemeral_replies && invoker_type === InvokerType.Interaction;
+        processor.currentContent = "processing...";
+        processor.sentMessage = await action.reply(invoker, { content: "processing...", ephemeral: guild_config.other.use_ephemeral_replies }) as Message;
         let formattedMessage: any = invoker
         formattedMessage.content = request as string;
         if (!formattedMessage.cleanContent) formattedMessage.cleanContent = request as string;

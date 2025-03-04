@@ -1,4 +1,4 @@
-import { Attachment, Collection, Message, PermissionFlagsBits, StickerFormatType, TextChannel, User } from "discord.js";
+import { Attachment, Collection, InteractionResponse, Message, MessageFlags, PermissionFlagsBits, StickerFormatType, TextChannel, User } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
@@ -884,14 +884,16 @@ export enum GPTProcessorLogType {
 
 export class GPTProcessor {
     repliedMessage: Message | FormattedCommandInteraction | undefined = undefined;
-    sentMessage: Message | undefined = undefined;
+    sentMessage: Message | InteractionResponse | undefined = undefined;
+    isEphemeral: boolean = false;
+    currentContent: string = "processing...";
     async log({ t, content }: { t: GPTProcessorLogType, content: string }) { // this is named log because then you can literally just plug console into it and itll work
         if (!this.sentMessage) {
             log.error(`no sent message to log to`);
             return;
         }
         if (t !== GPTProcessorLogType.SentMessage && t !== GPTProcessorLogType.FollowUp) {
-            const editContent = this.sentMessage.content + `\n-# [${t}] ${content}`;
+            const editContent = this.currentContent + `\n-# [${t}] ${content}`;
             return await action.edit(this.sentMessage, { content: editContent });
         } else if (t === GPTProcessorLogType.SentMessage) {
             return await action.edit(this.sentMessage, { content: content });
@@ -901,13 +903,13 @@ export class GPTProcessor {
                 if (channel && channel instanceof TextChannel) {
                     return await channel.send(content);
                 } else {
-                    return await action.edit(this.sentMessage, { content: this.sentMessage.content + `\n${content}` });
+                    return await action.edit(this.sentMessage, { content: this.currentContent + `\n${content}` });
                 }
             }
             if ((this.repliedMessage as FormattedCommandInteraction)) {
-                const forced_ephemeral = (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
+                const forced_ephemeral = this.isEphemeral || (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
                 if (forced_ephemeral) {
-                    return await this.repliedMessage?.followUp(content); // i dont feel like makin a whole method for this rn ngl
+                    return await this.repliedMessage?.followUp({ content: content, flags: MessageFlags.Ephemeral}); // i dont feel like makin a whole method for this rn ngl
                 } else {
                     const channel = this.repliedMessage?.channel;
                     if (channel && channel instanceof TextChannel) {
