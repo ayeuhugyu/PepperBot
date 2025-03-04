@@ -14,8 +14,8 @@ const imageCooldown = 4 * 60 * 60 * 1000; // 4 hours
 const image = new Command(
     {
         name: 'image',
-        description: 'various gpt related commands',
-        long_description: 'allows you to manipulate your conversation with the AI',
+        description: 'generates an image',
+        long_description: 'generates an image from the provided prompt',
         tags: [CommandTag.AI],
         example_usage: "p/gpt get",
         options: [
