@@ -28,7 +28,8 @@ async function gptHandler(message: Message) {
 
     const processor = new GPTProcessor();
     processor.repliedMessage = message;
-    processor.sentMessage = (await action.reply(message, { content: "processing...", ephemeral: true })) as Message;
+    processor.currentContent = "processing...";
+    processor.sentMessage = (await action.reply(message as Message<true>, { content: "processing...", ephemeral: true })) as Message<true>;
 
     await respond(message, processor);
 }

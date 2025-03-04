@@ -1,5 +1,5 @@
-import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions } from "discord.js"; // this import is horrific
-import { FormattedCommandInteraction } from "./classes/command";
+import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags } from "discord.js"; // this import is horrific
+import { CommandInvoker, } from "./classes/command";
 import { config } from "dotenv";
 config();
 import process from "node:process";
@@ -33,6 +33,15 @@ const pingReplacements = {
     "Mister Role": /<@&\d+>/g
 }
 
+function isEmpty(message: Partial<MessageInput>): boolean {
+    return ![
+        (message.content?.length || 0) > 0,
+        (message.embeds?.length || 0) > 0,
+        (message.files?.length || 0) > 0,
+        (message.components?.length || 0) > 0,
+    ].some((value) => value)
+}
+
 export function fixMessage(message: Partial<MessageInput> | string): Partial<MessageInput> {
     if (typeof message === "string") {
         message = { content: message } as MessageInput;
@@ -50,57 +59,34 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
             }
         }
     }
-    let isEmpty = true;
-    const emptyChecks = [
-        (message.content?.length || 0) > 0,
-        (message.embeds?.length || 0) > 0,
-        (message.files?.length || 0) > 0,
-        (message.components?.length || 0) > 0,
-    ]
-    if (emptyChecks.some((value) => value)) {
-        isEmpty = false;
-    }
-    if (isEmpty) {
+
+    if (isEmpty(message)) {
         log.warn("attempt to send an empty message")
         message.content = "<empty>";
     }
+
     if (message.content && message.content.length > 2000) {
         log.warn("attempt to send a message longer than 2000 characters")
-        const path = textToAttachment(message.content, "overflowtext.txt");
+        const attachment = textToAttachment(message.content, "overflow.txt", "the contents of the message as a file");
         message.content = "message content exceeded 2000 characters, here's a file with the text instead"
-        if (!message.files) message.files = [];
-        message.files.push(path);
+        message.files ??= [];
+        message.files.push(attachment);
     } // todo: check embeds
     return message;
 }
 
-export function reply(message: Message | FormattedCommandInteraction, content: Partial<MessageInput> | string): Promise<Message> | Promise<InteractionResponse> | undefined {
-    content = fixMessage(content);
-    if (message instanceof Message) {
-        log.info(`replying to message ${message.id} in channel ${message.channel.id}`);
-        return message.reply(content as string | MessagePayload | MessageReplyOptions);
+export function reply<T extends CommandInvoker>(invoker: T, content: Partial<MessageInput> | string): Promise<T extends Message<true> ? Message<true> : InteractionResponse> {
+    if (invoker instanceof CommandInteraction && typeof content === "object" && content.ephemeral) {
+        (content as InteractionReplyOptions).flags = MessageFlags.Ephemeral;
+        delete content.ephemeral
     }
-    if (message as FormattedCommandInteraction) {
-        log.info(`replying to interaction ${message.id}`);
-        return message.reply(content as InteractionReplyOptions);
-    }
-    return undefined;
+    return invoker.reply(fixMessage(content)) as never
 }
 
-export function send(channel: TextChannel, content: Partial<MessageInput> | string): Promise<Message> | undefined {
-    content = fixMessage(content);
-    if (channel) {
-        log.info(`sending message to channel ${channel.id}`);
-        return channel.send(content as string | MessagePayload | MessageCreateOptions);
-    }
-    return undefined;
+export function send(channel: TextChannel, content: Partial<MessageInput> | string): Promise<Message>  {
+    return channel.send(fixMessage(content))
 }
 
-export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> | undefined {
-    content = fixMessage(content);
-    if (message) {
-        log.info(`editing message ${message.id} in channel ${'channel' in message ? message.channel.id : "unknown"}`);
-        return message.edit(content as string | MessagePayload | MessageEditOptions);
-    }
-    return undefined;
+export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> {
+    return message.edit(fixMessage(content) as string | MessagePayload | MessageEditOptions);
 }
