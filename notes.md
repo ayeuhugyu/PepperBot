@@ -1,6 +1,5 @@
 REWRITE TODO
 ---
-
 commands to finish:
 p/gpt add
 p/todo
@@ -32,10 +31,10 @@ stuff to finish:
 slash commands (again supposedly finished by The Homomorphist but not merged) -- make sure subcommands are actual discord subcommands
 statistics
 update manager - add all past updates
+update display changed to image instead of embed
 
 things to fix:
-root aliases
-piping allowlist for subcommands not ignoring parent's
+piping allowlist for subcommands not ignoring parent's list
 
 LATEST UPDATE
 ---
