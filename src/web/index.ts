@@ -33,10 +33,14 @@ app.use(cookieParser());
 
 app.get("/", async (_req, res, next) => {
     try {
+        const guilds = await getGuilds();
+        const users = await getUsers();
         res.render("index", {
             title: "landing",
-            guilds: await getGuilds(),
-            users: await getUsers()
+            guilds,
+            users,
+            guildsPlural: guilds !== 1 ? "s" : "",
+            usersPlural: users !== 1 ? "s" : ""
         });
     } catch (err) {
         next(err);
