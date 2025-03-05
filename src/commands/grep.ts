@@ -22,7 +22,7 @@ const command = new Command(
         pipable_to: [CommandTag.TextPipable],
         example_usage: "p/git log | grep months",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["search"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["search"]),
     async function execute ({ message, piped_data, guild_config, args }) {
         if (!piped_data?.data) {
             await action.reply(message, { content: "this command must be piped", ephemeral: guild_config.other.use_ephemeral_replies})
@@ -47,6 +47,17 @@ const command = new Command(
                 try {
                     const r = new RegExp(regexSearch);
                     const found = lines.filter((line: string) => line.match(r));
+                    const captureGroups = lines.map((line: string) => {
+                        const match = line.match(r);
+                        if (match) {
+                            return match.slice(1).join(", ");
+                        }
+                    });
+                    found.unshift(`content: \`\`\``)
+                    if (captureGroups.length > 0) {
+                        found.unshift(`captured: \`\`\`${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
+                    }
+                    found.push("```");
                     await action.reply(message, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
                     return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
                 } catch (e: any) {
@@ -55,7 +66,9 @@ const command = new Command(
                 }
             }
             const found = lines.filter((line: string) => line.includes(search));
-            await action.reply(message, { content: found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
+            found.unshift(`content: \`\`\``)
+            found.push("```");
+            await action.reply(message, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
         } else {
             await action.reply(message, { content: "no grep text found", ephemeral: guild_config.other.use_ephemeral_replies });
