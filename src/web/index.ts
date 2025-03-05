@@ -4,6 +4,7 @@ import * as log from "../lib/log";
 import { getGuilds, getUsers } from "../lib/client_values_helpers";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
+import path from "node:path";
 
 const port = 53134
 
@@ -37,6 +38,8 @@ app.get("/", async (_req, res, next) => {
         const users = await getUsers();
         res.render("index", {
             title: "landing",
+            description: "PepperBot",
+            path: "/",
             guilds,
             users,
             guildsPlural: guilds !== 1 ? "s" : "",
@@ -113,6 +116,7 @@ app.use((err: HttpException, req: Request, res: Response, _next: NextFunction) =
 
     res.status(status).render("error", {
         title: "error",
+        description: `${status}: ${message}`,
         path: req.path,
         status: status,
         message: message
