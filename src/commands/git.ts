@@ -26,6 +26,23 @@ const git_log = new Command({
     }
 );
 
+const git_get = new Command({ // this is just so that its usable by slash commands
+        name: 'get',
+        description: 'returns the github repo',
+        long_description: 'sends the link for the public github repo for this bot. this only exists so that slash commands can use it',
+        tags: [CommandTag.Info],
+        pipable_to: [],
+        root_aliases: [],
+        example_usage: "p/git get",
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    async function execute ({ invoker, guild_config, args }) {
+        const content = "the public repo for this bot can be found at https://github.com/ayeuhugyu/PepperBot/";
+        await action.reply(invoker, { content: content, ephemeral: guild_config.other.use_ephemeral_replies });
+        return new CommandResponse({});
+    }
+);
+
 const command = new Command(
     {
         name: 'git',
@@ -36,7 +53,7 @@ const command = new Command(
         argument_order: "<subcommand>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [git_log]
+            list: [git_log, git_get]
         },
         options: [],
         example_usage: "p/git",
