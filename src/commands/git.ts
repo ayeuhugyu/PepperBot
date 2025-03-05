@@ -36,8 +36,7 @@ const command = new Command(
         argument_order: "<subcommand>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [git_log],
-            self: "git",
+            list: [git_log]
         },
         options: [],
         example_usage: "p/git",

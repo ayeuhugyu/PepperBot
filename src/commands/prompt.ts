@@ -403,7 +403,6 @@ const command = new Command(
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
             list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone],
-            self: "prompt",
         },
         options: [],
         example_usage: "p/prompt set always respond with \"hi\"",

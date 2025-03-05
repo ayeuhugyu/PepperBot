@@ -143,7 +143,6 @@ const command = new Command(
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
             list: [join, leave],
-            self: "vc",
         },
         allow_external_guild: false,
         options: [

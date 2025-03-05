@@ -1,5 +1,5 @@
 import { Attachment, Collection, GuildMember, Message, User } from "discord.js";
-import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse, CommandInvoker } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
@@ -214,7 +214,6 @@ const command = new Command(
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
             list: [get, add, play, list],
-            self: "sound"
         },
         options: [],
         example_usage: "p/prompt set always respond with \"hi\"",

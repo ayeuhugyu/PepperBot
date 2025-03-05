@@ -306,7 +306,7 @@ interface SplitSubcommandsSpecification {
      *
      * If set to null, this root command will not have any method of direct invocation by slash commands.
      */
-    self: string | null,
+    self?: string | null,
 }
 
 type SubcommandsSpecification<T extends SubcommandDeploymentApproach = SubcommandDeploymentApproach, O extends CommandOption<ApplicationCommandOptionType, string, any>[] = CommandOption<ApplicationCommandOptionType, string, any>[]> = {

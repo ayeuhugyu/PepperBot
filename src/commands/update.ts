@@ -162,7 +162,6 @@ const command = new Command( // todo change descriptions
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
             list: [get],
-            self: "update",
         },
         options: [],
         example_usage: "p/git",

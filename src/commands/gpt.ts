@@ -193,7 +193,6 @@ const command = new Command(
         subcommands: {
             deploy:  SubcommandDeploymentApproach.Split,
             list: [get, setparam, clear, image],
-            self: "gpt",
         },
         options: [],
         pipable_to: [] // todo: fix this so it just works on subcommands
