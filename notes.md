@@ -33,7 +33,6 @@ piping checker
 
 things to fix:
 piping allowlist for subcommands not ignoring parent's list
-commands are not usable outside of guilds...?
 
 LATEST UPDATE
 ---
