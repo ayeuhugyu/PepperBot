@@ -348,7 +348,7 @@ export class Command<
      * Which ways this command can be invoked, such as through slash commands or a prefixed message.
      */
     input_types: I[] = [ InvokerType.Interaction, InvokerType.Message ] as I[];
-    allow_external_guild = false; // should it be usable in guilds without administrator permission? (thats the only way to detect it)
+    allow_external_guild = true; // should it be usable in guilds without administrator permission? (thats the only way to detect it)
     subcommands?: D;
     pipable_to: (string | CommandTag)[] = []; // array of command names | tags which output may be piped to; the check for it has been disabled for now so its purely visual.
     contributors: Contributor[] = [contributors.ayeuhugyu];
@@ -361,7 +361,7 @@ export class Command<
     getSubcommand: () => Command<S, D, I, F, P> | undefined = () => undefined;
 
     toJSON(): Record<string, unknown> {
-        const json = pick(this, ["name", "description", "type", "options", "default_member_permissions", "integration_types", "nsfw"]);
+        const json = pick(this, ["name", "description", "type", "options", "default_member_permissions", "integration_types", "contexts", "nsfw"]);
         json.options = json.options.map(option => option.toJSON()) as never;
         return json;
     }
