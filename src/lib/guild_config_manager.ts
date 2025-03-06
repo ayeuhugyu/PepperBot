@@ -75,7 +75,11 @@ export class GuildConfig {
     }
 }
 
-export async function newGuildConfig(guild: string) {
+export async function newGuildConfig(guild?: string) {
+    if (!guild) {
+        log.info("no guild provided, using exterior config");
+        return exteriorConfig;
+    }
     const config = new GuildConfig({
         guild,
     });
@@ -83,7 +87,7 @@ export async function newGuildConfig(guild: string) {
     return config;
 }
 
-export function fetchGuildConfig(guild: string = "") {
+export function fetchGuildConfig(guild?: string) {
     return database("configs")
         .where({ guild })
         .select()
@@ -115,3 +119,6 @@ export function fetchGuildConfig(guild: string = "") {
             throw error;
         });
 }
+
+export const exteriorConfig = new GuildConfig({});
+exteriorConfig.other.use_ephemeral_replies = false;
