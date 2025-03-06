@@ -2,7 +2,7 @@ import { Collection, Message } from "discord.js";
 import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 
 const command = new Command(
@@ -10,6 +10,7 @@ const command = new Command(
         name: 'restart',
         description: 'restarts the given process',
         tags: [CommandTag.Debug],
+        input_types: [InvokerType.Message],
         pipable_to: [],
         example_usage: "p/restart sharder",
         aliases: [],
@@ -27,16 +28,17 @@ const command = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["process"]),
     async function execute ({ invoker, args }) {
-        if (!args.process) {
-            args.process = "sharder";
+        let process = args.process;
+        if (!process) {
+            process = "sharder";
         }
-        if (args.process === "sharder" || args.process === "site") {
+        if (process === "sharder" || process === "site") {
             fetch("http://localhost:50000/restart", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ process: args.process })
+                body: JSON.stringify({ process: process })
             }).then(async (response) => {
                 const content = await response.text();
                 action.reply(invoker, content);
