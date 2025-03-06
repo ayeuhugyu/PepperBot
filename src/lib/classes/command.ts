@@ -465,7 +465,7 @@ export class Command<
 
             if (!this.allow_external_guild && !bot_is_admin) {
                 log.info("external guilds are not enabled for command " + this.name);
-                action.reply(invoker, { content: "this command is not enabled in guilds where i don't have administrator", ephemeral: true });
+                action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "oh noes! i lack them permissions!", ephemeral: true });
                 return;
             }
 
