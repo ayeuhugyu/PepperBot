@@ -4,8 +4,6 @@ commands to finish:
 p/gpt add
 p/todo
 p/update - change to subcommands so that users can do p/update get 123 and instead would be p/update create ping=true update text here
-p/deploy (supposedly finished by The Homomorphist but not merged)
-p/undeploy
 p/equipment
 p/info
 p/queue
@@ -28,13 +26,14 @@ website stuff to finish:
 dunno the name but something that just redirects to the discord bot invite link
 
 stuff to finish:
-slash commands (again supposedly finished by The Homomorphist but not merged) -- make sure subcommands are actual discord subcommands
 statistics
 update manager - add all past updates
 update display changed to image instead of embed
+piping checker
 
 things to fix:
 piping allowlist for subcommands not ignoring parent's list
+commands are not usable outside of guilds...?
 
 LATEST UPDATE
 ---
