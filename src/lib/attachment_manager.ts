@@ -8,8 +8,9 @@ export function textToAttachment(text: string, name: string, description?: strin
     }
 }
 
-export function fixFileName(name: string) {
-    const fileNameWithoutExtension = name.slice(0, name.lastIndexOf("."));
+export function fixFileName(name: string, extensionless = false): string {
+    const fileNameWithoutExtension = extensionless ? name : name.slice(0, name.lastIndexOf("."));
+    const extension = extensionless ? "" : name.slice(name.lastIndexOf("."));
     const correctedFileName =
         fileNameWithoutExtension
             .toLowerCase()
@@ -27,6 +28,6 @@ export function fixFileName(name: string) {
             .replaceAll(">", "_")
             .replaceAll(";", "_")
             .replaceAll(",", "_")
-            .slice(0, 200) + name.slice(name.lastIndexOf(".")).slice(0, 50);
+            .slice(0, 200) + extension.slice(0, 50);
     return correctedFileName;
 }
