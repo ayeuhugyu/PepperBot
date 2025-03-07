@@ -7,7 +7,6 @@ p/update - change to subcommands so that users can do p/update get 123 and inste
 p/equipment
 p/info
 p/queue
-p/playurl (will probably just add to queue and play instead now)
 p/random
 p/statistics
 p/cquery
@@ -101,6 +100,9 @@ the biggest new base feature
 - bots can no longer execute any commands. this was just yet another value i had to think about if it would cause problems or not
 - p/vc join & leave now check for the "speak" permission instead of the "connect" permission
 - p/sound list & p/prompt list now use a 3 column list instead of a text file
+- p/playurl and p/queue now support many, many, MANY more urls
+  - use yt-dlp instead of ytdl-core;
+  - supports almost anything you can find at <https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md>
 
 **technical details:**
 
