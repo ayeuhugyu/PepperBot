@@ -119,3 +119,5 @@ the biggest new base feature
 - site is now largely made on the server rather than using javascript to request endpoints and use them
 - normal aliases have been renamed to root aliases
 - text converted to attachments is no longer stored in a cache file
+- using yt-dlp instead of @distube/ytdl-core to download audio for videos
+- using classes to store videos and playlists now instead of just a url
