@@ -97,7 +97,7 @@ const command = new Command(
 
         const fileResponse = await video.toFile().catch(err => {
             action.edit(sent, {
-                content: `failed to download file: \`${err}\``,
+                content: `failed to download file: \`${err.data}\``,
             });
             caughtBufferError = true;
         });
