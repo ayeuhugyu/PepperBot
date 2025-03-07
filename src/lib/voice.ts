@@ -2,6 +2,7 @@ import { GuildMember, StageChannel, VoiceChannel, VoiceState } from "discord.js"
 import * as log from "./log"
 import { AudioPlayer, AudioResource, VoiceConnection, joinVoiceChannel as jvc, createAudioResource as createResource, VoiceConnectionState, VoiceConnectionStatus } from "@discordjs/voice";
 import fs from "fs";
+import { Readable } from "stream";
 
 let voiceManagers: GuildVoiceManager[] = [];
 
@@ -83,6 +84,12 @@ export async function createAudioResource(path: string) {
     }
     const resource: AudioResource | undefined = await createResource(path);
     log.info(`created audio resource from ${path}`);
+    return resource;
+}
+
+export async function createAudioResourceFromBuffer(buffer: Readable) {
+    const resource: AudioResource | undefined = createResource(buffer);
+    log.info(`created audio resource from buffer`);
     return resource;
 }
 
