@@ -4,6 +4,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 dotenv.config();
 import * as log from "./log";
+import { execFile } from "node:child_process";
 
 const start = performance.now();
 
@@ -105,6 +106,20 @@ export function verifyData() {
             log.error(message);
             responses.push({ error: true, message, unrecoverable: false });
         }
+    }
+    try {
+        execFile("yt-dlp", ["--version"], (error, stdout, stderr) => {
+            if (error) {
+                log.error("yt-dlp not found; some features may not work, expect errors. have you added it to your PATH?");
+                responses.push({ error: true, message: "yt-dlp not found; some features may not work, expect errors. have you added it to your PATH?", unrecoverable: false });
+            } else {
+                log.info("found yt-dlp");
+                responses.push({ error: false, message: "found yt-dlp", unrecoverable: false });
+            }
+        });
+    } catch (err) {
+        log.error("yt-dlp not found; some features may not work, expect errors. have you added it to your PATH?");
+        responses.push({ error: true, message: "yt-dlp not found; some features may not work, expect errors. have you added it to your PATH?", unrecoverable: false });
     }
 
     // TODO: verify .env file
