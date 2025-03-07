@@ -1,5 +1,4 @@
 import * as log from "../log";
-import { google, youtube_v3 } from "googleapis";
 import { config } from "dotenv";
 import { Guild } from "discord.js";
 import { GuildVoiceManager } from "../voice";
@@ -7,12 +6,13 @@ import fs from "fs";
 import path from "path";
 import { fixFileName } from "../attachment_manager";
 import { execFile } from "child_process";
+import EventEmitter from "events";
+import * as voice from "../voice";
+import { CustomSound } from "../custom_sound_manager";
+import { AudioPlayerStatus, AudioResource } from "@discordjs/voice";
+import { re } from "mathjs";
 
 config();
-const youtube = google.youtube({
-    version: "v3",
-    auth: process.env.GOOGLE_API_KEY
-});
 
 export interface ShellResponse {
     code: number;
@@ -35,7 +35,7 @@ function sanitizeUrl(url: string): string {
 export function isSupportedUrl(url: string): Promise<VideoSupportedResponse> {
     return new Promise((resolve) => {
         const command = `yt-dlp`;
-        const args = ['--simulate', sanitizeUrl(url), '--no-playlist'];
+        const args = ['--update', '--simulate', sanitizeUrl(url), '--no-playlist'];
         execFile(command, args, (error, stdout, stderr) => {
             resolve({ supported: !error, stdout, stderr });
         });
@@ -59,7 +59,7 @@ export class Video {
     toFile(): Promise<ToFileResponse> {
         return new Promise ((resolve, reject) => {
             if (!this.url) {
-                log.error("attempt to convert video to buffer with no url");
+                log.error("attempt to convert video to file with no url");
                 reject({
                     type: ToFileResponseType.Error,
                     data: "missing video url"
@@ -76,6 +76,7 @@ export class Video {
                 const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title))}.mp3`);
                 const command = `yt-dlp`;
                 const args = [
+                    '--update',
                     '-f', 'bestaudio',
                     '--extract-audio',
                     '--audio-format', 'mp3',
@@ -99,10 +100,10 @@ export class Video {
                     });
                 });
             } catch (err) {
-                log.error("failed to convert video to buffer: ", err);
+                log.error("failed to convert video to file: ", err);
                 reject({
                     type: ToFileResponseType.Error,
-                    data: "failed to convert video to buffer"
+                    data: "failed to convert video to file"
                 });
                 return;
             }
@@ -118,6 +119,7 @@ export class Video {
                 }
                 const command = `yt-dlp`;
                 const args = [
+                    '--update',
                     '--get-title',
                     '--get-duration',
                     sanitizeUrl(this.url),
@@ -151,78 +153,170 @@ export class Video {
 }
 
 export class Playlist {
-    id: string = "";
-    title: string = "";
+    url: string = "";
     videos: (Video | VideoError)[] = [];
-    async getInfo(): Promise<any | VideoError> {
-        if (!this.id) {
-            log.error("attempt to get info of a playlist with no id");
-            return "missing playlist id";
-        }
-        const response = await youtube.playlistItems.list({
-            part: ["id,snippet"],
-            id: [this.id],
-        });
-        if (!response) {
-            log.error("failed to get info of playlist: " + this.id + " (response is undefined)");
-            return "failed to get playlist info (response is undefined)";
-        }
-        const playlistItems = response.data.items;
-        if (!playlistItems) {
-            log.error("failed to get info of playlist: " + this.id + " (playlistItems is undefined)");
-            return "failed to get playlist info (playlistItems is undefined)";
-        }
-        if (playlistItems.length === 0) {
-            log.error("failed to get info of playlist: " + this.id + " (playlistItems is empty)");
-            return "failed to get playlist info (playlistItems is empty)";
-        }
-        playlistItems.forEach((item: youtube_v3.Schema$PlaylistItem) => {
-            const video = new Video(`https://www.youtube.com/watch?v=${item.snippet?.resourceId?.videoId}`);
-            if (!item.snippet) {
-                this.videos.push("missing snippet");
-                return;
-            }
-            if (!item.snippet.title) {
-                this.videos.push("missing title");
-                return;
-            }
-            if (!item.snippet.thumbnails) {
-                this.videos.push("missing thumbnails");
-                return;
-            }
-
-            video.title = item.snippet?.title;
-            this.videos.push(video);
-        });
-
-        return response;
+    constructor(url: string) {
+        this.url = url;
+    }
+    async getVideos(): Promise<void | VideoError> {
+        log.warn("getVideos not implemented");
+        return;
     }
 }
 
-// UNFINISHED queue stuff
-
-export enum QueueItemType {
-    Video,
-    Playlist,
-    Error
+export enum QueueEventType {
+    Add = "Add",
+    Remove = "Remove",
+    Clear = "Clear",
+    Play = "Play",
+    Stop = "Stop",
+    Next = "Next",
+    Previous = "Previous",
+    Error = "Error",
+    Downloading = "Downloading"
 }
 
-export interface QueueItemMap {
-    [QueueItemType.Video]: Video;
-    [QueueItemType.Playlist]: Playlist;
-    [QueueItemType.Error]: VideoError;
-}
-
-export interface QueueItem<T extends QueueItemType> {
-    type: T;
-    item: QueueItemMap[T];
+export enum QueueState {
+    Playing,
+    Idle
 }
 
 export class Queue {
     guild?: Guild;
-    items: QueueItem<QueueItemType>[] = [];
-    voice_manager?: GuildVoiceManager;
-    constructor(guild?: Guild) {
+    items: (Video | CustomSound)[] = []; // there's no verify function ran in here, so its assuming that all videos will be valid (i mean theres a little bit of error handling but not much)
+    voice_manager: GuildVoiceManager;
+    emitter: EventEmitter = new EventEmitter();
+    current_index: number = 0;
+    state: QueueState = QueueState.Idle;
+    currently_playing: Video | CustomSound | null = null;
+    currently_playing_resource: AudioResource | null = null;
+    constructor(guild: Guild | undefined, voice_manager: GuildVoiceManager) {
         this.guild = guild;
+        this.voice_manager = voice_manager;
+
+        this.voice_manager.audio_player.on("stateChange", (oldState, newState) => {
+            this.currently_playing = null;
+            this.currently_playing_resource = null;
+            if (newState.status === AudioPlayerStatus.Idle && this.state !== QueueState.Idle) {
+                this.next();
+            }
+        });
+    }
+    on = this.emitter.on;
+    once = this.emitter.once;
+    off = this.emitter.off;
+    removeAllListeners = this.emitter.removeAllListeners;
+    emit = this.emitter.emit;
+
+    add(item: Video | Playlist | CustomSound) {
+        if (item instanceof Video || item instanceof CustomSound) {
+            this.items.push(item);
+            this.emit(QueueEventType.Add, item);
+        } else if (item instanceof Playlist) {
+            const playlistItem = item as Playlist;
+            playlistItem.videos.forEach((video) => {
+                if (video instanceof Video) {
+                    this.items.push(video);
+                }
+            });
+            this.emit(QueueEventType.Add, item);
+        }
+    }
+    remove(index: number) {
+        this.items.splice(index, 1);
+        this.emit(QueueEventType.Remove, index);
+    }
+    clear() {
+        this.items = [];
+        this.emit(QueueEventType.Clear);
+    }
+    async play(index?: number) {
+        if (index) {
+            this.current_index = index;
+        }
+        this.emit(QueueEventType.Play);
+        const item = this.items[this.current_index];
+        let filePath: string | undefined;
+        if (item instanceof Video) {
+            this.emit(QueueEventType.Downloading, item);
+            let errored = false;
+            const response = await item.toFile().catch((error) => {
+                log.error("failed to convert video to file: " + error);
+                this.emit(QueueEventType.Error, error);
+                this.next();
+                errored = true;
+                return;
+            });
+            if (errored) return;
+            if (!response) {
+                log.error("failed to convert video to file");
+                this.emit(QueueEventType.Error, "failed to convert video to file");
+                this.next();
+                return;
+            }
+            if (response.type === ToFileResponseType.Error) {
+                log.error("failed to convert video to file: " + response.data);
+                this.emit(QueueEventType.Error, response.data);
+                this.next();
+                return;
+            }
+            filePath = response.data;
+        }
+        if (item instanceof CustomSound) {
+            filePath = item.path;
+        }
+        if (!filePath) {
+            log.error("failed to get file path");
+            this.emit(QueueEventType.Error, "failed to get file path");
+            this.next();
+            return;
+        }
+        let errored = false;
+        const resource = await voice.createAudioResource(filePath).catch((error) => {
+            log.error("failed to create audio resource from video file: " + error);
+            this.emit(QueueEventType.Error, error);
+            errored = true;
+            this.next();
+            return;
+        });
+        if (errored) return;
+        if (!resource) {
+            log.error("failed to create audio resource from file");
+            this.emit(QueueEventType.Error, "failed to create audio resource from file");
+            this.next();
+            return;
+        }
+        this.emit(QueueEventType.Play, this.current_index);
+        this.state = QueueState.Playing;
+        this.currently_playing = item;
+        this.currently_playing_resource = resource;
+        this.voice_manager.play(resource);
+    }
+    next() {
+        this.current_index++;
+        if (this.current_index >= this.items.length) {
+            this.current_index = 0;
+            this.play(this.current_index);
+            return;
+        }
+        this.play(this.current_index);
+        this.emit(QueueEventType.Next, this.current_index);
+    }
+    previous() {
+        this.current_index--;
+        if (this.current_index < 0) {
+            this.current_index = this.items.length - 1;
+        }
+        this.play(this.current_index);
+        this.emit(QueueEventType.Previous, this.current_index);
+    }
+    stop() {
+        this.voice_manager.stop();
+        this.state = QueueState.Idle;
+        this.currently_playing = null;
+        this.currently_playing_resource = null;
+        this.emit(QueueEventType.Stop);
     }
 }
+
+// test-url: https://www.youtube.com/watch?v=Iy2Etqoylew&list=PLZPK9tzp-98d-T4YFtbuvaF8W6IgkuwW4
