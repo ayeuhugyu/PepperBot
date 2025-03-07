@@ -1,5 +1,6 @@
 import { Attachment, Collection, GuildMember, Message, User } from "discord.js";
-import { Command, CommandOption, CommandResponse, CommandInvoker } from "../lib/classes/command";
+import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
+import type { CommandInvoker } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
