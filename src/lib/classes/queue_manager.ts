@@ -1,13 +1,12 @@
 import * as log from "../log";
 import { google, youtube_v3 } from "googleapis";
 import { config } from "dotenv";
-import internal, { Readable } from "stream";
 import { Guild } from "discord.js";
 import { GuildVoiceManager } from "../voice";
-import shell from "shelljs";
 import fs from "fs";
 import path from "path";
 import { fixFileName } from "../attachment_manager";
+import { execFile } from "child_process";
 
 config();
 const youtube = google.youtube({
@@ -35,9 +34,10 @@ function sanitizeUrl(url: string): string {
 
 export function isSupportedUrl(url: string): Promise<VideoSupportedResponse> {
     return new Promise((resolve) => {
-        const command = `yt-dlp --simulate "${sanitizeUrl(url)}" --no-playlist`;
-        shell.exec(command, { silent: true }, (code, stdout, stderr) => {
-            resolve({ supported: (code === 0), stdout, stderr});
+        const command = `yt-dlp`;
+        const args = ['--simulate', sanitizeUrl(url), '--no-playlist'];
+        execFile(command, args, (error, stdout, stderr) => {
+            resolve({ supported: !error, stdout, stderr });
         });
     });
 }
@@ -74,10 +74,18 @@ export class Video {
                 }
 
                 const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title))}.mp3`);
-                const command = `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --no-playlist -o "${filePath}" "${this.url}"`;
+                const command = `yt-dlp`;
+                const args = [
+                    '-f', 'bestaudio',
+                    '--extract-audio',
+                    '--audio-format', 'mp3',
+                    '--no-playlist',
+                    '-o', filePath,
+                    sanitizeUrl(this.url)
+                ];
 
-                shell.exec(command, { silent: true }, (code, stdout, stderr) => {
-                    if (code !== 0) {
+                execFile(command, args, (error, stdout, stderr) => {
+                    if (error) {
                         reject({
                             type: ToFileResponseType.Error,
                             data: stderr
@@ -108,9 +116,15 @@ export class Video {
                     reject("missing video url");
                     return;
                 }
-                const command = `yt-dlp --get-title --get-duration "${sanitizeUrl(this.url)}" --no-playlist`;
-                shell.exec(command, { silent: true }, (code, stdout, stderr) => {
-                    if (code !== 0) {
+                const command = `yt-dlp`;
+                const args = [
+                    '--get-title',
+                    '--get-duration',
+                    sanitizeUrl(this.url),
+                    '--no-playlist'
+                ];
+                execFile(command, args, (error, stdout, stderr) => {
+                    if (error) {
                         reject(stderr);
                         return;
                     }
@@ -124,7 +138,7 @@ export class Video {
                     resolve();
                 });
             } catch (error) {
-                log.error("failed to get info of video: " + this.url + " (error: " + error + ")");
+                log.error("failed to get info of video: " + sanitizeUrl(this.url) + " (error: " + error + ")");
                 reject("failed to get video info (error: " + error + ")");
                 return;
             }
