@@ -42,7 +42,10 @@ function sanitizeUrl(url: string): string {
 const error_messages: Record<string, string> = {
     "Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies": "internal error: yt-dlp has not been passed required cookies. ",
     "Requested format is not available. Use --list-formats for a list of available formats": "this website does not provide an audio only format",
-
+    "Error 403: rate limit exceeded": "rate limit exceeded",
+    "Error 429: Too Many Requests": "rate limit exceeded",
+    "Error 404: Not Found": "video not found",
+    "Error 410: Gone": "video has been removed",
 }
 
 function getErrorFromStderr(stderr: string, fallback: string): string {
@@ -85,7 +88,9 @@ export function isSupportedUrl(url: string): Promise<Response<true, VideoError> 
 export class Video {
     url: string = "";
     title: string = "";
-    length?: number; // seconds
+    length: number = 0; // seconds
+    id: string = "";
+    fetched: boolean = false;
     toFile(): Promise<Response<true, VideoError> | Response<false, string>> {
         return new Promise ((resolve, reject) => {
             if (!this.url) {
@@ -99,6 +104,17 @@ export class Video {
                 });
                 return;
             }
+            if (!this.fetched) {
+                log.error("attempt to convert video to file that hasn't been fetched");
+                reject({
+                    type: ResponseType.Error,
+                    data: {
+                        message: "video hasn't been fetched",
+                        full_error: "attempt to convert video to file that hasn't been fetched"
+                    }
+                });
+                return;
+            }
             //let stream: internal.Readable;
             try {
                 const cacheDir = path.resolve(__dirname, "../../../cache/ytdl");
@@ -106,14 +122,17 @@ export class Video {
                     fs.mkdirSync(cacheDir, { recursive: true });
                 }
 
-                const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title))}.mp3`);
+                const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title + "_" + this.id))}.mp3`);
+                const archivePath = path.join(cacheDir, 'archive.txt');
                 const command = `yt-dlp`;
                 const args = [
                     '--update',
-                    '-f', 'bestaudio[abr<=128k]',
+                    '-f', 'bestaudio/best',
                     '--extract-audio',
                     '--audio-format', 'mp3',
                     '--no-playlist',
+                    '--download-archive', archivePath,
+                    '--limit-rate', '500k',
                     '-o', filePath,
                     sanitizeUrl(this.url)
                 ];
@@ -164,6 +183,7 @@ export class Video {
                     '--update',
                     '--get-title',
                     '--get-duration',
+                    '--get-id',
                     sanitizeUrl(this.url),
                     '--no-playlist'
                 ];
@@ -178,7 +198,7 @@ export class Video {
                         });
                         return;
                     }
-                    const [title, length] = stdout.split('\n');
+                    const [title, id, length] = stdout.split('\n');
                     if (!title) {
                         reject({
                             type: ResponseType.Error,
@@ -191,6 +211,8 @@ export class Video {
                     }
                     this.title = title;
                     this.length = parseInt(length);
+                    this.id = id;
+                    this.fetched = true;
                     resolve();
                 });
             } catch (error) {
@@ -215,6 +237,7 @@ export class Video {
 export class Playlist {
     url: string = "";
     videos: (Video | VideoError)[] = [];
+    fetched: boolean = false;
     constructor(url: string) {
         this.url = url;
     }
@@ -233,7 +256,8 @@ export enum QueueEventType {
     Next = "Next",
     Previous = "Previous",
     Error = "Error",
-    Downloading = "Downloading"
+    Downloading = "Downloading",
+    Skipped = "Skipped"
 }
 
 export enum QueueState {
@@ -242,7 +266,7 @@ export enum QueueState {
 }
 
 export class Queue {
-    guild?: Guild;
+    guild_id?: string;
     items: (Video | CustomSound)[] = []; // there's no verify function ran in here, so its assuming that all videos will be valid (i mean theres a little bit of error handling but not much)
     voice_manager: GuildVoiceManager;
     emitter: EventEmitter = new EventEmitter();
@@ -250,8 +274,8 @@ export class Queue {
     state: QueueState = QueueState.Idle;
     currently_playing: Video | CustomSound | null = null;
     currently_playing_resource: AudioResource | null = null;
-    constructor(guild: Guild | undefined, voice_manager: GuildVoiceManager) {
-        this.guild = guild;
+    constructor(guild: string | undefined, voice_manager: GuildVoiceManager) {
+        this.guild_id = guild;
         this.voice_manager = voice_manager;
 
         this.voice_manager.audio_player.on("stateChange", (oldState, newState) => {
@@ -260,6 +284,30 @@ export class Queue {
             if (newState.status === AudioPlayerStatus.Idle && this.state !== QueueState.Idle) {
                 this.next();
             }
+        });
+        this.emitter.on(QueueEventType.Play, () => {
+            this.voice_manager.channel?.send(`> playing \`${this.currently_playing instanceof Video ? this.currently_playing.title : this.currently_playing instanceof CustomSound ? this.currently_playing.name : "unknown"}\``);
+        });
+        this.emitter.on(QueueEventType.Stop, () => {
+            this.voice_manager.channel?.send(`> queue stopped`);
+        });
+        this.emitter.on(QueueEventType.Error, (error: string) => {
+            this.voice_manager.channel?.send(`> error: ${error}`);
+        });
+        this.emitter.on(QueueEventType.Downloading, (item: Video | CustomSound) => {
+            this.voice_manager.channel?.send(`> downloading \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
+        });
+        this.emitter.on(QueueEventType.Add, (item: Video | Playlist | CustomSound) => {
+            this.voice_manager.channel?.send(`> added \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
+        });
+        this.emitter.on(QueueEventType.Remove, (index: number) => {
+            this.voice_manager.channel?.send(`> removed item at index \`${index}\``);
+        });
+        this.emitter.on(QueueEventType.Clear, () => {
+            this.voice_manager.channel?.send(`> cleared queue`);
+        });
+        this.emitter.on(QueueEventType.Skipped, (item: Video | CustomSound) => {
+            this.voice_manager.channel?.send(`> skipped \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
         });
     }
     on = this.emitter.on;
@@ -271,7 +319,7 @@ export class Queue {
     add(item: Video | Playlist | CustomSound) {
         if (item instanceof Video || item instanceof CustomSound) {
             this.items.push(item);
-            this.emit(QueueEventType.Add, item);
+            this.emitter.emit(QueueEventType.Add, item);
         } else if (item instanceof Playlist) {
             const playlistItem = item as Playlist;
             playlistItem.videos.forEach((video) => {
@@ -279,44 +327,52 @@ export class Queue {
                     this.items.push(video);
                 }
             });
-            this.emit(QueueEventType.Add, item);
+            this.emitter.emit(QueueEventType.Add, item);
         }
     }
     remove(index: number) {
         this.items.splice(index, 1);
-        this.emit(QueueEventType.Remove, index);
+        this.emitter.emit(QueueEventType.Remove, index);
     }
     clear() {
         this.items = [];
-        this.emit(QueueEventType.Clear);
+        this.emitter.emit(QueueEventType.Clear);
     }
     async play(index?: number) {
+        if (this.items.length === 0) {
+            this.emitter.emit(QueueEventType.Error, "queue is empty");
+            return;
+        }
         if (index) {
             this.current_index = index;
         }
-        this.emit(QueueEventType.Play);
         const item = this.items[this.current_index];
+        if (!item) {
+            this.emitter.emit(QueueEventType.Error, "item at index " + this.current_index + " is undefined");
+            return;
+        }
         let filePath: string | undefined;
         if (item instanceof Video) {
-            this.emit(QueueEventType.Downloading, item);
-            let errored = false;
-            const response = await item.toFile().catch((error) => {
-                log.error("failed to convert video to file: " + error);
-                this.emit(QueueEventType.Error, error);
+            if (!item.fetched) {
+                this.emitter.emit(QueueEventType.Error, `can't download video ${item.url}; video hasn't been fetched`);
+                this.remove(this.current_index);
                 this.next();
-                errored = true;
                 return;
-            });
-            if (errored) return;
+            }
+            this.emitter.emit(QueueEventType.Downloading, item);
+            const response = await item.toFile().catch((error: Response<true, VideoError>) => { return error });
             if (!response) {
                 log.error("failed to convert video to file");
-                this.emit(QueueEventType.Error, "failed to convert video to file");
+                this.emitter.emit(QueueEventType.Error, "failed to convert video to file");
+                this.remove(this.current_index);
                 this.next();
                 return;
             }
             if (response.type === ResponseType.Error) {
-                log.error("failed to convert video to file: " + response.data);
-                this.emit(QueueEventType.Error, response.data);
+                const error = response.data;
+                log.error("failed to convert video to file: " + error);
+                this.emitter.emit(QueueEventType.Error, error.message + "\n-# \`" + error.full_error + "`");
+                this.remove(this.current_index);
                 this.next();
                 return;
             }
@@ -327,40 +383,46 @@ export class Queue {
         }
         if (!filePath) {
             log.error("failed to get file path");
-            this.emit(QueueEventType.Error, "failed to get file path");
+            this.emitter.emit(QueueEventType.Error, "failed to get file path");
+            this.remove(this.current_index);
             this.next();
             return;
         }
         let errored = false;
         const resource = await voice.createAudioResource(filePath).catch((error) => {
             log.error("failed to create audio resource from video file: " + error);
-            this.emit(QueueEventType.Error, error);
+            this.emitter.emit(QueueEventType.Error, error);
             errored = true;
+            this.remove(this.current_index);
             this.next();
             return;
         });
         if (errored) return;
         if (!resource) {
             log.error("failed to create audio resource from file");
-            this.emit(QueueEventType.Error, "failed to create audio resource from file");
+            this.emitter.emit(QueueEventType.Error, "failed to create audio resource from file");
+            this.remove(this.current_index);
             this.next();
             return;
         }
-        this.emit(QueueEventType.Play, this.current_index);
         this.state = QueueState.Playing;
         this.currently_playing = item;
         this.currently_playing_resource = resource;
+        this.emitter.emit(QueueEventType.Play);
         this.voice_manager.play(resource);
     }
-    next() {
+    next(skipped?: boolean) {
         this.current_index++;
         if (this.current_index >= this.items.length) {
             this.current_index = 0;
             this.play(this.current_index);
             return;
         }
+        this.emitter.emit(QueueEventType.Next, this.current_index);
+        if (skipped) {
+            this.emitter.emit(QueueEventType.Skipped, this.currently_playing);
+        }
         this.play(this.current_index);
-        this.emit(QueueEventType.Next, this.current_index);
     }
     previous() {
         this.current_index--;
@@ -368,14 +430,14 @@ export class Queue {
             this.current_index = this.items.length - 1;
         }
         this.play(this.current_index);
-        this.emit(QueueEventType.Previous, this.current_index);
+        this.emitter.emit(QueueEventType.Previous, this.current_index);
     }
     stop() {
         this.voice_manager.stop();
         this.state = QueueState.Idle;
         this.currently_playing = null;
         this.currently_playing_resource = null;
-        this.emit(QueueEventType.Stop);
+        this.emitter.emit(QueueEventType.Stop);
     }
 }
 

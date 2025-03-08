@@ -51,7 +51,7 @@ const command = new Command(
         if (url.startsWith("<") && url.endsWith(">")) {
             url = url.slice(1, -1);
         }
-        url = url.replaceAll("\"", ""); // this prevents shell injection
+        url = url.replaceAll("\"", "");
 
         const sent = await action.reply(invoker, {
             content: `checking url support...`
