@@ -132,7 +132,7 @@ export class Video {
                     '--audio-format', 'mp3',
                     '--no-playlist',
                     '--download-archive', archivePath,
-                    '--limit-rate', '500k',
+                    '--limit-rate', '250k',
                     '-o', filePath,
                     sanitizeUrl(this.url)
                 ];
@@ -262,7 +262,7 @@ export enum QueueEventType {
 
 export enum QueueState {
     Playing,
-    Idle
+    Idle,
 }
 
 export class Queue {
@@ -372,6 +372,10 @@ export class Queue {
                 const error = response.data;
                 log.error("failed to convert video to file: " + error);
                 this.emitter.emit(QueueEventType.Error, error.message + "\n-# \`" + error.full_error + "`");
+                if (error.message === "rate limit exceeded") {
+                    this.stop();
+                    return;
+                }
                 this.remove(this.current_index);
                 this.next();
                 return;
