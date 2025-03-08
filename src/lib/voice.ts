@@ -77,13 +77,11 @@ export async function leaveVoiceChannel(guildid: string) {
 
 export async function createAudioResource(path: string) {
     if (!fs.existsSync(path)) {
-        log.warn(
-            `attempted to create audio resource for non-existent file ${path}`
-        );
+        log.warn(`attempted to create audio resource for non-existent file`);
         return;
     }
     const resource: AudioResource | undefined = await createResource(path);
-    log.info(`created audio resource from ${path.replace(process.cwd(), "")}`);
+    log.info(`created audio resource from`);
     return resource;
 }
 
