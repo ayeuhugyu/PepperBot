@@ -405,15 +405,15 @@ export class Queue {
         this.voice_manager.play(resource);
     }
     next(skipped?: boolean) {
+        const item = this.items[this.current_index];
         this.current_index++;
         if (this.current_index >= this.items.length) {
             this.current_index = 0;
-            this.play(this.current_index);
-            return;
         }
         this.emitter.emit(QueueEventType.Next, this.current_index);
         if (skipped) {
-            this.emitter.emit(QueueEventType.Skipped, this.currently_playing);
+            this.stop();
+            this.emitter.emit(QueueEventType.Skipped, item);
         }
         this.play(this.current_index);
     }
