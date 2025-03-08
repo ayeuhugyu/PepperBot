@@ -40,6 +40,7 @@ function sanitizeUrl(url: string): string {
 }
 
 const error_messages: Record<string, string> = {
+    "Unsupported URL": "unsupported url",
     "Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies": "internal error: yt-dlp has not been passed required cookies. ",
     "Requested format is not available. Use --list-formats for a list of available formats": "this website does not provide an audio only format",
     "Error 403: rate limit exceeded": "rate limit exceeded",
@@ -57,28 +58,97 @@ function getErrorFromStderr(stderr: string, fallback: string): string {
     return fallback;
 }
 
-export function isSupportedUrl(url: string): Promise<Response<true, VideoError> | Response<false, ShellResponse>> {
+export function parseLength(length: string): number {
+    return parseInt(length);
+}
+
+export async function getInfo(url: string, no_playlist: boolean = false): Promise<Response<false, (Video | Playlist)> | Response<true, VideoError>> {
     return new Promise((resolve, reject) => {
         const command = `yt-dlp`;
-        const args = ['--simulate', sanitizeUrl(url), '--no-playlist'];
+        const args = [
+            '--simulate',
+            '--get-title',
+            '--get-duration',
+            '--get-id',
+            '--get-url',
+            no_playlist ? '--no-playlist' : '--flat-playlist',
+            sanitizeUrl(url),
+        ]
+
         execFile(command, args, (error, stdout, stderr) => {
             if (error) {
-                const filteredStderr = stderr.split('\n').filter(line => !line.startsWith("WARNING:")).join('\n');
                 reject({
                     type: ResponseType.Error,
                     data: {
-                        message: url,
-                        full_error: filteredStderr.replaceAll('\n', "")
+                        message: getErrorFromStderr(stderr, "failed to get video info"),
+                        full_error: stderr.replaceAll('\n', "")
                     }
                 });
                 return;
             }
-            resolve({
-                type: ResponseType.Success,
+
+            const lines = stdout.split('\n').filter((line) => line !== "");
+
+            if (lines.length < 8) { // for some odd reason, some websites return multiple urls from --get-url? this probably isn't a catch all solution but i have zero fuckin clue what else to do
+                const title = lines[0];
+                const id = lines[1];
+                const length = lines[lines.length - 1];
+                if (!title || !id || !length || !url) {
+                    reject({
+                        type: ResponseType.Error,
+                        data: {
+                            message: "failed to get video info",
+                            full_error: "stdout.split('\\n') returned an array with less than 3 elements"
+                        }
+                    });
+                    return;
+                }
+                const video = new Video(url);
+                video.title = title;
+                video.length = parseLength(length);
+                video.id = id;
+                resolve({
+                    type: ResponseType.Success,
+                    data: video
+                })
+                return;
+            }
+
+            const segments = lines.map((_, i) => lines.slice(i, i + 4)).filter((_, i) => i % 4 === 0);
+
+            if (segments.length > 1) {
+                const playlist = new Playlist(url);
+                segments.forEach(([title, id, url, length]) => {
+                    if (!title || !id || !url || !length) {
+                        if (playlist.videos.length === 0) {
+                            reject({
+                                type: ResponseType.Error,
+                                data: {
+                                    message: "failed to get video info",
+                                    full_error: "stdout.split('\\n') returned an array with less than 4 elements"
+                                }
+                            });
+                            return;
+                        } else {
+                            return;
+                        }
+                    }
+                    const video = new Video(url);
+                    video.title = title;
+                    video.length = parseLength(length);
+                    video.id = id;
+                    playlist.videos.push(video);
+                });
+                resolve({
+                    type: ResponseType.Success,
+                    data: playlist
+                });
+            }
+            reject({
+                type: ResponseType.Error,
                 data: {
-                    code: 0,
-                    stdout,
-                    stderr
+                    message: "failed to get video info",
+                    full_error: "stdout.split('\\n') returned an empty array"
                 }
             });
         });
@@ -90,7 +160,6 @@ export class Video {
     title: string = "";
     length: number = 0; // seconds
     id: string = "";
-    fetched: boolean = false;
     toFile(): Promise<Response<true, VideoError> | Response<false, string>> {
         return new Promise ((resolve, reject) => {
             if (!this.url) {
@@ -100,17 +169,6 @@ export class Video {
                     data: {
                         message: "missing video url",
                         full_error: "attempt to convert video to file with no url"
-                    }
-                });
-                return;
-            }
-            if (!this.fetched) {
-                log.error("attempt to convert video to file that hasn't been fetched");
-                reject({
-                    type: ResponseType.Error,
-                    data: {
-                        message: "video hasn't been fetched",
-                        full_error: "attempt to convert video to file that hasn't been fetched"
                     }
                 });
                 return;
@@ -166,66 +224,6 @@ export class Video {
             }
         });
     }
-    async getInfo(): Promise<void | Response<true, VideoError>> {
-        return new Promise((resolve, reject) => {
-            try {
-                if (!this.url) {
-                    log.error("attempt to get info of a video with no url");
-                    reject({
-                        type: ResponseType.Error,
-                        data: "missing video url"
-                    });
-                    return;
-                }
-                const command = `yt-dlp`;
-                const args = [
-                    '--get-title',
-                    '--get-duration',
-                    '--get-id',
-                    sanitizeUrl(this.url),
-                    '--no-playlist'
-                ];
-                execFile(command, args, (error, stdout, stderr) => {
-                    if (error) {
-                        reject({
-                            type: ResponseType.Error,
-                            data: {
-                                message: getErrorFromStderr(stderr, "failed to get video info"),
-                                full_error: stderr.replaceAll('\n', "")
-                            }
-                        });
-                        return;
-                    }
-                    const [title, id, length] = stdout.split('\n');
-                    if (!title) {
-                        reject({
-                            type: ResponseType.Error,
-                            data: {
-                                message: "failed to get video title",
-                                full_error: "stdout.split('\\n') returned an empty array"
-                            }
-                        });
-                        return;
-                    }
-                    this.title = title;
-                    this.length = parseInt(length);
-                    this.id = id;
-                    this.fetched = true;
-                    resolve();
-                });
-            } catch (error) {
-                log.error("failed to get info of video: " + sanitizeUrl(this.url) + " (error: " + error + ")");
-                reject({
-                    type: ResponseType.Error,
-                    data: {
-                        message: "failed to get video info",
-                        full_error: error
-                    }
-                });
-                return;
-            }
-        });
-    }
     constructor(url: string) {
         this.url = sanitizeUrl(url);
         return this;
@@ -235,13 +233,8 @@ export class Video {
 export class Playlist {
     url: string = "";
     videos: (Video | VideoError)[] = [];
-    fetched: boolean = false;
     constructor(url: string) {
         this.url = url;
-    }
-    async getVideos(): Promise<void | VideoError> {
-        log.warn("getVideos not implemented");
-        return;
     }
 }
 
@@ -296,6 +289,10 @@ export class Queue {
             this.voice_manager.channel?.send(`> downloading \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
         });
         this.emitter.on(QueueEventType.Add, (item: Video | Playlist | CustomSound) => {
+            if (item instanceof Playlist) {
+                this.voice_manager.channel?.send(`> added ${item.videos.length} items from playlist`);
+                return;
+            }
             this.voice_manager.channel?.send(`> added \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
         });
         this.emitter.on(QueueEventType.Remove, (index: number) => {
@@ -351,12 +348,6 @@ export class Queue {
         }
         let filePath: string | undefined;
         if (item instanceof Video) {
-            if (!item.fetched) {
-                this.emitter.emit(QueueEventType.Error, `can't download video ${item.url}; video hasn't been fetched`);
-                this.remove(this.current_index);
-                this.next();
-                return;
-            }
             this.emitter.emit(QueueEventType.Downloading, item);
             const response = await item.toFile().catch((error: Response<true, VideoError>) => { return error });
             if (!response) {

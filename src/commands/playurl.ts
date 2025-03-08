@@ -5,7 +5,7 @@ import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gp
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import * as voice from "../lib/voice";
-import { isSupportedUrl, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
+import { getInfo, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
 import { Readable } from "stream";
 
 const command = new Command(
@@ -65,30 +65,16 @@ const command = new Command(
         url = url.replaceAll("\"", "");
 
         const sent = await action.reply(invoker, {
-            content: `checking url support...`
+            content: `getting video info...`
         });
-
-        const supportedResponse = await isSupportedUrl(url).catch((err: Response<true, VideoError>) => { return err });
-        if (supportedResponse?.type === ResponseType.Error) {
+        const item = await getInfo(url, true).catch((err: Response<true, VideoError>) => { return err });
+        if (item?.type === ResponseType.Error) {
             action.edit(sent, {
-                content: `unsupported url: \`${supportedResponse.data.message}\`\n-# \`${supportedResponse.data.full_error}\``,
-                ephemeral: guild_config.other.use_ephemeral_replies,
-            });
-            return;
-        }
-        const video = new Video(url);
-
-        await action.edit(sent, {
-            content: "fetching video info..."
-        });
-
-        const infoResponse = await video.getInfo().catch((err: Response<true, VideoError>) => { return err });
-        if (infoResponse?.type === ResponseType.Error) {
-            action.edit(sent, {
-                content: `failed to get video info: \`${infoResponse.data.message}\`\n-# \`${infoResponse.data.full_error}\``,
+                content: `failed to get video info: \`${item.data.message}\`\n-# \`${item.data.full_error}\``,
             })
             return;
         }
+        const video = item.data as Video;
 
         await action.edit(sent, {
             content: `downloading \`${video.title}\`...`

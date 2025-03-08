@@ -5,7 +5,7 @@ import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gp
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import * as voice from "../lib/voice";
-import { isSupportedUrl, Queue, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
+import { getInfo, Playlist, Queue, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
 import { Readable } from "stream";
 import { GuildConfig } from "../lib/guild_config_manager";
 import { getSound } from "../lib/custom_sound_manager";
@@ -254,39 +254,28 @@ const add = new Command(
             url = url.replaceAll("\"", "");
 
             const sent = await action.reply(invoker, {
-                content: `checking url support...`
+                content: `getting info for video...`
             });
 
-            const supportedResponse = await isSupportedUrl(url).catch((err: Response<true, VideoError>) => { return err });
-            if (supportedResponse?.type === ResponseType.Error) {
-                action.edit(sent, {
-                    content: `unsupported url: \`${supportedResponse.data.message}\`\n-# \`${supportedResponse.data.full_error}\``,
-                    ephemeral: guild_config.other.use_ephemeral_replies,
-                });
+            const item = await getInfo(url).catch((e: Response<true, VideoError>) => { return e });
+            if (item.type === ResponseType.Error) {
+                action.edit(sent, { content: `error getting info: ${item.data.message}\n-#\`${item.data.full_error}\``, ephemeral: guild_config.other.use_ephemeral_replies });
                 return;
             }
-            const video = new Video(url);
-
-            await action.edit(sent, {
-                content: "fetching video info..."
-            });
-
-            const infoResponse = await video.getInfo().catch((err: Response<true, VideoError>) => { return err });
-            if (infoResponse?.type === ResponseType.Error) {
-                action.edit(sent, {
-                    content: `failed to get video info: \`${infoResponse.data.message}\`\n-# \`${infoResponse.data.full_error}\``,
-                })
-                return;
-            }
-
+            const data = item.data;
             const queueResponse = await getQueue(invoker, guild_config);
             if (queueResponse.type === ResponseType.Error) {
                 action.edit(sent, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
                 return;
             }
             const queue = queueResponse.data;
-            queue.add(video);
-            action.edit(sent, { content: `added \`${video.title}\` to the queue` });
+            queue.add(data);
+            if (data instanceof Video) {
+                action.edit(sent, { content: `added \`${data.title}\` to the queue` });
+            }
+            if (data instanceof Playlist) {
+                action.edit(sent, { content: `added ${data.videos.length} videos to the queue` });
+            }
         } else {
             if (url.startsWith("file://")) {
                 url = url.slice(7);
