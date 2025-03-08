@@ -31,8 +31,19 @@ const command = new Command(
     async function execute ({ args, invoker, guild_config, invoker_type }) {
 
         if (!args || !args.url) {
-            action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            if (invoker_type === InvokerType.Message) {
+                if ((invoker as Message).attachments.size > 0) {
+                    const attachment = (invoker as Message).attachments.first();
+                    if (!attachment) {
+                        action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
+                        return;
+                    }
+                    args.url = attachment.url;
+                }
+            } else {
+                action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
+                return;
+            }
         }
 
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
