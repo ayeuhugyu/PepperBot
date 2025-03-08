@@ -103,8 +103,8 @@ the biggest new base feature
 - p/vc join & leave now check for the "speak" permission instead of the "connect" permission
 - p/sound list & p/prompt list now use a 3 column list instead of a text file
 - p/playurl and p/queue now support many, many, MANY more urls
-  - use yt-dlp instead of ytdl-core;
-  - supports almost anything you can find at <https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md>
+  - supports anything you can find at <https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md>
+- adding playlists to p/queue no longer uses googles shitty api that only returns 50 responses at most, now your ENTIRE playlist will be added every time. also supports playlists from websites other than youtube (probably)
 
 **technical details:**
 
