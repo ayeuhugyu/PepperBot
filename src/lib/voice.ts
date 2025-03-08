@@ -83,7 +83,7 @@ export async function createAudioResource(path: string) {
         return;
     }
     const resource: AudioResource | undefined = await createResource(path);
-    log.info(`created audio resource from ${path}`);
+    log.info(`created audio resource from ${path.replace(process.cwd(), "")}`);
     return resource;
 }
 
