@@ -39,6 +39,32 @@ function queueToMessage(queue: Queue): Partial<action.MessageInput> {
     return { content: `queue: ${queue.items.map((q, i) => `${i + 1}. ${q instanceof Video ? q.title : q.name}`).join("\n")}` };
 }
 
+const shuffle = new Command(
+    {
+        name: 'shuffle',
+        description: 'shuffle all items in the queue',
+        long_description: 'randomizes the order of all items in the queue',
+        tags: [CommandTag.Voice],
+        pipable_to: [],
+        example_usage: "p/queue shuffle",
+        argument_order: "",
+        aliases: [],
+        options: []
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    async function execute ({ args, invoker, guild_config, invoker_type }) {
+        const queueResponse = await getQueue(invoker, guild_config);
+        if (queueResponse.type === ResponseType.Error) {
+            action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
+            return;
+        }
+        const queue = queueResponse.data;
+        queue.shuffle();
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
+        action.reply(invoker, { content: "shuffled the queue", ephemeral: guild_config.other.use_ephemeral_replies });
+    }
+);
+
 const previous = new Command(
     {
         name: 'previous',
@@ -60,6 +86,7 @@ const previous = new Command(
         }
         const queue = queueResponse.data;
         queue.previous();
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
         action.reply(invoker, { content: "went to the previous song", ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -85,6 +112,7 @@ const skip = new Command(
         }
         const queue = queueResponse.data;
         queue.next(true);
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
         action.reply(invoker, { content: "skipped the current song", ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -130,6 +158,7 @@ const remove = new Command(
             return;
         }
         queue.remove(index);
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
         action.reply(invoker, { content: `removed index ${args.index}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -155,6 +184,7 @@ const clear = new Command(
         }
         const queue = queueResponse.data;
         queue.clear();
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
         action.reply(invoker, { content: "cleared the queue", ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -180,6 +210,7 @@ const stop = new Command(
         }
         const queue = queueResponse.data;
         queue.stop();
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
         action.reply(invoker, { content: "stopped the queue", ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -205,6 +236,7 @@ const play = new Command(
         }
         const queue = queueResponse.data;
         queue.play();
+        if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
         action.reply(invoker, { content: "began queue at index " + queue.current_index, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -270,6 +302,10 @@ const add = new Command(
             }
             const queue = queueResponse.data;
             queue.add(data);
+            if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) {
+                action.deleteMessage(sent as Message<true>);
+                return;
+            }; // dont reply because it will already have a response from the queue manager's event handling
             if (data instanceof Video) {
                 action.edit(sent, { content: `added \`${data.title}\` to the queue` });
             }
@@ -295,6 +331,7 @@ const add = new Command(
             }
             const queue = queueResponse.data;
             queue.add(sound);
+            if (invoker_type === InvokerType.Message && invoker.channelId === queue.voice_manager.channel?.id) return; // dont reply because it will already have a response from the queue manager's event handling
             action.reply(invoker, { content: `added \`${sound.name}\` to the queue` });
         }
     }
@@ -339,7 +376,7 @@ const command = new Command(
         options: [],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [view, add, play, stop, clear, remove, skip, previous]
+            list: [view, add, play, stop, clear, remove, skip, previous, shuffle]
         }
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
