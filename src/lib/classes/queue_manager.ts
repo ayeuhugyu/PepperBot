@@ -110,7 +110,7 @@ export class Video {
                 const command = `yt-dlp`;
                 const args = [
                     '--update',
-                    '-f', 'bestaudio',
+                    '-f', 'bestaudio[abr<=128k]',
                     '--extract-audio',
                     '--audio-format', 'mp3',
                     '--no-playlist',
