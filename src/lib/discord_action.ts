@@ -1,4 +1,4 @@
-import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags } from "discord.js"; // this import is horrific
+import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel } from "discord.js"; // this import is horrific
 import { CommandInvoker, FormattedCommandInteraction } from "./classes/command";
 import { config } from "dotenv";
 config();
@@ -91,4 +91,8 @@ export function send(channel: TextChannel, content: Partial<MessageInput> | stri
 
 export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> {
     return message.edit(fixMessage(content) as string | MessagePayload | MessageEditOptions);
+}
+
+export function deleteMessage(message: Message): Promise<OmitPartialGroupDMChannel<Message>> {
+    return message.delete();
 }
