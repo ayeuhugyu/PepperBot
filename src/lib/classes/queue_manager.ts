@@ -20,49 +20,82 @@ export interface ShellResponse {
     stderr: string;
 }
 
-export interface VideoSupportedResponse {
-    supported: boolean;
-    stdout: string;
-    stderr: string;
+export interface VideoError {
+    message: string;
+    full_error: string;
 }
 
+export enum ResponseType {
+    Success,
+    Error
+}
+export interface Response<E extends boolean, T> {
+    type: E extends true ? ResponseType.Error : ResponseType.Success;
+    data: T;
+}
 
 function sanitizeUrl(url: string): string {
     // remove any characters that aren't a-z, A-Z, 0-9, :, /, ., ?, &, =, +, -, or _.
     return url.replace(/[^a-zA-Z0-9:\/*?&=+_.-]/g, '');
 }
 
-export function isSupportedUrl(url: string): Promise<VideoSupportedResponse> {
-    return new Promise((resolve) => {
+const error_messages: Record<string, string> = {
+    "Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies": "internal error: yt-dlp has not been passed required cookies. ",
+    "Requested format is not available. Use --list-formats for a list of available formats": "this website does not provide an audio only format",
+
+}
+
+function getErrorFromStderr(stderr: string, fallback: string): string {
+    for (const key in error_messages) {
+        if (stderr.includes(key)) {
+            return error_messages[key];
+        }
+    }
+    return fallback;
+}
+
+export function isSupportedUrl(url: string): Promise<Response<true, VideoError> | Response<false, ShellResponse>> {
+    return new Promise((resolve, reject) => {
         const command = `yt-dlp`;
         const args = ['--update', '--simulate', sanitizeUrl(url), '--no-playlist'];
         execFile(command, args, (error, stdout, stderr) => {
-            resolve({ supported: !error, stdout, stderr });
+            if (error) {
+                const filteredStderr = stderr.split('\n').filter(line => !line.startsWith("WARNING:")).join('\n');
+                reject({
+                    type: ResponseType.Error,
+                    data: {
+                        message: url,
+                        full_error: filteredStderr.replaceAll('\n', "")
+                    }
+                });
+                return;
+            }
+            resolve({
+                type: ResponseType.Success,
+                data: {
+                    code: 0,
+                    stdout,
+                    stderr
+                }
+            });
         });
     });
-}
-
-export enum ToFileResponseType {
-    Success,
-    Error
-}
-export type VideoError = string;
-export interface ToFileResponse {
-    type: ToFileResponseType;
-    data: string | VideoError;
 }
 
 export class Video {
     url: string = "";
     title: string = "";
     length?: number; // seconds
-    toFile(): Promise<ToFileResponse> {
+    toFile(): Promise<Response<true, VideoError> | Response<false, string>> {
         return new Promise ((resolve, reject) => {
             if (!this.url) {
                 log.error("attempt to convert video to file with no url");
                 reject({
-                    type: ToFileResponseType.Error,
-                    data: "missing video url"
+                    type: ResponseType.Error,
+                    data: {
+                        message: "missing video url",
+                        full_error: "attempt to convert video to file with no url"
+                    }
                 });
                 return;
             }
@@ -88,33 +121,42 @@ export class Video {
                 execFile(command, args, (error, stdout, stderr) => {
                     if (error) {
                         reject({
-                            type: ToFileResponseType.Error,
-                            data: stderr
+                            type: ResponseType.Error,
+                            data: {
+                                message: getErrorFromStderr(stderr, "failed to convert video to file"),
+                                full_error: stderr.replaceAll('\n', "")
+                            }
                         });
                         return;
                     }
 
                     resolve({
-                        type: ToFileResponseType.Success,
+                        type: ResponseType.Success,
                         data: filePath
                     });
                 });
             } catch (err) {
                 log.error("failed to convert video to file: ", err);
                 reject({
-                    type: ToFileResponseType.Error,
-                    data: "failed to convert video to file"
+                    type: ResponseType.Error,
+                    data: {
+                        message: "failed to convert video to file",
+                        full_error: err
+                    }
                 });
                 return;
             }
         });
     }
-    async getInfo(): Promise<void | VideoError> {
+    async getInfo(): Promise<void | Response<true, VideoError>> {
         return new Promise((resolve, reject) => {
             try {
                 if (!this.url) {
                     log.error("attempt to get info of a video with no url");
-                    reject("missing video url");
+                    reject({
+                        type: ResponseType.Error,
+                        data: "missing video url"
+                    });
                     return;
                 }
                 const command = `yt-dlp`;
@@ -127,12 +169,24 @@ export class Video {
                 ];
                 execFile(command, args, (error, stdout, stderr) => {
                     if (error) {
-                        reject(stderr);
+                        reject({
+                            type: ResponseType.Error,
+                            data: {
+                                message: getErrorFromStderr(stderr, "failed to get video info"),
+                                full_error: stderr.replaceAll('\n', "")
+                            }
+                        });
                         return;
                     }
                     const [title, length] = stdout.split('\n');
                     if (!title) {
-                        reject("unable to fetch video title");
+                        reject({
+                            type: ResponseType.Error,
+                            data: {
+                                message: "failed to get video title",
+                                full_error: "stdout.split('\\n') returned an empty array"
+                            }
+                        });
                         return;
                     }
                     this.title = title;
@@ -141,7 +195,13 @@ export class Video {
                 });
             } catch (error) {
                 log.error("failed to get info of video: " + sanitizeUrl(this.url) + " (error: " + error + ")");
-                reject("failed to get video info (error: " + error + ")");
+                reject({
+                    type: ResponseType.Error,
+                    data: {
+                        message: "failed to get video info",
+                        full_error: error
+                    }
+                });
                 return;
             }
         });
@@ -254,7 +314,7 @@ export class Queue {
                 this.next();
                 return;
             }
-            if (response.type === ToFileResponseType.Error) {
+            if (response.type === ResponseType.Error) {
                 log.error("failed to convert video to file: " + response.data);
                 this.emit(QueueEventType.Error, response.data);
                 this.next();

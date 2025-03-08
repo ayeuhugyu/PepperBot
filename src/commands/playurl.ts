@@ -5,7 +5,7 @@ import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gp
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import * as voice from "../lib/voice";
-import { isSupportedUrl, ToFileResponseType, Video } from "../lib/classes/queue_manager";
+import { isSupportedUrl, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
 import { Readable } from "stream";
 
 const command = new Command(
@@ -57,10 +57,10 @@ const command = new Command(
             content: `checking url support...`
         });
 
-        const supportedResponse = await isSupportedUrl(url);
-        if (!supportedResponse.supported) {
+        const supportedResponse = await isSupportedUrl(url).catch((err: Response<true, VideoError>) => { return err });
+        if (supportedResponse?.type === ResponseType.Error) {
             action.edit(sent, {
-                content: `unsupported url: \`${supportedResponse.stderr}\``,
+                content: `unsupported url: \`${supportedResponse.data.message}\`\n-# \`${supportedResponse.data.full_error}\``,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
@@ -71,20 +71,10 @@ const command = new Command(
             content: "fetching video info..."
         });
 
-        let caughtInfoError = false;
-
-        const infoResponse = await video.getInfo().catch(err => {
+        const infoResponse = await video.getInfo().catch((err: Response<true, VideoError>) => { return err });
+        if (infoResponse?.type === ResponseType.Error) {
             action.edit(sent, {
-                content: `failed to get video info: \`${err}\``,
-            });
-            caughtInfoError = true;
-        });
-        if (caughtInfoError) {
-            return;
-        }
-        if (typeof infoResponse === "string") {
-            action.edit(sent, {
-                content: `failed to get video info: ${infoResponse}`,
+                content: `failed to get video info: \`${infoResponse.data.message}\`\n-# \`${infoResponse.data.full_error}\``,
             })
             return;
         }
@@ -93,33 +83,17 @@ const command = new Command(
             content: `downloading \`${video.title}\`...`
         });
 
-        let caughtBufferError = false;
-
-        const fileResponse = await video.toFile().catch(err => {
+        const fileResponse = await video.toFile().catch((err: Response<true, VideoError>) => { return err });
+        if (fileResponse?.type === ResponseType.Error) {
             action.edit(sent, {
-                content: `failed to download file: \`${err.data}\``,
-            });
-            caughtBufferError = true;
-        });
-        if (caughtBufferError) {
-            return;
-        }
-        if (fileResponse?.type === ToFileResponseType.Error) {
-            action.edit(sent, {
-                content: `failed to download file: ${fileResponse.data}`,
+                content: `failed to download file: \`${fileResponse.data.message}\`\n-# \`${fileResponse.data.full_error}\``,
             })
             return;
-        }
-        if (fileResponse?.type !== ToFileResponseType.Success) {
-            action.edit(sent, {
-                content: `failed to download file: unknown error`,
-            });
-            return
         }
         const resource = await voice.createAudioResource(fileResponse?.data);
         if (!resource) {
             action.edit(sent, {
-                content: `failed to create audio resource`,
+                content: `failed to create audio resource\n-# \`resource was undefined\``,
             })
             return;
         }
