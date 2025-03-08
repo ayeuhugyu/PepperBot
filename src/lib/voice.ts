@@ -81,13 +81,11 @@ export async function createAudioResource(path: string) {
         return;
     }
     const resource: AudioResource | undefined = await createResource(path);
-    log.info(`created audio resource from`);
     return resource;
 }
 
 export async function createAudioResourceFromBuffer(buffer: Readable) {
     const resource: AudioResource | undefined = createResource(buffer);
-    log.info(`created audio resource from buffer`);
     return resource;
 }
 
