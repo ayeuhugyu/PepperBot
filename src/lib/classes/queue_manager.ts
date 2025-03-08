@@ -248,7 +248,8 @@ export enum QueueEventType {
     Previous = "Previous",
     Error = "Error",
     Downloading = "Downloading",
-    Skipped = "Skipped"
+    Skipped = "Skipped",
+    Shuffle = "Shuffle"
 }
 
 export enum QueueState {
@@ -270,23 +271,24 @@ export class Queue {
         this.voice_manager = voice_manager;
 
         this.voice_manager.audio_player.on("stateChange", (oldState, newState) => {
-            this.currently_playing = null;
-            this.currently_playing_resource = null;
             if (newState.status === AudioPlayerStatus.Idle && this.state !== QueueState.Idle) {
+                this.currently_playing = null;
+                this.currently_playing_resource = null;
                 this.next();
             }
         });
         this.emitter.on(QueueEventType.Play, () => {
             this.voice_manager.channel?.send(`> playing \`${this.currently_playing instanceof Video ? this.currently_playing.title : this.currently_playing instanceof CustomSound ? this.currently_playing.name : "unknown"}\``);
         });
-        this.emitter.on(QueueEventType.Stop, () => {
+        this.emitter.on(QueueEventType.Stop, (skipped: boolean) => {
+            if (skipped) return;
             this.voice_manager.channel?.send(`> queue stopped`);
         });
         this.emitter.on(QueueEventType.Error, (error: string) => {
             this.voice_manager.channel?.send(`> error: ${error}`);
         });
-        this.emitter.on(QueueEventType.Downloading, (item: Video | CustomSound) => {
-            this.voice_manager.channel?.send(`> downloading \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
+        this.emitter.on(QueueEventType.Downloading, (item: Video) => {
+            this.voice_manager.channel?.send(`> downloading \`${item.title}\``);
         });
         this.emitter.on(QueueEventType.Add, (item: Video | Playlist | CustomSound) => {
             if (item instanceof Playlist) {
@@ -303,6 +305,9 @@ export class Queue {
         });
         this.emitter.on(QueueEventType.Skipped, (item: Video | CustomSound) => {
             this.voice_manager.channel?.send(`> skipped \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
+        });
+        this.emitter.on(QueueEventType.Shuffle, () => {
+            this.voice_manager.channel?.send(`> shuffled queue; now at index \`${this.current_index + 1}\``);
         });
     }
     on = this.emitter.on;
@@ -412,7 +417,7 @@ export class Queue {
         }
         this.emitter.emit(QueueEventType.Next, this.current_index);
         if (skipped) {
-            this.stop();
+            this.stop(true);
             this.emitter.emit(QueueEventType.Skipped, item);
         }
         this.play(this.current_index);
@@ -425,12 +430,17 @@ export class Queue {
         this.play(this.current_index);
         this.emitter.emit(QueueEventType.Previous, this.current_index);
     }
-    stop() {
+    stop(skipped: boolean = false) {
         this.voice_manager.stop();
         this.state = QueueState.Idle;
         this.currently_playing = null;
         this.currently_playing_resource = null;
-        this.emitter.emit(QueueEventType.Stop);
+        this.emitter.emit(QueueEventType.Stop, skipped);
+    }
+    shuffle() {
+        this.items = this.items.sort(() => Math.random() - 0.5);
+        this.current_index = this.currently_playing ? this.items.indexOf(this.currently_playing as Video | CustomSound) : 0;
+        this.emitter.emit(QueueEventType.Shuffle);
     }
 }
 
