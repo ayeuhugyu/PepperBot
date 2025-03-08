@@ -60,7 +60,7 @@ function getErrorFromStderr(stderr: string, fallback: string): string {
 export function isSupportedUrl(url: string): Promise<Response<true, VideoError> | Response<false, ShellResponse>> {
     return new Promise((resolve, reject) => {
         const command = `yt-dlp`;
-        const args = ['--update', '--simulate', sanitizeUrl(url), '--no-playlist'];
+        const args = ['--simulate', sanitizeUrl(url), '--no-playlist'];
         execFile(command, args, (error, stdout, stderr) => {
             if (error) {
                 const filteredStderr = stderr.split('\n').filter(line => !line.startsWith("WARNING:")).join('\n');
@@ -126,7 +126,6 @@ export class Video {
                 const archivePath = path.join(cacheDir, 'archive.txt');
                 const command = `yt-dlp`;
                 const args = [
-                    '--update',
                     '-f', 'bestaudio/best',
                     '--extract-audio',
                     '--audio-format', 'mp3',
@@ -180,7 +179,6 @@ export class Video {
                 }
                 const command = `yt-dlp`;
                 const args = [
-                    '--update',
                     '--get-title',
                     '--get-duration',
                     '--get-id',
