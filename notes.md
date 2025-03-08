@@ -6,7 +6,8 @@ p/todo
 p/update - change to subcommands so that users can do p/update get 123 and instead would be p/update create ping=true update text here
 p/equipment
 p/info
-p/queue
+p/queue embed (may or may not be in image format w/ thumbnail icons? idk)
+p/queue add playlist support
 p/random
 p/statistics
 p/cquery
@@ -29,6 +30,7 @@ statistics
 update manager - add all past updates
 update display changed to image instead of embed
 piping checker
+diabolical events
 
 things to fix:
 piping allowlist for subcommands not ignoring parent's list
