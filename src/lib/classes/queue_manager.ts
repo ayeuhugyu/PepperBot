@@ -1,6 +1,6 @@
 import * as log from "../log";
 import { config } from "dotenv";
-import { Guild } from "discord.js";
+import { Guild, VoiceStateManager } from "discord.js";
 import { GuildVoiceManager } from "../voice";
 import fs from "fs";
 import path from "path";
@@ -9,7 +9,7 @@ import { execFile } from "child_process";
 import EventEmitter from "events";
 import * as voice from "../voice";
 import { CustomSound } from "../custom_sound_manager";
-import { AudioPlayerStatus, AudioResource } from "@discordjs/voice";
+import { AudioPlayer, AudioPlayerState, AudioPlayerStatus, AudioResource } from "@discordjs/voice";
 import { re } from "mathjs";
 
 config();
@@ -257,10 +257,18 @@ export enum QueueState {
     Idle,
 }
 
+function audioPlayerStateChange(_oldState: AudioPlayerState, newState: AudioPlayerState, self: Queue) {
+    if (newState.status === AudioPlayerStatus.Idle && self.state !== QueueState.Idle) {
+        self.currently_playing = null;
+        self.currently_playing_resource = null;
+        self.next();
+    }
+}
+
 export class Queue {
     guild_id?: string;
     items: (Video | CustomSound)[] = []; // there's no verify function ran in here, so its assuming that all videos will be valid (i mean theres a little bit of error handling but not much)
-    voice_manager: GuildVoiceManager;
+    voice_manager: GuildVoiceManager | undefined;
     emitter: EventEmitter = new EventEmitter();
     current_index: number = 0;
     state: QueueState = QueueState.Idle;
@@ -268,46 +276,40 @@ export class Queue {
     currently_playing_resource: AudioResource | null = null;
     constructor(guild: string | undefined, voice_manager: GuildVoiceManager) {
         this.guild_id = guild;
-        this.voice_manager = voice_manager;
 
-        this.voice_manager.audio_player.on("stateChange", (oldState, newState) => {
-            if (newState.status === AudioPlayerStatus.Idle && this.state !== QueueState.Idle) {
-                this.currently_playing = null;
-                this.currently_playing_resource = null;
-                this.next();
-            }
-        });
+        this.setVoiceManager(voice_manager);
+
         this.emitter.on(QueueEventType.Play, () => {
-            this.voice_manager.channel?.send(`> playing \`${this.currently_playing instanceof Video ? this.currently_playing.title : this.currently_playing instanceof CustomSound ? this.currently_playing.name : "unknown"}\``);
+            this.voice_manager?.channel?.send(`> playing \`${this.currently_playing instanceof Video ? this.currently_playing.title : this.currently_playing instanceof CustomSound ? this.currently_playing.name : "unknown"}\``);
         });
         this.emitter.on(QueueEventType.Stop, (skipped: boolean) => {
             if (skipped) return;
-            this.voice_manager.channel?.send(`> queue stopped`);
+            this.voice_manager?.channel?.send(`> queue stopped`);
         });
         this.emitter.on(QueueEventType.Error, (error: string) => {
-            this.voice_manager.channel?.send(`> error: ${error}`);
+            this.voice_manager?.channel?.send(`> error: ${error}`);
         });
         this.emitter.on(QueueEventType.Downloading, (item: Video) => {
-            this.voice_manager.channel?.send(`> downloading \`${item.title}\``);
+            this.voice_manager?.channel?.send(`> downloading \`${item.title}\``);
         });
         this.emitter.on(QueueEventType.Add, (item: Video | Playlist | CustomSound) => {
             if (item instanceof Playlist) {
-                this.voice_manager.channel?.send(`> added ${item.videos.length} items from playlist`);
+                this.voice_manager?.channel?.send(`> added ${item.videos.length} items from playlist`);
                 return;
             }
-            this.voice_manager.channel?.send(`> added \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
+            this.voice_manager?.channel?.send(`> added \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
         });
         this.emitter.on(QueueEventType.Remove, (index: number) => {
-            this.voice_manager.channel?.send(`> removed item at index \`${index}\``);
+            this.voice_manager?.channel?.send(`> removed item at index \`${index}\``);
         });
         this.emitter.on(QueueEventType.Clear, () => {
-            this.voice_manager.channel?.send(`> cleared queue`);
+            this.voice_manager?.channel?.send(`> cleared queue`);
         });
         this.emitter.on(QueueEventType.Skipped, (item: Video | CustomSound) => {
-            this.voice_manager.channel?.send(`> skipped \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
+            this.voice_manager?.channel?.send(`> skipped \`${item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "unknown"}\``);
         });
         this.emitter.on(QueueEventType.Shuffle, () => {
-            this.voice_manager.channel?.send(`> shuffled queue; now at index \`${this.current_index + 1}\``);
+            this.voice_manager?.channel?.send(`> shuffled queue; now at index \`${this.current_index + 1}\``);
         });
     }
     on = this.emitter.on;
@@ -315,6 +317,21 @@ export class Queue {
     off = this.emitter.off;
     removeAllListeners = this.emitter.removeAllListeners;
     emit = this.emitter.emit;
+
+    setVoiceManager(manager: GuildVoiceManager) {
+        this.voice_manager = manager;
+        let eventConnection: undefined | AudioPlayer = this.voice_manager?.audio_player.on("stateChange", (oldState, newState) => {
+            audioPlayerStateChange(oldState, newState, this);
+        });
+        this.voice_manager?.connection?.on("stateChange", (oldState, newState) => {
+            if (newState.status === "destroyed") {
+                this.stop();
+                this.voice_manager?.audio_player?.off("stateChange", audioPlayerStateChange);
+                this.voice_manager = undefined;
+                eventConnection = undefined;
+            }
+        });
+    }
 
     add(item: Video | Playlist | CustomSound) {
         if (item instanceof Video || item instanceof CustomSound) {
@@ -407,7 +424,7 @@ export class Queue {
         this.currently_playing = item;
         this.currently_playing_resource = resource;
         this.emitter.emit(QueueEventType.Play);
-        this.voice_manager.play(resource);
+        this.voice_manager?.play(resource);
     }
     next(skipped?: boolean) {
         const item = this.items[this.current_index];
@@ -431,7 +448,7 @@ export class Queue {
         this.emitter.emit(QueueEventType.Previous, this.current_index);
     }
     stop(skipped: boolean = false) {
-        this.voice_manager.stop();
+        this.voice_manager?.stop();
         this.state = QueueState.Idle;
         this.currently_playing = null;
         this.currently_playing_resource = null;
