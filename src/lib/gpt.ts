@@ -136,35 +136,30 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
             },
         }
     },
-    random: {
+    pick_random: {
         type: 'function',
         function: {
-            name: "random",
-            description: "returns a random number between two values. This should only be used when users ask for random values.",
+            name: "pick_random",
+            description: "picks a random item from a list of items. This should only ever be used when a user explicitly states to pick something at random. Do not use this for any other reason.",
             parse: JSON.parse,
             parameters: {
                 type: 'object',
                 properties: {
-                    min: {
-                        type: "number",
-                        description: "minimum value, defaults to 0",
-                        default: 0,
-                    },
-                    max: {
-                        type: "number",
-                        description: "maximum value, defaults to 100",
-                        default: 100,
+                    items: {
+                        type: "array",
+                        items: {
+                            type: "string",
+                        },
+                        description: "list of items to choose from",
                     },
                 },
                 additionalProperties: false,
             },
-            function: async ({ min = 0, max = 100 }: { min: number, max: number }) => {
-                try {
-                    return Math.floor(Math.random() * (max - min + 1) + min);
-                } catch (err: any) {
-                    log.warn(`error while executing random tool: ${err.mesage}`)
-                    return `an error occurred while attempting to generate a random number: ${err.message}`
+            function: async ({ items }: { items: string[] }) => {
+                if (!items || items.length === 0) {
+                    return "ERROR: No items provided.";
                 }
+                return items[Math.floor(Math.random() * items.length)];
             },
         }
     },

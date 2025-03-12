@@ -83,7 +83,7 @@ the biggest new base feature
   - if you for some reason want to use the old prompt, you still can by running `p/prompt clone PepperBot/old`
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
-- new "random" tool allows gpt to generate random numbers
+- new "pick_random" tool allows gpt to get a random item from a list
 - AI can now see stickers
 
 **actual content:**
