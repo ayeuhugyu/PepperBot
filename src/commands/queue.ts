@@ -9,8 +9,18 @@ import { getInfo, Playlist, Queue, Response, ResponseType, Video, VideoError } f
 import { Readable } from "stream";
 import { GuildConfig } from "../lib/guild_config_manager";
 import { getSound } from "../lib/custom_sound_manager";
+import { queue } from "sharp";
 
 let queues: Queue[] = [];
+
+const testQueue = new Queue("1112819622505365556", undefined);
+const response: Response<false, Playlist> = await getInfo("https://www.youtube.com/watch?v=Te_cA3UeFQg&list=PLGPnvYCC8I1Wlpx11Nr3LsmW9sjBH7Jew") as Response<false, Playlist>;
+testQueue.add(response.data);
+testQueue.currently_playing = response.data.videos[6] as any;
+
+export async function getQueueById(guildId: string): Promise<Queue | undefined> {
+    return testQueue;
+}
 
 async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
     let queue = queues.find(q => q.guild_id === invoker.guildId);

@@ -274,7 +274,7 @@ export class Queue {
     state: QueueState = QueueState.Idle;
     currently_playing: Video | CustomSound | null = null;
     currently_playing_resource: AudioResource | null = null;
-    constructor(guild: string | undefined, voice_manager: GuildVoiceManager) {
+    constructor(guild: string | undefined, voice_manager?: GuildVoiceManager) {
         this.guild_id = guild;
 
         this.setVoiceManager(voice_manager);

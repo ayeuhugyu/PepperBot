@@ -3,6 +3,8 @@
     font-size: 1em;
     line-height: 1.25;
 
+    --darkened-background-color: #101010;
+
     background-color: #181818;
     color: #eeeeee;
 }
@@ -37,6 +39,13 @@ h1, h2, h3, h4, h5 {
 }
 i {
     color: #888888;
+}
+a {
+    color: #8095ff
+}
+
+li {
+    list-style-type: none;
 }
 
 /* shamelessly stolen from forgejo/gitea, thanks! */

@@ -2,6 +2,8 @@
 // something like interpolating the string and then finding what it is
 // but for now, we will just hard code it and nothing will happen
 
+import { Guild } from "discord.js";
+
 export async function getGuilds(): Promise<number> {
     const jsonData = await fetch("http://localhost:49999/fetchClientValues", {
         method: "POST", // robtop reference
@@ -12,6 +14,18 @@ export async function getGuilds(): Promise<number> {
         .then(json => json.data) as number[]; // lord god, i come to you a sinner
 
     return jsonData.reduce((prev, val) => prev + val, 0);
+}
+
+export async function getGuild(id: string): Promise<Guild | undefined> {
+    const jsonData = await fetch("http://localhost:49999/getGuild", {
+        method: "POST",
+        body: JSON.stringify({ id: id }),
+        headers: { "Content-Type": "application/json" }
+    })
+        .then(res => res.json())
+        .then(json => json.data) as Guild | string;
+    if (typeof jsonData === "string") return undefined;
+    return jsonData
 }
 
 export async function getUsers(): Promise<number> {

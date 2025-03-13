@@ -1,10 +1,13 @@
 import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
-import { getGuilds, getUsers } from "../lib/client_values_helpers";
+import { getGuild, getGuilds, getUsers } from "../lib/client_values_helpers";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 import path from "node:path";
+import { next } from "cheerio/dist/commonjs/api/traversing";
+import { getQueueById } from "../commands/queue";
+import { getInfo, Queue, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
 
 const port = 53134
 
@@ -82,6 +85,99 @@ app.get("/auth", async (req, res, next) => {
         updateCookies(res, token.access_token, token.refresh_token);
         return res.redirect('/'); // todo: implement redirect system
     }
+});
+
+app.get("/queue/:id", async (req, res, next) => {
+    const queueId = req.params.id as string;
+    if (!queueId) {
+        return next(new HttpException(400, "Missing queue id"));
+    }
+    if (isNaN(parseInt(queueId)) || parseInt(queueId) < 0) {
+        return next(new HttpException(400, "Invalid queue id"));
+    }
+    const guild = await getGuild(queueId);
+    if (!guild) {
+        return next(new HttpException(404, `Guild ${queueId} not found`));
+    }
+    const queue = await getQueueById(queueId);
+    if (!queue) {
+        return next(new HttpException(404, `Queue not found for guild ${guild.name}`));
+    }
+    const items = queue.items.map((item, index) => {
+        return {
+            index: index + 1,
+            name: item instanceof Video ? item.title : item.name,
+            url: item instanceof Video ? item.url : undefined,
+            type: item instanceof Video ? "video" : "sound",
+            isPlaying: item === queue.currently_playing
+        }
+    })
+    res.render("queue", {
+        title: "queue",
+        description: "Queue for " + guild.name,
+        guildName: guild.name,
+        queue: items,
+        queueId: queueId
+    });
+});
+
+app.get("/removeFromQueue", async (req, res, next) => {
+    const queueId = req.query.queueId as string;
+    const index = parseInt(req.query.index as string);
+    if (!queueId || !index) {
+        return next(new HttpException(400, "Missing queue id or index"));
+    }
+    const queue = await getQueueById(queueId);
+    if (!queue) {
+        return next(new HttpException(404, `Queue not found for guild ${queueId}`));
+    }
+    queue.remove(Math.max(index - 1, 0)); // need to subtract 1 to undo the +1 done earlier
+    res.redirect(`/queue/${queueId}`);
+});
+
+app.get("/addToQueue", async (req, res, next) => {
+    const queueId = req.query.queueId as string;
+    const url = req.query.url as string;
+    if (!queueId || !url) {
+        return next(new HttpException(400, "Missing queue id or url"));
+    }
+    const queue = await getQueueById(queueId);
+    if (!queue) {
+        return next(new HttpException(404, `Queue not found for guild ${queueId}`));
+    }
+    const response = await getInfo(url).catch((err: Response<true, VideoError>) => { return err });
+    if (response.type === ResponseType.Error) {
+        return next(new HttpException(400, response.data.message || response.data.full_error || "Unknown error"));
+    }
+    if (response.type === ResponseType.Success) {
+        queue.add(response.data);
+        res.redirect(`/queue/${queueId}`);
+    }
+});
+const queueActions = {
+    "clear": "clear",
+    "previousSongIn": "previous",
+    "nextSongIn": "next",
+    "shuffle": "shuffle"
+};
+
+Object.entries(queueActions).forEach(([urlPart, action]) => {
+    app.get(`/${urlPart}Queue`, async (req, res, next) => {
+        const queueId = req.query.queueId as string;
+        if (!queueId) {
+            return next(new HttpException(400, "Missing queue id"));
+        }
+        const queue = await getQueueById(queueId);
+        if (!queue) {
+            return next(new HttpException(404, `Queue not found for guild ${queueId}`));
+        }
+        const fn = (queue as any)[action];
+        if (typeof fn !== "function") {
+            return next(new HttpException(500, "Invalid action"));
+        }
+        fn.call(queue);
+        res.redirect(`/queue/${queueId}`);
+    });
 });
 
 // api endpoints (json)
