@@ -277,7 +277,7 @@ export class Queue {
     constructor(guild: string | undefined, voice_manager?: GuildVoiceManager) {
         this.guild_id = guild;
 
-        this.setVoiceManager(voice_manager);
+        if (voice_manager) this.setVoiceManager(voice_manager);
 
         this.emitter.on(QueueEventType.Play, () => {
             this.voice_manager?.channel?.send(`> playing \`${this.currently_playing instanceof Video ? this.currently_playing.title : this.currently_playing instanceof CustomSound ? this.currently_playing.name : "unknown"}\``);
