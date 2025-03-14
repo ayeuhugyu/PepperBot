@@ -6,8 +6,7 @@ import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 import path from "node:path";
 import { next } from "cheerio/dist/commonjs/api/traversing";
-import { getQueueById } from "../commands/queue";
-import { getInfo, Queue, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
+import { getInfo, Queue, ResponseType, Video, VideoError, getQueueById } from "../lib/classes/queue_manager";
 
 const port = 53134
 

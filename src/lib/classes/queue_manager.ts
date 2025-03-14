@@ -1,6 +1,6 @@
 import * as log from "../log";
 import { config } from "dotenv";
-import { Guild, VoiceStateManager } from "discord.js";
+import { Guild, GuildMember, VoiceStateManager } from "discord.js";
 import { GuildVoiceManager } from "../voice";
 import fs from "fs";
 import path from "path";
@@ -11,6 +11,8 @@ import * as voice from "../voice";
 import { CustomSound } from "../custom_sound_manager";
 import { AudioPlayer, AudioPlayerState, AudioPlayerStatus, AudioResource } from "@discordjs/voice";
 import { re } from "mathjs";
+import { CommandInvoker } from "./command";
+import { GuildConfig } from "../guild_config_manager";
 
 config();
 
@@ -461,4 +463,43 @@ export class Queue {
     }
 }
 
-// test-url: https://www.youtube.com/watch?v=Iy2Etqoylew&list=PLZPK9tzp-98d-T4YFtbuvaF8W6IgkuwW4
+let queues: Queue[] = [];
+/*
+const testQueue = new Queue("1112819622505365556", undefined);
+const response: Response<false, Playlist> = await getInfo("https://www.youtube.com/watch?v=Te_cA3UeFQg&list=PLGPnvYCC8I1Wlpx11Nr3LsmW9sjBH7Jew") as Response<false, Playlist>;
+testQueue.add(response.data);
+testQueue.currently_playing = response.data.videos[6] as any;
+*/
+
+export async function getQueueById(guildId: string): Promise<Queue | undefined> {
+    return queues.find(q => q.guild_id === guildId);
+    //return testQueue;
+}
+
+export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
+    let queue = queues.find(q => q.guild_id === invoker.guildId);
+    if (queue) {
+        let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
+        if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
+            connectionManager = await voice.joinVoiceChannel((invoker.member.voice.channel));
+        }
+        if (connectionManager) {
+            queue.setVoiceManager(connectionManager);
+        }
+    }
+    if (!invoker.guildId) {
+        return { type: ResponseType.Error, data: "you must be in a guild to use this command" };
+    }
+    if (!queue) {
+        let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
+        if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
+            connectionManager = await voice.joinVoiceChannel((invoker.member.voice.channel));
+        }
+        if (!connectionManager) {
+            return { type: ResponseType.Error, data: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one` };
+        }
+        queue = new Queue(invoker.guildId, connectionManager);
+        queues.push(queue);
+    }
+    return { type: ResponseType.Success, data: queue };
+}
