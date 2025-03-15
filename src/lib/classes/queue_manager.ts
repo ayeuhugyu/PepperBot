@@ -446,7 +446,7 @@ export class Queue {
         });
     }
 
-    add(item: Video | Playlist | CustomSound) {
+    async add(item: Video | Playlist | CustomSound) {
         if (item instanceof Video || item instanceof CustomSound) {
             this.items.push(item);
             this.emitter.emit(QueueEventType.Add, item);
@@ -459,17 +459,17 @@ export class Queue {
             });
             this.emitter.emit(QueueEventType.Add, item);
         }
-        this.write();
+        await this.write();
     }
-    remove(index: number) {
+    async remove(index: number) {
         this.items.splice(index, 1);
         this.emitter.emit(QueueEventType.Remove, index);
-        this.write();
+        await this.write();
     }
-    clear() {
+    async clear() {
         this.items = [];
         this.emitter.emit(QueueEventType.Clear);
-        this.write();
+        await this.write();
     }
     async play(index?: number) {
         if (this.items.length === 0) {
@@ -542,7 +542,7 @@ export class Queue {
         this.emitter.emit(QueueEventType.Play);
         this.voice_manager?.play(resource);
     }
-    next(skipped?: boolean) {
+    async next(skipped?: boolean) {
         const item = this.items[this.current_index];
         this.current_index++;
         if (this.current_index >= this.items.length) {
@@ -554,16 +554,16 @@ export class Queue {
             this.emitter.emit(QueueEventType.Skipped, item);
         }
         this.play(this.current_index);
-        this.write();
+        await this.write();
     }
-    previous() {
+    async previous() {
         this.current_index--;
         if (this.current_index < 0) {
             this.current_index = this.items.length - 1;
         }
         this.play(this.current_index);
         this.emitter.emit(QueueEventType.Previous, this.current_index);
-        this.write();
+        await this.write();
     }
     stop(skipped: boolean = false) {
         this.voice_manager?.stop();
@@ -572,15 +572,15 @@ export class Queue {
         this.currently_playing_resource = null;
         this.emitter.emit(QueueEventType.Stop, skipped);
     }
-    shuffle() {
+    async shuffle() {
+        const currentItem = this.items[this.current_index];
         this.items = this.items.sort(() => Math.random() - 0.5);
-        this.current_index = this.currently_playing ? this.items.indexOf(this.currently_playing as Video | CustomSound) : 0;
+        this.current_index = this.items.indexOf(currentItem as Video | CustomSound) || 0
         this.emitter.emit(QueueEventType.Shuffle);
-        this.write();
+        await this.write();
     }
 }
 
-export const queues: Queue[] = []; // this is probably unnecessary now that i just use database but lowkey i do not give a shit
 /*
 const testQueue = new Queue("1112819622505365556", undefined);
 const response: Response<false, Playlist> = await getInfo("https://www.youtube.com/watch?v=Te_cA3UeFQg&list=PLGPnvYCC8I1Wlpx11Nr3LsmW9sjBH7Jew") as Response<false, Playlist>;
@@ -589,21 +589,19 @@ testQueue.currently_playing = response.data.videos[6] as any;
 */
 
 export async function getQueueById(guildId: string): Promise<Queue | undefined> {
-    let queue = queues.find(q => q.guild_id === guildId);
+    let queue
     const dbItems = await database("queues").where({ guild: guildId })
     if (dbItems.length > 0) {
         queue = Queue.fromDatabase(dbItems);
-        queues.push(queue);
     }
     return queue;
 }
 
 export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
-    let queue = queues.find(q => q.guild_id === invoker.guildId);
+    let queue
     const dbItems = await database("queues").where({ guild: invoker.guildId })
     if (dbItems.length > 0) {
         queue = Queue.fromDatabase(dbItems);
-        queues.push(queue);
     }
     if (queue) {
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
@@ -626,7 +624,6 @@ export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfi
             return { type: ResponseType.Error, data: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one` };
         }
         queue = new Queue(invoker.guildId, connectionManager);
-        queues.push(queue);
     }
     return { type: ResponseType.Success, data: queue };
 }

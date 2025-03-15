@@ -106,7 +106,7 @@ app.get("/queue/:id", async (req, res, next) => {
             name: item instanceof Video ? item.title : item.name,
             url: item instanceof Video ? item.url : undefined,
             type: item instanceof Video ? "video" : "sound",
-            isPlaying: item === queue.currently_playing
+            isPlaying: index === queue.current_index
         }
     })
     res.render("queue", {
@@ -128,7 +128,7 @@ app.get("/removeFromQueue", async (req, res, next) => {
     if (!queue) {
         return next(new HttpException(404, `Queue not found for guild ${queueId}`));
     }
-    queue.remove(Math.max(index - 1, 0)); // need to subtract 1 to undo the +1 done earlier
+    await queue.remove(Math.max(index - 1, 0)); // need to subtract 1 to undo the +1 done earlier
     res.redirect(`/queue/${queueId}`);
 });
 
@@ -147,14 +147,12 @@ app.get("/addToQueue", async (req, res, next) => {
         return next(new HttpException(400, response.data.message || response.data.full_error || "Unknown error"));
     }
     if (response.type === ResponseType.Success) {
-        queue.add(response.data);
+        await queue.add(response.data);
         res.redirect(`/queue/${queueId}`);
     }
 });
 const queueActions = {
     "clear": "clear",
-    "previousSongIn": "previous",
-    "nextSongIn": "next",
     "shuffle": "shuffle"
 };
 
@@ -172,7 +170,7 @@ Object.entries(queueActions).forEach(([urlPart, action]) => {
         if (typeof fn !== "function") {
             return next(new HttpException(500, "Invalid action"));
         }
-        fn.call(queue);
+        await fn.call(queue);
         res.redirect(`/queue/${queueId}`);
     });
 });
