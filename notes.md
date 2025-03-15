@@ -4,7 +4,6 @@ commands to finish:
 p/gpt add
 p/todo
 p/update - change to subcommands so that users can do p/update get 123 and instead would be p/update create ping=true update text here
-p/equipment
 p/info
 p/queue embed (may or may not be in image format w/ thumbnail icons? idk)
 p/queue add playlist support
@@ -53,6 +52,8 @@ lets start off with the bad stuff so you'll forget about it by the time you fini
 - p/jak (soloed by booru.soy)
 - p/embed
 - p/markov
+- p/random buildidea
+- p/equipment (both of these are just too hard to maintain, deepwoken updates too often for me to give a shit (especially since i dont even play the game anymore))
 
 the biggest new base feature
 **command piping:**
