@@ -123,7 +123,6 @@ export function verifyData() {
     }
 
     // TODO: verify .env file
-    dataVerified = true;
     return responses;
 }
 if (!dataVerified) {
@@ -211,14 +210,16 @@ if (!dataVerified) {
     await finishTable("configs");
 
     await ensureTable("queues");
-    await ensureColumn("queues", "guild", (table) => table.string("guild"));
-    await ensureColumn("queues", "user", (table) => table.string("user"));
-    await ensureColumn("queues", "queue_name", (table) => table.string("queue_name").notNullable());
-    await ensureColumn("queues", "index", (table) => table.integer("index").notNullable());
-    await ensureColumn("queues", "link", (table) => table.string("link").notNullable());
-    await ensureColumn("queues", "title", (table) => table.string("title").notNullable());
-    await ensureColumn("queues", "currentIndex", (table) => table.string("currentIndex"));
-    await ensureColumn("queues", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
+    await ensureColumn("queues", "guild", (table) => table.string("guild").notNullable());
+    await ensureColumn("queues", "type", (table) => table.string("type").notNullable());
+    await ensureColumn("queues", "index", (table) => table.integer("index"));
+    await ensureColumn("queues", "url", (table) => table.string("url"));
+    await ensureColumn("queues", "title", (table) => table.string("title"));
+    await ensureColumn("queues", "length", (table) => table.integer("length"));
+    await ensureColumn("queues", "videoId", (table) => table.string("videoId"));
+    await ensureColumn("queues", "name", (table) => table.string("name"));
+    await ensureColumn("queues", "key", (table) => table.string("key"));
+    await ensureColumn("queues", "value", (table) => table.string("value"));
     await finishTable("queues");
 
     await ensureTable("sounds");
@@ -239,6 +240,8 @@ if (!dataVerified) {
 
     log.info("database verified");
 }
+
+dataVerified = true;
 
 export default database;
 
