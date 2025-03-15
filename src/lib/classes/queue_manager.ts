@@ -8,11 +8,12 @@ import { fixFileName } from "../attachment_manager";
 import { execFile } from "child_process";
 import EventEmitter from "events";
 import * as voice from "../voice";
-import { CustomSound } from "../custom_sound_manager";
+import { CustomSound, getSoundNoAutocorrect } from "../custom_sound_manager";
 import { AudioPlayer, AudioPlayerState, AudioPlayerStatus, AudioResource } from "@discordjs/voice";
 import { re } from "mathjs";
 import { CommandInvoker } from "./command";
 import { GuildConfig } from "../guild_config_manager";
+import database from "../data_manager";
 
 config();
 
@@ -74,6 +75,7 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
             '--get-id',
             '--get-url',
             no_playlist ? '--no-playlist' : '--flat-playlist',
+            process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? process.env.PATH_TO_COOKIES : '',
             sanitizeUrl(url),
         ]
 
@@ -193,6 +195,7 @@ export class Video {
                     '--download-archive', archivePath,
                     '--limit-rate', '250k',
                     '-o', filePath,
+                    process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? process.env.PATH_TO_COOKIES : '',
                     sanitizeUrl(this.url)
                 ];
 
@@ -267,6 +270,29 @@ function audioPlayerStateChange(_oldState: AudioPlayerState, newState: AudioPlay
     }
 }
 
+export enum dbQueueDataType {
+    Video = "video",
+    CustomSound = "custom_sound",
+    QueueData = "queue_data"
+}
+
+export type dbQueue<T extends dbQueueDataType> = {
+    guild: string;
+    type: T;
+
+    index: T extends dbQueueDataType.Video ? number : T extends dbQueueDataType.CustomSound ? number : undefined;
+
+    url: T extends dbQueueDataType.Video ? string : undefined;
+    title: T extends dbQueueDataType.Video ? string : undefined;
+    length: T extends dbQueueDataType.Video ? number : undefined;
+    videoId: T extends dbQueueDataType.Video ? string : undefined;
+
+    name: T extends dbQueueDataType.CustomSound ? string : undefined;
+
+    key: T extends dbQueueDataType.QueueData ? string : undefined;
+    value: T extends dbQueueDataType.QueueData ? string : undefined;
+}
+
 export class Queue {
     guild_id?: string;
     items: (Video | CustomSound)[] = []; // there's no verify function ran in here, so its assuming that all videos will be valid (i mean theres a little bit of error handling but not much)
@@ -320,6 +346,91 @@ export class Queue {
     removeAllListeners = this.emitter.removeAllListeners;
     emit = this.emitter.emit;
 
+    static fromDatabase(dbQueue: dbQueue<dbQueueDataType>[]) {
+        const queueData: dbQueue<dbQueueDataType.QueueData>[] = dbQueue.filter((data): data is dbQueue<dbQueueDataType.QueueData> => data.type === "queue_data");
+        const items = dbQueue.filter((data): data is dbQueue<dbQueueDataType.Video> | dbQueue<dbQueueDataType.CustomSound> => data.type === "video" || data.type === "custom_sound");
+
+        const queue = new Queue(queueData[0]?.guild);
+
+        queueData.forEach((data) => { // will use this more later possibly if i add saving them with different names but idk
+            switch (data.key) {
+                case "current_index":
+                    queue.current_index = parseInt(data.value);
+                    break;
+                default: break;
+            }
+        });
+
+        items.forEach(async (data) => {
+            switch (data.type) {
+                case "video":
+                    const video = new Video(data.url as string);
+                    video.title = data.title as string;
+                    video.length = data.length as number;
+                    video.id = data.videoId as string;
+                    queue.items.splice(data.index, 0, video);
+                    break;
+                case "custom_sound":
+                    const sound = await getSoundNoAutocorrect(data.name);
+                    if (sound) {
+                        queue.items.splice(data.index, 0, sound);
+                    }
+                    break;
+                default: break;
+            }
+        });
+
+        return queue;
+    }
+
+    async write(): Promise<dbQueue<dbQueueDataType>[]> {
+        const queueData: dbQueue<dbQueueDataType>[] = [];
+        this.items.forEach((item, index) => {
+            if (item instanceof Video) {
+                queueData.push({
+                    guild: this.guild_id || "",
+                    type: dbQueueDataType.Video,
+                    index: index,
+                    url: item.url,
+                    title: item.title,
+                    length: item.length,
+                    videoId: item.id,
+                    name: undefined,
+                    key: undefined,
+                    value: undefined
+                });
+            } else if (item instanceof CustomSound) {
+                queueData.push({
+                    guild: this.guild_id || "",
+                    type: dbQueueDataType.CustomSound,
+                    index: index,
+                    url: undefined,
+                    title: undefined,
+                    length: undefined,
+                    videoId: undefined,
+                    name: item.name,
+                    key: undefined,
+                    value: undefined
+                });
+            }
+        });
+        queueData.push({
+            guild: this.guild_id || "",
+            type: dbQueueDataType.QueueData,
+            index: undefined,
+            url: undefined,
+            title: undefined,
+            length: undefined,
+            videoId: undefined,
+            name: undefined,
+            key: "current_index",
+            value: this.current_index.toString()
+        });
+        await database("queues").where({ guild: this.guild_id }).delete();
+        await database("queues").insert(queueData);
+        return queueData;
+    }
+
     setVoiceManager(manager: GuildVoiceManager) {
         this.voice_manager = manager;
         let eventConnection: undefined | AudioPlayer = this.voice_manager?.audio_player.on("stateChange", (oldState, newState) => {
@@ -348,14 +459,17 @@ export class Queue {
             });
             this.emitter.emit(QueueEventType.Add, item);
         }
+        this.write();
     }
     remove(index: number) {
         this.items.splice(index, 1);
         this.emitter.emit(QueueEventType.Remove, index);
+        this.write();
     }
     clear() {
         this.items = [];
         this.emitter.emit(QueueEventType.Clear);
+        this.write();
     }
     async play(index?: number) {
         if (this.items.length === 0) {
@@ -440,6 +554,7 @@ export class Queue {
             this.emitter.emit(QueueEventType.Skipped, item);
         }
         this.play(this.current_index);
+        this.write();
     }
     previous() {
         this.current_index--;
@@ -448,6 +563,7 @@ export class Queue {
         }
         this.play(this.current_index);
         this.emitter.emit(QueueEventType.Previous, this.current_index);
+        this.write();
     }
     stop(skipped: boolean = false) {
         this.voice_manager?.stop();
@@ -460,10 +576,11 @@ export class Queue {
         this.items = this.items.sort(() => Math.random() - 0.5);
         this.current_index = this.currently_playing ? this.items.indexOf(this.currently_playing as Video | CustomSound) : 0;
         this.emitter.emit(QueueEventType.Shuffle);
+        this.write();
     }
 }
 
-let queues: Queue[] = [];
+export const queues: Queue[] = []; // this is probably unnecessary now that i just use database but lowkey i do not give a shit
 /*
 const testQueue = new Queue("1112819622505365556", undefined);
 const response: Response<false, Playlist> = await getInfo("https://www.youtube.com/watch?v=Te_cA3UeFQg&list=PLGPnvYCC8I1Wlpx11Nr3LsmW9sjBH7Jew") as Response<false, Playlist>;
@@ -472,12 +589,22 @@ testQueue.currently_playing = response.data.videos[6] as any;
 */
 
 export async function getQueueById(guildId: string): Promise<Queue | undefined> {
-    return queues.find(q => q.guild_id === guildId);
-    //return testQueue;
+    let queue = queues.find(q => q.guild_id === guildId);
+    const dbItems = await database("queues").where({ guild: guildId })
+    if (dbItems.length > 0) {
+        queue = Queue.fromDatabase(dbItems);
+        queues.push(queue);
+    }
+    return queue;
 }
 
 export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
     let queue = queues.find(q => q.guild_id === invoker.guildId);
+    const dbItems = await database("queues").where({ guild: invoker.guildId })
+    if (dbItems.length > 0) {
+        queue = Queue.fromDatabase(dbItems);
+        queues.push(queue);
+    }
     if (queue) {
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
         if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {

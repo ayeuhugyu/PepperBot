@@ -4,8 +4,6 @@ import * as log from "../lib/log";
 import { getGuild, getGuilds, getUsers } from "../lib/client_values_helpers";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
-import path from "node:path";
-import { next } from "cheerio/dist/commonjs/api/traversing";
 import { getInfo, Queue, ResponseType, Video, VideoError, getQueueById } from "../lib/classes/queue_manager";
 
 const port = 53134

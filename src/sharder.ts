@@ -3,7 +3,6 @@ import { config } from 'dotenv';
 config();
 import * as log from './lib/log';
 import { startServer } from './lib/communication_manager';
-import { client } from './bot';
 
 const app = await startServer("sharder", 49999);
 if (app instanceof Error) {
