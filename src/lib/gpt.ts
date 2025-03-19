@@ -902,6 +902,7 @@ export class GPTProcessor {
                 }
             }
             if ((this.repliedMessage as FormattedCommandInteraction)) {
+                console.log("interaction followup")
                 const forced_ephemeral = this.isEphemeral || (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
                 if (forced_ephemeral) {
                     return await this.repliedMessage?.followUp({ content: content, flags: MessageFlags.Ephemeral}); // i dont feel like makin a whole method for this rn ngl
@@ -909,6 +910,8 @@ export class GPTProcessor {
                     const channel = this.repliedMessage?.channel;
                     if (channel && channel instanceof TextChannel) {
                         return await action.send(channel, content);
+                    } else {
+                        return await this.repliedMessage?.followUp({ content: content });
                     }
                 }
             }
@@ -922,14 +925,19 @@ const messageSplitCharacters = "$SPLIT_MESSAGE$"
 export async function respond(userMessage: Message | GPTFormattedCommandInteraction, processor: GPTProcessor) {
     const conversation = await getConversation(userMessage);
     await conversation.addMessage(userMessage, GPTRole.User);
+    let hasFatallyErrored = false;
     conversation.on(ConversationEvents.FunctionCall, async (toolCalls: ChatCompletionMessageToolCall[]) => {
         await processor.log({ t: GPTProcessorLogType.ToolCall, content: toolCalls.map((toolCall) => `${toolCall.function.name} (${toolCall.id}) with args ${JSON.stringify(toolCall.function.arguments, null, 2).replaceAll(/\n/g, ' ').replaceAll("\\", "")}` ).join('\n-# [ToolCall] ') });
     });
     conversation.on(ConversationEvents.FatalError, async (error: any) => {
+        hasFatallyErrored = true;
         await processor.log({ t: GPTProcessorLogType.Error, content: `fatal error: ${error}; debug data will persist` });
         conversation.removeAllListeners();
     });
     const response = await conversation.run();
+    if (hasFatallyErrored) {
+        return;
+    }
     const fullMessageContent = response?.choices[0]?.message?.content;
     const excludedFullMessageContent = fullMessageContent//?.replaceAll(/\$EXCLUDE_START\$[\s\S]*?\$EXCLUDE_END\$/g, '');
     let messages = excludedFullMessageContent?.split(messageSplitCharacters) || [excludedFullMessageContent || ""];
