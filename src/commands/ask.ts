@@ -1,8 +1,7 @@
-import { Collection, Message } from "discord.js";
+import { Collection, Message, Attachment } from "discord.js";
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
-import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 const command = new Command(
@@ -13,24 +12,39 @@ const command = new Command(
         tags: [CommandTag.AI],
         pipable_to: [CommandTag.TextPipable],
         example_usage: "p/ask hi there",
-        argument_order: "<question>",
+        argument_order: "<request> [attach your image]",
         aliases: ["question", "askai"],
         options: [
             new CommandOption({
                 name: 'request',
                 description: 'the question to ask the ai',
                 type: CommandOptionType.String,
-                required: true,
+                required: false,
+            }),
+            new CommandOption({
+                name: 'image',
+                description: 'an image to provide context',
+                type: CommandOptionType.Attachment,
+                required: false,
             })
         ]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["request"]),
+    async function getArguments ({ invoker, command_name_used, guild_config }) {
+        invoker = invoker as Message<true>;
+        const args = new Collection();
+        const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+        const text = invoker.content.slice(commandLength)?.trim();
+        args.set('request', text);
+        if (invoker.attachments.size > 0) args.set('image', invoker.attachments.first());
+        return args;
+    }, // No arguments template needed
     async function execute ({ args, invoker, guild_config, invoker_type }) {
-        if (!args || !args.request) {
+        if (!args || (!args.request && !args.image)) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
             return;
         }
         const request = args.request;
+        const image = args.image as Attachment | undefined;
         const processor = new GPTProcessor()
         processor.repliedMessage = invoker;
         processor.isEphemeral = guild_config.other.use_ephemeral_replies && invoker_type === InvokerType.Interaction;
@@ -40,6 +54,9 @@ const command = new Command(
         formattedMessage.content = request as string;
         if (!formattedMessage.cleanContent) formattedMessage.cleanContent = request as string;
         formattedMessage.attachments = formattedMessage.attachments || new Collection();
+        if (image) {
+            formattedMessage.attachments.set(image.id, image);
+        }
         formattedMessage as GPTFormattedCommandInteraction;
         const response = await respond(formattedMessage, processor);
         return new CommandResponse({ pipe_data: { input_text: response } });
