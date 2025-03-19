@@ -3,15 +3,25 @@
     font-size: 1em;
     line-height: 1.25;
 
-    --darkened-background-color: #101010;
+    --background-color: #181818;
+    --background-color-dark: #101010;
+    --background-color-extra-dark: #080808;
 
-    background-color: #181818;
+    --border-color: #434343;
+
+    --text-color: #eeeeee;
+    --text-color-light: #ffffff;
+    --text-color-dark: #898989;
+    --text-color-darker: #515151;
+
+
+    background-color: var(--background-color);
     color: #eeeeee;
 }
 
 body {
     margin: 0;
-    padding: 0;
+    padding: 1em;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -34,14 +44,15 @@ p {
     margin-bottom: .8em;
 }
 h1, h2, h3, h4, h5 {
-    margin-top: .8em;
-    margin-bottom: .8em;
+    margin-top: .2em;
+    margin-bottom: .2em;
 }
 i {
     color: #888888;
 }
 a {
-    color: #8095ff
+    color: #8095ff;
+    text-decoration: none;
 }
 
 li {
@@ -58,4 +69,120 @@ li {
 }
 .error {
     text-align: center;
+}
+
+/* generic stuff */
+
+.page-centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+.no-padding {
+    padding: 0;
+}
+
+.little-padding {
+    padding: 0.2em;
+}
+
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.column {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.gap {
+    gap: 1em;
+}
+.small-gap {
+    gap: 0.5em;
+}
+
+.centered {
+    justify-content: center;
+    align-items: center;
+}
+.justify-center {
+    justify-content: center;
+}
+.align-center {
+    align-items: center;
+}
+
+.card {
+    background-color: var(--background-color-extra-dark);
+    color: var(--text-color);
+    border: 0.1em solid var(--border-color);
+    border-radius: 0.5em;
+    padding: 1em;
+}
+
+.hover-button {
+    transition: 0.3s;
+}
+
+.hover-button:hover {
+    background-color: var(--background-color-dark);
+    transform: scale(1.1);
+    box-shadow: 0 0 0.5em #ffffff80, 0 0 0.5em #ffffff80;
+}
+
+.background-standard {
+    background-color: var(--background-color);
+}
+.background-dark {
+    background-color: var(--background-color-dark);
+}
+.background-extra-dark {
+    background-color: var(--background-color-extra-dark);
+}
+
+/* specific stuff */
+
+/* queue */
+
+.queue-title {
+    padding-top: 0.25em;
+}
+
+.queue-controller {
+    padding: 0.5em;
+}
+
+.queue-controller .queue-input-element {
+    margin: 0;
+    padding: 0.5em;
+}
+
+.remove-button {
+    padding: 0.25em;
+}
+
+.queue-item {
+    margin-bottom: 0.25em;
+}
+
+.queue-item-index {
+    border-left: 0.1em solid var(--border-color);
+    border-right: 0.1em solid var(--border-color);
+    padding-left: 0.35em;
+    padding-right: 0.35em;
 }

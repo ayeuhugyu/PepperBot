@@ -93,16 +93,14 @@ app.get("/queue/:id", async (req, res, next) => {
         return next(new HttpException(400, "Invalid queue id"));
     }
     const guild = await getGuild(queueId);
-    if (!guild) {
-        return next(new HttpException(404, `Guild ${queueId} not found`));
-    }
     const queue = await getQueueById(queueId);
     if (!queue) {
-        return next(new HttpException(404, `Queue not found for guild ${guild.name}`));
+        return next(new HttpException(404, `Queue not found for guild ${guild?.name || queueId}`));
     }
+    const largestIndex = queue.items.length;
     const items = queue.items.map((item, index) => {
         return {
-            index: index + 1,
+            index: (index + 1).toString().padStart(largestIndex.toString().length, '0'),
             name: item instanceof Video ? item.title : item.name,
             url: item instanceof Video ? item.url : undefined,
             type: item instanceof Video ? "video" : "sound",
@@ -111,8 +109,8 @@ app.get("/queue/:id", async (req, res, next) => {
     })
     res.render("queue", {
         title: "queue",
-        description: "Queue for " + guild.name,
-        guildName: guild.name,
+        description: "Queue for " + guild?.name || queueId,
+        guildName: guild?.name || queueId,
         queue: items,
         queueId: queueId
     });
