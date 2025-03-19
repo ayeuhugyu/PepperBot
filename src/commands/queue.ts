@@ -10,7 +10,8 @@ import { Readable } from "stream";
 import { GuildConfig } from "../lib/guild_config_manager";
 import { getSound } from "../lib/custom_sound_manager";
 
-function queueToMessage(queue: Queue): Partial<action.MessageInput> {
+async function queueToMessage(queue: Queue): Promise<Partial<action.MessageInput>> {
+    await queue.fetch();
     return { content: `queue: ${queue.items.map((q, i) => `${i + 1}. ${q instanceof Video ? q.title : q.name}`).join("\n")}` };
 }
 
@@ -332,7 +333,7 @@ const view = new Command(
             return;
         }
         const queue = queueResponse.data;
-        let message = queueToMessage(queue);
+        let message = await queueToMessage(queue);
         message.ephemeral = guild_config.other.use_ephemeral_replies;
         action.reply(invoker, message);
     }
@@ -366,7 +367,7 @@ const command = new Command(
             return;
         }
         const queue = queueResponse.data;
-        let message = queueToMessage(queue);
+        let message = await queueToMessage(queue);
         message.ephemeral = guild_config.other.use_ephemeral_replies;
         action.reply(invoker, message);
     }

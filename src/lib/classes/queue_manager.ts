@@ -293,6 +293,47 @@ export type dbQueue<T extends dbQueueDataType> = {
     value: T extends dbQueueDataType.QueueData ? string : undefined;
 }
 
+async function queueFromDatabase(dbItems: dbQueue<dbQueueDataType>[], inputQueue?: Queue): Promise<Queue> {
+    const queueData: dbQueue<dbQueueDataType.QueueData>[] = dbItems.filter((data): data is dbQueue<dbQueueDataType.QueueData> => data.type === "queue_data");
+    const items = dbItems.filter((data): data is dbQueue<dbQueueDataType.Video> | dbQueue<dbQueueDataType.CustomSound> => data.type === "video" || data.type === "custom_sound");
+
+    const queue = inputQueue || new Queue(queueData[0]?.guild);
+
+    queueData.forEach((data) => { // will use this more later possibly if i add saving them with different names but idk
+        switch (data.key) {
+            case "current_index":
+                queue.current_index = parseInt(data.value);
+                break;
+            default: break;
+        }
+    });
+
+    items.forEach(async (data) => {
+        switch (data.type) {
+            case "video":
+                const video = new Video(data.url as string);
+                video.title = data.title as string;
+                video.length = data.length as number;
+                video.id = data.videoId as string;
+                queue.items.splice(data.index, 0, video);
+                break;
+            case "custom_sound":
+                const sound = await getSoundNoAutocorrect(data.name);
+                if (sound) {
+                    queue.items.splice(data.index, 0, sound);
+                }
+                break;
+            default: break;
+        }
+    });
+
+    return queue;
+}
+
+async function getDatabaseQueueItems(guildId: string): Promise<dbQueue<dbQueueDataType>[]> {
+    return await database("queues").where({ guild: guildId });
+}
+
 export class Queue {
     guild_id?: string;
     items: (Video | CustomSound)[] = []; // there's no verify function ran in here, so its assuming that all videos will be valid (i mean theres a little bit of error handling but not much)
@@ -346,41 +387,21 @@ export class Queue {
     removeAllListeners = this.emitter.removeAllListeners;
     emit = this.emitter.emit;
 
-    static fromDatabase(dbQueue: dbQueue<dbQueueDataType>[]) {
-        const queueData: dbQueue<dbQueueDataType.QueueData>[] = dbQueue.filter((data): data is dbQueue<dbQueueDataType.QueueData> => data.type === "queue_data");
-        const items = dbQueue.filter((data): data is dbQueue<dbQueueDataType.Video> | dbQueue<dbQueueDataType.CustomSound> => data.type === "video" || data.type === "custom_sound");
+    static async fromDatabase(guildId: string) {
+        if (!guildId) {
+            return undefined;
+        }
+        const items = await getDatabaseQueueItems(guildId);
+        if (items.length === 0) {
+            return undefined;
+        }
+        return queueFromDatabase(items);
+    }
 
-        const queue = new Queue(queueData[0]?.guild);
-
-        queueData.forEach((data) => { // will use this more later possibly if i add saving them with different names but idk
-            switch (data.key) {
-                case "current_index":
-                    queue.current_index = parseInt(data.value);
-                    break;
-                default: break;
-            }
-        });
-
-        items.forEach(async (data) => {
-            switch (data.type) {
-                case "video":
-                    const video = new Video(data.url as string);
-                    video.title = data.title as string;
-                    video.length = data.length as number;
-                    video.id = data.videoId as string;
-                    queue.items.splice(data.index, 0, video);
-                    break;
-                case "custom_sound":
-                    const sound = await getSoundNoAutocorrect(data.name);
-                    if (sound) {
-                        queue.items.splice(data.index, 0, sound);
-                    }
-                    break;
-                default: break;
-            }
-        });
-
-        return queue;
+    async fetch(): Promise<Queue> {
+        const items = await getDatabaseQueueItems(this.guild_id || "");
+        this.items = [];
+        return await queueFromDatabase(items, this);
     }
 
     async write(): Promise<dbQueue<dbQueueDataType>[]> {
@@ -447,6 +468,7 @@ export class Queue {
     }
 
     async add(item: Video | Playlist | CustomSound) {
+        await this.fetch();
         if (item instanceof Video || item instanceof CustomSound) {
             this.items.push(item);
             this.emitter.emit(QueueEventType.Add, item);
@@ -462,6 +484,7 @@ export class Queue {
         await this.write();
     }
     async remove(index: number) {
+        await this.fetch();
         this.items.splice(index, 1);
         this.emitter.emit(QueueEventType.Remove, index);
         await this.write();
@@ -472,6 +495,7 @@ export class Queue {
         await this.write();
     }
     async play(index?: number) {
+        await this.fetch();
         if (this.items.length === 0) {
             this.emitter.emit(QueueEventType.Error, "queue is empty");
             return;
@@ -479,7 +503,7 @@ export class Queue {
         if (index) {
             this.current_index = index;
         }
-        const item = this.items[this.current_index];
+        const item = await getItemAtIndex(this.guild_id || "", this.current_index);
         if (!item) {
             this.emitter.emit(QueueEventType.Error, "item at index " + this.current_index + " is undefined");
             return;
@@ -543,6 +567,7 @@ export class Queue {
         this.voice_manager?.play(resource);
     }
     async next(skipped?: boolean) {
+        await this.fetch();
         const item = this.items[this.current_index];
         this.current_index++;
         if (this.current_index >= this.items.length) {
@@ -557,6 +582,7 @@ export class Queue {
         await this.write();
     }
     async previous() {
+        await this.fetch();
         this.current_index--;
         if (this.current_index < 0) {
             this.current_index = this.items.length - 1;
@@ -573,6 +599,7 @@ export class Queue {
         this.emitter.emit(QueueEventType.Stop, skipped);
     }
     async shuffle() {
+        await this.fetch();
         const currentItem = this.items[this.current_index];
         this.items = this.items.sort(() => Math.random() - 0.5);
         this.current_index = this.items.indexOf(currentItem as Video | CustomSound) || 0
@@ -588,21 +615,35 @@ testQueue.add(response.data);
 testQueue.currently_playing = response.data.videos[6] as any;
 */
 
-export async function getQueueById(guildId: string): Promise<Queue | undefined> {
-    let queue
-    const dbItems = await database("queues").where({ guild: guildId })
-    if (dbItems.length > 0) {
-        queue = Queue.fromDatabase(dbItems);
+export async function getItemAtIndex(id: string, index: number) {
+    const data: dbQueue<dbQueueDataType.Video | dbQueueDataType.CustomSound> | undefined = await database("queues").where({ guild: id, index: index }).first();
+    if (!data) {
+        return undefined;
     }
+    switch (data.type) {
+        case "video":
+            const video = new Video(data.url as string);
+            video.title = data.title as string;
+            video.length = data.length as number;
+            video.id = data.videoId as string;
+            return video;
+        case "custom_sound":
+            const sound = await getSoundNoAutocorrect((data as dbQueue<dbQueueDataType.CustomSound>).name);
+            if (sound) {
+                return sound;
+            }
+            return undefined;
+        default: return undefined;
+    }
+}
+
+export async function getQueueById(guildId: string): Promise<Queue | undefined> {
+    let queue = await Queue.fromDatabase(guildId);
     return queue;
 }
 
 export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
-    let queue
-    const dbItems = await database("queues").where({ guild: invoker.guildId })
-    if (dbItems.length > 0) {
-        queue = Queue.fromDatabase(dbItems);
-    }
+    let queue = await Queue.fromDatabase(invoker.id);
     if (queue) {
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
         if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
