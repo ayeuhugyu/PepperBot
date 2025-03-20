@@ -1,10 +1,10 @@
 import { Collection, Message, User } from "discord.js";
-import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
+import { Command, CommandInvoker, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { getPrompt, getPromptByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
+import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
 import { userPrompts } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -226,21 +226,60 @@ const list = new Command({
         long_description: 'lists your prompts',
         tags: [CommandTag.AI],
         pipable_to: [CommandTag.TextPipable],
-        options: [],
+        options: [
+            new CommandOption({
+                name: 'user',
+                description: 'the user to list prompts for',
+                type: CommandOptionType.User,
+                required: false,
+            })
+        ],
         example_usage: "p/prompt list",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ invoker, guild_config }) {
-        const prompts = await getUserPrompts(invoker.author.id);
-        let reply = "your prompts: ```";
+    async function getArguments({ invoker, guild_config, command_name_used }) {
+        invoker = invoker as CommandInvoker<InvokerType.Message>;
+        const args: Record<string, (User | Boolean | string) | undefined> = {};
+        const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+        const arg = invoker.content.slice(commandLength)?.trim();
+        const hadArg = arg && arg.length > 0;
+        let user = invoker.mentions.users.first();
+        if (!user) {
+            user = invoker.client.users.cache.get(arg);
+        }
+        if (!user) {
+            user = invoker.client.users.cache.find(user => user.username.toLowerCase() === arg?.toLowerCase());
+        }
+        args.usedArg = arg;
+        args.user = user;
+        args.hadArg = hadArg || undefined;
+        return args;
+    },
+    async function execute ({ invoker, guild_config, args }) {
+        if (args.hadArg && !args.user) {
+            action.reply(invoker, { content: "couldn't find user: " + args.usedArg, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        let user = args.user as User || invoker.author as User;
+        let notUser = user !== invoker.author;
+        let prompts = await getUserPrompts(user.id);
+        if (prompts.length === 0) {
+            prompts = await getPromptsByUsername(user.username);
+        }
+        if (prompts.length === 0) {
+            action.reply(invoker, { content: `${notUser ? user.username : "you"} ${notUser ? "has" : "have"} no ${notUser ? "published" : ""} prompts`, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        let reply = `${notUser ? user.username + "'s" : "your"} prompts: \`\`\``;
         if (prompts.length < 10) {
             prompts.forEach(prompt => {
+                if (notUser && !prompt.published) return;
                 reply += `\n${prompt.name}`;
             });
         } else {
             const columnWidth = Math.max(...prompts.map(prompt => prompt.name.length)) + 4;
             prompts.forEach((prompt, index) => {
                 if (index % 3 === 0 && index !== 0) reply += "\n";
+                if (notUser && !prompt.published) return;
                 reply += prompt.name.padEnd(columnWidth);
             });
         }
@@ -343,6 +382,29 @@ const use = new Command({
         if ((args.content === "default") || (args.content === "reset")) {
             userPrompts.delete(invoker.author.id);
             action.reply(invoker, { content: "now using default prompt", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({});
+        }
+        const [username, ...promptname] = (args.content as string).split("/");
+        if (username && promptname) {
+            const prompt = await getPromptByUsername(promptname.join("/"), username);
+            if (!prompt) {
+                action.reply(invoker, { content: `couldn't find prompt \`${promptname}\` from user \`${username}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({});
+            }
+            const newPrompt = new Prompt({
+                author_id: invoker.author.id,
+                author_username: invoker.author.username,
+                author_avatar: invoker.author.displayAvatarURL(),
+                name: prompt.name,
+                content: prompt.content,
+                description: prompt.description,
+                nsfw: prompt.nsfw,
+                created_at: prompt.created_at,
+                published: false,
+            });
+            await writePrompt(newPrompt);
+            userPrompts.set(invoker.author.id, newPrompt.name);
+            action.reply(invoker, { content: `now using/editing prompt \`${promptname}\``, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
         const prompt = await getPrompt(args.content as string, invoker.author.id);

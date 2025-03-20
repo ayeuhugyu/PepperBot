@@ -84,6 +84,12 @@ export async function getUserPrompts(user: string) {
     });
 }
 
+export async function getPromptsByUsername(username: string) {
+    return await database("prompts").where({ author_username: username }).then((rows) => {
+        return rows.map((row) => new Prompt(row));
+    });
+}
+
 export async function getPublishedPrompts() {
     return await database("prompts").where({ published: 1 }).then((rows) => {
         return rows.map((row) => new Prompt(row));
