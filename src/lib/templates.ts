@@ -1,5 +1,5 @@
 import { Attachment, Collection, Message } from "discord.js";
-import { CommandInput, CommandInvoker, GetArgumentsFunction } from "./classes/command";
+import { CommandAccess, CommandInput, CommandInvoker, GetArgumentsFunction } from "./classes/command";
 import { InvokerType } from "./classes/command_enums";
 
 export enum GetArgumentsTemplateType {
@@ -57,4 +57,9 @@ export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, arg
                     return args;
                 }
     }
+}
+
+export const CommandAccessTemplates = {
+    public: new CommandAccess({}, {}),
+    dev_only: new CommandAccess({ users: ["440163494529073152"] }, {}),
 }

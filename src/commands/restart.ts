@@ -1,7 +1,7 @@
 import { Collection, Message } from "discord.js";
 import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 
@@ -14,9 +14,7 @@ const command = new Command(
         pipable_to: [],
         example_usage: "p/restart sharder",
         aliases: [],
-        access: new CommandAccess({
-            users: ["440163494529073152"]
-        }),
+        access: CommandAccessTemplates.dev_only,
         options: [
             new CommandOption({
                 name: 'process',
