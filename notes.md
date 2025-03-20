@@ -6,10 +6,8 @@ p/todo
 p/update - change to subcommands so that users can do p/update get 123 and instead would be p/update create ping=true update text here
 p/info
 p/queue embed (may or may not be in image format w/ thumbnail icons? idk)
-p/queue add playlist support
 p/random
 p/statistics
-p/cquery
 p/force
 p/help
 
@@ -21,6 +19,7 @@ website stuff to finish:
 /updates (views updates)
 /config (utilize oauth2 shenanigans)
 /prompts (also utilize oauth2 shenanigans) (tis the prompt browser)
+/queues (would list active queues)
 /terms & /privacy (these two can come much later though, they're just needed for discord verification)
 dunno the name but something that just redirects to the discord bot invite link
 
@@ -125,3 +124,4 @@ the biggest new base feature
 - text converted to attachments is no longer stored in a cache file
 - using yt-dlp instead of @distube/ytdl-core to download audio for videos
 - using classes to store videos and playlists now instead of just a url
+- paged embeds have been completely redone and are no longer horrendous to use
