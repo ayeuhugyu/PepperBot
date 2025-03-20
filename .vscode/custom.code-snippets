@@ -3,7 +3,7 @@
         "scope": "typescript",
         "prefix": "templatecommand",
         "body": [
-            "import { Command, CommandAccess, CommandOption, CommandResponse } from \"../lib/classes/command\";",
+            "import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse } from \"../lib/classes/command\";",
             "import * as action from \"../lib/discord_action\";",
             "import { getArgumentsTemplate, GetArgumentsTemplateType } from \"../lib/templates\";",
             "import { CommandTag, InvokerType, CommandOptionType } from \"../lib/classes/command_enums\";",
@@ -35,6 +35,21 @@
             "",
             "export default command;"
         ],
-        "description": "Boilerplate code for a TypeScript command file"
+        "description": "Boilerplate code for a command file"
+    },
+    "getarguments": {
+        "scope": "typescript",
+        "prefix": "templategetarguments",
+        "body": [
+            "function getArguments({ invoker, command_name_used, guild_config }) {",
+            "    invoker = invoker as CommandInvoker<InvokerType.Message>;",
+            "    const args: Record<string, string | undefined> = {};",
+            "    const commandLength = `${guild_config.other.prefix}\\${command_name_used}`.length;",
+            "    const arg = invoker.content.slice(commandLength)?.trim()?.split(' ')[0]?.trim();",
+            "    args['argname'] = arg;",
+            "    return args;",
+            "},"
+        ],
+        "description": "Boilerplate code for a getArguments function"
     }
 }
