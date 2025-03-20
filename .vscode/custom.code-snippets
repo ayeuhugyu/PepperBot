@@ -1,0 +1,40 @@
+{
+    "command": {
+        "scope": "typescript",
+        "prefix": "templatecommand",
+        "body": [
+            "import { Command, CommandAccess, CommandOption, CommandResponse } from \"../lib/classes/command\";",
+            "import * as action from \"../lib/discord_action\";",
+            "import { getArgumentsTemplate, GetArgumentsTemplateType } from \"../lib/templates\";",
+            "import { CommandTag, InvokerType, CommandOptionType } from \"../lib/classes/command_enums\";",
+            "",
+            "const command = new Command(",
+            "    {",
+            "        name: 'name',",
+            "        description: 'description',",
+            "        long_description: 'description',",
+            "        tags: [],",
+            "        options: [",
+            "            new CommandOption({",
+            "                name: 'argument',",
+            "                description: 'description',",
+            "                long_description: 'description',",
+            "                type: CommandOptionType.String,",
+            "                required: true",
+            "            })",
+            "        ],",
+            "        input_types: [InvokerType.Message, InvokerType.Interaction],",
+            "        example_usage: \"\",",
+            "        aliases: []",
+            "    },",
+            "    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, [\"argument\"]),",
+            "    async function execute ({ invoker, args }) {",
+            "",
+            "    }",
+            ");",
+            "",
+            "export default command;"
+        ],
+        "description": "Boilerplate code for a TypeScript command file"
+    }
+}
