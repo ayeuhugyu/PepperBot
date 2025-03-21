@@ -8,7 +8,6 @@ p/info
 p/queue embed (may or may not be in image format w/ thumbnail icons? idk)
 p/random
 p/statistics
-p/force
 p/help
 
 website stuff to finish:
@@ -53,17 +52,14 @@ lets start off with the bad stuff so you'll forget about it by the time you fini
 - p/markov
 - p/random buildidea
 - p/equipment (both of these are just too hard to maintain, deepwoken updates too often for me to give a shit (especially since i dont even play the game anymore))
+- p/force (two reasons: it's TOS questionable and i lowkey just didn't wanna bother remaking it; i might readd it later if theres enough demand for it)
 
 the biggest new base feature
 **command piping:**
 
 - commands can now be piped by adding " | p/command" to the end of it. for example: "p/test | p/test | p/test"
 - new command p/grep which functions nearly identically to grep on linux, added exclusively for the purpose of piping to it
-- commands that can now be piped, and their effects:
-  - p/test can now be piped to itself, displaying the full time it took to execute all p/tests at the end
-  - p/git log can now be piped to grep
-  - p/eval can now be piped to grep
-  - p/chatbubble now has piping support, nothing uses it yet though
+  there's too many commands that are pipable to eachother to really list, so just find out yourself by looking at the guide page.
 
 **gpt stuff:**
 

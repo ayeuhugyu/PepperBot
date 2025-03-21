@@ -244,6 +244,7 @@ if (!dataVerified) {
 dataVerified = true;
 
 export default database;
+export const tables = ["prompts", "todos", "configs", "queues", "sounds", "updates"];
 
 ['SIGINT', 'SIGTERM', 'SIGQUIT', 'EXIT'].forEach(signal => {
     process.on(signal, () => {
