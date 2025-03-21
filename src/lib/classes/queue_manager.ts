@@ -491,6 +491,7 @@ export class Queue {
     }
     async clear() {
         this.items = [];
+        this.current_index = 0;
         this.emitter.emit(QueueEventType.Clear);
         await this.write();
     }
@@ -569,17 +570,18 @@ export class Queue {
     async next(skipped?: boolean) {
         await this.fetch();
         const item = this.items[this.current_index];
-        this.current_index++;
-        if (this.current_index >= this.items.length) {
-            this.current_index = 0;
-        }
         this.emitter.emit(QueueEventType.Next, this.current_index);
         if (skipped) {
             this.stop(true);
             this.emitter.emit(QueueEventType.Skipped, item);
+        } else { // this will be done by the audio player getting stopped, tis not a concern
+            this.current_index++;
+            await this.write();
+            if (this.current_index >= this.items.length) {
+                this.current_index = 0;
+            }
+            this.play(this.current_index);
         }
-        this.play(this.current_index);
-        await this.write();
     }
     async previous() {
         await this.fetch();
@@ -616,10 +618,14 @@ testQueue.currently_playing = response.data.videos[6] as any;
 */
 
 export async function getItemAtIndex(id: string, index: number) {
-    const data: dbQueue<dbQueueDataType.Video | dbQueueDataType.CustomSound> | undefined = await database("queues").where({ guild: id, index: index }).first();
+    const data = await database<dbQueue<dbQueueDataType.Video | dbQueueDataType.CustomSound>>("queues")
+        .where({ guild: id, index })
+        .first();
+
     if (!data) {
         return undefined;
     }
+
     switch (data.type) {
         case "video":
             const video = new Video(data.url as string);
