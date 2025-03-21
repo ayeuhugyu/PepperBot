@@ -696,8 +696,6 @@ export async function sanitizeIncomingMessageContent(message: Message | GPTForma
         }
     }
 
-    console.log(content)
-
     return content;
 }
 
@@ -987,7 +985,6 @@ export class GPTProcessor {
                 }
             }
             if ((this.repliedMessage as FormattedCommandInteraction)) {
-                console.log("interaction followup")
                 const forced_ephemeral = this.isEphemeral || (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
                 if (forced_ephemeral) {
                     return await this.repliedMessage?.followUp({ content: content, flags: MessageFlags.Ephemeral}); // i dont feel like makin a whole method for this rn ngl
