@@ -1,4 +1,4 @@
-import { Attachment, Collection, InteractionResponse, Message, MessageFlags, PermissionFlagsBits, StickerFormatType, TextChannel, User } from "discord.js";
+import { Attachment, Collection, InteractionResponse, Message, MessageFlags, PermissionFlagsBits, StickerFormatType, TextChannel, User, Client } from "discord.js";
 import OpenAI from "openai";
 import * as log from "./log";
 import mime from 'mime-types';
@@ -513,7 +513,6 @@ export enum GPTContentPartType {
 
 export type GPTFormattedCommandInteraction = FormattedCommandInteraction & {
     author: User;
-    cleanContent: string;
     content: string;
     attachments: Collection<string, Attachment>;
 }
@@ -627,35 +626,176 @@ function getFileType(filename: string): string {
     return 'none';
 }
 
-async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction): Promise<GPTContentPart[]> {
-    log.info("sanitizing message for GPT")
-    let contentParts = [];
+let cached_client: Client | undefined;
 
-    if (message.cleanContent || message.content) {
-        contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: message.cleanContent || message.content || "Error finding message content. " }));
+export async function sanitizeOutgoingMessageContent(content: string) {
+    const client = cached_client;
+    if (!client) {
+        throw new Error("Client is not set.");
     }
-    if (message.attachments.size > 0) {
-        for (const attachment of message.attachments.values()) {
-            const fileType = getFileType(attachment.name || "");
-            if (fileType === "image") {
-                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Image, image_url: attachment.url }));
-            } else if (fileType === ("text")) {
-                const text = await fetch(attachment.url).then((response) => response.text());
-                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name}: ${text.slice(0, 1048500)}` }));
-            } else if (fileType.startsWith("other: ")) {
-                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name} is of type ${fileType.substring(7)} and cannot be processed.` }));
+    const userMentions = content.match(/<@[^>]+ \(\d+\)>/g) || [];
+    const channelMentions = content.match(/<#\w+ \(\d+\)>/g) || [];
+    const roleMentions = content.match(/<@&[^>]+ \(\d+\)>/g) || [];
+    const commandMentions = content.match(/<\/command \(\d+\)>/g) || [];
+    const emojiMentions = content.match(/<:\w+:\d+>/g) || [];
+
+    for (const userMention of userMentions) {
+        const userId = userMention.match(/<@(\w+)>/)?.[1];
+        if (userId) {
+            const user = client.users.cache.get(userId);
+            if (user) {
+                content = content.replace(userMention, `<@${user.id}>`);
             }
         }
     }
-    if ('stickers' in message && message.stickers.size > 0) {
-        log.info("found stickers")
-        message.stickers.forEach((sticker) => {
-            if (sticker.format !== StickerFormatType.Lottie) {
-                log.info(`adding sticker ${sticker.name} (${sticker.id}) to message`);
-                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Image, image_url: sticker.url }));
+
+    for (const channelMention of channelMentions) {
+        const channelId = channelMention.match(/<#(\w+)>/)?.[1];
+        if (channelId) {
+            const channel = client.channels.cache.get(channelId);
+            if (channel) {
+                content = content.replace(channelMention, `<#${channel.id}>`);
             }
-        });
+        }
     }
+
+    for (const roleMention of roleMentions) {
+        const roleId = roleMention.match(/<@&(\w+)>/)?.[1];
+        if (roleId && client.guilds.cache.size > 0) {
+            const guild = client.guilds.cache.first();
+            const role = guild?.roles.cache.get(roleId);
+            if (role) {
+                content = content.replace(roleMention, `<@&${role.id}>`);
+            }
+        }
+    }
+
+    for (const commandMention of commandMentions) {
+        const commandId = commandMention.match(/<\/command:(\d+)>/)?.[1];
+        if (commandId) {
+            content = content.replace(commandMention, `</command:${commandId}>`);
+        }
+    }
+
+    for (const emojiMention of emojiMentions) {
+        const emojiId = emojiMention.match(/<:\w+:(\d+)>/)?.[1];
+        if (emojiId) {
+            content = content.replace(emojiMention, `<:emoji:${emojiId}>`);
+        }
+    }
+
+    return content;
+}
+
+export async function sanitizeIncomingMessageContent(message: Message | GPTFormattedCommandInteraction) {
+    if (!cached_client) cached_client = message.client as Client; // set the client if it hasn't been set yet
+    let content = message.content;
+    const mentions = {
+        users: content.match(/<@!?(\d+)>/g) || [],
+        channels: content.match(/<#(\d+)>/g) || [],
+        roles: content.match(/<@&(\d+)>/g) || [],
+        commands: content.match(/<\/\w+:(\d+)>/g) || [],
+        emojis: content.match(/<:\w+:(\d+)>/g) || [],
+    };
+    console.log(mentions)
+    for (const userMention of mentions.users) {
+        const userId = userMention.match(/\d+/)?.[0];
+        if (userId) {
+            let user = message.client.users.cache.find(u => u.id === userId);
+            if (!user) {
+                try {
+                    user = await message.client.users.fetch(userId);
+                } catch (err) {
+                    log.warn(`Failed to fetch user with ID ${userId}`, err);
+                }
+            }
+            if (user) {
+                content = content.replace(userMention, `<@${user.username} (${user.id})>`);
+            }
+        }
+    }
+
+    for (const channelMention of mentions.channels) {
+        const channelId = channelMention.match(/\d+/)?.[0];
+        if (channelId) {
+            let channel = message.client.channels.cache.find(c => c.id === channelId);
+            if (!channel) {
+                try {
+                    channel = await message.client.channels.fetch(channelId) ?? undefined;
+                } catch (err) {
+                    log.warn(`Failed to fetch channel with ID ${channelId}`, err);
+                }
+            }
+            if (channel && 'name' in channel) {
+                content = content.replace(channelMention, `<#${channel.name} (${channel.id})>`);
+            }
+        }
+    }
+
+    for (const roleMention of mentions.roles) {
+        const roleId = roleMention.match(/\d+/)?.[0];
+        if (roleId && message.guild) {
+            let role = message.guild.roles.cache.find(r => r.id === roleId);
+            if (!role) {
+                try {
+                    role = await message.guild.roles.fetch(roleId) ?? undefined;
+                } catch (err) {
+                    log.warn(`Failed to fetch role with ID ${roleId}`, err);
+                }
+            }
+            if (role) {
+                content = content.replace(roleMention, `<@&${role.name} (${role.id})>`);
+            }
+        }
+    }
+ // todo: fix these :/
+    for (const commandMention of mentions.commands) {
+        const commandId = commandMention.match(/\d+/)?.[0];
+        if (commandId) {
+            content = content.replace(commandMention, `</command (${commandId})>`);
+        }
+    }
+
+    for (const emojiMention of mentions.emojis) {
+        const emojiId = emojiMention.match(/\d+/)?.[0];
+        if (emojiId) {
+            content = content.replace(emojiMention, `<:emoji (${emojiId})>`);
+        }
+    }
+
+    return content;
+}
+
+async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction): Promise<GPTContentPart[]> {
+        log.info("sanitizing message for GPT")
+        let contentParts = [];
+
+        const content = await sanitizeIncomingMessageContent(message);
+        if (content) {
+            contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: content || "Error finding message content. " }));
+        }
+        if (message.attachments.size > 0) {
+            for (const attachment of message.attachments.values()) {
+                const fileType = getFileType(attachment.name || "");
+                if (fileType === "image") {
+                    contentParts.push(new GPTContentPart({ type: GPTContentPartType.Image, image_url: attachment.url }));
+                } else if (fileType === ("text")) {
+                    const text = await fetch(attachment.url).then((response) => response.text());
+                    contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name}: ${text.slice(0, 1048500)}` }));
+                } else if (fileType.startsWith("other: ")) {
+                    contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: `Attachment ${attachment.name} is of type ${fileType.substring(7)} and cannot be processed.` }));
+                }
+            }
+        }
+        if ('stickers' in message && message.stickers.size > 0) {
+            log.info("found stickers")
+            message.stickers.forEach((sticker) => {
+                if (sticker.format !== StickerFormatType.Lottie) {
+                    log.info(`adding sticker ${sticker.name} (${sticker.id}) to message`);
+                    contentParts.push(new GPTContentPart({ type: GPTContentPartType.Image, image_url: sticker.url }));
+                }
+            });
+        }
     return contentParts;
 }
 
@@ -955,7 +1095,7 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
         const remainingMessages = messages.slice(10).join('\n');
         messages = [...messages.slice(0, 10), remainingMessages];
     }
-    const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: messages[0] || "no content returned" });
+    const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: await sanitizeOutgoingMessageContent(messages[0]) || "no content returned" });
     if (messages[0] == undefined || messages[0] == "") {
         log.warn(`error in gpt response: message 0 was undefined or empty`);
     }
@@ -971,7 +1111,7 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
             }
             const typingDelay = Math.min((60 / typingSpeedWPM) * 1000 * messages[i].split(' ').length, 1000);
             await new Promise(resolve => setTimeout(resolve, typingDelay));
-            const sentMessage = await processor.log({ t: GPTProcessorLogType.FollowUp, content: messages[i] || "no content returned" });
+            const sentMessage = await processor.log({ t: GPTProcessorLogType.FollowUp, content: await sanitizeOutgoingMessageContent(messages[i]) || "no content returned" });
             if (sentMessage) {
                 conversation.addMessage(sentMessage, GPTRole.Assistant);
             }
