@@ -13,6 +13,7 @@ import * as cheerio from "cheerio";
 import { getPrompt as getDBPrompt, Prompt } from "./prompt_manager";
 import * as action from "./discord_action"
 import { randomUUIDv7 } from "bun";
+import UserAgent from 'user-agents';
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -202,8 +203,17 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                         return `refused attempt to access private ip from request_url`;
                     }
                 }
+                const options: RequestInit = {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': new UserAgent().toString(), // prevents a lot of sites that block the default nodejs user agent
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                        'Connection': 'keep-alive',
+                    }
+                }
                 try {
-                    const response = await fetch(url);
+                    const response = await fetch(url, options);
                     const html = await response.text();
                     if (raw) {
                         return html;
