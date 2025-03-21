@@ -258,12 +258,13 @@ export enum QueueEventType {
 }
 
 export enum QueueState {
-    Playing,
-    Idle,
+    Playing = "Playing",
+    Idle = "Idle",
+    Stopped = "Stopped"
 }
 
 function audioPlayerStateChange(_oldState: AudioPlayerState, newState: AudioPlayerState, self: Queue) {
-    if (newState.status === AudioPlayerStatus.Idle && self.state !== QueueState.Idle) {
+    if (newState.status === AudioPlayerStatus.Idle && self.state == QueueState.Playing) {
         self.currently_playing = null;
         self.currently_playing_resource = null;
         self.next();
@@ -506,7 +507,8 @@ export class Queue {
         }
         const item = await getItemAtIndex(this.guild_id || "", this.current_index);
         if (!item) {
-            this.emitter.emit(QueueEventType.Error, "item at index " + this.current_index + " is undefined");
+            this.emitter.emit(QueueEventType.Error, "item at index " + this.current_index + " is undefined; skipping");
+            this.next();
             return;
         }
         let filePath: string | undefined;
@@ -576,10 +578,10 @@ export class Queue {
             this.emitter.emit(QueueEventType.Skipped, item);
         } else { // this will be done by the audio player getting stopped, tis not a concern
             this.current_index++;
-            await this.write();
-            if (this.current_index >= this.items.length) {
+            if (this.current_index >= this.items.length -1) {
                 this.current_index = 0;
             }
+            await this.write();
             this.play(this.current_index);
         }
     }
@@ -594,11 +596,17 @@ export class Queue {
         await this.write();
     }
     stop(skipped: boolean = false) {
-        this.voice_manager?.stop();
-        this.state = QueueState.Idle;
+        if (!skipped) this.state = QueueState.Stopped;
         this.currently_playing = null;
         this.currently_playing_resource = null;
-        this.emitter.emit(QueueEventType.Stop, skipped);
+        try {
+            this.voice_manager?.destroy()
+            this.emitter.emit(QueueEventType.Stop, skipped);
+        } catch (e: any) {
+            if (e.message !== "Cannot destroy VoiceConnection - it has already been destroyed") {
+                log.error("failed to destroy voice manager: " + e);
+            }
+        };
     }
     async shuffle() {
         await this.fetch();
@@ -616,6 +624,8 @@ const response: Response<false, Playlist> = await getInfo("https://www.youtube.c
 testQueue.add(response.data);
 testQueue.currently_playing = response.data.videos[6] as any;
 */
+
+let queues: Queue[] = [];
 
 export async function getItemAtIndex(id: string, index: number) {
     const data = await database<dbQueue<dbQueueDataType.Video | dbQueueDataType.CustomSound>>("queues")
@@ -649,8 +659,8 @@ export async function getQueueById(guildId: string): Promise<Queue | undefined> 
 }
 
 export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
-    let queue = await Queue.fromDatabase(invoker.id);
-    if (queue) {
+    let queue = invoker.guildId ? queues.find(queue => { queue.guild_id === invoker.guildId }) || await Queue.fromDatabase(invoker.id) : undefined;
+    if (queue && queue.voice_manager?.destroyed) {
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
         if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
             connectionManager = await voice.joinVoiceChannel((invoker.member.voice.channel));
@@ -671,6 +681,7 @@ export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfi
             return { type: ResponseType.Error, data: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one` };
         }
         queue = new Queue(invoker.guildId, connectionManager);
+        queues.push(queue);
     }
     return { type: ResponseType.Success, data: queue };
 }

@@ -11,6 +11,7 @@ export class GuildVoiceManager {
     channel: VoiceChannel | StageChannel | null = null;
     connection: VoiceConnection | null = null;
     audio_player: AudioPlayer = new AudioPlayer();
+    destroyed = false;
     constructor(guild: string) {
         this.guild = guild;
         voiceManagers.push(this);
@@ -45,6 +46,7 @@ export class GuildVoiceManager {
         this.connection = null;
         this.channel?.client.off('voiceStateUpdate', this.onVoiceStateUpdate.bind(this));
         this.channel = null;
+        this.destroyed = true;
         voiceManagers = voiceManagers.filter(voiceManager => voiceManager.guild !== this.guild);
     }
 }
