@@ -9,7 +9,7 @@ const command = new Command(
         name: 'ask',
         description: 'ask the ai something',
         long_description: 'ask the ai something',
-        tags: [CommandTag.AI],
+        tags: [CommandTag.AI, CommandTag.TextPipable, CommandTag.ImagePipable],
         pipable_to: [CommandTag.TextPipable],
         example_usage: "p/ask hi there",
         argument_order: "<request> [attach your image]",
@@ -38,13 +38,13 @@ const command = new Command(
         if (invoker.attachments.size > 0) args.set('image', invoker.attachments.first());
         return args;
     }, // No arguments template needed
-    async function execute ({ args, invoker, guild_config, invoker_type }) {
-        if (!args || (!args.request && !args.image)) {
+    async function execute ({ args, invoker, guild_config, invoker_type, piped_data }) {
+        const request = args.request || piped_data?.data.input_text;
+        const image = (args.image as Attachment | undefined) || { id: "unknown", url: piped_data?.data.image_url, name: "image.png" }; // this could have issues but i literally cant think of another way to do it
+        if (!request && !image) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
             return;
         }
-        const request = args.request;
-        const image = args.image as Attachment | undefined;
         const processor = new GPTProcessor()
         processor.repliedMessage = invoker;
         processor.isEphemeral = guild_config.other.use_ephemeral_replies && invoker_type === InvokerType.Interaction;
