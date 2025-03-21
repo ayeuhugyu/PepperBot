@@ -326,14 +326,16 @@ Discord does not support headings past that. Don't try to use them.
 Discord provides a bit of syntax that isn't included in standard markdown that only works on Discord. I'll list them as follows:
 | Discord's Original Format | Reformatted Version | Description |
 |---------------------------|---------------------|-------------|
-| <@userid>                | <@username>         | Mentions a user. Will notify them. Try to avoid mentioning random users. If you must mention a user, make sure it's relevant and you have a good reason to. |
-| <#channelid>             | <#channelname>      | Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand. |
+| <@userid>                | <@username (userid)>         | Mentions a user. Will notify them. Try to avoid mentioning random users. If you must mention a user, make sure it's relevant and you have a good reason to. |
+| <#channelid>             | <#channelname (channelid)>      | Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand. |
+| <@&roleid>               | <@&rolename (roleid)> | Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it. |
+| <:emojiname:emojiid>     | No reformatted version | This allows for guild specific emojis to be sent. |
+| </command:commandid>     | No reformatted version | This allows for slash commands to be sent. |
 | <url>                    | No reformatted version | This prevents what discord calls an "embed" (basically a preview of the website's content) from appearing. Use this if you're either sending more than like 2 links in a message or if you just don't want an embed to appear. Embeds can look ugly compared to the rest of the message and often take up a LOT of screen space, but one is usually fine. |
-| <@&roleid>               | No reformatted version | Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it. |
 | @everyone                | No reformatted version | Pings everyone in the server. Again, there are safeguards to prevent you from using this. Do not attempt to use this. Ever. |
 | @here                    | No reformatted version | Pings everyone online in the server. Again, safeguards are in place to prevent this. Don't use it. |
 
-ATTENTION!!!! THE ABOVE REFORMATTED HAS **NOT BEEN IMPLEMENTED YET.** it is merely a planned feature right now, do not attempt to do it.
+----> Use the reformatted versions ALWAYS. Do not forget the ID!!!!! <-----
 
 In addition to these, Discord provides a timestamp format. You can use the get_date function with no arguments to get the current unix timestamp, and then use this table to format it correctly. The tool might return something with a decimal place at the end, just omit everything beyond the decimal place. Discord only has precision up until the second. If put into this format, don't tell the user the date in a string afterwards. The date will be displayed by the timestamp.
 | Style             | Input             | Output (12-hour clock)            | Output (24-hour clock)           |
@@ -628,59 +630,32 @@ function getFileType(filename: string): string {
 
 let cached_client: Client | undefined;
 
-export async function sanitizeOutgoingMessageContent(content: string) {
+export async function sanitizeOutgoingMessageContent(inputContent: string) { // undoes whatever sanitizeIncomingMessageContent does
     const client = cached_client;
     if (!client) {
-        throw new Error("Client is not set.");
+        throw new Error("Client is not set."); // theoretically this should never be able to happen since for it to send a message you'd need to first input one
     }
-    const userMentions = content.match(/<@[^>]+ \(\d+\)>/g) || [];
-    const channelMentions = content.match(/<#\w+ \(\d+\)>/g) || [];
-    const roleMentions = content.match(/<@&[^>]+ \(\d+\)>/g) || [];
-    const commandMentions = content.match(/<\/command \(\d+\)>/g) || [];
-    const emojiMentions = content.match(/<:\w+:\d+>/g) || [];
+    let content = inputContent;
 
-    for (const userMention of userMentions) {
-        const userId = userMention.match(/<@(\w+)>/)?.[1];
-        if (userId) {
-            const user = client.users.cache.get(userId);
-            if (user) {
-                content = content.replace(userMention, `<@${user.id}>`);
-            }
+    const mentions = {
+        users: content.matchAll(/<@[^&].+? \((\d+?)\)>/gm),
+        channels: content.matchAll(/<#.+? \((\d+?)\)>/gm),
+        roles: content.matchAll(/<@&.+? \((\d+?)\)>/gm),
+    }
+
+    if (mentions.users) {
+        for (const mention of mentions.users) {
+            content = content.replaceAll(mention[0], `<@${mention[1]}>`);
         }
     }
-
-    for (const channelMention of channelMentions) {
-        const channelId = channelMention.match(/<#(\w+)>/)?.[1];
-        if (channelId) {
-            const channel = client.channels.cache.get(channelId);
-            if (channel) {
-                content = content.replace(channelMention, `<#${channel.id}>`);
-            }
+    if (mentions.channels) {
+        for (const mention of mentions.channels) {
+            content = content.replaceAll(mention[0], `<#${mention[1]}>`);
         }
     }
-
-    for (const roleMention of roleMentions) {
-        const roleId = roleMention.match(/<@&(\w+)>/)?.[1];
-        if (roleId && client.guilds.cache.size > 0) {
-            const guild = client.guilds.cache.first();
-            const role = guild?.roles.cache.get(roleId);
-            if (role) {
-                content = content.replace(roleMention, `<@&${role.id}>`);
-            }
-        }
-    }
-
-    for (const commandMention of commandMentions) {
-        const commandId = commandMention.match(/<\/command:(\d+)>/)?.[1];
-        if (commandId) {
-            content = content.replace(commandMention, `</command:${commandId}>`);
-        }
-    }
-
-    for (const emojiMention of emojiMentions) {
-        const emojiId = emojiMention.match(/<:\w+:(\d+)>/)?.[1];
-        if (emojiId) {
-            content = content.replace(emojiMention, `<:emoji:${emojiId}>`);
+    if (mentions.roles) {
+        for (const mention of mentions.roles) {
+            content = content.replaceAll(mention[0], `<@&${mention[1]}>`);
         }
     }
 
@@ -688,80 +663,40 @@ export async function sanitizeOutgoingMessageContent(content: string) {
 }
 
 export async function sanitizeIncomingMessageContent(message: Message | GPTFormattedCommandInteraction) {
-    if (!cached_client) cached_client = message.client as Client; // set the client if it hasn't been set yet
+    cached_client = message.client as Client;
     let content = message.content;
     const mentions = {
-        users: content.match(/<@!?(\d+)>/g) || [],
-        channels: content.match(/<#(\d+)>/g) || [],
-        roles: content.match(/<@&(\d+)>/g) || [],
-        commands: content.match(/<\/\w+:(\d+)>/g) || [],
-        emojis: content.match(/<:\w+:(\d+)>/g) || [],
+        users: content.matchAll(/<@(\d+)>/gm),
+        channels: content.matchAll(/<#(\d+)>/gm),
+        roles: content.matchAll(/<@&(\d+)>/gm),
     };
-    console.log(mentions)
-    for (const userMention of mentions.users) {
-        const userId = userMention.match(/\d+/)?.[0];
-        if (userId) {
-            let user = message.client.users.cache.find(u => u.id === userId);
-            if (!user) {
-                try {
-                    user = await message.client.users.fetch(userId);
-                } catch (err) {
-                    log.warn(`Failed to fetch user with ID ${userId}`, err);
-                }
-            }
-            if (user) {
-                content = content.replace(userMention, `<@${user.username} (${user.id})>`);
-            }
+
+    if (mentions.users) {
+        for (const mention of mentions.users) {
+            try {
+                const user = await cached_client.users.fetch(mention[1]);
+                if (user) content = content.replaceAll(mention[0], `<@${user.username} (${user.id})>`);
+            } catch {}
+        }
+    }
+    if (mentions.channels) {
+        for (const mention of mentions.channels) {
+            try {
+                const channel = await cached_client.channels.fetch(mention[1]);
+                if (channel && 'name' in channel) content = content.replaceAll(mention[0], `<#${channel.name} (${channel.id})>`);
+            } catch {}
+        }
+    }
+    if (mentions.roles) {
+        for (const mention of mentions.roles) {
+            try {
+                const role = await message.guild?.roles.fetch(mention[1]);
+                if (role && 'name' in role) content = content.replaceAll(mention[0], `<@&${role.name} (${role.id})>`);
+            } catch {}
         }
     }
 
-    for (const channelMention of mentions.channels) {
-        const channelId = channelMention.match(/\d+/)?.[0];
-        if (channelId) {
-            let channel = message.client.channels.cache.find(c => c.id === channelId);
-            if (!channel) {
-                try {
-                    channel = await message.client.channels.fetch(channelId) ?? undefined;
-                } catch (err) {
-                    log.warn(`Failed to fetch channel with ID ${channelId}`, err);
-                }
-            }
-            if (channel && 'name' in channel) {
-                content = content.replace(channelMention, `<#${channel.name} (${channel.id})>`);
-            }
-        }
-    }
-
-    for (const roleMention of mentions.roles) {
-        const roleId = roleMention.match(/\d+/)?.[0];
-        if (roleId && message.guild) {
-            let role = message.guild.roles.cache.find(r => r.id === roleId);
-            if (!role) {
-                try {
-                    role = await message.guild.roles.fetch(roleId) ?? undefined;
-                } catch (err) {
-                    log.warn(`Failed to fetch role with ID ${roleId}`, err);
-                }
-            }
-            if (role) {
-                content = content.replace(roleMention, `<@&${role.name} (${role.id})>`);
-            }
-        }
-    }
- // todo: fix these :/
-    for (const commandMention of mentions.commands) {
-        const commandId = commandMention.match(/\d+/)?.[0];
-        if (commandId) {
-            content = content.replace(commandMention, `</command (${commandId})>`);
-        }
-    }
-
-    for (const emojiMention of mentions.emojis) {
-        const emojiId = emojiMention.match(/\d+/)?.[0];
-        if (emojiId) {
-            content = content.replace(emojiMention, `<:emoji (${emojiId})>`);
-        }
-    }
+    console.log(content)
 
     return content;
 }
