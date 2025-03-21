@@ -12,7 +12,7 @@ const command = new Command(
         name: 'cquery',
         description: 'queries adobe stock for christos georghiou images',
         long_description: 'queries adobe stock for christos georghiou images',
-        tags: [CommandTag.Utility, CommandTag.ImagePipable],
+        tags: [CommandTag.Utility],
         options: [
             new CommandOption({
                 name: 'query',
@@ -32,7 +32,8 @@ const command = new Command(
         input_types: [InvokerType.Message, InvokerType.Interaction],
         example_usage: ["p/cquery cat", "p/cquery cat n=2"],
         argument_order: "query n",
-        aliases: ["christosquery", "csearch", "christossearch", "cq", "cs"]
+        aliases: ["christosquery", "csearch", "christossearch", "cq", "cs"],
+        pipable_to: [CommandTag.ImagePipable]
     },
     function getArguments({ invoker, command_name_used, guild_config }) {
         invoker = invoker as CommandInvoker<InvokerType.Message>;
