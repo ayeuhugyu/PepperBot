@@ -2,7 +2,6 @@ REWRITE TODO
 ---
 commands to finish:
 p/gpt add
-p/todo
 p/update - change to subcommands so that users can do p/update get 123 and instead would be p/update create ping=true update text here
 p/info
 p/queue embed (may or may not be in image format w/ thumbnail icons? idk)

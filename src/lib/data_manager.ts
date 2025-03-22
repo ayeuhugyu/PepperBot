@@ -199,7 +199,6 @@ if (!dataVerified) {
     await ensureColumn("todos", "item", (table) => table.integer("item").notNullable());
     await ensureColumn("todos", "text", (table) => table.string("text").notNullable());
     await ensureColumn("todos", "completed", (table) => table.boolean("completed").notNullable().defaultTo(false));
-    await ensureColumn("todos", "created_at", (table) => table.timestamp("created_at").defaultTo(database.fn.now()));
     await finishTable("todos");
 
     await ensureTable("configs");

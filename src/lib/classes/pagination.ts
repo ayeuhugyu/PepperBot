@@ -1,9 +1,9 @@
 import { Message, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Interaction, InteractionResponse } from 'discord.js';
 
 class PagedMenu {
-    private embeds: EmbedBuilder[];
-    private currentPage: number;
-    private activeMessage: Message | null;
+    embeds: EmbedBuilder[];
+    currentPage: number;
+    activeMessage: Message | null;
 
     constructor(embeds: EmbedBuilder[]) {
         this.embeds = embeds;
@@ -31,7 +31,7 @@ class PagedMenu {
         this.activeMessage = message;
         await this.updateMessage();
 
-        const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+        const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 600_000 });
 
         collector.on('collect', async (interaction: Interaction) => {
             if (!interaction.isButton()) return;
