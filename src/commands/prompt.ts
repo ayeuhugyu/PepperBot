@@ -54,7 +54,7 @@ const generate = new Command({
         }
         const sent = await action.reply(invoker, { content: "processing...", ephemeral: guild_config.other.use_ephemeral_replies }) as Message;
         const response = await generatePrompt(args.input as string);
-        action.edit(sent, { content: `generated prompt: \`\`\`${response}\`\`\`use ${guild_config.other.prefix}prompt set to use it. (or just pipe it)`, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.edit(sent, { content: `generated prompt: \`\`\`\n${response}\`\`\`use ${guild_config.other.prefix}prompt set to use it. (or just pipe it)`, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({ pipe_data: { input_text: response }});
     }
 );
@@ -249,7 +249,7 @@ const description = new Command({
         let prompt = await getUserPrompt(invoker.author);
         prompt.description = args.content as string;
         await savePrompt(prompt, invoker.author);
-        action.reply(invoker, { content: `prompt description of ${prompt.name} set to \`\`\`${prompt.description}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: `prompt description of ${prompt.name} set to \`\`\`\n${prompt.description}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -302,7 +302,7 @@ const list = new Command({
             action.reply(invoker, { content: `${notUser ? user.username : "you"} ${notUser ? "has" : "have"} no ${notUser ? "published" : ""} prompts`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
-        let reply = `${notUser ? user.username + "'s" : "your"} prompts: \`\`\``;
+        let reply = `${notUser ? user.username + "'s" : "your"} prompts: \`\`\`\n`;
         if (prompts.length < 10) {
             prompts.forEach(prompt => {
                 if (notUser && !prompt.published) return;
@@ -483,7 +483,7 @@ const set = new Command({
         let prompt = await getUserPrompt(invoker.author);
         prompt.content = content as string;
         await savePrompt(prompt, invoker.author);
-        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`${prompt.content}\`\`\`${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 

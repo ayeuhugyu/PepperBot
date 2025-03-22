@@ -53,9 +53,9 @@ const command = new Command(
                             return match.slice(1).join(", ");
                         }
                     });
-                    found.unshift(`content: \`\`\``)
+                    found.unshift(`content: \`\`\`\n`)
                     if (captureGroups.length > 0) {
-                        found.unshift(`captured: \`\`\`${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
+                        found.unshift(`captured: \`\`\`\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
                     }
                     found.push("```");
                     await action.reply(message, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
@@ -66,7 +66,7 @@ const command = new Command(
                 }
             }
             const found = lines.filter((line: string) => line.includes(search));
-            found.unshift(`content: \`\`\``)
+            found.unshift(`content: \`\`\`\n`)
             found.push("```");
             await action.reply(message, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });

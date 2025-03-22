@@ -55,14 +55,14 @@ const command = new Command(
                 return await eval(args.code);
             })();
             if (result !== undefined) {
-                action.reply(message, `result: \`\`\`${result}\`\`\``);
-                return new CommandResponse({ pipe_data: { input_text: `result: \`\`\`${result}\`\`\`` }});
+                action.reply(message, `result: \`\`\`\n${result}\`\`\``);
+                return new CommandResponse({ pipe_data: { input_text: `result: \`\`\`\n${result}\`\`\`` }});
             }
             action.reply(message, "no error generated, no result returned.");
             return;
         } catch (e) {
-            action.reply(message, `\`\`\`${e}\`\`\``);
-            return new CommandResponse({ pipe_data: { input_text: `\`\`\`${e}\`\`\`` }});
+            action.reply(message, `\`\`\`\n${e}\`\`\``);
+            return new CommandResponse({ pipe_data: { input_text: `\`\`\`\n${e}\`\`\`` }});
         }
     }
 );
