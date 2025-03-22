@@ -2,7 +2,7 @@ import { Collection, Message, User } from "discord.js";
 import { Command, CommandInvoker, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
-import { userPrompts } from "../lib/gpt";
+import { userPrompts, generatePrompt } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
@@ -25,6 +25,39 @@ function savePrompt(prompt: Prompt, user: User) {
     userPrompts.set(user.id, prompt.name);
     writePrompt(prompt);
 }
+
+const generate = new Command({
+        name: 'generate',
+        description: 'generates a response based on a prompt you input',
+        long_description: 'generates a response based on a prompt you input',
+        tags: [CommandTag.AI],
+        pipable_to: [CommandTag.TextPipable],
+        options: [
+            new CommandOption({
+            name: 'input',
+            description: 'the input to generate a response for',
+            type: CommandOptionType.String,
+            required: true,
+            })
+        ],
+        example_usage: "p/prompt generate cat",
+        argument_order: "<input>",
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["input"]),
+    async function execute ({ invoker, guild_config, args }) {
+        if (!args.input) {
+            action.reply(invoker, {
+            content: "please supply input for the prompt",
+            ephemeral: guild_config.other.use_ephemeral_replies
+            });
+            return new CommandResponse({});
+        }
+        const sent = await action.reply(invoker, { content: "processing...", ephemeral: guild_config.other.use_ephemeral_replies }) as Message;
+        const response = await generatePrompt(args.input as string);
+        action.edit(sent, { content: `generated prompt: \`\`\`${response}\`\`\`use ${guild_config.other.prefix}prompt set to use it. (or just pipe it)`, ephemeral: guild_config.other.use_ephemeral_replies });
+        return new CommandResponse({ pipe_data: { input_text: response }});
+    }
+);
 
 const deflt = new Command({
         name: 'default',
@@ -450,7 +483,7 @@ const set = new Command({
         let prompt = await getUserPrompt(invoker.author);
         prompt.content = content as string;
         await savePrompt(prompt, invoker.author);
-        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`${prompt.content}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`${prompt.content}\`\`\`${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -464,7 +497,7 @@ const command = new Command(
         argument_order: "<subcommand> <content?>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone],
+            list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone, generate],
         },
         options: [],
         example_usage: "p/prompt set always respond with \"hi\"",
