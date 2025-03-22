@@ -40,7 +40,7 @@ const command = new Command(
                 search = search.replace("-c", "");
                 count = true
             }
-            const regex = /\/(.*?)\//g;
+            const regex = /\/(.*?[^\\])\//g;
             const regexMatches = [...search.matchAll(regex)].map(match => match[1]);
             if (regexMatches.length > 0) {
                 const regexSearch = regexMatches[0];
@@ -61,8 +61,8 @@ const command = new Command(
                     await action.reply(message, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
                     return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
                 } catch (e: any) {
-                    await action.reply(message, { content: "invalid regex: " + e.message, ephemeral: guild_config.other.use_ephemeral_replies });
-                    return new CommandResponse({ pipe_data: { input_text: "invalid regex: " + e.message } });
+                    await action.reply(message, { content: `invalid regex (${regexSearch}): ${e.message}`, ephemeral: guild_config.other.use_ephemeral_replies });
+                    return new CommandResponse({ pipe_data: { input_text: `invalid regex (${regexSearch}): ${e.message}` } });
                 }
             }
             const found = lines.filter((line: string) => line.includes(search));
