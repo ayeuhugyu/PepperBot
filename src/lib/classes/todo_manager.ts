@@ -109,3 +109,12 @@ export async function getTodo(user: string, name: string) {
 
     return new Todo(items);
 }
+
+export async function listTodos(user: string) {
+    const items = await database('todos')
+        .where({ user: user })
+        .select('name')
+        .distinct();
+
+    return items.map(item => item.name);
+}

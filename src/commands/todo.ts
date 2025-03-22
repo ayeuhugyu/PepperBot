@@ -2,12 +2,36 @@ import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse 
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
-import { Todo, TodoItem, getTodo } from "../lib/classes/todo_manager";
+import { Todo, getTodo, listTodos } from "../lib/classes/todo_manager";
 import PagedMenu from "../lib/classes/pagination";
 import { Collection, EmbedBuilder, Message } from "discord.js";
 import { createThemeEmbed, Theme } from "../lib/theme";
 
 let currentlyEditing: Collection<string, string> = new Collection();
+
+const listCommand = new Command(
+    {
+        name: 'list',
+        description: 'list all your todo lists',
+        long_description: 'list all the names of your todo lists',
+        tags: [CommandTag.Utility],
+        pipable_to: [],
+        options: [],
+        access: CommandAccessTemplates.public,
+        input_types: [InvokerType.Message, InvokerType.Interaction],
+        example_usage: "p/todo list",
+        aliases: []
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
+    async function execute ({ invoker, args, guild_config }) {
+        const todos = await listTodos(invoker.author.id);
+        if (todos.length === 0) {
+            await action.reply(invoker, { content: "you have no todo lists", ephemeral: guild_config.other.use_ephemeral_replies });
+            return;
+        }
+        await action.reply(invoker, { content: `your todo lists:\n\`\`\`\n${todos.join("\n")}\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
+    }
+);
 
 const switchCommand = new Command(
     {
@@ -244,7 +268,7 @@ const command = new Command(
         pipable_to: [CommandTag.TextPipable],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [viewCommand, addCommand, removeCommand, checkCommand, clearCommand, switchCommand],
+            list: [viewCommand, addCommand, removeCommand, checkCommand, clearCommand, switchCommand, listCommand],
         },
         options: [
             new CommandOption({
