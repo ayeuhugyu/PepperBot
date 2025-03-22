@@ -75,7 +75,7 @@ const play = new Command({
         const sound = await getSound(args.content);
         if (!sound) {
             action.reply(invoker, {
-                content: `the sound \`${args.content}\` does not exist`,
+                content: `the sound \`${fixFileName(args.content)}\` does not exist`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({});
@@ -187,7 +187,7 @@ const get = new Command({
         const sound = await getSound(args.content);
         if (!sound) {
             action.reply(invoker, {
-                content: `the sound \`${args.content}\` does not exist`,
+                content: `the sound \`${fixFileName(args.content)}\` does not exist`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({});

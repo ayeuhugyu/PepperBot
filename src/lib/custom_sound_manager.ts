@@ -88,8 +88,9 @@ export async function getSoundNoAutocorrect(name: string): Promise<CustomSound |
         });
 }
 
-export async function getSound(name: string): Promise<CustomSound | null> {
-    let sound = await getSoundNoAutocorrect(fixFileName(name));
+export async function getSound(inputName: string): Promise<CustomSound | null> {
+    const name = fixFileName(inputName);
+    let sound = await getSoundNoAutocorrect(name);
     if (!sound) {
         sound = await database("sounds")
             .where("name", "like", `%${name}%`)
