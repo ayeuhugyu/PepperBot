@@ -66,6 +66,10 @@ the biggest new base feature
   - tool calls can no longer be messed up, so never again will you see $EXEC_TOOL stuff
   - custom prompts can now use tool calls
   - tool calls will take less time to process because the AI doesn't need to spend time writing $EXEC_TOOL or the text he likes to write around it
+- new tools:
+  - new "request_raw_url" allows gpt to request urls with specified body, headers, and method values. this could in theory allow it to use public APIs
+  - new "pick_random" tool allows gpt to get a random item from a list
+  - probably the most powerful tool ever added, "evaluate_luau" allows gpt to write and evaluate custom luau code. this can be used to complete semi-complex tasks almost instantly
 - p/prompt has been completely overhauled
   - prompts are now automatically saved instead of you having to do p/prompt save
   - prompts can now be published for viewing on the prompt browser
@@ -78,8 +82,6 @@ the biggest new base feature
   - if you for some reason want to use the old prompt, you still can by running `p/prompt clone PepperBot/old`
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
-- new "pick_random" tool allows gpt to get a random item from a list
-- probably the most powerful tool ever added, "evaluate_luau" allows gpt to write and evaluate custom luau code. this can be used to complete semi-complex tasks almost instantly
 - AI can now see stickers
 
 **actual content:**

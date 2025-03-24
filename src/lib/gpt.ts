@@ -208,23 +208,13 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                         type: "string",
                         description: "URL to fetch. Do not input local addresses. IP's are fine, just not local ones.",
                     },
-                    keepScripts: {
-                        type: "boolean",
-                        description: "whether to keep scripts in the fetched content",
-                        default: false,
-                    },
-                    raw: {
-                        type: "boolean",
-                        description: "whether to return the raw HTML instead of markdown",
-                        default: false,
-                    },
                 },
                 required: [
                     "url"
                 ],
                 additionalProperties: false,
             },
-            function: async ({ url, keepScripts, raw }: { url: string, keepScripts: boolean, raw: boolean }) => {
+            function: async ({ url }: { url: string }) => {
                 if (!url) {
                     return "ERROR: No URL provided.";
                 }
@@ -246,14 +236,9 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                 try {
                     const response = await fetch(url, options);
                     const html = await response.text();
-                    if (raw) {
-                        return html;
-                    }
 
                     const $ = cheerio.load(html);
-                    if (!keepScripts) {
-                        $('script, style, noscript, iframe').remove();
-                    }
+                    $('script, style, noscript, iframe').remove();
                     const turndownService = new TurndownService();
 
                     $('a[href]').each((_, element) => {
@@ -273,6 +258,73 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                     return markdown
                 } catch (err: any) {
 
+                    log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
+                    return `an error occurred while attempting to fetch the URL: ${err.message}`;
+                }
+            },
+        }
+    },
+    request_raw_url: {
+        type: 'function',
+        function: {
+            name: "request_raw_url",
+            description: "Fetches a URL with the specified method, headers, and body, and returns the response. Does not support local addresses for security reasons. For almost all research or information gathering uses, this is not necessary, and request_url will be better.",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    url: {
+                        type: 'string',
+                        description: 'URL to fetch. Do not input local addresses. IPs are fine, just not local ones.',
+                    },
+                    method: {
+                        type: 'string',
+                        description: 'HTTP method to use (GET, POST, PUT, DELETE, etc.).',
+                        default: 'GET',
+                    },
+                    headers: {
+                        type: 'object',
+                        description: 'Headers to include in the request.',
+                        additionalProperties: { type: 'string' },
+                        default: {},
+                    },
+                    body: {
+                        type: 'string',
+                        description: 'Body of the request, for methods like POST or PUT.',
+                        default: '',
+                    },
+                },
+                required: ['url'],
+                additionalProperties: false,
+            },
+            function: async ({ url, method = 'GET', headers = {}, body = '' }: { url: string, method?: string, headers?: { [key: string]: string }, body?: string }) => {
+                if (!url) {
+                    return "ERROR: No URL provided.";
+                }
+                for (let ipStart of local_ips) {
+                    if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
+                        log.warn(`attempt to access local ip from request_raw_url`);
+                        return `refused attempt to access private ip from request_raw_url`;
+                    }
+                }
+                const options: RequestInit = {
+                    method,
+                    headers: {
+                        ...headers,
+                        'User-Agent': new UserAgent().toString(),
+                    },
+                    body: method !== 'GET' && method !== 'HEAD' ? body : undefined,
+                };
+                try {
+                    const response = await fetch(url, options);
+                    const responseBody = await response.text();
+                    return {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers: Object.fromEntries(response.headers.entries()),
+                        body: responseBody,
+                    };
+                } catch (err: any) {
                     log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
                     return `an error occurred while attempting to fetch the URL: ${err.message}`;
                 }
@@ -530,6 +582,13 @@ A: are asked to fetch a URL.
 B: are asked to get the contents of a website.
 C: are asked to get information from a website.
 D: are given a website, unless you already know the content of it.
+- request_raw_url: Use this when you:
+A: are asked to fetch a URL with a specific method, headers, or body.
+B: are asked to get the raw contents of a website.
+C: are asked to get information from a website that requires a specific method, headers, or body.
+D: to use an API that requires body / headers input.
+For almost all purposes, request_url will be better. This should only be used when interacting with APIs or other things that require body / headers input.
+The regular request_url turns output into markdown, as well as adding headers that will prevent some basic blocking (ex. randomizing the user agent). This does not do that, and only uses the exact data you input.
 - search: Use this when you:
 A: are asked to search for something.
 B: are asked for information on a topic.
@@ -871,7 +930,7 @@ export class Conversation {
                                 type: content.type,
                             }
                             if (content.text) {
-                                apiContent.text = content.text;
+                                apiContent.text = content.text || "text content unknown";
                             }
                             if (content.image_url) {
                                 apiContent.image_url = content.image_url;
