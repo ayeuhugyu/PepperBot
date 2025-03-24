@@ -79,6 +79,7 @@ the biggest new base feature
 - gpt conversations are now MUCH more customizable via the use of p/gpt setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
 - new "pick_random" tool allows gpt to get a random item from a list
+- probably the most powerful tool ever added, "evaluate_luau" allows gpt to write and evaluate custom luau code. this can be used to complete semi-complex tasks almost instantly
 - AI can now see stickers
 
 **actual content:**

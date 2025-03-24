@@ -59,6 +59,7 @@ const expectedOther: string[] = [
     "cache",
     "cache/ytdl",
     "cache/containers",
+    "cache/luau",
     "logs",
 ];
 const expectedLogs: string[] = [
@@ -120,6 +121,20 @@ export function verifyData() {
     } catch (err) {
         log.error("yt-dlp not found; some features may not work, expect errors. have you added it to your PATH?");
         responses.push({ error: true, message: "yt-dlp not found; some features may not work, expect errors. have you added it to your PATH?", unrecoverable: false });
+    }
+    try {
+        execFile("lune", ["--version"], (error, stdout, stderr) => {
+            if (error) {
+                log.error("lune not found; some features may not work, expect errors. have you added it to your PATH?");
+                responses.push({ error: true, message: "lune not found; some features may not work, expect errors. have you added it to your PATH?", unrecoverable: false });
+            } else {
+                log.info("found lune");
+                responses.push({ error: false, message: "found lune", unrecoverable: false });
+            }
+        });
+    } catch (err) {
+        log.error("lune not found; some features may not work, expect errors. have you added it to your PATH?");
+        responses.push({ error: true, message: "lune not found; some features may not work, expect errors. have you added it to your PATH?", unrecoverable: false });
     }
 
     // TODO: verify .env file

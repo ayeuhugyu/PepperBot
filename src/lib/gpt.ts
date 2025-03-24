@@ -14,6 +14,9 @@ import { getPrompt as getDBPrompt, Prompt } from "./prompt_manager";
 import * as action from "./discord_action"
 import { randomUUIDv7 } from "bun";
 import UserAgent from 'user-agents';
+import fs from "fs";
+import path from "path";
+import { execFile } from "node:child_process";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -27,6 +30,34 @@ for (let i = 17; i <= 31; i++) {
 
 export let userPrompts = new Collection<string, string>(); // userid, prompt name
 export let conversations: Conversation[] = [];
+
+function runLuauScript(luauCode: string): Promise<{ stdout: string; stderr: string }> {
+    const filePath = "cache/luau/" + Date.now() + ".luau";
+    return new Promise((resolve, reject) => {
+        try {
+            // write to the file synchronously
+            fs.mkdirSync(path.dirname(filePath), { recursive: true });
+            fs.writeFileSync(filePath, luauCode);
+            // create a promise that runs the luau script
+            const child = execFile('lune', ['run', filePath], (error, stdout, stderr) => {
+                if (error) {
+                    reject(`error executing luau script: ${error}`);
+                    return;
+                }
+                resolve({ stdout, stderr });
+            });
+            // set a timeout for 5 seconds
+            const timeout = setTimeout(() => {
+                child.kill();
+                reject('script execution timed out; 5 second limit exceeded. this is likely due to an infinite loop somewhere in your code.');
+            }, 5000);
+            // clear the timeout if the script finishes in time
+            child.on('exit', () => clearTimeout(timeout));
+        } catch (err) {
+            reject(`error writing file: ${err}`);
+        }
+    });
+}
 
 const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
     // dont use strict mode on any of these unless you know what you're doing, it adds 900 unnecessary checks. for example, you can't have default values for parameters, every value must be required, etc. it's stupid.
@@ -288,6 +319,37 @@ const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will er
                 }
             },
         }
+    },
+    evaluate_luau: {
+        type: 'function',
+        function: {
+            name: "evaluate_luau",
+            description: "evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you dont print something, it won't be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX's 'task' library, do not attempt to use it. You also do not appear to have access to any sort of 'wait' function. Do not attempt to use it.",
+            parse: JSON.parse,
+            parameters: {
+                type: 'object',
+                properties: {
+                    expression: {
+                        type: "string",
+                        description: "luau expression to evaluate",
+                    },
+                },
+                required: [
+                    "expression"
+                ],
+                additionalProperties: false,
+            },
+            function: async ({ expression }: { expression: string }) => {
+                if (!expression.includes("print")) {
+                    return "ERROR: the expression must contain a print statement. please remember to print your output.";
+                }
+                try {
+                    return await runLuauScript(expression);
+                } catch (err: any) {
+                    return `an error occurred while attempting to evaluate the expression: ${err.message || err}`
+                }
+            }
+        }
     }
 }
 
@@ -475,6 +537,14 @@ D: are in need of a list of results.
 E: are in need of further details.
 Try to use this when answering most questions, it will make your answers seem more authentic and then if users ask for sources later you can provide it.
 This should always be used in conjunction with request_url. Snippets will never be enough to provide enough information. Visit the websites and tell the users what they want to know from it, not where they can find it.
+- evaluate_luau: Use this when you:
+A: need to automate a complex task.
+C: have some other requirement in which creating a quick script could be useful.
+DO NOT USE THIS TO EVALUATE MALICIOUS CODE.
+Always include a print statement. If you are returned an error, attempt to correct it.
+This tool can be insanely powerful if used correctly, allowing you to quickly sort arrays, create complex data structures, and more. Use it wisely.
+You do not have access to ROBLOX's 'task' library, do not attempt to use it.
+You also do not appear to have access to any sort of "wait" function. Do not attempt to use it.
 
 # Personality
 
