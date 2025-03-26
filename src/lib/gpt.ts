@@ -744,7 +744,7 @@ const openAIImageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", 
 function getFileType(filename: string): string {
     const mimeType = mime.lookup(filename);
     if (mimeType) {
-        if (mimeType.startsWith('text/')) {
+        if (mimeType.startsWith('text/') || mimeType.startsWith('application/')) {
             return 'text';
         } else if (mimeType.startsWith('image/')) {
             if (!openAIImageTypes.includes(mimeType)) {
