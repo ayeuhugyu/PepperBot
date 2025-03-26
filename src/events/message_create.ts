@@ -5,6 +5,7 @@ import { Command, CommandInput, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { respond, GPTProcessor } from "../lib/gpt";
 import { CommandEntryType } from "../lib/classes/command_enums";
+import { incrementPipedCommands } from "../lib/statistics";
 
 async function gptHandler(message: Message) {
     // Only process if the bot is mentioned.
@@ -106,6 +107,9 @@ async function commandHandler(message: Message<true>) {
         previous_response.from = command.name;
         previous_command = command;
         commandIndex++;
+        if (segments.length > 1) {
+            await incrementPipedCommands();
+        }
     }
 }
 

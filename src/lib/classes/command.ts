@@ -3,7 +3,7 @@ import type { GuildConfig } from "../guild_config_manager";
 import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits, User, Attachment, Awaitable } from "discord.js";
 import * as contributors from "../../../constants/contributors.json";
 import * as action from "../discord_action";
-import { Channel } from "diagnostics_channel";
+import * as statistics from "../statistics";
 import { InvokerType, SubcommandDeploymentApproach, CommandTag, CommandOptionType, CommandEntryType } from "./command_enums";
 
 let guildConfigManager
@@ -427,6 +427,8 @@ export class Command<
         // #region COMMAND EXECUTION
         this.execute = async (input: CommandInput<F, P, I, false>) => {
             log.info("executing command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
+            await statistics.incrementCommandUsage((this.parent_command ? this.parent_command + " " + this.name : this.name));
+            await statistics.incrementInvokerTypeUsage(input.invoker_type);
             const start = performance.now();
             const { invoker } = input;
             if (!invoker) return log.error("invoker is undefined in command execution");
@@ -500,6 +502,7 @@ export class Command<
 
             const response = await this.execute_internal(input);
             log.info("executed command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            await statistics.addExecutionTime(this.name, performance.now() - start);
             return response;
         };
     }

@@ -252,6 +252,13 @@ if (!dataVerified) {
     await ensureColumn("updates", "major", (table) => table.boolean("major").notNullable().defaultTo(false));
     await finishTable("updates");
 
+    await ensureTable("statistics");
+    await ensureColumn("statistics", "type", (table) => table.string("type").notNullable());
+    await ensureColumn("statistics", "name", (table) => table.string("name"));
+    await ensureColumn("statistics", "value", (table) => table.integer("value"));
+    await ensureColumn("statistics", "times", (table) => table.json("times"));
+    await finishTable("statistics");
+
     log.info("database verified");
 }
 

@@ -17,6 +17,7 @@ import UserAgent from 'user-agents';
 import fs from "fs";
 import path from "path";
 import { execFile } from "node:child_process";
+import { incrementGPTResponses } from "./statistics";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -1178,6 +1179,7 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
             }
         }
     }
+    await incrementGPTResponses();
     conversation.removeAllListeners();
 
     return fullMessageContent;
@@ -1193,6 +1195,7 @@ export async function generateImage(prompt: string) {
             size: "1024x1024",
         });
         log.info(`generated gpt image in ${(performance.now() - now).toFixed(3)}ms`)
+        await incrementGPTResponses();
         return completion.data[0].url;
     } catch (err) {
         return err; // 99% of errors are due to filtering
@@ -1213,5 +1216,6 @@ export async function generatePrompt(prompt: string) {
             },
         ],
     });
+    await incrementGPTResponses();
     return completion.choices[0].message.content;
 }
