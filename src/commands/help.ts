@@ -68,8 +68,8 @@ const command = new Command(
 
 __TAGS:__ ${command.tags.join(", ") || "N/A"}
 __PIPABLE TO:__ ${command.pipable_to.join(", ") || "N/A"}
-__ALIASES:__ ${command.aliases.join(", ") || "N/A"} ${command.argument_order ? `\n__ARGUMENT ORDER:__ ${command.argument_order}` : ""} ${command.root_aliases?.length > 0 ? `\n__ROOT ALIASES:__ ${command.root_aliases.join("\n")}` : ""}
-__EXAMPLE USE${typeof command.example_usage !== "string" ? "S:__\n" + (command.example_usage as string[]).join("\n") : ":__ " + command.example_usage}`;
+__ALIASES:__ ${command.aliases.map(alias => guild_config.other.prefix + (command.parent_command ? command.parent_command + " " : "") + alias).join(", ") || "N/A"} ${command.argument_order ? `\n__ARGUMENT ORDER:__ ${command.argument_order}` : ""} ${command.root_aliases?.length > 0 ? `\n__ROOT ALIASES:__ ${command.root_aliases.map(alias => guild_config.other.prefix + alias).join("\n")}` : ""}
+__EXAMPLE USE${typeof command.example_usage !== "string" ? "S:__\n" + (command.example_usage as string[]).map(example => example.replace("p/", guild_config.other.prefix)).join("\n") : ":__ " + command.example_usage.replace("p/", guild_config.other.prefix)}`;
                 if (options.length > 0) {
                     embedDescription += "\n\n**__OPTIONS:__**\n";
                     options.forEach((option) => {
@@ -84,7 +84,6 @@ __EXAMPLE USE${typeof command.example_usage !== "string" ? "S:__\n" + (command.e
                 const subcommands = command.subcommands.list;
                 const pages = subcommands.map((subcommand: any) => createCommandEmbed(subcommand));
                 const requestedPageIndex = subcommands.findIndex((subcommand: any) => subcommand.name === requestedSubcommand);
-                console.log(requestedSubcommand, requestedPageIndex);
                 const pagedMenu = new PagedMenu(pages);
                 const initialPage = requestedPageIndex !== -1 ? pages[requestedPageIndex] : pages[0];
                 pagedMenu.currentPage = requestedPageIndex !== -1 ? requestedPageIndex : 0;
