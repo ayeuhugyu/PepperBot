@@ -426,7 +426,7 @@ export class Command<
 
         // #region COMMAND EXECUTION
         this.execute = async (input: CommandInput<F, P, I, false>) => {
-            log.info("executing command p/" + self.name + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
+            log.info("executing command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
             const start = performance.now();
             const { invoker } = input;
             if (!invoker) return log.error("invoker is undefined in command execution");
@@ -499,7 +499,7 @@ export class Command<
             }
 
             const response = await this.execute_internal(input);
-            log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            log.info("executed command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " in " + ((performance.now() - start).toFixed(3)) + "ms");
             return response;
         };
     }
