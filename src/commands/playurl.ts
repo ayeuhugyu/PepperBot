@@ -44,6 +44,11 @@ const command = new Command(
                 action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
                 return;
             }
+            if (!args.url) {
+                // if we still don't have a url after checking attachments
+                action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
+                return;
+            }
         }
 
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
