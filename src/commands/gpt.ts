@@ -128,7 +128,12 @@ const modelcommand = new Command(
             });
             return;
         }
-        const modelName = GPTModelName[args.model as keyof typeof GPTModelName];
+        const modelName = GPTModelName[args.model as keyof typeof GPTModelName]
+            || GPTModelName[args.model.toUpperCase() as keyof typeof GPTModelName]
+            || GPTModelName[args.model.toLowerCase() as keyof typeof GPTModelName]
+            || Object.keys(GPTModelName).find(key => key.startsWith(args.model))
+            || Object.values(GPTModelName).find(value => typeof value === "string" && value.startsWith(args.model));
+        console.log(modelName);
         const modelInfo = models[modelName];
         if (!modelInfo) {
             await action.reply(invoker, {
@@ -138,8 +143,20 @@ const modelcommand = new Command(
             return;
         }
 
+        const conversation = await getConversation(invoker as Message);
+        // Check if the model is already set to avoid unnecessary updates
+        if (conversation.api_parameters.model === modelInfo) {
+            await action.reply(invoker, {
+                content: `model is already set to ${modelInfo.name}.`,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return;
+        }
+        // Update the model in the conversation
+        conversation.api_parameters.model = modelInfo;
+
         await action.reply(invoker, {
-            content: `set current model to ${args.model}, here's some info: ${JSON.stringify(modelInfo, null, 2)}`,
+            content: `set current model to ${modelInfo.name}`,
             ephemeral: guild_config.useEphemeralReplies,
         });
     }

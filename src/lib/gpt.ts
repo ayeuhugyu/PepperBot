@@ -781,18 +781,22 @@ export async function sanitizeIncomingMessageContent(message: Message | GPTForma
     return content;
 }
 
-async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction): Promise<GPTContentPart[]> {
+async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction, conversation: Conversation): Promise<GPTContentPart[]> {
         log.info("sanitizing message for GPT")
+        const modelCapabilities = conversation.api_parameters.model.capabilities
+
         let contentParts = [];
 
-        const content = await sanitizeIncomingMessageContent(message);
-        if (content) {
-            contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: content || "Error finding message content. " }));
+        if (modelCapabilities.includes(GPTModelCapabilities.Text)) {
+            const content = await sanitizeIncomingMessageContent(message);
+            if (content) {
+                contentParts.push(new GPTContentPart({ type: GPTContentPartType.Text, text: content || "Error finding message content. " }));
+            }
         }
         if (message.attachments.size > 0) {
             for (const attachment of message.attachments.values()) {
                 const fileType = getFileType(attachment.name || "");
-                if (fileType === "image") {
+                if (fileType === "image" && modelCapabilities.includes(GPTModelCapabilities.Vision)) { // if the file is an image and the model supports vision
                     contentParts.push(new GPTContentPart({ type: GPTContentPartType.Image, image_url: attachment.url }));
                 } else if (fileType === ("text")) {
                     const text = await fetch(attachment.url).then((response) => response.text());
@@ -802,7 +806,7 @@ async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction
                 }
             }
         }
-        if ('stickers' in message && message.stickers.size > 0) {
+        if (('stickers' in message && message.stickers.size > 0) && modelCapabilities.includes(GPTModelCapabilities.Vision)) { // if the message has stickers and the model supports vision
             log.info("found stickers")
             message.stickers.forEach((sticker) => {
                 if (sticker.format !== StickerFormatType.Lottie) {
@@ -905,6 +909,9 @@ export class Conversation {
                 }
                 return apiConversation;
             }
+            case GPTProvider.Gemini: {
+                return "Not yet implemented for Gemini";
+            }
             default:
                 throw new Error(`Unsupported provider: ${this.api_parameters.model.provider}`);
         }
@@ -923,7 +930,7 @@ export class Conversation {
         }
         newMessage.timestamp = message.createdTimestamp || Date.now();
         newMessage.message_id = message.id.toString();
-        newMessage.content = await sanitizeMessage(message);
+        newMessage.content = await sanitizeMessage(message, this);
         if (!newMessage.content || newMessage.content.length === 0) {
             newMessage.content = [new GPTContentPart({ type: GPTContentPartType.Text, text: "No content provided." })];
         }
@@ -1007,6 +1014,9 @@ export class Conversation {
                     });
                     const finalResponse = await response.finalChatCompletion();
                     return finalResponse?.choices[0]?.message?.content;
+                }
+                case GPTProvider.Gemini: {
+                    return "Not yet implemented"
                 }
             }
         } catch (err: any) {
