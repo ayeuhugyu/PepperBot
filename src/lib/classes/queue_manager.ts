@@ -75,7 +75,7 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
             '--get-id',
             '--get-url',
             no_playlist ? '--no-playlist' : '--flat-playlist',
-            process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? process.env.PATH_TO_COOKIES : '',
+            process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? `"${process.env.PATH_TO_COOKIES}"` : '',
             sanitizeUrl(url),
         ]
 
@@ -195,7 +195,7 @@ export class Video {
                     '--download-archive', archivePath,
                     '--limit-rate', '250k',
                     '-o', filePath,
-                    process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? process.env.PATH_TO_COOKIES : '',
+                    process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? `"${process.env.PATH_TO_COOKIES}"` : '',
                     sanitizeUrl(this.url)
                 ];
 
