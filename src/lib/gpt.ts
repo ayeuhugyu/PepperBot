@@ -18,6 +18,8 @@ import fs from "fs";
 import path from "path";
 import { execFile } from "node:child_process";
 import { incrementGPTResponses } from "./statistics";
+import { JSONSchemaDefinition } from "openai/lib/jsonschema";
+import { inspect } from "node:util";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -60,350 +62,258 @@ function runLuauScript(luauCode: string): Promise<{ stdout: string; stderr: stri
     });
 }
 
-const tools: { [name: string]: RunnableToolFunction<any> } = { // openai will error if this is empty
-    // dont use strict mode on any of these unless you know what you're doing, it adds 900 unnecessary checks. for example, you can't have default values for parameters, every value must be required, etc. it's stupid.
-    date_to_timestamp: {
-        type: 'function',
-        function: {
-            name: "get_date",
-            description: "formats the inputted date into a unix timestamp. this should ONLY be used to convert to discord's timestamp display format. Do not use this for any other reason.",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    day: { type: 'number', description: 'the day of the month' },
-                    month: { type: 'number', description: 'the month' },
-                    year: { type: 'number', description: 'the year' },
-                    hour: { type: 'number', description: 'the hour' },
-                    minute: { type: 'number', description: 'the minute' },
-                    second: { type: 'number', description: 'the second' },
-                },
-                required: [],
-                additionalProperties: false,
-            },
-            function: ({ day, month, year, hour, minute, second }: { day?: number, month?: number, year?: number, hour?: number, minute?: number, second?: number }) => {
-                const date = new Date();
-                if (year !== undefined) date.setFullYear(year);
-                if (month !== undefined) date.setMonth(month - 1);
-                if (day !== undefined) date.setDate(day);
-                if (hour !== undefined) date.setHours(hour);
-                if (minute !== undefined) date.setMinutes(minute);
-                if (second !== undefined) date.setSeconds(second);
-                return Math.floor(date.getTime() / 1000); // return unix timestamp
-            },
-        }
-    },
-    get_listening_data: {
-        type: 'function',
-        function: {
-            name: "get_listening_data",
-            description: "retrieves last.fm listening data for a specific user",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    userid: {
-                        type: "string",
-                        description: "ID of the user to retrieve listening data for",
-                    },
-                },
-                required: [
-                    "userid"
-                ],
-                additionalProperties: false,
-            },
-            function: async ({ userid }: { userid: string }) => {
-                if (!userid) {
-                    return "ERROR: No user ID provided.";
-                }
-                const url = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${userid}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=5`;
+export class ToolParameter {
+    type: string; // type of the parameter (string, number, boolean, etc.)
+    arraytype?: string;
+    name: string;
+    description: string; // description of the parameter
+    required: boolean; // whether this parameter is required or optional
+    default?: any; // default value if not provided (optional)
 
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    if (data.error) {
-                        log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${data.message}`);
-                        return `an error occurred while attempting to fetch Last.fm data: ${data.message}`
-                    }
-                    const mapped = data.recenttracks.track.map((track: any) => ({ // i dont wanna re create lastfms api types so ill just use any for now
-                        artist: track.artist['#text'],
-                        track: track.name,
-                        album: track.album['#text'],
-                        url: track.url,
-                        date: track.date ? track.date['#text'] : 'Now Playing'
-                    }));
-                    return mapped
-                } catch (err: any) {
-                    log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${err.message}`);
-                    return `an error occurred while attempting to fetch Last.fm data: ${err.message}`
-                }
-            },
-        }
-    },
-    math: {
-        type: 'function',
-        function: {
-            name: "math",
-            description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate(). This should only be used when you must use math. ",
-            parse: JSON.parse,
-            strict: true,
-            parameters: {
-                type: 'object',
-                properties: {
-                    expression: {
-                        type: "string",
-                        description: "mathematical expression to evaluate",
-                    },
-                },
-                required: [
-                    "expression"
-                ],
-                additionalProperties: false,
-            },
-            function: async ({ expression }: { expression: string }) => {
-                try {
-                    return mathjs.evaluate(expression);
-                } catch (err: any) {
-                    return `an error occurred while attempting to evaluate the expression: ${err.message}`
-                }
-            },
-        }
-    },
-    pick_random: {
-        type: 'function',
-        function: {
-            name: "pick_random",
-            description: "picks a random item from a list of items. This should only ever be used when a user explicitly states to pick something at random. Do not use this for any other reason.",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    items: {
-                        type: "array",
-                        items: {
-                            type: "string",
-                        },
-                        description: "list of items to choose from",
-                    },
-                },
-                additionalProperties: false,
-            },
-            function: async ({ items }: { items: string[] }) => {
-                if (!items || items.length === 0) {
-                    return "ERROR: No items provided.";
-                }
-                return items[Math.floor(Math.random() * items.length)];
-            },
-        }
-    },
-    request_url: {
-        type: 'function',
-        function: {
-            name: "request_url",
-            description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons.",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    url: {
-                        type: "string",
-                        description: "URL to fetch. Do not input local addresses. IP's are fine, just not local ones.",
-                    },
-                },
-                required: [
-                    "url"
-                ],
-                additionalProperties: false,
-            },
-            function: async ({ url }: { url: string }) => {
-                if (!url) {
-                    return "ERROR: No URL provided.";
-                }
-                for (let ipStart of local_ips) {
-                    if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
-                        log.warn(`attempt to access local ip from request_url`);
-                        return `refused attempt to access private ip from request_url`;
-                    }
-                }
-                const options: RequestInit = {
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': new UserAgent().toString(), // prevents a lot of sites that block the default nodejs user agent
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-                        'Connection': 'keep-alive',
-                    }
-                }
-                try {
-                    const response = await fetch(url, options);
-                    const html = await response.text();
-
-                    const $ = cheerio.load(html);
-                    $('script, style, noscript, iframe').remove();
-                    const turndownService = new TurndownService();
-
-                    $('a[href]').each((_, element) => {
-                        const href = $(element).attr('href');
-                        if (href && (href.startsWith('/') || href.startsWith('./'))) {
-                            const absoluteUrl = new URL(href, url).href;
-                            $(element).attr('href', absoluteUrl);
-                        }
-                    });
-
-                    const mainContent = $('article').html() || $('main').html() || $('body').html();
-                    if (!mainContent) return "No content found.";
-                    let markdown = turndownService.turndown(mainContent);
-                    if (markdown.length > 100000) {
-                        return markdown.slice(0, 100000) + " ... (truncated due to length)";
-                    }
-                    return markdown
-                } catch (err: any) {
-
-                    log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
-                    return `an error occurred while attempting to fetch the URL: ${err.message}`;
-                }
-            },
-        }
-    },
-    request_raw_url: {
-        type: 'function',
-        function: {
-            name: "request_raw_url",
-            description: "Fetches a URL with the specified method, headers, and body, and returns the response. Does not support local addresses for security reasons. For almost all research or information gathering uses, this is not necessary, and request_url will be better.",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    url: {
-                        type: 'string',
-                        description: 'URL to fetch. Do not input local addresses. IPs are fine, just not local ones.',
-                    },
-                    method: {
-                        type: 'string',
-                        description: 'HTTP method to use (GET, POST, PUT, DELETE, etc.).',
-                        default: 'GET',
-                    },
-                    headers: {
-                        type: 'object',
-                        description: 'Headers to include in the request.',
-                        additionalProperties: { type: 'string' },
-                        default: {},
-                    },
-                    body: {
-                        type: 'string',
-                        description: 'Body of the request, for methods like POST or PUT.',
-                        default: '',
-                    },
-                },
-                required: ['url'],
-                additionalProperties: false,
-            },
-            function: async ({ url, method = 'GET', headers = {}, body = '' }: { url: string, method?: string, headers?: { [key: string]: string }, body?: string }) => {
-                if (!url) {
-                    return "ERROR: No URL provided.";
-                }
-                for (let ipStart of local_ips) {
-                    if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
-                        log.warn(`attempt to access local ip from request_raw_url`);
-                        return `refused attempt to access private ip from request_raw_url`;
-                    }
-                }
-                const options: RequestInit = {
-                    method,
-                    headers: {
-                        ...headers,
-                        'User-Agent': new UserAgent().toString(),
-                    },
-                    body: method !== 'GET' && method !== 'HEAD' ? body : undefined,
-                };
-                try {
-                    const response = await fetch(url, options);
-                    const responseBody = await response.text();
-                    return {
-                        status: response.status,
-                        statusText: response.statusText,
-                        headers: Object.fromEntries(response.headers.entries()),
-                        body: responseBody,
-                    };
-                } catch (err: any) {
-                    log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
-                    return `an error occurred while attempting to fetch the URL: ${err.message}`;
-                }
-            },
-        }
-    },
-    search: {
-        type: 'function',
-        function: {
-            name: "search",
-            description: "searches Google for a query and returns the results. snippets will never be enough to provide accurate information, so always use this in conjunction with request_url to provide further information. do not simply link users to the results, actually follow them.",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    query: {
-                        type: "string",
-                        description: "query to search for",
-                    },
-                },
-                required: [
-                    "query"
-                ],
-                additionalProperties: false,
-            },
-            function: async ({ query }: { query: string }) => {
-                const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID}`;
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    if (data.error) {
-                        log.warn(`an error occurred while attempting to search Google for GPT: ${data.error.message}`);
-                        return `an error occurred while attempting to search Google: ${data.error.message}`;
-                    }
-                    const results = Array.isArray(data.items) ? data.items : [data.items];
-                    let newResults = [];
-                    for (let result of results) {
-                        newResults.push({ title: result.title, snippet: result.snippet, link: result.link })
-                    }
-                    return newResults;
-                } catch (err: any) {
-                    log.warn(`an error occurred while attempting to search Google for GPT: ${err.message}`);
-                    return `an error occurred while attempting to search Google: ${err.message}`;
-                }
-            },
-        }
-    },
-    evaluate_luau: {
-        type: 'function',
-        function: {
-            name: "evaluate_luau",
-            description: "evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you dont print something, it won't be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX's 'task' library, do not attempt to use it. You also do not appear to have access to any sort of 'wait' function. Do not attempt to use it.",
-            parse: JSON.parse,
-            parameters: {
-                type: 'object',
-                properties: {
-                    expression: {
-                        type: "string",
-                        description: "luau expression to evaluate",
-                    },
-                },
-                required: [
-                    "expression"
-                ],
-                additionalProperties: false,
-            },
-            function: async ({ expression }: { expression: string }) => {
-                if (!expression.includes("print")) {
-                    return "ERROR: the expression must contain a print statement. please remember to print your output.";
-                }
-                try {
-                    return await runLuauScript(expression);
-                } catch (err: any) {
-                    return `an error occurred while attempting to evaluate the expression: ${err.message || err}`
-                }
-            }
+    constructor({ type, arraytype, name, description, required, defaultValue }: { type: string; arraytype?: string, name: string, description: string; required: boolean; defaultValue?: any }) {
+        this.type = type;
+        this.arraytype = arraytype; // for array types, specify the type of the items in the array
+        this.name = name;
+        this.description = description;
+        this.required = required;
+        if (defaultValue !== undefined) {
+            this.default = defaultValue;
         }
     }
+}
+
+type ToolFunction = RunnableToolFunction<any>['function']['function']
+
+export class Tool {
+    name: string;
+    description: string;
+    parameters: ToolParameter[];
+    function: ToolFunction;
+
+    constructor({ name, description, parameters }: { name: string; description: string; parameters: ToolParameter[]; }, func: ToolFunction) {
+        this.name = name;
+        this.description = description;
+        this.parameters = parameters;
+        this.function = func;
+    }
+}
+
+const tools: { [name: string]: Tool } = {
+    date_to_timestamp: new Tool({
+        name: "date_to_timestamp",
+        description: "formats the inputted date into a unix timestamp. This should ONLY be used to convert to Discord's timestamp display format. Do not use this for any other reason.",
+        parameters: [
+            new ToolParameter({ type: "number", name: "day", description: "the day of the month", required: false }),
+            new ToolParameter({ type: "number", name: "month", description: "the month", required: false }),
+            new ToolParameter({ type: "number", name: "year", description: "the year", required: false }),
+            new ToolParameter({ type: "number", name: "hour", description: "the hour", required: false }),
+            new ToolParameter({ type: "number", name: "minute", description: "the minute", required: false }),
+            new ToolParameter({ type: "number", name: "second", description: "the second", required: false })
+        ]
+    }, ({ day, month, year, hour, minute, second }: { day?: number, month?: number, year?: number, hour?: number, minute?: number, second?: number }) => {
+        const date = new Date();
+        if (year !== undefined) date.setFullYear(year);
+        if (month !== undefined) date.setMonth(month - 1);
+        if (day !== undefined) date.setDate(day);
+        if (hour !== undefined) date.setHours(hour);
+        if (minute !== undefined) date.setMinutes(minute);
+        if (second !== undefined) date.setSeconds(second);
+        return Math.floor(date.getTime() / 1000); // return unix timestamp
+    }),
+    get_listening_data: new Tool({
+        name: "get_listening_data",
+        description: "retrieves last.fm listening data for a specific user",
+        parameters: [
+            new ToolParameter({ type: "string", name: "userid", description: "ID of the user to retrieve listening data for", required: true })
+        ]
+    }, async ({ userid }: { userid: string }) => {
+        if (!userid) {
+            return "ERROR: No user ID provided.";
+        }
+        const url = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${userid}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=5`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.error) {
+                log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${data.message}`);
+                return `an error occurred while attempting to fetch Last.fm data: ${data.message}`
+            }
+            const mapped = data.recenttracks.track.map((track: any) => ({
+                artist: track.artist['#text'],
+                track: track.name,
+                album: track.album['#text'],
+                url: track.url,
+                date: track.date ? track.date['#text'] : 'Now Playing'
+            }));
+            return mapped; // return the mapped data
+        } catch (err: any) {
+            log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${err.message}`);
+            return `an error occurred while attempting to fetch Last.fm data: ${err.message}`;
+        }
+    }),
+    math: new Tool({
+        name: "math",
+        description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate(). This should only be used when you must use math.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "expression", description: "mathematical expression to evaluate", required: true })
+        ]
+    }, ({ expression }: { expression: string }) => {
+        try {
+            return mathjs.evaluate(expression);
+        } catch (err: any) {
+            return `an error occurred while attempting to evaluate the expression: ${err.message}`;
+        }
+    }),
+    pick_random: new Tool({
+        name: "pick_random",
+        description: "picks a random item from a list of items. This should only ever be used when a user explicitly states to pick something at random. Do not use this for any other reason.",
+        parameters: [
+            new ToolParameter({ type: "array", arraytype: "string", name: "items", description: "list of items to choose from", required: true })
+        ]
+    }, ({ items }: { items: string[] }) => {
+        if (!items || items.length === 0) {
+            return "ERROR: No items provided.";
+        }
+        return items[Math.floor(Math.random() * items.length)];
+    }),
+    request_url: new Tool({
+        name: "request_url",
+        description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "url", description: "URL to fetch. Do not input local addresses. IP's are fine, just not local ones.", required: true })
+        ]
+    }, async ({ url }: { url: string }) => {
+        if (!url) {
+            return "ERROR: No URL provided.";
+        }
+        for (let ipStart of local_ips) {
+            if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
+                log.warn(`attempt to access local ip from request_url`);
+                return `refused attempt to access private ip from request_url`;
+            }
+        }
+        const options: RequestInit = {
+            method: 'GET',
+            headers: {
+                'User-Agent': new UserAgent().toString(), // prevents a lot of sites that block the default nodejs user agent
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'Connection': 'keep-alive',
+            }
+        }
+        try {
+            const response = await fetch(url, options);
+            const html = await response.text();
+
+            const $ = cheerio.load(html);
+            $('script, style, noscript, iframe').remove();
+            const turndownService = new TurndownService();
+
+            $('a[href]').each((_, element) => {
+                const href = $(element).attr('href');
+                if (href && (href.startsWith('/') || href.startsWith('./'))) {
+                    const absoluteUrl = new URL(href, url).href;
+                    $(element).attr('href', absoluteUrl);
+                }
+            });
+
+            const mainContent = $('article').html() || $('main').html() || $('body').html();
+            if (!mainContent) return "No content found.";
+            let markdown = turndownService.turndown(mainContent);
+            if (markdown.length > 100000) {
+                return markdown.slice(0, 100000) + " ... (truncated due to length)";
+            }
+            return markdown
+        } catch (err: any) {
+
+            log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
+            return `an error occurred while attempting to fetch the URL: ${err.message}`;
+        }
+    }),
+    request_raw_url: new Tool({
+        name: "request_raw_url",
+        description: "Fetches a URL with the specified method, headers, and body, and returns the response. Does not support local addresses for security reasons. For almost all research or information gathering uses, this is not necessary, and request_url will be better.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "url", description: "URL to fetch. Do not input local addresses. IP's are fine, just not local ones.", required: true }),
+            new ToolParameter({ type: "string", name: "method", description: "HTTP method to use (GET, POST, PUT, DELETE, etc.).", required: false, defaultValue: 'GET' }),
+            new ToolParameter({ type: "object", name: "headers", description: "Headers to include in the request.", required: false, defaultValue: {} }),
+            new ToolParameter({ type: "string", name: "body", description: "Body of the request, for methods like POST or PUT.", required: false, defaultValue: '' })
+        ]
+    }, async ({ url, method = 'GET', headers = {}, body = '' }: { url: string, method?: string, headers?: { [key: string]: string }, body?: string }) => {
+        if (!url) {
+            return "ERROR: No URL provided.";
+        }
+        for (let ipStart of local_ips) {
+            if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
+                log.warn(`attempt to access local ip from request_raw_url`);
+                return `refused attempt to access private ip from request_raw_url`;
+            }
+        }
+        const options: RequestInit = {
+            method,
+            headers: {
+                ...headers,
+                'User-Agent': new UserAgent().toString(),
+            },
+            body: method !== 'GET' && method !== 'HEAD' ? body : undefined,
+        };
+        try {
+            const response = await fetch(url, options);
+            const responseBody = await response.text();
+            return {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries()),
+                body: responseBody,
+            };
+        } catch (err: any) {
+            log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
+            return `an error occurred while attempting to fetch the URL: ${err.message}`;
+        }
+    }),
+    search: new Tool({
+        name: "search",
+        description: "searches Google for a query and returns the results. snippets will never be enough to provide accurate information, so always use this in conjunction with request_url to provide further information. do not simply link users to the results, actually follow them.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "query", description: "query to search for", required: true })
+        ]
+    }, async ({ query }: { query: string }) => {
+        const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.error) {
+                log.warn(`an error occurred while attempting to search Google for GPT: ${data.error.message}`);
+                return `an error occurred while attempting to search Google: ${data.error.message}`;
+            }
+            const results = Array.isArray(data.items) ? data.items : [data.items];
+            let newResults = [];
+            for (let result of results) {
+                newResults.push({ title: result.title, snippet: result.snippet, link: result.link })
+            }
+            return newResults;
+        } catch (err: any) {
+            log.warn(`an error occurred while attempting to search Google for GPT: ${err.message}`);
+            return `an error occurred while attempting to search Google: ${err.message}`;
+        }
+    }),
+    evaluate_luau: new Tool({
+        name: "evaluate_luau",
+        description: "evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you don't print something, it won't be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX's 'task' library, do not attempt to use it.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "expression", description: "luau expression to evaluate", required: true })
+        ]
+    }, async ({ expression }: { expression: string }) => {
+        if (!expression.includes("print")) {
+            return "ERROR: the expression must contain a print statement. please remember to print your output.";
+        }
+        try {
+            return await runLuauScript(expression);
+        } catch (err: any) {
+            return `an error occurred while attempting to evaluate the expression: ${err.message || err}`;
+        }
+    })
 }
 
 const botPromptContent = `
@@ -633,7 +543,8 @@ const botPrompt = new Prompt({
 
 export enum GPTModelName {
     gpt4omini = "gpt-4o-mini",
-    gpt35turbo = "gpt-3.5-turbo", // unused
+    gpt35turbo = "gpt-3.5-turbo",
+    gemini20flashlite = "gemini-2.0-flash-lite"
 }
 
 export enum GPTProvider {
@@ -646,6 +557,7 @@ export enum GPTModelCapabilities {
     Text = "text",
     Reasoning = "reasoning",
     Vision = "vision",
+    VideoVision = "video_vision", // not yet implemented
     Audio = "audio"
 }
 
@@ -666,6 +578,11 @@ export const models: Record<GPTModelName, GPTModel> = {
         name: GPTModelName.gpt35turbo,
         provider: GPTProvider.OpenAI,
         capabilities: [GPTModelCapabilities.Text], // gpt-3.5-turbo only supports text
+    },
+    [GPTModelName.gemini20flashlite]: {
+        name: GPTModelName.gemini20flashlite,
+        provider: GPTProvider.Gemini,
+        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.Vision, GPTModelCapabilities.VideoVision], // gemini 2.0 flash supports text, vision and audio
     }
 }
 
@@ -1021,8 +938,46 @@ export class Conversation {
             const apiInput = this.toApiInput();
             switch (this.api_parameters.model.provider) {
                 case GPTProvider.OpenAI: {
+                    const formattedTools = Object.entries(tools).map(([key, tool]) => {
+                        const formattedParameters: RunnableToolFunction<any>['function']['parameters'] = {
+                            type: 'object',
+                            properties: {},
+                            additionalProperties: false,
+                        }
+                        tool.parameters.forEach((param) => {
+                            if (!formattedParameters.properties) formattedParameters.properties = {};
+                            let formattedParam: JSONSchemaDefinition = {
+                                type: param.type,
+                                description: param.description
+                            }
+                            if (param.arraytype) {
+                                formattedParam.items = {
+                                    type: param.arraytype
+                                }
+                            }
+                            if (param.default !== undefined) {
+                                formattedParam.default = param.default; // add default value if provided
+                            }
+                            formattedParameters.properties[param.name] = formattedParam; // add the parameter to the properties object
+                            if (param.required) {
+                                if (!formattedParameters.required) formattedParameters.required = []; // initialize required if it doesn't exist
+                                formattedParameters.required.push(param.name); // if the parameter is required, add it to the required array
+                            }
+                        }); // format the parameters for the tool
+                        const formattedTool: RunnableToolFunction<any> = {
+                            type: 'function',
+                            function: {
+                                name: tool.name,
+                                description: tool.description,
+                                parse: JSON.parse,
+                                parameters: formattedParameters,
+                                function: tool.function
+                            }
+                        }
+                        return formattedTool;
+                    });
                     const response = await openai.beta.chat.completions.runTools({
-                        tools: Object.values(tools),
+                        tools: formattedTools,
                         ...apiInput
                     }).on('message', (msg) => {
                         switch (msg.role) {
