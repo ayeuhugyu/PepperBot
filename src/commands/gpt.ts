@@ -150,15 +150,26 @@ const get = new Command(
     {
         name: 'get',
         description: 'returns your gpt conversation',
-        long_description: 'returns your gpt conversation',
+        long_description: 'returns your gpt conversation. Append any text after the command to receive the full conversation output.',
         tags: [CommandTag.Debug],
-        example_usage: "p/gpt get",
-        pipable_to: [CommandTag.TextPipable]
+        example_usage: "p/gpt get full",
+        pipable_to: [CommandTag.TextPipable],
+        options: [
+            new CommandOption({
+                name: 'full',
+                description: 'whether to return the full conversation output',
+                type: CommandOptionType.Boolean,
+                required: false,
+            }),
+        ]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ invoker, guild_config }) {
+    // Using SingleStringWholeMessage to capture extra text which if non-empty means "full" is true
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["full"]),
+    async function execute ({ invoker, args, guild_config }) {
         const conversation = await getConversation(invoker as Message);
-        const output = conversation.toReasonableOutput();
+        // "full" is true if there's any extra text after the command
+        const full = !!(args.full && args.full.trim().length);
+        const output = conversation.toReasonableOutput(full);
         const file = textToAttachment(JSON.stringify(output, null, 2), "conversation.txt");
         await action.reply(invoker, { content: "here's your conversation", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({ pipe_data: { input_text: JSON.stringify(output, null, 2) } });

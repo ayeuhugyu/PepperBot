@@ -882,15 +882,15 @@ export class Conversation {
     emit = this.emitter.emit.bind(this.emitter);
     removeAllListeners = this.emitter.removeAllListeners.bind(this.emitter);
 
-    toReasonableOutput() {
+    toReasonableOutput(full: Boolean = false) {
         return {
             messages: this.messages.map((message) => {
                 const content = (message.content !== undefined) ? Array.isArray(message.content) ? message.content.map(part => {
-                    if (part.type === GPTContentPartType.Text && part.text && part.text.length > 150) {
+                    if (part.type === GPTContentPartType.Text && part.text && (part.text.length > 150) && !full) {
                         return { ...part, text: part.text.slice(0, 150) + "... cut due to length" };
                     }
                     return part;
-                }) : message?.content?.length > 150 ? message.content?.slice(0, 150) + "... cut due to length" : message?.content : undefined;
+                }) : ((message?.content?.length > 150) && !full) ? (message.content?.slice(0, 150) + "... cut due to length") : message?.content : undefined;
 
                 return {
                     name: message.name,
