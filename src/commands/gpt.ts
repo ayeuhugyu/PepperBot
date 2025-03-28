@@ -1,10 +1,10 @@
 import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, Collection, GuildMember, Message, StageChannel, VoiceChannel } from "discord.js";
-import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
+import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { APIParameters, getConversation, generateImage } from "../lib/gpt";
+import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { APIParameters, getConversation, generateImage, GPTModelName, models } from "../lib/gpt";
 import { textToAttachment } from "../lib/attachment_manager";
-import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 const templateAPIParameters = new APIParameters();
 
@@ -78,11 +78,78 @@ const image = new Command(
     }
 );
 
+const modelcommand = new Command(
+    {
+        name: 'model',
+        description: 'set the model for your conversation',
+        long_description: 'allows you to change which AI model your conversation uses',
+        tags: [],
+        pipable_to: [],
+        options: [
+            new CommandOption({
+                name: 'model',
+                description: 'the AI model to use for the conversation.',
+                long_description: 'the AI model to use for the conversation. ',
+                type: CommandOptionType.String,
+                required: true,
+                choices: Object.keys(GPTModelName).map(key => {
+                    // Filter out the numeric keys from the enum
+                    if (isNaN(Number(key))) {
+                        return { name: key, value: key };
+                    }
+                }).filter(choice => choice !== undefined) as { name: string, value: string }[] // Filter out undefined values
+            })
+        ],
+        access: CommandAccessTemplates.public,
+        input_types: [InvokerType.Message, InvokerType.Interaction],
+        example_usage: "",
+        aliases: []
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["model"]),
+    async function execute ({ invoker, args, guild_config }) {
+        if (!args.model) {
+            await action.reply(invoker, {
+                content: "you must provide a model name or 'list'/'ls' to view available models.",
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return;
+        }
+
+        if (args.model === "list" || args.model === "ls") {
+            const mappedModels = Object.entries(models).map(([key, value]) => {
+                return `${value.name}:
+  - provider: ${value.provider}
+  - capabilities: ${value.capabilities ? value.capabilities.join(", ") : "none"}
+                `
+            });
+            await action.reply(invoker, {
+                content: `available models: \`\`\`md\n${mappedModels.join("\n")}\`\`\``,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return;
+        }
+        const modelName = GPTModelName[args.model as keyof typeof GPTModelName];
+        const modelInfo = models[modelName];
+        if (!modelInfo) {
+            await action.reply(invoker, {
+                content: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return;
+        }
+
+        await action.reply(invoker, {
+            content: `set current model to ${args.model}, here's some info: ${JSON.stringify(modelInfo, null, 2)}`,
+            ephemeral: guild_config.useEphemeralReplies,
+        });
+    }
+);
+
 const setparam = new Command(
     {
         name: 'setparam',
         description: 'allows you to change parameters for the gpt conversation',
-        long_description: 'allows you to change parameters for the gpt conversation, notably things like temperature ad top_p',
+        long_description: 'allows you to change parameters for the gpt conversation, notably things like temperature and top_p',
         tags: [CommandTag.AI],
         example_usage: "p/gpt setparam temperature 1",
         options: [
@@ -91,7 +158,9 @@ const setparam = new Command(
                 description: 'the parameter to change',
                 type: CommandOptionType.String,
                 required: true,
-                choices: Object.keys(templateAPIParameters).map(key => { return { name: key, value: key } })
+                choices: Object.keys(templateAPIParameters)
+                    .filter(key => key !== "model")
+                    .map(key => { return { name: key, value: key } })
             }),
             new CommandOption({
                 name: 'value',
@@ -114,7 +183,7 @@ const setparam = new Command(
         const parameter = args.parameter;
         const value = args.value;
         if (!templateAPIParameters.hasOwnProperty(parameter)) {
-            action.reply(invoker, { content: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).map(key => key).join(", ")}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            action.reply(invoker, { content: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``, ephemeral: guild_config.other.use_ephemeral_replies });
             return;
         }
         // constraints on values
@@ -157,7 +226,8 @@ const setparam = new Command(
             default: break;
         }
         const conversation = await getConversation(invoker as Message);
-        conversation.api_parameters[parameter as keyof APIParameters] = parseInt(value);
+        type APIParameterKeys = Exclude<keyof APIParameters, "model">;
+        conversation.api_parameters[parameter as APIParameterKeys] = parseInt(value);
 
         await action.reply(invoker, { content: `set \`${parameter}\` to \`${value}\``, ephemeral: guild_config.other.use_ephemeral_replies });
         return;
@@ -221,7 +291,7 @@ const command = new Command(
         example_usage: "p/gpt get",
         subcommands: {
             deploy:  SubcommandDeploymentApproach.Split,
-            list: [get, setparam, clear, image],
+            list: [get, setparam, clear, image, modelcommand],
         },
         options: [],
         pipable_to: [] // todo: fix this so it just works on subcommands

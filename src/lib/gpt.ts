@@ -631,6 +631,45 @@ const botPrompt = new Prompt({
     description: "The default prompt for PepperBot. ",
 })
 
+export enum GPTModelName {
+    gpt4omini = "gpt-4o-mini",
+    gpt35turbo = "gpt-3.5-turbo", // unused
+}
+
+export enum GPTProvider {
+    OpenAI = "OpenAI",
+    Gemini = "GoogleGemini",
+    DeepSeek = "DeepSeek"
+}
+
+export enum GPTModelCapabilities {
+    Text = "text",
+    Reasoning = "reasoning",
+    Vision = "vision",
+    Audio = "audio"
+}
+
+export interface GPTModel {
+    name: GPTModelName; // the name of the model
+    provider: GPTProvider; // the provider of the model (OpenAI, Gemini, etc.)
+    capabilities: GPTModelCapabilities[]; // the capabilities of the model (text, image, audio)
+}
+
+
+export const models: Record<GPTModelName, GPTModel> = {
+    [GPTModelName.gpt4omini]: {
+        name: GPTModelName.gpt4omini,
+        provider: GPTProvider.OpenAI,
+        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.Vision], // gpt-4o mini supports text and vision
+    },
+    [GPTModelName.gpt35turbo]: {
+        name: GPTModelName.gpt35turbo,
+        provider: GPTProvider.OpenAI,
+        capabilities: [GPTModelCapabilities.Text], // gpt-3.5-turbo only supports text
+    }
+}
+
+
 export enum GPTRole { // in theory i could import these from openai, but they have a lot of other weird stuff added to them and i dont wanna deal with that
     User = "user",
     Assistant = "assistant",
@@ -647,11 +686,6 @@ export type GPTFormattedCommandInteraction = FormattedCommandInteraction & {
     author: User;
     content: string;
     attachments: Collection<string, Attachment>;
-}
-
-export enum GPTModel {
-    gpt_4o_mini = "gpt-4o-mini",
-    gpt_35_turbo = "gpt-3.5-turbo", // unused
 }
 
 export enum GPTModality {
@@ -707,6 +741,7 @@ export const APIParametersDescriptions = {
 } // may or may not be used in the future for a help command
 
 export class APIParameters {
+    model: GPTModel = models[GPTModelName.gpt4omini]; // default model is gpt-4o-mini
     temperature: number = 1;
     top_p: number = 1;
     frequency_penalty: number = 0;
@@ -911,45 +946,51 @@ export class Conversation {
     }
 
     toApiInput() {
-        const apiConversation: any = {
-            model: GPTModel.gpt_4o_mini,
-            messages: this.messages.map((message) => {
-                const apiMessage: any = {
-                    role: message.role,
-                    tool_calls: message.tool_calls,
-                    tool_call_id: message.tool_call_id
-                }
-                if (message.name) {
-                    apiMessage.name = message.name;
-                }
-                if (message.content) {
-                    if (typeof message.content === "string") {
-                        apiMessage.content = message.content;
-                    } else {
-                        message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
-                            const apiContent: any = {
-                                type: content.type,
+        switch (this.api_parameters.model.provider) {
+            case GPTProvider.OpenAI: {
+                const apiConversation: any = {
+                    model: this.api_parameters.model.name, // the model to use for the conversation
+                    messages: this.messages.map((message) => {
+                        const apiMessage: any = {
+                            role: message.role,
+                            tool_calls: message.tool_calls,
+                            tool_call_id: message.tool_call_id
+                        };
+                        if (message.name) {
+                            apiMessage.name = message.name;
+                        }
+                        if (message.content) {
+                            if (typeof message.content === "string") {
+                                apiMessage.content = message.content;
+                            } else {
+                                message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
+                                    const apiContent: any = {
+                                        type: content.type,
+                                    };
+                                    if (content.text) {
+                                        apiContent.text = content.text || "text content unknown";
+                                    }
+                                    if (content.image_url) {
+                                        apiContent.image_url = content.image_url;
+                                    }
+                                    return apiContent;
+                                }) : message.content;
+                                apiMessage.content = message.content;
                             }
-                            if (content.text) {
-                                apiContent.text = content.text || "text content unknown";
-                            }
-                            if (content.image_url) {
-                                apiContent.image_url = content.image_url;
-                            }
-                            return apiContent;
-                        }) : message.content;
-                        apiMessage.content = message.content;
+                        }
+                        return apiMessage;
+                    })
+                }; // i am not gonna make a whole type for this ngl i do not care enough
+                for (const [key, value] of Object.entries(this.api_parameters)) {
+                    if (value !== undefined && key !== "model") { // don't include the model here because its already included above
+                        apiConversation[key] = value;
                     }
                 }
-                return apiMessage;
-            })
-        }; // i am not gonna make a whole type for this ngl i do not care enough
-        for (const [key, value] of Object.entries(this.api_parameters)) {
-            if (value !== undefined) {
-                apiConversation[key] = value;
+                return apiConversation;
             }
+            default:
+                throw new Error(`Unsupported provider: ${this.api_parameters.model.provider}`);
         }
-        return apiConversation;
     }
 
     addNonDiscordMessage(message: GPTMessage): GPTMessage {
@@ -978,32 +1019,41 @@ export class Conversation {
     async run() {
         try {
             const apiInput = this.toApiInput();
-            const response = await openai.beta.chat.completions.runTools({
-                tools: Object.values(tools),
-                ...apiInput
-            }).on('message', (msg) => {
-                if (msg.role === GPTRole.Tool) {
-                    log.info(`finished processing tool (${msg.tool_call_id})`);
-                    const message = new GPTMessage({ role: GPTRole.Tool, content: msg.content as string, tool_call_id: msg.tool_call_id })
-                    this.addNonDiscordMessage(message);
-                } else if (msg.role === GPTRole.Assistant) {
-                    let message = new GPTMessage()
-                    message.name = "PepperBot";
-                    message.role = GPTRole.Assistant;
-                    if (msg.tool_calls && msg.tool_calls.length >= 1) {
-                        for (const toolCall of msg.tool_calls) {
-                            log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
+            switch (this.api_parameters.model.provider) {
+                case GPTProvider.OpenAI: {
+                    const response = await openai.beta.chat.completions.runTools({
+                        tools: Object.values(tools),
+                        ...apiInput
+                    }).on('message', (msg) => {
+                        switch (msg.role) {
+                            case GPTRole.Tool: {
+                                log.info(`finished processing tool (${msg.tool_call_id})`);
+                                const message = new GPTMessage({ role: GPTRole.Tool, content: msg.content as string, tool_call_id: msg.tool_call_id });
+                                this.addNonDiscordMessage(message);
+                                break;
+                            }
+                            case GPTRole.Assistant: {
+                                let message = new GPTMessage();
+                                message.name = "PepperBot";
+                                message.role = GPTRole.Assistant;
+                                if (msg.tool_calls && msg.tool_calls.length >= 1) {
+                                    for (const toolCall of msg.tool_calls) {
+                                        log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
+                                    }
+                                    this.emitter.emit(ConversationEvents.FunctionCall, msg.tool_calls);
+                                    message.tool_calls = msg.tool_calls;
+                                    this.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
+                                }
+                                message.content = msg.content as string;
+                                // we dont add the message because its not yet a discord message
+                                break;
+                            }
                         }
-                        this.emitter.emit(ConversationEvents.FunctionCall, msg.tool_calls);
-                        message.tool_calls = msg.tool_calls;
-                        this.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
-                    }
-                    message.content = msg.content as string;
-                    // we dont add the message because its not yet a discord message
+                    });
+                    const finalResponse = await response.finalChatCompletion();
+                    return finalResponse?.choices[0]?.message?.content;
                 }
-            });
-
-            return await response.finalChatCompletion();
+            }
         } catch (err: any) {
             log.error(`internal error while executing GPT:`);
             log.error(err);
@@ -1150,8 +1200,7 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     if (hasFatallyErrored) {
         return;
     }
-    const fullMessageContent = response?.choices[0]?.message?.content;
-    const excludedFullMessageContent = fullMessageContent//?.replaceAll(/\$EXCLUDE_START\$[\s\S]*?\$EXCLUDE_END\$/g, '');
+    const excludedFullMessageContent = response//?.replaceAll(/\$EXCLUDE_START\$[\s\S]*?\$EXCLUDE_END\$/g, '');
     let messages = excludedFullMessageContent?.split(messageSplitCharacters) || [excludedFullMessageContent || ""];
     if (messages.length > 10) {
         const remainingMessages = messages.slice(10).join('\n');
@@ -1182,7 +1231,7 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     await incrementGPTResponses();
     conversation.removeAllListeners();
 
-    return fullMessageContent;
+    return response;
 }
 
 export async function generateImage(prompt: string) {
