@@ -95,6 +95,7 @@ the biggest new base feature
     - commands now have argument orders
 - site has been completely remade
 - bots can no longer execute any commands. this was just yet another value i had to think about if it would cause problems or not
+- new p/random phrase allows you to generate phrases based off parts of speech (ex. p/random phrase noun adjective adverb verb noun)
 - p/vc join & leave now check for the "speak" permission instead of the "connect" permission
 - p/sound list & p/prompt list now use a 3 column list instead of a text file
 - p/playurl and p/queue now support many, many, MANY more urls
