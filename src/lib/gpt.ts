@@ -1047,7 +1047,7 @@ export class Conversation {
         const prompt = await getPrompt(message.author.id)
         if (prompt.content.length > 0 && prompt.content !== "Prompt undefined.") conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
         const args = prompt.api_parameters
-        const wantedModel = prompt.api_parameters.model as string;
+        const wantedModel = (prompt.api_parameters.model || "") as string;
         const modelName = GPTModelName[wantedModel as keyof typeof GPTModelName]
             || GPTModelName[wantedModel.toUpperCase() as keyof typeof GPTModelName]
             || GPTModelName[wantedModel.toLowerCase() as keyof typeof GPTModelName]

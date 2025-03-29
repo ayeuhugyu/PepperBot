@@ -520,14 +520,6 @@ const modelcommand = new Command(
 
         const prompt = await getUserPrompt(invoker.author);
         const apiParameters = new APIParameters(prompt.api_parameters);
-        // Check if the model is already set to avoid unnecessary updates
-        if (apiParameters.model === modelInfo) {
-            await action.reply(invoker, {
-                content: `model is already set to ${modelInfo.name}.`,
-                ephemeral: guild_config.useEphemeralReplies,
-            });
-            return;
-        }
         // Update the model in the conversation
         prompt.api_parameters.model = modelInfo.name;
 
@@ -657,14 +649,30 @@ const set = new Command({
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
-    async function execute ({ invoker, guild_config, args, piped_data }) {
-        const content = args.content || piped_data?.data?.input_text
+    async function execute ({ invoker, guild_config, args, piped_data, invoker_type }) {
+        let content = args.content || piped_data?.data?.input_text
         if (!content) {
-            action.reply(invoker, {
-                content: "please supply content",
-                ephemeral: guild_config.other.use_ephemeral_replies
-            })
-            return new CommandResponse({});
+            if (invoker_type === InvokerType.Message) {
+                if ((invoker as CommandInvoker<InvokerType.Message>).attachments.size > 0) {
+                    const attachment = (invoker as CommandInvoker<InvokerType.Message>).attachments.first();
+                    if (attachment) {
+                        const attachmentContent = await fetch(attachment.url).then(res => res.text());
+                        if (attachmentContent) {
+                            content = attachmentContent;
+                        } else {
+                            action.reply(invoker, { content: "couldn't read the attachment", ephemeral: guild_config.other.use_ephemeral_replies });
+                            return new CommandResponse({});
+                        }
+                    }
+                }
+            }
+            if (!content) {
+                action.reply(invoker, {
+                    content: "please supply content",
+                    ephemeral: guild_config.other.use_ephemeral_replies
+                })
+                return new CommandResponse({});
+            }
         }
         let prompt = await getUserPrompt(invoker.author);
         prompt.content = content as string;
