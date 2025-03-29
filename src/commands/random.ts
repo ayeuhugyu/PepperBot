@@ -18,6 +18,10 @@ fs.readdirSync(partsOfSpeechDir).forEach((file) => {
     }
 });
 
+partsOfSpeechToArray["any"] = Object.keys(partsOfSpeechToArray)
+    .filter((key) => key !== "word")
+    .flatMap((key) => partsOfSpeechToArray[key]);
+
 const phrasecommand = new Command(
     {
         name: 'phrase',
@@ -70,6 +74,7 @@ const phrasecommand = new Command(
             }
         });
         if (errored) return;
+
         const phrase = list.map((part: string) => {
             const array = partsOfSpeechToArray[part];
             const randomnum = Math.floor(Math.random() * array.length);
