@@ -22,6 +22,8 @@ export interface dbPrompt {
     description: string;
     nsfw: boolean;
     default: boolean;
+
+    api_parameters: string; // JSON string
 }
 
 export class Prompt {
@@ -37,6 +39,8 @@ export class Prompt {
     description: string = "No description provided.";
     nsfw: boolean = false;
     default: boolean = false;
+
+    api_parameters: Record<string, number | string> = {}; // JSON string
 
     constructor(dbObject: Partial<dbPrompt>) {
         Object.assign(this, {
@@ -54,6 +58,7 @@ export class Prompt {
             description: dbObject.description || "No description provided.",
             nsfw: Boolean(dbObject.nsfw),
             default: Boolean(dbObject.default),
+            api_parameters: JSON.parse(dbObject.api_parameters || "{}"),
         });
     }
 }
@@ -122,6 +127,7 @@ export async function writePrompt(prompt: Prompt) {
                 description: prompt.description,
                 nsfw: Number(prompt.nsfw),
                 default: Number(prompt.default),
+                api_parameters: JSON.stringify(prompt.api_parameters),
             });
     } else {
         result = await database("prompts")
@@ -138,6 +144,7 @@ export async function writePrompt(prompt: Prompt) {
                 description: prompt.description,
                 nsfw: Number(prompt.nsfw),
                 default: Number(prompt.default),
+                api_parameters: JSON.stringify(prompt.api_parameters),
             });
     }
 

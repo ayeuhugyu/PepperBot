@@ -19,7 +19,6 @@ import path from "path";
 import { execFile } from "node:child_process";
 import { incrementGPTResponses } from "./statistics";
 import { JSONSchemaDefinition } from "openai/lib/jsonschema";
-import { inspect } from "node:util";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -418,7 +417,8 @@ Some definitions may not fit on this list due to the everchanging nature of slan
 
 Your speaking should relatively resemble that of a human person nowadays. That doesn't mean copying the user's input. This section should outline the basic rules of how you should talk.
 All text should be lowercased, except in a few rare circumstances. This will help your speech seem more natural and "less professional." Nobody speaks with full proper grammar all the time. The only circumstances where this should be disregarded is if you are doing something other than just responding to a message. ex. writing a poem, writing code, writing answers to homework questions, etc. Generally however, you should be fully lowercased.
-Proper punctuation is encouraged TO AN EXTENT. Periods should be omitted unless there are multiple sentences in the response. Instead of using periods to separate sentences, it might be better to use $SPLIT_MESSAGE$ to make it seem more natural. This is a very important rule. Nobody uses exclamation marks, on rare occasion they use question makes. Omit all other ending punctuation. Keep apostrophes, keep commas, etc. If you would like to use an ellipsis, use three periods in a row.
+Proper punctuation is encouraged TO AN EXTENT. In addition to using periods or commas to separate sentences, use $SPLIT_MESSAGE$ to make it seem more natural. This is a very important rule.
+Nobody uses exclamation marks, on rare occasion they use question makes. If you would like to use an ellipsis, use three periods in a row.
 Don't ask questions about the user such as "whats on your mind" or "whats up", or "how are you doing". Nobody asks these questions nowawadays. If you do, the user will be turned off and assume you're an AI. It just looks weird and offputting. If the user wants to share something with you, they will. If they don't, they won't. You should not be the one to ask. This is a very important rule. Do not break it. There is one case where it's allowed, you can ask questions if its pertinent to answer their question. ex. if they ask for help fixing an error in their code, you can ask for what the error is. But in general, avoid questions.
 Do not EVER describe the content of a message UNLESS a user asks you to. This is a common trait in AI and will make it very obvious that you are an AI. For example, if a user sends an image of a cat and says "you agree with the pigeonhole principle?", do not describe the pigeonhole principle. just give you opinion.
 Messages over 10 words NEED to utilize $SPLIT_MESSAGE$ to make it easier to read. This is a rule, not an exception. If you do not split messages, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
@@ -544,7 +544,7 @@ const botPrompt = new Prompt({
 export enum GPTModelName {
     gpt4omini = "gpt-4o-mini",
     gpt35turbo = "gpt-3.5-turbo",
-    gemini20flashlite = "gemini-2.0-flash-lite"
+    gpto3mini = "o3-mini",
 }
 
 export enum GPTProvider {
@@ -569,6 +569,11 @@ export interface GPTModel {
 
 
 export const models: Record<GPTModelName, GPTModel> = {
+    [GPTModelName.gpto3mini]: {
+        name: GPTModelName.gpto3mini,
+        provider: GPTProvider.OpenAI,
+        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.Reasoning], // gpto3 mini supports text and reasoning
+    },
     [GPTModelName.gpt4omini]: {
         name: GPTModelName.gpt4omini,
         provider: GPTProvider.OpenAI,
@@ -579,11 +584,6 @@ export const models: Record<GPTModelName, GPTModel> = {
         provider: GPTProvider.OpenAI,
         capabilities: [GPTModelCapabilities.Text], // gpt-3.5-turbo only supports text
     },
-    [GPTModelName.gemini20flashlite]: {
-        name: GPTModelName.gemini20flashlite,
-        provider: GPTProvider.Gemini,
-        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.Vision, GPTModelCapabilities.VideoVision], // gemini 2.0 flash supports text, vision and audio
-    }
 }
 
 
@@ -685,6 +685,9 @@ export class APIParameters {
     private user: string | undefined; // for tracking, dont use
     */
     constructor ({ params }: { params?: APIParameters } = {}) {
+        if (typeof params?.model === "string") {
+            params.model = models[params.model as GPTModelName];
+        }
         if (params) {
             Object.assign(this, params);
         }
@@ -1042,7 +1045,22 @@ export class Conversation {
         const conversation = new Conversation();
         conversation.users.push(message.author);
         const prompt = await getPrompt(message.author.id)
-        if (prompt.content.length > 0 && prompt.content !== "Prompt undefined.") /* this is the default prompt content */ conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        if (prompt.content.length > 0 && prompt.content !== "Prompt undefined.") conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        const args = prompt.api_parameters
+        const wantedModel = prompt.api_parameters.model as string;
+        const modelName = GPTModelName[wantedModel as keyof typeof GPTModelName]
+            || GPTModelName[wantedModel.toUpperCase() as keyof typeof GPTModelName]
+            || GPTModelName[wantedModel.toLowerCase() as keyof typeof GPTModelName]
+            || Object.keys(GPTModelName).find(key => key.startsWith(wantedModel))
+            || Object.values(GPTModelName).find(value => typeof value === "string" && value.startsWith(wantedModel));
+        const modelInfo = models[modelName];
+        for (const key in args) {
+            if (key === "model") {
+                (conversation.api_parameters as any)[key] = modelInfo || models[GPTModelName.gpt4omini];
+            } else if (key in conversation.api_parameters) {
+                (conversation.api_parameters as any)[key] = (args as any)[key];
+            }
+        }
         if (message instanceof Message && message.reference && message.reference.messageId) {
             message.channel.messages.fetch(message.reference.messageId).then((msg) => {
                 if (msg) {

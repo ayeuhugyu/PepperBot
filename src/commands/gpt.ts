@@ -133,7 +133,6 @@ const modelcommand = new Command(
             || GPTModelName[args.model.toLowerCase() as keyof typeof GPTModelName]
             || Object.keys(GPTModelName).find(key => key.startsWith(args.model))
             || Object.values(GPTModelName).find(value => typeof value === "string" && value.startsWith(args.model));
-        console.log(modelName);
         const modelInfo = models[modelName];
         if (!modelInfo) {
             await action.reply(invoker, {

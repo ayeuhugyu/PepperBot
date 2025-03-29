@@ -206,6 +206,7 @@ if (!dataVerified) {
     await ensureColumn("prompts", "published", (table) => table.boolean("published").notNullable().defaultTo(false));
     await ensureColumn("prompts", "nsfw", (table) => table.boolean("nsfw").notNullable().defaultTo(false));
     await ensureColumn("prompts", "default", (table) => table.boolean("default").notNullable().defaultTo(false));
+    await ensureColumn("prompts", "api_parameters", (table) => table.json("api_parameters").notNullable().defaultTo("{}"));
     await finishTable("prompts");
 
     await ensureTable("todos");
