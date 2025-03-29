@@ -52,7 +52,7 @@ const phrasecommand = new Command(
         if (args.list == "list" || args.list == "help" || args.list == "ls") {
             const partsOfSpeech = Object.keys(partsOfSpeechToArray);
             action.reply(invoker, {
-                content: `available parts of speech: \`any\`, \`${partsOfSpeech.join("\`, \`")}\``,
+                content: `available parts of speech: \`${partsOfSpeech.join("\`, \`")}\``,
                 ephemeral: guild_config.useEphemeralReplies,
             });
             return;
@@ -60,7 +60,7 @@ const phrasecommand = new Command(
         const list = args.list.toLowerCase().split(" ");
         let errored = false;
         list.forEach((part: string) => {
-            if (part !== "any" && !partsOfSpeechToArray[part]) {
+            if (!partsOfSpeechToArray[part]) {
                 action.reply(invoker, {
                     content: `invalid part of speech: ${part}`,
                     ephemeral: guild_config.useEphemeralReplies,
@@ -71,15 +71,9 @@ const phrasecommand = new Command(
         });
         if (errored) return;
         const phrase = list.map((part: string) => {
-            if (part === "any") {
-                const allParts = Object.values(partsOfSpeechToArray).flat();
-                const randomnum = Math.floor(Math.random() * allParts.length);
-                return allParts[randomnum].toLowerCase();
-            } else {
-                const array = partsOfSpeechToArray[part];
-                const randomnum = Math.floor(Math.random() * array.length);
-                return array[randomnum].toLowerCase();
-            }
+            const array = partsOfSpeechToArray[part];
+            const randomnum = Math.floor(Math.random() * array.length);
+            return array[randomnum].toLowerCase();
         }).join(" ");
 
         await action.reply(invoker, {
