@@ -289,7 +289,13 @@ const tools: { [name: string]: Tool } = {
             const results = Array.isArray(data.items) ? data.items : [data.items];
             let newResults = [];
             for (let result of results) {
-                newResults.push({ title: result.title, snippet: result.snippet, link: result.link })
+                if ((typeof result == 'object')) {
+                    newResults.push({ title: result.title, snippet: result.snippet, link: result.link })
+                }
+            }
+            if (newResults.some((result) => result == undefined) || newResults.length == 0) {
+                log.warn(`error while searching Google for GPT: no results found`);
+                return "no results found; full response: " + JSON.stringify(data, null, 2);
             }
             return newResults;
         } catch (err: any) {
