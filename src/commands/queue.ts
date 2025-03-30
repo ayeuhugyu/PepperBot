@@ -8,11 +8,46 @@ import * as voice from "../lib/voice";
 import { getInfo, Playlist, Queue, Response, ResponseType, Video, VideoError, getQueue } from "../lib/classes/queue_manager";
 import { Readable } from "stream";
 import { GuildConfig } from "../lib/guild_config_manager";
-import { getSound } from "../lib/custom_sound_manager";
+import { CustomSound, getSound } from "../lib/custom_sound_manager";
+import { createThemeEmbed, Theme } from "../lib/theme";
+import PagedMenu from "../lib/classes/pagination";
 
-async function queueToMessage(queue: Queue): Promise<Partial<action.MessageInput>> {
+async function queueToMessage(queue: Queue): Promise<PagedMenu> {
     await queue.fetch();
-    return { content: `queue: ${queue.items.map((q, i) => `${i + 1}. ${q instanceof Video ? q.title : q.name}`).join("\n")}` };
+    const guildName = queue.voice_manager?.channel?.guild?.name;
+    let pages = [];
+    for (let i = 0; i < queue.items.length; i += 15) {
+        const page = queue.items.slice(i, i + 15).map((item, index) => {
+            const displayIndex = i + index + 1;
+            if (item instanceof Video) {
+                return `${displayIndex}. [${item.title}](${item.url})`;
+            } else if (item instanceof CustomSound) {
+                return `${displayIndex}. ${item.name}`;
+            }
+            return `${displayIndex}. Unknown item`;
+        }).join("\n");
+        pages.push(page);
+    }
+
+    let embeds = [];
+
+    for (let i = 0; i < pages.length; i++) {
+        const embed = createThemeEmbed(Theme.CURRENT)
+            .setTitle(`queue${guildName ? ` for ${guildName}` : (queue.guild_id ? ` for ${queue.guild_id}` : "")} // page ${i + 1}/${pages.length}`)
+            .setDescription(pages[i])
+        embeds.push(embed);
+    }
+
+    if (pages.length === 0) {
+        const embed = createThemeEmbed(Theme.CURRENT)
+            .setTitle(`queue${guildName ? ` for ${guildName}` : (queue.guild_id ? ` for ${queue.guild_id}` : "")}`)
+            .setDescription("no items in queue")
+        embeds.push(embed);
+    }
+
+    const pagedMenu = new PagedMenu(embeds)
+
+    return pagedMenu;
 }
 
 const shuffle = new Command(
@@ -333,9 +368,9 @@ const view = new Command(
             return;
         }
         const queue = queueResponse.data;
-        let message = await queueToMessage(queue);
-        message.ephemeral = guild_config.other.use_ephemeral_replies;
-        action.reply(invoker, message);
+        let pagedMenu = await queueToMessage(queue);
+        const reply = await action.reply(invoker, { embeds: [pagedMenu.embeds[0]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
+        pagedMenu.setActiveMessage(reply as Message<true>);
     }
 );
 
@@ -367,9 +402,9 @@ const command = new Command(
             return;
         }
         const queue = queueResponse.data;
-        let message = await queueToMessage(queue);
-        message.ephemeral = guild_config.other.use_ephemeral_replies;
-        action.reply(invoker, message);
+        let pagedMenu = await queueToMessage(queue);
+        const reply = await action.reply(invoker, { embeds: [pagedMenu.embeds[pagedMenu.currentPage]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
+        pagedMenu.setActiveMessage(reply as Message<true>);
     }
 );
 
