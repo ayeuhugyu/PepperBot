@@ -68,6 +68,7 @@ export function parseLength(length: string): number {
 export async function getInfo(url: string, no_playlist: boolean = false): Promise<Response<false, (Video | Playlist)> | Response<true, VideoError>> {
     return new Promise((resolve, reject) => {
         const command = `yt-dlp`;
+        const cookies = process.env.PATH_TO_COOKIES ? true : false;
         const args = [
             '--simulate',
             '--get-title',
@@ -75,9 +76,11 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
             '--get-id',
             '--get-url',
             no_playlist ? '--no-playlist' : '--flat-playlist',
-            process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? `"${process.env.PATH_TO_COOKIES}"` : '',
-            sanitizeUrl(url),
         ]
+        if (cookies) {
+            args.push("--cookies", process.env.PATH_TO_COOKIES || "");
+        }
+        args.push(sanitizeUrl(url));
 
         execFile(command, args, (error, stdout, stderr) => {
             if (error) {
@@ -118,7 +121,18 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
                 return;
             }
 
-            const segments = lines.map((_, i) => lines.slice(i, i + 4)).filter((_, i) => i % 4 === 0);
+            const segments = lines.map((_, i) => {
+                const segment = lines.slice(i, i + 4);
+                const urlLine = segment.find(line => /^https?:\/\//.test(line));
+                const timeLine = segment.find(line => /^\d+:\d+$/.test(line));
+                if (urlLine) {
+                    segment[2] = urlLine;
+                }
+                if (timeLine) {
+                    segment[3] = timeLine;
+                }
+                return segment;
+            }).filter((_, i) => i % 4 === 0);
 
             if (segments.length > 1) {
                 const playlist = new Playlist(url);
@@ -187,6 +201,7 @@ export class Video {
                 const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title + "_" + this.id))}.mp3`);
                 const archivePath = path.join(cacheDir, 'archive.txt');
                 const command = `yt-dlp`;
+                const cookies = process.env.PATH_TO_COOKIES ? true : false;
                 const args = [
                     '-f', 'bestaudio/best',
                     '--extract-audio',
@@ -195,9 +210,11 @@ export class Video {
                     '--download-archive', archivePath,
                     '--limit-rate', '250k',
                     '-o', filePath,
-                    process.env.PATH_TO_COOKIES ? '--cookies' : '', process.env.PATH_TO_COOKIES ? `"${process.env.PATH_TO_COOKIES}"` : '',
-                    sanitizeUrl(this.url)
                 ];
+                if (cookies) {
+                    args.push("--cookies", process.env.PATH_TO_COOKIES || "");
+                }
+                args.push(this.url);
 
                 execFile(command, args, (error, stdout, stderr) => {
                     if (error) {
