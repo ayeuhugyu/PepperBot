@@ -18,7 +18,6 @@ dunno the name but something that just redirects to the discord bot invite link
 stuff to finish:
 update manager - add all past updates
 update display changed to image instead of embed
-piping checker
 diabolical events
 
 things to fix:

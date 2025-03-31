@@ -126,25 +126,37 @@ const command = new Command(
         } catch (err) {
             log.error(err);
             await action.reply(invoker, { content: "error parsing inputs... are they valid math expressions? space seperated?", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "error parsing inputs... are they valid math expressions? space seperated?"
+            });
         }
 
         if (args.gravity && !["south", "north"].includes(args.gravity)) {
             await action.reply(invoker, { content: "invalid gravity; must be \"south\" or \"north\", not " + args.gravity, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "invalid gravity; must be \"south\" or \"north\", not " + args.gravity
+            });
         }
 
         const gravity: Gravity = (args.gravity as Gravity) || "north";
         if (!args.url && !args.image && !piped_data?.data?.image_url) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "i cant make the air into a chatbubble, gimme an image"
+            });
         }
 
         const imageUrl = args.url || args.image?.url || piped_data?.data?.image_url;
 
         if (!imageUrl) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "i cant make the air into a chatbubble, gimme an image"
+            });
         } // this is just to satisfy typescript i think it should be impossible to get here
 
         const inputImageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer());
@@ -156,7 +168,10 @@ const command = new Command(
         } catch (err) {
             log.error(err);
             await action.reply(invoker, { content: "uh oh! invalid image?", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "uh oh! invalid image?"
+            });
         }
 
         // i don't think it's possible for this to be null/undefined

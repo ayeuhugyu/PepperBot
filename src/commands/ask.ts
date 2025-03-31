@@ -43,7 +43,10 @@ const command = new Command(
         const image = (args.image as Attachment | undefined) || piped_data?.data?.image_url ? { id: "unknown", url: piped_data?.data?.image_url, name: "image.png" } : undefined; // this could have issues but i literally cant think of another way to do it
         if (!request && !image) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "please provide a request",
+            });
         }
         const processor = new GPTProcessor()
         processor.repliedMessage = invoker;

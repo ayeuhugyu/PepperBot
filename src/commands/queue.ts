@@ -67,7 +67,10 @@ const shuffle = new Command(
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         await queue.shuffle();
@@ -93,7 +96,10 @@ const previous = new Command(
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         await queue.previous();
@@ -119,7 +125,10 @@ const skip = new Command(
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         await queue.next(true);
@@ -151,17 +160,26 @@ const remove = new Command(
     async function execute ({ args, invoker, guild_config, invoker_type }) {
         if (!args || !args.index) {
             action.reply(invoker, { content: "please provide an index", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "please provide an index",
+            });
         }
         if (isNaN(parseInt(args.index))) {
             action.reply(invoker, { content: "index must be a number", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "index must be a number",
+            });
         }
         const index = parseInt(args.index) - 1;
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         if (index < 0 || index >= queue.items.length) {
@@ -191,7 +209,10 @@ const clear = new Command(
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         await queue.clear();
@@ -217,7 +238,10 @@ const stop = new Command(
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         queue.stop();
@@ -243,7 +267,10 @@ const play = new Command(
         const queueResponse = await getQueue(invoker, guild_config);
         if (queueResponse.type === ResponseType.Error) {
             action.reply(invoker, { content: queueResponse.data, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: queueResponse.data,
+            });
         }
         const queue = queueResponse.data;
         queue.play();
@@ -279,13 +306,19 @@ const add = new Command(
                     const attachment = (invoker as Message).attachments.first();
                     if (!attachment) {
                         action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
-                        return;
+                        return new CommandResponse({
+                            error: true,
+                            message: "please provide a url",
+                        });
                     }
                     args.url = attachment.url;
                 }
             } else {
                 action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: "please provide a url",
+                });
             }
         }
 
@@ -303,7 +336,10 @@ const add = new Command(
             const item = await getInfo(url).catch((e: Response<true, VideoError>) => { return e });
             if (item.type === ResponseType.Error) {
                 action.edit(sent, { content: `error getting info: ${item.data.message}\n-#\`${item.data.full_error}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: item.data.message,
+                });
             }
             const data = item.data;
             const queueResponse = await getQueue(invoker, guild_config);
@@ -333,7 +369,10 @@ const add = new Command(
                     content: `the sound \`${args.url}\` does not exist`,
                     ephemeral: guild_config.other.use_ephemeral_replies,
                 })
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: `the sound \`${args.url}\` does not exist`,
+                });
             }
             const queueResponse = await getQueue(invoker, guild_config);
             if (queueResponse.type === ResponseType.Error) {

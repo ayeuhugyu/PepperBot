@@ -51,7 +51,10 @@ const phrasecommand = new Command(
                 content: "missing list of parts of speech",
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "missing list of parts of speech",
+            });
         }
         if (args.list == "list" || args.list == "help" || args.list == "ls") {
             const partsOfSpeech = Object.keys(partsOfSpeechToArray);
@@ -70,7 +73,10 @@ const phrasecommand = new Command(
                     ephemeral: guild_config.useEphemeralReplies,
                 });
                 errored = true;
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: `invalid part of speech: ${part}`,
+                });
             }
         });
         if (errored) return;
@@ -148,7 +154,10 @@ const command = new Command(
                 content: "invalid subcommand: " + args.subcommand,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "invalid subcommand: " + args.subcommand,
+            });
         }
         action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",

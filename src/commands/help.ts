@@ -57,7 +57,10 @@ const command = new Command(
             const requestedSubcommand: string = args.command.replace(guild_config.other.prefix, "").split(" ")[1];
             if (!command) {
                 action.reply(invoker, { content: `couldn't find command: \`${args.command}\`` });
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: `couldn't find command: \`${args.command}\``,
+                });
             }
 
             const createCommandEmbed = (command: Command) => {

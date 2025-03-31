@@ -3,7 +3,7 @@ import fs from "fs";
 import * as log from "./log";
 import { client } from "../bot";
 import { Command, ValidationCheck } from "./classes/command";
-import { CommandEntryType, InvokerType } from "./classes/command_enums";
+import { CommandEntryType, CommandTag, InvokerType } from "./classes/command_enums";
 import { inspect } from "util";
 
 /**
@@ -26,6 +26,12 @@ export class CommandManager {
     get(name: string): Command | undefined {
         return this.mappings.get(name)?.command
     };
+
+    withTag(tag: CommandTag): Command[] {
+        return Array.from(this.mappings.values())
+            .filter(({ command }) => command.tags.includes(tag))
+            .map(({ command }) => command);
+    }
 
     getEntryType(name: string): CommandEntryType | undefined {
         return this.mappings.get(name)?.type

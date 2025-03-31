@@ -5,6 +5,7 @@ import * as contributors from "../../../constants/contributors.json";
 import * as action from "../discord_action";
 import * as statistics from "../statistics";
 import { InvokerType, SubcommandDeploymentApproach, CommandTag, CommandOptionType, CommandEntryType } from "./command_enums";
+import type { CommandManager } from "../command_manager";
 
 let guildConfigManager
 if (!guildConfigManager) { // avoids circular dependency
@@ -90,13 +91,13 @@ export class CommandInput<
             : I extends InvokerType.Message
                 ? P & { [K in Exclude<keyof F, keyof P>]?: undefined }
                 : F & { [K in Exclude<keyof P, keyof F>]?: undefined }
-    >(invoker: CommandInvoker<I>, command: Command<any, any, I, F, P>, args: A, extra: ExtraCommandInputData) {
-        const input = new this(invoker, command, args, extra);
+    >(invoker: CommandInvoker<I>, command: Command<any, any, I, F, P>, args: A, extra: ExtraCommandInputData, command_manager: CommandManager) {
+        const input = new this(invoker, command, args, extra, command_manager);
         input.guild_config = await fetchGuildConfig(invoker.guildId!); // !!!!
         return input
     }
 
-    private constructor(invoker: CommandInvoker<I>, public command: Command<any, any, I, F, P>, args: A, extra: ExtraCommandInputData) {
+    private constructor(invoker: CommandInvoker<I>, public command: Command<any, any, I, F, P>, args: A, extra: ExtraCommandInputData, manager: CommandManager) {
         this.args = args;
         this.invoker = invoker;
         this.invoker_type = ((invoker instanceof Message)
@@ -106,6 +107,8 @@ export class CommandInput<
 
         this.command_name_used = extra.alias_used ?? command.name;
         this.command_entry_type = extra.command_entry_type ?? CommandEntryType.Command;
+        this.piping_to = extra.piping_to;
+        this.command_manager = manager
         this.message = (invoker instanceof Message ? invoker : null) as I extends InvokerType.Message ? Message<true> : null;
         this.interaction = (invoker instanceof Message ? null : invoker) as I extends InvokerType.Interaction ? FormattedCommandInteraction : null;
 
@@ -140,7 +143,9 @@ export class CommandInput<
     previous_response: CommandResponse | undefined;
     piped_data?: PipedData;
     will_be_piped!: boolean;
+    piping_to?: string;
 
+    command_manager: CommandManager;
     command_entry_type: CommandEntryType;
 
     /**
@@ -431,8 +436,13 @@ export class Command<
             await statistics.incrementInvokerTypeUsage(input.invoker_type);
             const start = performance.now();
             const { invoker } = input;
-            if (!invoker) return log.error("invoker is undefined in command execution");
-
+            if (!invoker) {
+                log.error("invoker is undefined in command execution");
+                return new CommandResponse({
+                    error: true,
+                    message: "invoker is undefined",
+                })
+            }
             const invoker_type = (invoker instanceof Message)
                 ? InvokerType.Message
                 : InvokerType.Interaction;
@@ -445,20 +455,29 @@ export class Command<
                 if (blacklisted) accessReply += "user/channel/guild in blacklist; ";
                 log.info(accessReply + "for command " + this.name);
                 action.reply(invoker, { content: accessReply, ephemeral: true });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: accessReply,
+                })
             }
 
             if (!this.input_types.includes(invoker_type as I)) {
                 log.info("invalid input type " + invoker_type + " for command " + this.name);
                 action.reply(invoker, { content: `input type \"${invoker_type}\" is not enabled for this command`, ephemeral: true });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: `input type \"${invoker_type}\" is not enabled for this command`,
+                })
             }
 
             if (!this.contexts.includes(InteractionContextType.Guild)) {
                 if (invoker.guild) {
                     log.info("guild context is not enabled for command " + this.name);
                     action.reply(invoker, { content: "this command is not enabled in guilds", ephemeral: true });
-                    return;
+                    return new CommandResponse({
+                        error: true,
+                        message: "this command is not enabled in guilds",
+                    })
                 }
             }
             // todo: add context checks for bot dm and private channel
@@ -468,11 +487,16 @@ export class Command<
             if (!this.allow_external_guild && !bot_is_admin) {
                 log.info("external guilds are not enabled for command " + this.name);
                 action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "oh noes! i lack them permissions!", ephemeral: true });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: "oh noes! i lack them permissions!",
+                })
             }
 
             input.enrich(input.is_message() ? (await this.parse_arguments?.(input) ?? {}) as P : undefined);
             input.piped_data = new PipedData(input.previous_response?.from, input.previous_response?.pipe_data)
+
+            let usedSubcommand
 
             if (this.subcommand_argument in input.args) {
                 const subcommand = this.subcommands?.list.find(subcommand => (
@@ -495,13 +519,41 @@ export class Command<
 
                 log.info("executing subcommand p/" + this.name + " " + subcommand.name);
 
-                const response = await subcommand.execute(input);
-                log.info("executed subcommand p/" + this.name + " " + subcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
-                return response;
+                usedSubcommand = subcommand;
             }
 
-            const response = await this.execute_internal(input);
-            log.info("executed command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            const piping_to = input.piping_to
+            if (piping_to) {
+                let canPipe = true;
+                let pipableCommands: string[] = [] // string of command names
+                let command = usedSubcommand || this;
+                command.pipable_to.forEach((pipe) => {
+                    const isTag = pipe.startsWith("#");
+                    if (isTag) {
+                        const taggedCommands = input.command_manager.withTag(pipe as CommandTag);
+                        pipableCommands.push(...taggedCommands.map((command: Command) => command.name));
+                    } else {
+                        pipableCommands.push(pipe);
+                    }
+                });
+                canPipe = pipableCommands.includes(piping_to);
+                if (!canPipe) {
+                    await action.reply(invoker, `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`);
+                    return new CommandResponse({
+                        error: true,
+                        message: `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`,
+                    })
+                };
+            }
+
+            let response
+            if (usedSubcommand) {
+                response = await usedSubcommand.execute(input);
+                log.info("executed subcommand p/" + this.name + " " + usedSubcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            } else {
+                response = await this.execute_internal(input);
+                log.info("executed command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " in " + ((performance.now() - start).toFixed(3)) + "ms");
+            }
             await statistics.addExecutionTime(this.name, performance.now() - start);
             return response;
         };

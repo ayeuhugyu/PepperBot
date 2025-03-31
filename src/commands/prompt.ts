@@ -50,7 +50,10 @@ const generate = new Command({
             content: "please supply input for the prompt",
             ephemeral: guild_config.other.use_ephemeral_replies
             });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply input for the prompt",
+            });
         }
         const sent = await action.reply(invoker, { content: "processing...", ephemeral: guild_config.other.use_ephemeral_replies }) as Message;
         const response = await generatePrompt(args.input as string);
@@ -128,7 +131,10 @@ const publish = new Command({
         let prompt = await getUserPrompt(invoker.author);
         if (prompt.name === "autosave") {
             action.reply(invoker, { content: "you can't publish the autosave prompt", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({})
+            return new CommandResponse({
+                error: true,
+                message: "you can't publish the autosave prompt",
+            })
         }
         prompt.published = !prompt.published;
         prompt.published_at = prompt.published ? new Date() : undefined;
@@ -152,7 +158,10 @@ const del = new Command({
         let prompt = await getUserPrompt(invoker.author);
         if (prompt.name === "autosave") {
             action.reply(invoker, { content: "you can't delete the autosave prompt", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({})
+            return new CommandResponse({
+                error: true,
+                message: "you can't delete the autosave prompt",
+            })
         }
         await removePrompt(prompt.name, invoker.author.id);
         userPrompts.delete(invoker.author.id);
@@ -183,18 +192,27 @@ const name = new Command({
     async function execute ({ invoker, guild_config, args }) {
         if (!args.content) {
             action.reply(invoker, {
-                content: "please supply a description",
+                content: "please supply a name",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply a name",
+            });
         }
         if (nameBlacklists.includes(args.content as string)) {
             action.reply(invoker, { content: `you can't name your prompt \`${args.content}\`, choose another name`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({})
+            return new CommandResponse({
+                error: true,
+                message: `you can't name your prompt \`${args.content}\`, choose another name`,
+            })
         }
         if (args.content.includes('/')) { // this will be used later for published prompts
             action.reply(invoker, { content: "prompt names cannot contain `/`", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({})
+            return new CommandResponse({
+                error: true,
+                message: "prompt names cannot contain `/`",
+            })
         }
         let prompt = await getUserPrompt(invoker.author);
         prompt.name = args.content as string;
@@ -247,7 +265,10 @@ const description = new Command({
                 content: "please supply a description",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply a description",
+            });
         }
         let prompt = await getUserPrompt(invoker.author);
         prompt.description = args.content as string;
@@ -351,25 +372,40 @@ const clone = new Command({
                 content: "please supply a prompt to clone",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply a prompt to clone",
+            });
         }
         const [username, ...promptname] = (args.content as string).split("/");
         if (!username) {
             action.reply(invoker, { content: "please supply the user to clone the prompt from", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply the user to clone the prompt from",
+            });
         }
         if (!promptname) {
             action.reply(invoker, { content: "please supply the prompt to clone from this user", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply the prompt to clone from this user",
+            });
         }
         const prompt = await getPromptByUsername(promptname.join("/"), username);
         if (!prompt) {
             action.reply(invoker, { content: `couldn't find prompt \`${promptname}\` from user \`${username}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt \`${promptname}\` from user \`${username}\``,
+            });
         }
         if (!prompt.published) {
             action.reply(invoker, { content: `prompt \`${promptname}\` from user \`${username}\` is not published and thus cannot be cloned.`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `prompt \`${promptname}\` from user \`${username}\` is not published and thus cannot be cloned.`,
+            });
         }
         const newPrompt = new Prompt({
             author_id: invoker.author.id,
@@ -413,7 +449,10 @@ const use = new Command({
                 content: "please supply a prompt to use",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply a prompt to use",
+            });
         }
         if ((args.content === "default") || (args.content === "reset")) {
             userPrompts.delete(invoker.author.id);
@@ -425,7 +464,10 @@ const use = new Command({
             const prompt = await getPromptByUsername(promptname.join("/"), username);
             if (!prompt) {
                 action.reply(invoker, { content: `couldn't find prompt \`${promptname}\` from user \`${username}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: `couldn't find prompt \`${promptname}\` from user \`${username}\``,
+                });
             }
             const newPrompt = new Prompt({
                 author_id: invoker.author.id,
@@ -446,7 +488,10 @@ const use = new Command({
         const prompt = await getPrompt(args.content as string, invoker.author.id);
         if (!prompt) {
             action.reply(invoker, { content: `couldn't find prompt: \`${args.content}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt: \`${args.content}\``,
+            });
         }
         userPrompts.set(invoker.author.id, prompt.name);
         action.reply(invoker, { content: "now using/editing prompt `" + prompt.name + "`", ephemeral: guild_config.other.use_ephemeral_replies });
@@ -488,7 +533,10 @@ const modelcommand = new Command(
                 content: "you must provide a model name or 'list'/'ls' to view available models.",
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "you must provide a model name or 'list'/'ls' to view available models.",
+            });
         }
 
         if (args.model === "list" || args.model === "ls") {
@@ -515,7 +563,10 @@ const modelcommand = new Command(
                 content: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
+            });
         }
 
         const prompt = await getUserPrompt(invoker.author);
@@ -562,17 +613,26 @@ const setparam = new Command(
     async function execute ({ args, invoker, guild_config }) {
         if (!args.parameter) {
             action.reply(invoker, { content: "parameter is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "parameter is required",
+            });
         }
         if (!args.value) {
             action.reply(invoker, { content: "value is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "value is required",
+            });
         }
         const parameter = args.parameter;
         const value = args.value;
         if (!templateAPIParameters.hasOwnProperty(parameter)) {
             action.reply(invoker, { content: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``,
+            });
         }
         // constraints on values
         switch (parameter) {
@@ -661,7 +721,10 @@ const set = new Command({
                             content = attachmentContent;
                         } else {
                             action.reply(invoker, { content: "couldn't read the attachment", ephemeral: guild_config.other.use_ephemeral_replies });
-                            return new CommandResponse({});
+                            return new CommandResponse({
+                                error: true,
+                                message: "couldn't read the attachment",
+                            });
                         }
                     }
                 }
@@ -671,7 +734,10 @@ const set = new Command({
                     content: "please supply content",
                     ephemeral: guild_config.other.use_ephemeral_replies
                 })
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: "please supply content",
+                });
             }
         }
         let prompt = await getUserPrompt(invoker.author);
@@ -704,7 +770,10 @@ const command = new Command(
                 content: "invalid subcommand: " + args.subcommand,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "invalid subcommand: " + args.subcommand,
+            });
         }
         action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",

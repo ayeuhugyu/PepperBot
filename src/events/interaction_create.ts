@@ -32,7 +32,7 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
     }
 
     const authored = Object.assign(interaction, { author: interaction.user }) as FormattedCommandInteraction;
-    const input = await CommandInput.new(authored, command as Command<any>, args, { will_be_piped: false })
+    const input = await CommandInput.new(authored, command as Command<any>, args, { will_be_piped: false }, commands)
 
     command?.execute(input);
 }

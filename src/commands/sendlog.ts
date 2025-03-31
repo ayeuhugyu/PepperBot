@@ -43,13 +43,19 @@ const command = new Command(
     async function execute ({ args, invoker, piped_data, will_be_piped, guild_config }) {
         if (!args || !args.log) {
             action.reply(invoker, { content: "you need to specify a log file to send", ephemeral: true });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "you need to specify a log file to send",
+            });
         }
         const log = replaceLast(args.log, ".log", "").replace(/[^a-z0-9]/gi, '');
         const log_file = `./logs/${log}.log`;
         if (!fs.existsSync(log_file)) {
             action.reply(invoker, { content: `the log file \`${log_file}\` does not exist`, ephemeral: true });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `the log file \`${log_file}\` does not exist`,
+            });
         }
         const sent = await action.reply(invoker, { content: `uploading...` });
         if (!sent) return;

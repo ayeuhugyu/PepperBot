@@ -27,7 +27,10 @@ const leave = new Command(
                     content: "you don't have permission to make me leave the voice channel",
                     ephemeral: guild_config.other.use_ephemeral_replies
                 })
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: "you don't have permission to make me leave the voice channel",
+                });
             }
             action.reply(invoker, {
                 content: "left voice channel <#" + voiceManager.channel?.id + ">",
@@ -39,6 +42,10 @@ const leave = new Command(
                 content: "im not in a voice channel",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
+            return new CommandResponse({
+                error: true,
+                message: "im not in a voice channel",
+            });
         }
         return new CommandResponse({});
     }
@@ -69,7 +76,10 @@ const join = new Command(
                     content: "you don't have permission to make me join the voice channel",
                     ephemeral: guild_config.other.use_ephemeral_replies
                 })
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: "you don't have permission to make me join the voice channel",
+                });
             }
             voice.joinVoiceChannel(args.channel as VoiceChannel);
             action.reply(invoker, {
@@ -90,7 +100,10 @@ const join = new Command(
                     content: "channel not found: " + args.channel,
                     ephemeral: guild_config.other.use_ephemeral_replies
                 })
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: "channel not found: " + args.channel,
+                });
             }
             if (channel && (channel instanceof VoiceChannel || channel instanceof StageChannel)) {
                 if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, channel as VoiceChannel | StageChannel)) {
@@ -98,7 +111,10 @@ const join = new Command(
                         content: "you don't have permission to make me join the voice channel",
                         ephemeral: guild_config.other.use_ephemeral_replies
                     })
-                    return new CommandResponse({});
+                    return new CommandResponse({
+                        error: true,
+                        message: "you don't have permission to make me join the voice channel",
+                    });
                 }
                 voice.joinVoiceChannel(channel as VoiceChannel);
                 action.reply(invoker, {
@@ -114,7 +130,10 @@ const join = new Command(
                     content: "you don't have permission to make me join the voice channel",
                     ephemeral: guild_config.other.use_ephemeral_replies
                 })
-                return new CommandResponse({});
+                return new CommandResponse({
+                    error: true,
+                    message: "you don't have permission to make me join the voice channel",
+                });
             }
             voice.joinVoiceChannel(invoker.member.voice.channel);
             action.reply(invoker, {
@@ -128,7 +147,10 @@ const join = new Command(
                 content: "please supply a voice channel",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "please supply a voice channel",
+            });
         }
     }
 );
@@ -171,7 +193,10 @@ const command = new Command(
                 content: "invalid subcommand: " + args.subcommand,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "invalid subcommand: " + args.subcommand,
+            });
         }
         action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",

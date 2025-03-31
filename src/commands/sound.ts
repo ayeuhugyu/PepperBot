@@ -70,7 +70,10 @@ const play = new Command({
                 content: "you need to specify a sound to play",
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "you need to specify a sound to play",
+            });
         }
         const sound = await getSound(args.content);
         if (!sound) {
@@ -78,7 +81,10 @@ const play = new Command({
                 content: `the sound \`${fixFileName(args.content)}\` does not exist`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `the sound \`${fixFileName(args.content)}\` does not exist`,
+            });
         }
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
         if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
@@ -89,7 +95,10 @@ const play = new Command({
                 content: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one`,
+            });
         }
         voice.createAudioResource(sound.path).then((resource) => {
             if (!resource) {
@@ -97,7 +106,10 @@ const play = new Command({
                     content: `failed to create audio resource for \`${sound.name}\``,
                     ephemeral: guild_config.other.use_ephemeral_replies,
                 });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: `failed to create audio resource for \`${sound.name}\``,
+                });
             }
             connectionManager.audio_player.play(resource);
         });
@@ -133,7 +145,10 @@ const add = new Command({
                 content: "you need to specify a sound to add",
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "you need to specify a sound to add",
+            });
         }
         const inputsound: Attachment = args.sound
         const existingSound = await getSound(inputsound.name);
@@ -142,7 +157,10 @@ const add = new Command({
                 content: `the sound \`${inputsound.name}\` already exists`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `the sound \`${inputsound.name}\` already exists`,
+            });
         }
         const sent = await action.reply(invoker, {
             content: `downloading ${fixFileName(inputsound.name)}...`
@@ -182,7 +200,10 @@ const get = new Command({
                 content: "you need to specify a sound to get",
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: "you need to specify a sound to get",
+            });
         }
         const sound = await getSound(args.content);
         if (!sound) {
@@ -190,7 +211,10 @@ const get = new Command({
                 content: `the sound \`${fixFileName(args.content)}\` does not exist`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return new CommandResponse({});
+            return new CommandResponse({
+                error: true,
+                message: `the sound \`${fixFileName(args.content)}\` does not exist`,
+            });
         }
         const sent = await action.reply(invoker, {
             content: `uploading...`
@@ -227,7 +251,10 @@ const command = new Command(
                 content: "invalid subcommand: " + args.subcommand,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "invalid subcommand: " + args.subcommand,
+            });
         }
         action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",

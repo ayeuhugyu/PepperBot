@@ -36,18 +36,27 @@ const command = new Command(
                     const attachment = (invoker as Message).attachments.first();
                     if (!attachment) {
                         action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
-                        return;
+                        return new CommandResponse({
+                            error: true,
+                            message: "please provide a url",
+                        });
                     }
                     args.url = attachment.url;
                 }
             } else {
                 action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: "please provide a url",
+                });
             }
             if (!args.url) {
                 // if we still don't have a url after checking attachments
                 action.reply(invoker, { content: "please provide a url", ephemeral: guild_config.other.use_ephemeral_replies });
-                return;
+                return new CommandResponse({
+                    error: true,
+                    message: "please provide a url",
+                });
             }
         }
 
@@ -60,7 +69,10 @@ const command = new Command(
                 content: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one`,
+            });
         }
 
         let url = args.url;
@@ -77,7 +89,10 @@ const command = new Command(
             action.edit(sent, {
                 content: `failed to get video info: \`${item.data.message}\`\n-# \`${item.data.full_error}\``,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `failed to get video info: \`${item.data.message}\`\n-# \`${item.data.full_error}\``,
+            });
         }
         const video = item.data as Video;
 
@@ -90,14 +105,20 @@ const command = new Command(
             action.edit(sent, {
                 content: `failed to download file: \`${fileResponse.data.message}\`\n-# \`${fileResponse.data.full_error}\``,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `failed to download file: \`${fileResponse.data.message}\`\n-# \`${fileResponse.data.full_error}\``,
+            });
         }
         const resource = await voice.createAudioResource(fileResponse?.data);
         if (!resource) {
             action.edit(sent, {
                 content: `failed to create audio resource\n-# \`resource was undefined\``,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `failed to create audio resource\n-# \`resource was undefined\``,
+            });
         }
         connectionManager.audio_player.play(resource);
         await action.edit(sent, {

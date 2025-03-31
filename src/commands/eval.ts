@@ -62,7 +62,10 @@ const command = new Command(
             return;
         } catch (e) {
             action.reply(message, `\`\`\`\n${e}\`\`\``);
-            return new CommandResponse({ pipe_data: { input_text: `\`\`\`\n${e}\`\`\`` }});
+            return new CommandResponse({
+                error: true,
+                message: `\`\`\`\n${e}\`\`\``,
+            });
         }
     }
 );

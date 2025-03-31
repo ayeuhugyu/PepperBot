@@ -87,7 +87,10 @@ const checkCommand = new Command(
 
         if (!todo.items[index]) {
             await action.reply(invoker, { content: `item at index ${args.index} does not exist in list ${todo.name}`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `item at index ${args.index} does not exist in list ${todo.name}`,
+            });
         }
         const item = await todo.toggleItemCompletion(index);
         await action.reply(invoker, { content: `marked item \`${args.index}\` as ${item?.completed ? "completed" : "not completed"} in list ${todo.name}`, ephemeral: guild_config.other.use_ephemeral_replies });
@@ -142,7 +145,10 @@ const removeCommand = new Command(
 
         if (!todo.items[index]) {
             await action.reply(invoker, { content: `item at index \`${args.index}\` does not exist in list ${todo.name}`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `item at index \`${args.index}\` does not exist in list ${todo.name}`,
+            });
         }
         const item = await todo.removeItem(index);
         await action.reply(invoker, { content: `removed item: \`${args.index}\` from list ${todo.name} ${(item !== undefined) ? `(${item.text})` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
@@ -288,7 +294,10 @@ const command = new Command(
         const subcommand = args.subcommand;
         if (subcommand) {
             action.reply(invoker, `subcommand ${subcommand} doesn't exist`);
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `subcommand ${subcommand} doesn't exist`,
+            });
         }
         const todo = await ensureTodo(invoker.author.id, currentlyEditing.get(invoker.author.id) || "default");
         const pagedMenu = embedTodo(todo);

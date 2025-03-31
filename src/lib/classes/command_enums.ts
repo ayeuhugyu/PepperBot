@@ -42,17 +42,17 @@ export enum SubcommandDeploymentApproach {
 }
 
 export enum CommandTag {
-    AI = "ai",
-    Management = "management",
-    Fun = "fun",
-    Utility = "utility",
-    Info = "info",
-    Voice = "voice",
-    Moderation = "moderation",
-    Debug = "debug",
-    Other = "other",
-    TextPipable = "text pipable",
-    ImagePipable = "image pipable",
+    AI = "#ai",
+    Management = "#management",
+    Fun = "#fun",
+    Utility = "#utility",
+    Info = "#info",
+    Voice = "#voice",
+    Moderation = "#moderation",
+    Debug = "#debug",
+    Other = "#other",
+    TextPipable = "#text pipable",
+    ImagePipable = "#image pipable",
 }
 
 export const CommandOptionType = ApplicationCommandOptionType;

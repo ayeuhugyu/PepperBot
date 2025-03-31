@@ -38,7 +38,10 @@ const image = new Command(
                 content: "you are already generating an image. please wait for it to finish.",
                 ephemeral: guild_config.useEphemeralReplies
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "you are already generating an image. please wait for it to finish.",
+            });
         }
 
         if (lastUsedImageAt[userId] && Date.now() - lastUsedImageAt[userId] < imageCooldown) {
@@ -46,7 +49,10 @@ const image = new Command(
                 content: `you can only generate an image every 4 hours (this stuff's expensive, sorry!). the next time you can generate an image is <t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:T>).`,
                 ephemeral: guild_config.useEphemeralReplies
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `you can only generate an image every 4 hours (this stuff's expensive, sorry!). the next time you can generate an image is <t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:T>).`,
+            });
         }
 
         currentlyGenerating[userId] = true;
@@ -112,7 +118,10 @@ const modelcommand = new Command(
                 content: "you must provide a model name or 'list'/'ls' to view available models.",
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "you must provide a model name or 'list'/'ls' to view available models.",
+            });
         }
 
         if (args.model === "list" || args.model === "ls") {
@@ -139,7 +148,10 @@ const modelcommand = new Command(
                 content: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
+            });
         }
 
         const conversation = await getConversation(invoker as Message);
@@ -149,7 +161,10 @@ const modelcommand = new Command(
                 content: `model is already set to ${modelInfo.name}.`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `model is already set to ${modelInfo.name}.`,
+            });
         }
         // Update the model in the conversation
         conversation.api_parameters.model = modelInfo;
@@ -190,17 +205,26 @@ const setparam = new Command(
     async function execute ({ args, invoker, guild_config }) {
         if (!args.parameter) {
             action.reply(invoker, { content: "parameter is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "parameter is required",
+            });
         }
         if (!args.value) {
             action.reply(invoker, { content: "value is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "value is required",
+            });
         }
         const parameter = args.parameter;
         const value = args.value;
         if (!templateAPIParameters.hasOwnProperty(parameter)) {
             action.reply(invoker, { content: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``,
+            });
         }
         // constraints on values
         switch (parameter) {

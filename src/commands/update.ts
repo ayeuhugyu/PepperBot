@@ -133,7 +133,10 @@ const get = new Command({
                 content: `update ${updateNumber} not found`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `update ${updateNumber} not found`,
+            });
         }
         const embeds = embedUpdate(update);
         if (Array.isArray(embeds) && embeds[0] && 'embeds' in embeds[0]) {
@@ -141,7 +144,9 @@ const get = new Command({
                 content: `update #${updateNumber} (<t:${update.timestamp.getTime() * 0.001}:D>) https://canary.discord.com/channels/1112819622505365556/1171660137946157146/${update.message_id} (too large to display)`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
-            return;
+            return new CommandResponse({
+                pipe_data: { input_text: update.text },
+            });
         }
         action.reply(invoker, {
             content: `${update.major ? "major update" : "patch"} #${updateNumber} (<t:${update.timestamp.getTime() * 0.001}:D>) https://canary.discord.com/channels/1112819622505365556/1171660137946157146/${update.message_id}`,
@@ -174,7 +179,10 @@ const command = new Command( // todo change descriptions
                 content: "invalid subcommand: " + args.subcommand,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: "invalid subcommand: " + args.subcommand,
+            });
         }
         action.reply(invoker, {
             content: "this command does nothing if you don't supply a subcommand",

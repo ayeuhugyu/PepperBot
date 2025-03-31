@@ -1,10 +1,10 @@
 import { Events, Message } from "discord.js";
 import commands from "../lib/command_manager";
 import { fetchGuildConfig } from "../lib/guild_config_manager";
-import { Command, CommandInput, CommandResponse } from "../lib/classes/command";
+import { Command, CommandInput, CommandInvoker, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { respond, GPTProcessor } from "../lib/gpt";
-import { CommandEntryType } from "../lib/classes/command_enums";
+import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { incrementPipedCommands } from "../lib/statistics";
 
 async function gptHandler(message: Message) {
@@ -100,16 +100,21 @@ async function commandHandler(message: Message<true>) {
             will_be_piped: (segments.length > 1) && (commandIndex < segments.length - 1),
             piping_to: queue[commandIndex + 1]?.command?.name,
             next_pipe_message: segments[commandIndex + 1]?.trim()
-        });
+        }, commands);
 
         const response = await command.execute(input);
         previous_response = response ?? new CommandResponse({});
         previous_response.from = command.name;
         previous_command = command;
+        if (response.error) {
+            // don't continue piping if the command errors
+            return;
+        }
         commandIndex++;
         if (segments.length > 1) {
             await incrementPipedCommands();
         }
+
     }
 }
 

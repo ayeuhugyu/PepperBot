@@ -49,7 +49,10 @@ const command = new Command(
     async function execute ({ invoker, args }) {
         if (!args.query) {
             action.reply(invoker, "no query provided");
-            return new CommandResponse({ pipe_data: { input_text: "no query provided" }});
+            return new CommandResponse({
+                error: true,
+                message: "no query provided",
+            });
         }
         const n = (args.n as number | undefined) || 1;
         const query = args.query as string;
@@ -61,7 +64,10 @@ const command = new Command(
         });
         if (searchResults.length === 0) {
             action.reply(invoker, `no results found for query \`${query}\``);
-            return new CommandResponse({ pipe_data: { input_text: `no results found for query \`${query}\`` }});
+            return new CommandResponse({
+                error: true,
+                message: `no results found for query \`${query}\``,
+            });
         }
         const embeds = searchResults.map((result, index) => {
             const embed = createThemeEmbed(Theme.CURRENT);
@@ -73,7 +79,10 @@ const command = new Command(
 
         if (!embeds[n]) {
             action.reply(invoker, `no result found at index ${n}`);
-            return new CommandResponse({ pipe_data: { input_text: `no result found at index ${n}` }});
+            return new CommandResponse({
+                error: true,
+                message: `no result found at index ${n}`,
+            });
         }
 
         // Ensure the first embed is the nth result
