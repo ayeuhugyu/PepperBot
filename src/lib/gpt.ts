@@ -1287,3 +1287,20 @@ export async function generatePrompt(prompt: string) {
     await incrementGPTResponses();
     return completion.choices[0].message.content;
 }
+
+export async function AIReaction(str: string) {
+    const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            {
+                role: "system",
+                content: "You will be given a message. Summarize this message with emojis. Do NOT include any text other than emojis. If you do not follow this instruction, you will be punished. For example, if given a message: 'lmfao what is that' respond with '😂'. On occasion, it would be more funny to respond with an emoji that has zero resemblance of the message whatsoever, but do NOT always do this. For example, if given the same message as before, you could respond with '🪤'. Alternatively, you can actually respond with multiple emojis, as long as they are in a comma seperated format. DO NOT include combined emojis, they WILL NOT FUNCTION. Given the same message as before, you could respond with '🇼,🇭,🇦,🇹'. Do not exceed these formatting guidelines. You don't need to use this to write out words, you could also use it with two emojis, such as '🐭,🪤' The following is INVALID and should NEVER BE RETURNED: '👋😃'. Instead, you should return '👋,😃'.",
+            },
+            {
+                role: "user",
+                content: str,
+            },
+        ],
+    });
+    return completion.choices[0].message.content;
+}

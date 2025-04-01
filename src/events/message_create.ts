@@ -6,6 +6,7 @@ import * as action from "../lib/discord_action";
 import { respond, GPTProcessor } from "../lib/gpt";
 import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { incrementPipedCommands } from "../lib/statistics";
+import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
 
 async function gptHandler(message: Message) {
     // Only process if the bot is mentioned.
@@ -124,7 +125,8 @@ export default {
         // Wait for all handlers to finish.
         return await Promise.all([
             gptHandler(message),
-            commandHandler(message)
+            commandHandler(message),
+            handleDiabolicalEvent(message)
         ]);
     },
 };
