@@ -6,7 +6,7 @@
     "scripts": {
         "start": "bun run src/index.ts",
         "gpt": "bun run tests/gpt_tester.ts",
-        "pull": "chmod +x pull.sh && ./pull.sh",
+        "pull": "bash -c 'chmod +x pull.sh && ./pull.sh' || (powershell -Command \"./pull.ps1\")",
         "migrate": "bunx knex migrate:latest",
         "migrate:make": "bunx knex migrate:make",
         "setup": "cp .env.example .env && bun install && bun run migrate",
