@@ -64,22 +64,24 @@ const phrasecommand = new Command(
             });
             return;
         }
-        const list = args.list.toLowerCase().split(" ");
-        let errored = false;
+        const list = args.list.toLowerCase().replaceAll(",", " ").split(" ").filter((part: string) => part !== "");
+        const invalidParts: string[] = [];
         list.forEach((part: string) => {
             if (!partsOfSpeechToArray[part]) {
-                action.reply(invoker, {
-                    content: `invalid part of speech: ${part}`,
-                    ephemeral: guild_config.useEphemeralReplies,
-                });
-                errored = true;
-                return new CommandResponse({
-                    error: true,
-                    message: `invalid part of speech: ${part}`,
-                });
+            invalidParts.push(part);
             }
         });
-        if (errored) return;
+
+        if (invalidParts.length > 0) {
+            action.reply(invoker, {
+                content: `invalid parts of speech: ${invalidParts.join(", ")}`,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `invalid parts of speech: \`${invalidParts.join("\`, \`")}\``,
+            });
+        }
 
         const phrase = list.map((part: string) => {
             const array = partsOfSpeechToArray[part];
