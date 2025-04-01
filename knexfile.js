@@ -8,5 +8,8 @@ module.exports = {
     connection: {
         filename: './resources/database.db',
     },
-    useNullAsDefault: true
+    useNullAsDefault: true,
+    migrations: {
+        directory: './migrations',
+    }
 };
