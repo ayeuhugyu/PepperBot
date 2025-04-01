@@ -108,7 +108,7 @@ const modelcommand = new Command(
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: "",
+        example_usage: "d/gpt model gpt-3.5-turbo",
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["model"]),

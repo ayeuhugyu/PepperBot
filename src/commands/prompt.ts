@@ -523,7 +523,7 @@ const modelcommand = new Command(
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: "",
+        example_usage: "p/prompt model gpt-3.5-turbo",
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["model"]),
@@ -590,7 +590,7 @@ const setparam = new Command(
         description: 'allows you to change parameters for the prompt',
         long_description: 'allows you to change parameters for the prompt, notably things like temperature and top_p',
         tags: [CommandTag.AI],
-        example_usage: "p/gpt setparam temperature 1",
+        example_usage: "p/prompt setparam temperature 1",
         options: [
             new CommandOption({
                 name: 'parameter',
