@@ -107,17 +107,26 @@ const tools: { [name: string]: Tool } = {
             new ToolParameter({ type: "number", name: "year", description: "the year", required: false }),
             new ToolParameter({ type: "number", name: "hour", description: "the hour", required: false }),
             new ToolParameter({ type: "number", name: "minute", description: "the minute", required: false }),
-            new ToolParameter({ type: "number", name: "second", description: "the second", required: false })
+            new ToolParameter({ type: "number", name: "second", description: "the second", required: false }),
+            new ToolParameter({ type: "string", name: "timezone", description: "the timezone in GMT format (e.g., GMT+2, GMT-5)", required: false, defaultValue: "GMT+0" })
         ]
-    }, ({ day, month, year, hour, minute, second }: { day?: number, month?: number, year?: number, hour?: number, minute?: number, second?: number }) => {
-        const date = new Date();
-        if (year !== undefined) date.setFullYear(year);
-        if (month !== undefined) date.setMonth(month - 1);
-        if (day !== undefined) date.setDate(day);
-        if (hour !== undefined) date.setHours(hour);
-        if (minute !== undefined) date.setMinutes(minute);
-        if (second !== undefined) date.setSeconds(second);
-        return Math.floor(date.getTime() / 1000); // return unix timestamp
+    }, ({ day, month, year, hour, minute, second, timezone = "GMT+0" }: { day?: number, month?: number, year?: number, hour?: number, minute?: number, second?: number, timezone?: string }) => {
+        const date = new Date(0); // Initialize with epoch time to avoid default values
+        const now = new Date();
+        date.setUTCFullYear(year ?? now.getUTCFullYear()); // Default to current year if year is not provided
+        date.setUTCMonth((month ?? (now.getUTCMonth() + 1)) - 1); // Default to current month if month is not provided
+        date.setUTCDate(day ?? now.getUTCDate()); // Default to today's date if day is not provided
+        date.setUTCHours(hour ?? 0); // Default to 00:00:00 if time is not provided
+        date.setUTCMinutes(minute ?? 0);
+        date.setUTCSeconds(second ?? 0);
+
+        const offsetMatch = timezone.match(/GMT([+-]\d+)/);
+        const offsetHours = offsetMatch ? parseInt(offsetMatch[1], 10) : 0;
+        const offsetSeconds = offsetHours * 3600;
+
+        const timestamp = Math.floor(date.getTime() / 1000);
+        const adjustedTimestamp = timestamp + offsetSeconds;
+        return adjustedTimestamp;
     }),
     get_listening_data: new Tool({
         name: "get_listening_data",
