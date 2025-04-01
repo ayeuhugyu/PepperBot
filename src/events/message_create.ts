@@ -106,7 +106,7 @@ async function commandHandler(message: Message<true>) {
         previous_response = response ?? new CommandResponse({});
         previous_response.from = command.name;
         previous_command = command;
-        if (response.error) {
+        if (response?.error) {
             // don't continue piping if the command errors
             return;
         }
