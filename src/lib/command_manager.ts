@@ -28,9 +28,27 @@ export class CommandManager {
     };
 
     withTag(tag: CommandTag): Command[] {
-        return Array.from(this.mappings.values())
-            .filter(({ command }) => command.tags.includes(tag))
-            .map(({ command }) => command);
+        const result: Command[] = [];
+        const seen = new Set<Command>();
+
+        for (const { command } of this.mappings.values()) {
+            if (command.tags.includes(tag) && !seen.has(command)) {
+                result.push(command);
+                seen.add(command);
+            }
+
+            const subcommandDescendants = Array.from<Command>(command.subcommands?.list ?? []);
+            while (subcommandDescendants.length > 0) {
+                const subcommand = subcommandDescendants.pop()!;
+                if (subcommand.tags.includes(tag) && !seen.has(subcommand)) {
+                    result.push(subcommand);
+                    seen.add(subcommand);
+                }
+                subcommandDescendants.push(...subcommand.subcommands?.list ?? []);
+            }
+        }
+
+        return result;
     }
 
     getEntryType(name: string): CommandEntryType | undefined {

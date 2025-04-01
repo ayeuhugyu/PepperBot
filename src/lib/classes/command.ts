@@ -108,6 +108,9 @@ export class CommandInput<
         this.command_name_used = extra.alias_used ?? command.name;
         this.command_entry_type = extra.command_entry_type ?? CommandEntryType.Command;
         this.piping_to = extra.piping_to;
+        this.previous_response = extra.previous_response;
+        this.will_be_piped = extra.will_be_piped;
+        this.next_pipe_message = extra.next_pipe_message;
         this.command_manager = manager
         this.message = (invoker instanceof Message ? invoker : null) as I extends InvokerType.Message ? Message<true> : null;
         this.interaction = (invoker instanceof Message ? null : invoker) as I extends InvokerType.Interaction ? FormattedCommandInteraction : null;
@@ -144,6 +147,7 @@ export class CommandInput<
     piped_data?: PipedData;
     will_be_piped!: boolean;
     piping_to?: string;
+    next_pipe_message?: string | undefined;
 
     command_manager: CommandManager;
     command_entry_type: CommandEntryType;
@@ -524,6 +528,7 @@ export class Command<
 
             const piping_to = input.piping_to
             if (piping_to) {
+                const next_pipe_message = input.next_pipe_message
                 let canPipe = true;
                 let pipableCommands: string[] = [] // string of command names
                 let command = usedSubcommand || this;
@@ -531,12 +536,12 @@ export class Command<
                     const isTag = pipe.startsWith("#");
                     if (isTag) {
                         const taggedCommands = input.command_manager.withTag(pipe as CommandTag);
-                        pipableCommands.push(...taggedCommands.map((command: Command) => command.name));
+                        pipableCommands.push(...taggedCommands.map((command: Command) => `${command.parent_command ? command.parent_command + " " : ""}${command.name}`));
                     } else {
                         pipableCommands.push(pipe);
                     }
                 });
-                canPipe = pipableCommands.includes(piping_to);
+                canPipe = pipableCommands.some((pipe) => next_pipe_message?.startsWith(pipe));
                 if (!canPipe) {
                     await action.reply(invoker, `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`);
                     return new CommandResponse({
