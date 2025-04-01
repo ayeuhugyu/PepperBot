@@ -18,10 +18,6 @@ dunno the name but something that just redirects to the discord bot invite link
 stuff to finish:
 update manager - add all past updates
 update display changed to image instead of embed
-diabolical events
-
-things to fix:
-piping allowlist for subcommands not ignoring parent's list
 
 LATEST UPDATE
 ---
