@@ -1,4 +1,5 @@
 import { Collection, Message } from "discord.js";
+import { client } from "../src/bot";
 import { GPTProcessorLogType, respond } from "../src/lib/gpt";
 import * as readline from 'readline';
 
@@ -6,6 +7,7 @@ class FakeMessage {
     content: string = "";
     id: string = "1120938102380";
     attachments: Collection<string, any> = new Collection();
+    client = client;
     author: {
         id: string;
         username: string;
