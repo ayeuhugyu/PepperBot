@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "start": "bun run src/index.ts",
-        "gpt": "bun run tests/gpt_tester.ts"
+        "gpt": "bun run tests/gpt_tester.ts",
+        "pull": "git pull origin rewrite && (git diff --name-only HEAD@{1} HEAD | grep -q 'package.json' && bun install || true)"
     },
     "author": "",
     "license": "ISC",
