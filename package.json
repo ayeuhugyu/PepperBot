@@ -6,7 +6,7 @@
     "scripts": {
         "start": "bun run src/index.ts",
         "gpt": "bun run tests/gpt_tester.ts",
-        "pull": "bun run pull.ts",
+        "pull": "bun run scripts/pull.ts",
         "migrate": "bunx knex migrate:latest",
         "migrate:make": "bunx knex migrate:make",
         "setup": "cp .env.example .env && bun install && bun run migrate",
