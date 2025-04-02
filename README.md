@@ -19,6 +19,8 @@ this will get the bot running, but it will still be missing some features. the n
 
 these aren't required for the bot to run, but some features won't work without them
 
+depending on your system, you might be able to install them by using `bun extras:install`, but this won't work for everyone. if it doesn't work, use the manual installations below.
+
 - for the queue and playurl commands:
     - install `yt-dlp` from https://github.com/yt-dlp/yt-dlp/releases/latest
     - add it to your PATH, however that is done on your device.

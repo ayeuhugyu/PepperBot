@@ -10,7 +10,8 @@
         "migrate": "bunx knex migrate:latest",
         "migrate:make": "bunx knex migrate:make",
         "setup": "cp .env.example .env && bun install && bun run migrate",
-        "start:server": "bun run pull && bun run start"
+        "start:server": "bun run pull && bun run start",
+        "extras:install": "bun run scripts/install_extras.ts"
     },
     "author": "",
     "license": "ISC",
