@@ -1,4 +1,4 @@
-# Install yt-dlp and lune-org/lune using PowerShell
+# Install yt-dlp and display a warning for lune-org/lune on Windows
 
 # Ensure script runs with administrative privileges
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
@@ -19,16 +19,7 @@ if (-Not (Test-Path -Path $ytDlpPath)) {
     Write-Host "yt-dlp is already installed at $ytDlpPath" -ForegroundColor Yellow
 }
 
-# Install lune-org/lune
-Write-Host "Installing lune-org/lune..." -ForegroundColor Green
-$luneRepo = "https://github.com/lune-org/lune.git"
-$luneInstallPath = "$env:ProgramFiles\lune"
-
-if (-Not (Test-Path -Path $luneInstallPath)) {
-    git clone $luneRepo $luneInstallPath
-    Write-Host "lune-org/lune cloned successfully to $luneInstallPath" -ForegroundColor Green
-} else {
-    Write-Host "lune-org/lune is already installed at $luneInstallPath" -ForegroundColor Yellow
-}
+# Display warning for lune-org/lune
+Write-Host "WARNING: lune-org/lune cannot be easily installed on a Windows OS using this script. Please manually install it from the instructions provided at https://lune-org.github.io/docs/getting-started/1-installation" -ForegroundColor Red
 
 Write-Host "Installation process completed!" -ForegroundColor Cyan
