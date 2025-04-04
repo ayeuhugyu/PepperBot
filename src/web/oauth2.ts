@@ -9,7 +9,13 @@ const nameRefreshToken = "CIA_MONITORING_ACTIVE";
 const cookieExp = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 const isDev = process.env.IS_DEV?.toLowerCase() == "true";
-const botId = await getClientId();
+let botId: string;
+try {
+    botId = await getClientId();
+} catch (err) {
+    log.error("Failed to fetch client ID, defaulting to fallback ID. Error:", err);
+    botId = "111111111111111111111";
+}
 const port = 53134; // TODO: fetch this from above file; not very possible. it is Hell
 export const oauth2Url = `https://discord.com/oauth2/authorize?client_id=${botId}&response_type=code&redirect_uri=${(isDev ? `http%3A%2F%2Flocalhost%3A${port}%2Fauth` : "https%3A%2F%2Fpepperbot.online%2Fauth")}&scope=identify+guilds`;
 

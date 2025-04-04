@@ -92,8 +92,14 @@ app.get("/queue/:id", async (req, res, next) => {
     if (isNaN(parseInt(queueId)) || parseInt(queueId) < 0) {
         return next(new HttpException(400, "Invalid queue id"));
     }
-    const guild = await getGuild(queueId);
-    const queue = await getQueueById(queueId);
+    let guild;
+    let queue;
+    try {
+        guild = await getGuild(queueId);
+        queue = await getQueueById(queueId);
+    } catch (err) {
+        return next(err);
+    }
     if (!queue) {
         return next(new HttpException(404, `Queue not found for guild ${guild?.name || queueId}`));
     }
