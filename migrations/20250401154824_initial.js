@@ -1,8 +1,19 @@
+const fs = require('fs');
+const path = require('path');
+
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
 exports.up = function(knex) {
+    const dbFilePath = path.resolve(knex.client.config.connection.filename);
+
+    // Ensure the database file exists
+    if (!fs.existsSync(dbFilePath)) {
+        fs.writeFileSync(dbFilePath, '');
+        console.log(`Database file created at: ${dbFilePath}`);
+    }
+
     return knex.schema
         .hasTable("prompts").then((exists) => {
             if (!exists) {
