@@ -1,22 +1,66 @@
+@keyframes move-circles {
+    0% {
+        background-position: 10% 20%, 80% 30%, 50% 70%, 30% 50%, 70% 80%;
+    }
+    12.5% {
+        background-position: 30% 50%, 60% 10%, 40% 80%, 20% 40%, 80% 20%;
+    }
+    25% {
+        background-position: 20% 40%, 70% 20%, 60% 60%, 40% 30%, 60% 70%;
+    }
+    37.5% {
+        background-position: 50% 70%, 30% 20%, 70% 50%, 10% 60%, 40% 10%;
+    }
+    50% {
+        background-position: 30% 10%, 60% 50%, 40% 40%, 50% 70%, 80% 60%;
+    }
+    62.5% {
+        background-position: 70% 30%, 40% 60%, 20% 50%, 60% 80%, 30% 40%;
+    }
+    75% {
+        background-position: 40% 30%, 50% 40%, 70% 20%, 20% 60%, 30% 50%;
+    }
+    87.5% {
+        background-position: 60% 20%, 30% 70%, 50% 30%, 80% 40%, 20% 80%;
+    }
+    100% {
+        background-position: 10% 20%, 80% 30%, 50% 70%, 30% 50%, 70% 80%;
+    }
+}
+
 :root {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     font-size: 1em;
     line-height: 1.25;
 
-    --background-color: #181818;
-    --background-color-dark: #101010;
-    --background-color-extra-dark: #080808;
+    --background-color: rgba(32, 26, 24, 0.5);
+    --transparent-background-color: rgba(32, 26, 24, 0);
+    --background-color-dark: rgba(25, 16, 12, 0.75);
+    --background-color-extra-dark: rgba(20, 16, 14, 0.5);
 
-    --border-color: #434343;
+    --border-color: #5a4a4a;
 
-    --text-color: #eeeeee;
-    --text-color-light: #ffffff;
-    --text-color-dark: #898989;
-    --text-color-darker: #515151;
+    --text-color: #f0e6e2;
+    --text-color-light: #fff5f0;
+    --text-color-dark: #a89589;
+    --text-color-darker: #7a6159;
 
+    --glow-color: #f2cfb1;
 
     background-color: var(--background-color);
+    background-image:
+                    radial-gradient(circle, #004d4dac, rgba(0, 77, 77, 0) 70%), /* dark teal */
+                    radial-gradient(circle, #001f3f, rgba(0, 31, 63, 0) 70%), /* navy blue */
+                    radial-gradient(circle, #5f02a1, rgba(75, 0, 130, 0) 70%), /* deep violet */
+                    radial-gradient(circle, #203d50, rgba(54, 69, 79, 0) 70%), /* charcoal gray */
+                    radial-gradient(circle, #5e2c93, rgba(25, 25, 112, 0) 70%); /* midnight blue */
+    background-size: 200% 200%;
+    background-position: 10% 20%, 80% 30%, 50% 70%, 30% 50%, 70% 80%;
+    animation: move-circles 120s ease-in-out infinite;
+    animation-fill-mode: forwards;
+
     color: #eeeeee;
+    backdrop-filter: blur(10px);
 }
 
 body {
@@ -142,7 +186,7 @@ li {
 .hover-button:hover {
     background-color: var(--background-color-dark);
     transform: scale(1.1);
-    box-shadow: 0 0 0.5em #ffffff80, 0 0 0.5em #ffffff80;
+    box-shadow: 0 0 0.5em var(--glow-color);
 }
 
 .background-standard {
@@ -156,6 +200,44 @@ li {
 }
 
 /* specific stuff */
+
+/* index */
+
+.landing-page.disabled {
+    overflow: hidden;
+}
+
+.index-serving-info {
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    transform: translate(0, 0);
+    width: 15em;
+    height: 6em;
+}
+
+.index-statistics {
+    position: absolute;
+    top: 50%;
+    right: 1em;
+    width: calc(100vw - 22.5em);
+    height: calc(100vh - 4em);
+    transform: translate(0, -50%);
+    overflow: scroll;
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: flex-start;
+}
+
+.statistics-columns {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 1em;
+}
 
 /* queue */
 

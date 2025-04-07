@@ -5,8 +5,10 @@ import { getGuild, getGuilds, getUsers } from "../lib/client_values_helpers";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 import { getInfo, Queue, ResponseType, Video, VideoError, getQueueById } from "../lib/classes/queue_manager";
+import { getStatistics } from "../lib/statistics";
 
 const port = 53134
+const isDev = process.env.IS_DEV === "True";
 
 class HttpException extends Error {
     public status?: number;
@@ -32,23 +34,64 @@ app.use(cookieParser());
 
 // lander
 
-app.get("/", async (_req, res, next) => {
+app.get("/", async (req, res, next) => {
     try {
         const guilds = await getGuilds();
         const users = await getUsers();
+
+        // Check if the user has visited before using a cookie
+        const hasVisited = req.cookies.hasVisited === "true";
+        const animateClass = hasVisited ? "" : "animate";
+
+        // Set a cookie to mark the user as having visited
+        if (!isDev) res.cookie("hasVisited", "true", { maxAge: 2 * 60 * 60 * 1000 }); // 2 hours expiration
+
+        const statistics = await getStatistics();
+        if (!statistics) {
+            // fallback to empty object if statistics fails to load
+            log.error("Failed to load statistics");
+        }
+        const formattedStatistics = {
+            "execution times": Object.fromEntries(
+            Object.entries(statistics?.execution_times || {}).map(([key, value]) => {
+                // format the execution time for display
+                return [key, value.reduce((sum, num) => sum + num, 0) / value.length];
+            })
+            ),
+            "command usage": Object.fromEntries(
+            Object.entries(statistics?.command_usage || {}).map(([command, count]) => {
+                // format the command usage for display
+                return [command, count];
+            })
+            ),
+            "totals": {
+            "gpt responses": statistics?.total_gpt_responses || 0, // total gpt responses
+            "command usage": Object.values(statistics?.command_usage || {}).reduce((sum, count) => sum + count, 0),
+            "piped commands": statistics?.total_piped_commands || 0 // total piped commands
+            },
+            "invoker type usage": Object.fromEntries(
+            Object.entries(statistics?.invoker_type_usage || {}).map(([type, count]) => {
+                // format the invoker type usage for display
+                return [type, count];
+            })
+            )
+        };
+
         res.render("index", {
             title: "landing",
             description: "PepperBot",
             path: "/",
             guilds,
             users,
+            animateClass,
             guildsPlural: guilds !== 1 ? "s" : "",
-            usersPlural: users !== 1 ? "s" : ""
+            usersPlural: users !== 1 ? "s" : "",
+            statistics: formattedStatistics,
         });
     } catch (err) {
         next(err);
     }
-})
+});
 
 // oauth2 auth
 
