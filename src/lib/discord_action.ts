@@ -49,7 +49,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
     const allowPings = message.allowPings ?? false;
     if ('content' in message && message.content) {
         for (const [key, value] of Object.entries(replaceList)) {
-            if (value !== undefined) {
+            if (value !== undefined && value !== "") {
                 message.content = message.content.toString().replaceAll(value, key); // tostring is necessary here because it can actually be a number somehow
             }
         }
