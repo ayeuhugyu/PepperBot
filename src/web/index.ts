@@ -87,6 +87,9 @@ app.get("/", async (req, res, next) => {
             guildsPlural: guilds !== 1 ? "s" : "",
             usersPlural: users !== 1 ? "s" : "",
             statistics: formattedStatistics,
+            pages: {
+                "home": "/",
+            }
         });
     } catch (err) {
         next(err);

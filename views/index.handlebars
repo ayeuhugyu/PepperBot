@@ -1,15 +1,23 @@
-<div class="card no-margin index-serving-info {{animateClass}}">
-    <h1>PepperBot</h1>
-    <p><i>serving {{users}} user{{usersPlural}} across {{guilds}} server{{guildsPlural}}</i></p>
+<div class="index-column-1 flex column gap">
+    <div class="card no-margin index-serving-info">
+        <h1>PepperBot</h1>
+        <p><i>serving {{users}} user{{usersPlural}} across {{guilds}} server{{guildsPlural}}</i></p>
+    </div>
+    <div class="card no-margin index-pages-list">
+        <h2>Pages</h1>
+        {{#each pages}}
+            <a href="{{this}}">{{@key}}</a>
+        {{/each}}
+    </div>
 </div>
-<div class="card no-margin index-statistics {{animateClass}}">
+<div class="card no-margin index-statistics">
     <h2>Statistics</h2>
     <div class="statistics-columns">
         {{#each statistics}}
             <div class="statistics-column">
                 <h3>{{@key}}</h3>
                 {{#each this}}
-                    <p>{{@key}}: {{this}}</p>
+                    <p class="no-margin">{{@key}}: {{this}}</p>
                 {{/each}}
             </div>
         {{/each}}

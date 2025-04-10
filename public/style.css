@@ -33,12 +33,12 @@
     font-size: 1em;
     line-height: 1.25;
 
-    --background-color: rgba(55, 39, 72, 0.6);
+    --background-color: rgba(68, 30, 109, 0.6);
     --transparent-background-color: rgba(38, 34, 42, 0);
-    --background-color-dark: rgba(28, 22, 35, 0.85);
-    --background-color-extra-dark: rgba(28, 24, 30, 0.6);
+    --background-color-dark: rgba(39, 16, 66, 0.85);
+    --background-color-extra-dark: rgba(28, 7, 38, 0.6);
 
-    --border-color: #4c4a5a;
+    --border-color: #8d5ac7;
 
     --text-color: #f0e6e2;
     --text-color-light: #fff5f0;
@@ -214,8 +214,11 @@ li {
 }
 
 .index-serving-info.disabled {
-    width: 15em;
     height: 5em;
+}
+
+.index-info {
+    flex-grow: 1;
 }
 
 .index-statistics {
