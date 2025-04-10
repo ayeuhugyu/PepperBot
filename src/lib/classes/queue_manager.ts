@@ -13,7 +13,6 @@ import { AudioPlayer, AudioPlayerState, AudioPlayerStatus, AudioResource } from 
 import { re } from "mathjs";
 import { CommandInvoker } from "./command";
 import { GuildConfig } from "../guild_config_manager";
-import database from "../data_manager";
 
 config();
 
@@ -348,10 +347,6 @@ async function queueFromDatabase(dbItems: dbQueue<dbQueueDataType>[], inputQueue
     return queue;
 }
 
-async function getDatabaseQueueItems(guildId: string): Promise<dbQueue<dbQueueDataType>[]> {
-    return await database("queues").where({ guild: guildId });
-}
-
 export class Queue {
     guild_id?: string;
     items: (Video | CustomSound)[] = []; // there's no verify function ran in here, so its assuming that all videos will be valid (i mean theres a little bit of error handling but not much)
@@ -405,71 +400,6 @@ export class Queue {
     removeAllListeners = this.emitter.removeAllListeners;
     emit = this.emitter.emit;
 
-    static async fromDatabase(guildId: string) {
-        if (!guildId) {
-            return undefined;
-        }
-        const items = await getDatabaseQueueItems(guildId);
-        if (items.length === 0) {
-            return undefined;
-        }
-        return queueFromDatabase(items);
-    }
-
-    async fetch(): Promise<Queue> {
-        const items = await getDatabaseQueueItems(this.guild_id || "");
-        this.items = [];
-        return await queueFromDatabase(items, this);
-    }
-
-    async write(): Promise<dbQueue<dbQueueDataType>[]> {
-        const queueData: dbQueue<dbQueueDataType>[] = [];
-        this.items.forEach((item, index) => {
-            if (item instanceof Video) {
-                queueData.push({
-                    guild: this.guild_id || "",
-                    type: dbQueueDataType.Video,
-                    index: index,
-                    url: item.url,
-                    title: item.title,
-                    length: item.length,
-                    videoId: item.id,
-                    name: undefined,
-                    key: undefined,
-                    value: undefined
-                });
-            } else if (item instanceof CustomSound) {
-                queueData.push({
-                    guild: this.guild_id || "",
-                    type: dbQueueDataType.CustomSound,
-                    index: index,
-                    url: undefined,
-                    title: undefined,
-                    length: undefined,
-                    videoId: undefined,
-                    name: item.name,
-                    key: undefined,
-                    value: undefined
-                });
-            }
-        });
-        queueData.push({
-            guild: this.guild_id || "",
-            type: dbQueueDataType.QueueData,
-            index: undefined,
-            url: undefined,
-            title: undefined,
-            length: undefined,
-            videoId: undefined,
-            name: undefined,
-            key: "current_index",
-            value: this.current_index.toString()
-        });
-        await database("queues").where({ guild: this.guild_id }).delete();
-        await database("queues").insert(queueData);
-        return queueData;
-    }
-
     setVoiceManager(manager: GuildVoiceManager) {
         this.voice_manager = manager;
         let eventConnection: undefined | AudioPlayer = this.voice_manager?.audio_player.on("stateChange", (oldState, newState) => {
@@ -486,7 +416,6 @@ export class Queue {
     }
 
     async add(item: Video | Playlist | CustomSound) {
-        await this.fetch();
         if (item instanceof Video || item instanceof CustomSound) {
             this.items.push(item);
             this.emitter.emit(QueueEventType.Add, item);
@@ -499,22 +428,17 @@ export class Queue {
             });
             this.emitter.emit(QueueEventType.Add, item);
         }
-        await this.write();
     }
     async remove(index: number) {
-        await this.fetch();
         this.items.splice(index, 1);
         this.emitter.emit(QueueEventType.Remove, index);
-        await this.write();
     }
     async clear() {
         this.items = [];
         this.current_index = 0;
         this.emitter.emit(QueueEventType.Clear);
-        await this.write();
     }
     async play(index?: number) {
-        await this.fetch();
         if (this.items.length === 0) {
             this.emitter.emit(QueueEventType.Error, "queue is empty");
             return;
@@ -522,7 +446,7 @@ export class Queue {
         if (index) {
             this.current_index = index;
         }
-        const item = await getItemAtIndex(this.guild_id || "", this.current_index);
+        const item = this.items[this.current_index];
         if (!item) {
             this.emitter.emit(QueueEventType.Error, "item at index " + this.current_index + " is undefined; skipping");
             this.next();
@@ -587,7 +511,6 @@ export class Queue {
         this.voice_manager?.play(resource);
     }
     async next(skipped?: boolean) {
-        await this.fetch();
         const item = this.items[this.current_index];
         this.emitter.emit(QueueEventType.Next, this.current_index);
         if (skipped) {
@@ -598,19 +521,16 @@ export class Queue {
             if (this.current_index >= this.items.length -1) {
                 this.current_index = 0;
             }
-            await this.write();
             this.play(this.current_index);
         }
     }
     async previous() {
-        await this.fetch();
         this.current_index--;
         if (this.current_index < 0) {
             this.current_index = this.items.length - 1;
         }
         this.play(this.current_index);
         this.emitter.emit(QueueEventType.Previous, this.current_index);
-        await this.write();
     }
     stop(skipped: boolean = false) {
         if (!skipped) this.state = QueueState.Stopped;
@@ -626,12 +546,10 @@ export class Queue {
         };
     }
     async shuffle() {
-        await this.fetch();
         const currentItem = this.items[this.current_index];
         this.items = this.items.sort(() => Math.random() - 0.5);
         this.current_index = this.items.indexOf(currentItem as Video | CustomSound) || 0
         this.emitter.emit(QueueEventType.Shuffle);
-        await this.write();
     }
 }
 
@@ -642,41 +560,10 @@ testQueue.add(response.data);
 testQueue.currently_playing = response.data.videos[6] as any;
 */
 
-let queues: Queue[] = [];
-
-export async function getItemAtIndex(id: string, index: number) {
-    const data = await database<dbQueue<dbQueueDataType.Video | dbQueueDataType.CustomSound>>("queues")
-        .where({ guild: id, index })
-        .first();
-
-    if (!data) {
-        return undefined;
-    }
-
-    switch (data.type) {
-        case "video":
-            const video = new Video(data.url as string);
-            video.title = data.title as string;
-            video.length = data.length as number;
-            video.id = data.videoId as string;
-            return video;
-        case "custom_sound":
-            const sound = await getSoundNoAutocorrect((data as dbQueue<dbQueueDataType.CustomSound>).name);
-            if (sound) {
-                return sound;
-            }
-            return undefined;
-        default: return undefined;
-    }
-}
-
-export async function getQueueById(guildId: string): Promise<Queue | undefined> {
-    let queue = await Queue.fromDatabase(guildId);
-    return queue;
-}
+export let queues: Queue[] = [];
 
 export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
-    let queue = invoker.guildId ? queues.find(queue => { queue.guild_id === invoker.guildId }) || await Queue.fromDatabase(invoker.id) : undefined;
+    let queue = invoker.guildId ? queues.find(queue => { queue.guild_id === invoker.guildId }) : undefined;
     if (queue && queue.voice_manager?.destroyed) {
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
         if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
@@ -701,4 +588,8 @@ export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfi
         queues.push(queue);
     }
     return { type: ResponseType.Success, data: queue };
+}
+
+export async function getQueueByGuildId(guildId: string): Promise<Queue | undefined> {
+    return queues.find(queue => queue.guild_id === guildId);
 }

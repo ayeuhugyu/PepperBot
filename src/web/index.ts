@@ -3,7 +3,7 @@ import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
-import { getInfo, Queue, ResponseType, Video, VideoError, getQueueById } from "../lib/classes/queue_manager";
+import { getInfo, Queue, ResponseType, Video, VideoError, getQueueByGuildId, QueueState } from "../lib/classes/queue_manager";
 import { getStatistics } from "../lib/statistics";
 import { Client } from "discord.js";
 
@@ -143,7 +143,7 @@ export function listen(client: Client) {
         let queue;
         try {
             guild = client.guilds.cache.get(queueId) || await client.guilds.fetch(queueId).catch(() => {});
-            queue = await getQueueById(queueId);
+            queue = await getQueueByGuildId(queueId);
         } catch (err) {
             return next(err);
         }
@@ -157,7 +157,7 @@ export function listen(client: Client) {
                 name: item instanceof Video ? item.title : item.name,
                 url: item instanceof Video ? item.url : undefined,
                 type: item instanceof Video ? "video" : "sound",
-                isPlaying: index === queue.current_index
+                isPlaying: index === queue.current_index && queue.state === QueueState.Playing,
             }
         })
         res.render("queue", {
@@ -175,7 +175,7 @@ export function listen(client: Client) {
         if (!queueId || !index) {
             return next(new HttpException(400, "Missing queue id or index"));
         }
-        const queue = await getQueueById(queueId);
+        const queue = await getQueueByGuildId(queueId);
         if (!queue) {
             return next(new HttpException(404, `Queue not found for guild ${queueId}`));
         }
@@ -189,7 +189,7 @@ export function listen(client: Client) {
         if (!queueId || !url) {
             return next(new HttpException(400, "Missing queue id or url"));
         }
-        const queue = await getQueueById(queueId);
+        const queue = await getQueueByGuildId(queueId);
         if (!queue) {
             return next(new HttpException(404, `Queue not found for guild ${queueId}`));
         }
@@ -213,7 +213,7 @@ export function listen(client: Client) {
             if (!queueId) {
                 return next(new HttpException(400, "Missing queue id"));
             }
-            const queue = await getQueueById(queueId);
+            const queue = await getQueueByGuildId(queueId);
             if (!queue) {
                 return next(new HttpException(404, `Queue not found for guild ${queueId}`));
             }
