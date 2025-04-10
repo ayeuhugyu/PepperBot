@@ -8,6 +8,8 @@ import database, { tables } from "../lib/data_manager";
 import prettyBytes from "pretty-bytes";
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import si from 'systeminformation';
 
 const getDirectorySize = (directory: string): number => {
     const files = fs.readdirSync(directory);
@@ -106,6 +108,51 @@ const dbinfo = new Command(
     }
 );
 
+const performanceinfo = new Command(
+    {
+        name: 'performance',
+        description: 'returns information about system performance',
+        long_description: 'returns information about RAM, CPU, and GPU usage',
+        tags: [],
+        pipable_to: [],
+        options: [],
+        access: CommandAccessTemplates.public,
+        input_types: [InvokerType.Message, InvokerType.Interaction],
+        example_usage: "",
+        aliases: []
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
+    async function execute ({ invoker, guild_config }) {
+        const memoryUsage = process.memoryUsage();
+        const totalMemory = os.totalmem();
+        const freeMemory = os.freemem();
+        const usedMemory = totalMemory - freeMemory;
+
+        const cpuLoad = await si.currentLoad();
+        const gpuData = await si.graphics();
+
+        const embed = createThemeEmbed(Theme.CURRENT)
+            .setTitle("performance information")
+            .setDescription(
+                `**RAM usage**: ${prettyBytes(memoryUsage.rss)} (RSS)\n` +
+                `**Total system memory**: ${prettyBytes(totalMemory)}\n` +
+                `**Used system memory**: ${prettyBytes(usedMemory)}\n\n` +
+                `**CPU load**: ${cpuLoad.currentLoad.toFixed(2)}%\n` +
+                `**CPU cores**: ${os.cpus().length}\n\n` +
+                (gpuData.controllers.length > 0
+                    ? gpuData.controllers.map((gpu, index) =>
+                        `**GPU ${index + 1}**: ${gpu.model}\n` +
+                        `**GPU load**: ${gpu.utilizationGpu || 0}%\n` +
+                        `**GPU memory usage**: ${prettyBytes(gpu.memoryUsed || 0)} / ${prettyBytes(gpu.memoryTotal || 0)}\n`
+                    ).join("\n")
+                    : "**GPU**: No GPU detected\n")
+            );
+
+        action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+        return new CommandResponse({});
+    }
+);
+
 const botinfo = new Command(
     {
         name: 'bot',
@@ -155,7 +202,7 @@ const command = new Command(
         ],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [botinfo, dbinfo, storageinfo]
+            list: [botinfo, dbinfo, storageinfo, performanceinfo]
         },
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
