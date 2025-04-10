@@ -102,6 +102,7 @@ the biggest new base feature
 
 - javascript -> typescript
 - running off of bun now instead of nodejs
+- no longer sharding, it was doing me no good at all and just making it harder to develop
 - constant resources have been separated into a /constant folder
 - user data has been transformed into a SQL database
 - guild config values are now separated by category
