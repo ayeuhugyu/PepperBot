@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import * as log from './lib/log';
 import { Theme, getThemeEmoji } from './lib/theme';
 import fs from "fs";
+import { listen } from './web/index';
 
 config();
 
@@ -20,18 +21,6 @@ export const client = new Client({
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
-let shardTotal: any = { totalShards: 1, currentShard: 0 };
-try {
-    shardTotal = await fetch("http://localhost:49999/totalShards").then(async (response) => await response.json())
-} catch (err) {
-    log.error(err)
-}
-
-/*const app = await startServer("shard" + shardTotal.currentShard, 50000 + shardTotal.currentShard);
-if (app instanceof Error) {
-    log.error(app.message);
-    process.exit(1);
-}*/
 
 const eventFiles = fs
     .readdirSync("src/events")
@@ -43,7 +32,7 @@ for (const file of eventFiles) {
 }
 
 client.once('ready', async () => {
-    log.info(`logged in as ${client.user?.tag}; shard ${shardTotal.currentShard}/${shardTotal.totalShards}`);
+    log.info(`logged in as ${client.user?.tag}`);
 
     // web server starting has been moved to index.ts because in here it would start one for every single shard
 
@@ -66,7 +55,8 @@ async function init() {
         process.exit(1);
     }
 }
-init();
+await init();
+await listen(client);
 
 process.on("warning", log.warn);
 ["unhandledRejection", "uncaughtException"].forEach((event) => {

@@ -79,12 +79,6 @@ const nonFatalEnvVariables = [
     { key: "LASTFM_API_KEY", message: "missing LASTFM_API_KEY in .env; some features may not work, expect errors" },
 ];
 
-let dataVerified = false;
-await fetch("http://localhost:50000/verified").then((res) => res.text()).then((text) => {
-    if (text === "true") dataVerified = true;
-}).catch(() => {
-    log.warn("failed to check if data has already been verified with internal server, assuming unverified")
-});
 // really messed up way to avoid verifying multiple times (just makes the logs cleaner)
 
 export function verifyData() {
@@ -140,17 +134,16 @@ export function verifyData() {
     // TODO: verify .env file
     return responses;
 }
-if (!dataVerified) {
-    const verificationResponses = verifyData();
-    let unrecoverable = verificationResponses.filter((response) => response.unrecoverable);
-    if (unrecoverable.length > 0) {
-        console.error("unrecoverable errors found:");
-        unrecoverable.forEach((response) => {
-            console.error(response.message);
-        });
-        console.error("fix the above errors and try again. you may have cloned the repository incorrectly, or you are missing .env properties.");
-        process.exit(1);
-    }
+
+const verificationResponses = verifyData();
+let unrecoverable = verificationResponses.filter((response) => response.unrecoverable);
+if (unrecoverable.length > 0) {
+    console.error("unrecoverable errors found:");
+    unrecoverable.forEach((response) => {
+        console.error(response.message);
+    });
+    console.error("fix the above errors and try again. you may have cloned the repository incorrectly, or you are missing .env properties.");
+    process.exit(1);
 }
 
 const database = knex({
@@ -161,8 +154,6 @@ const database = knex({
     useNullAsDefault: true,
 });
 log.info("opened database connection");
-
-dataVerified = true;
 
 export default database;
 export const tables = ["prompts", "todos", "configs", "queues", "sounds", "updates", "statistics"];

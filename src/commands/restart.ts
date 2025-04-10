@@ -3,7 +3,7 @@ import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/c
 import * as action from "../lib/discord_action";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
-
+import process from "node:process";
 
 const command = new Command(
     {
@@ -12,36 +12,15 @@ const command = new Command(
         tags: [CommandTag.Debug],
         input_types: [InvokerType.Message],
         pipable_to: [],
-        example_usage: "p/restart sharder",
+        example_usage: "p/restart",
         aliases: [],
         access: CommandAccessTemplates.dev_only,
-        options: [
-            new CommandOption({
-                name: 'process',
-                description: 'the process to restart',
-                required: false,
-                type: CommandOptionType.String
-            })
-        ]
+        options: []
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["process"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, args }) {
-        let process = args.process;
-        if (!process) {
-            process = "sharder";
-        }
-        if (process === "sharder" || process === "site") {
-            fetch("http://localhost:50000/restart", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ process: process })
-            }).then(async (response) => {
-                const content = await response.text();
-                action.reply(invoker, content);
-            })
-        }
+        await action.reply(invoker, "restarting bot...");
+        process.send!("restart");
     }
 );
 
