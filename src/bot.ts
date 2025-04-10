@@ -4,7 +4,6 @@ import * as log from './lib/log';
 import { Theme, getThemeEmoji } from './lib/theme';
 import fs from "fs";
 import { listen } from './web/index';
-
 config();
 
 export const client = new Client({
@@ -56,6 +55,7 @@ async function init() {
     }
 }
 await init();
+process.env.DISCORD_CLIENT_ID = client.user?.id || "0";
 await listen(client);
 
 process.on("warning", log.warn);

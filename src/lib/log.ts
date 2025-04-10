@@ -2,8 +2,9 @@ import chalk from "chalk";
 import * as util from "util";
 import fs from "fs-extra";
 import process from "node:process";
+import GlobalEvents from "./communication_manager";
 
-enum Level {
+export enum Level {
     Debug,
     Info,
     Warn,
@@ -69,7 +70,7 @@ function log(level: Level, ...message: unknown[]) {
     const fileString = `${cleanPrefix}${formatted.split("\n").join("\n" + cleanPrefix)}\n`;
 
     process.stdout.write(stdoutString);
-
+    GlobalEvents.emit("log", fileString, level);
     // TODO: catch these?
     fs.appendFile(`./logs/${Level[level].toLowerCase()}.log`, fileString)
     fs.appendFile(`./logs/global.log`, fileString)

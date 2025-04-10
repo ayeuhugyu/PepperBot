@@ -1,7 +1,6 @@
 import * as log from '../lib/log';
 import { Response } from 'express';
 import { RESTPostOAuth2AccessTokenResult, Routes } from 'discord.js';
-import { getClientId } from '../lib/client_values_helpers';
 
 const discordApi = "https://discord.com/api/v10";
 const nameToken = "LIBERAL_LIES";
@@ -11,7 +10,7 @@ const cookieExp = 1000 * 60 * 60 * 24 * 365; // 1 year
 const isDev = process.env.IS_DEV?.toLowerCase() == "true";
 let botId: string;
 try {
-    botId = await getClientId();
+    botId = process.env.DISCORD_CLIENT_ID || "";
 } catch (err) {
     log.error("Failed to fetch client ID, defaulting to fallback ID. Error:", err);
     botId = "111111111111111111111";
