@@ -87,7 +87,10 @@ export async function newGuildConfig(guild?: string) {
     return config;
 }
 
-export function fetchGuildConfig(guild: string) {
+export function fetchGuildConfig(guild?: string) {
+    if (!guild) {
+        return exteriorConfig;
+    }
     return database("configs")
         .where({ guild })
         .select()
