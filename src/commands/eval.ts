@@ -10,6 +10,7 @@ import * as util from "util";
 import * as gpt from "../lib/gpt";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 import * as queue from "../lib/classes/queue_manager";
+import database from "../lib/data_manager"
 
 const modules = {
     discord,
@@ -20,7 +21,8 @@ const modules = {
     shell,
     util,
     gpt,
-    queue
+    queue,
+    database,
 } // this is some weird hacky thing to make bun not omit the modules due to them being unused
 
 const command = new Command(
