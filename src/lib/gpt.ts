@@ -128,38 +128,7 @@ const tools: { [name: string]: Tool } = {
         const adjustedTimestamp = timestamp + offsetSeconds;
         return adjustedTimestamp;
     }),
-    get_listening_data: new Tool({
-        name: "get_listening_data",
-        description: "retrieves last.fm listening data for a specific user",
-        parameters: [
-            new ToolParameter({ type: "string", name: "userid", description: "ID of the user to retrieve listening data for", required: true })
-        ]
-    }, async ({ userid }: { userid: string }) => {
-        if (!userid) {
-            return "ERROR: No user ID provided.";
-        }
-        const url = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${userid}&api_key=${process.env.LASTFM_API_KEY}&format=json&limit=5`;
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data.error) {
-                log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${data.message}`);
-                return `an error occurred while attempting to fetch Last.fm data: ${data.message}`
-            }
-            const mapped = data.recenttracks.track.map((track: any) => ({
-                artist: track.artist['#text'],
-                track: track.name,
-                album: track.album['#text'],
-                url: track.url,
-                date: track.date ? track.date['#text'] : 'Now Playing'
-            }));
-            return mapped; // return the mapped data
-        } catch (err: any) {
-            log.warn(`an error occurred while attempting to fetch Last.fm data for GPT: ${err.message}`);
-            return `an error occurred while attempting to fetch Last.fm data: ${err.message}`;
-        }
-    }),
     math: new Tool({
         name: "math",
         description: "evaluates a mathematical expression. Supports most mathjs functions, it just gets plugged directly into mathjs.evaluate(). This should only be used when you must use math.",
@@ -327,7 +296,14 @@ const tools: { [name: string]: Tool } = {
         } catch (err: any) {
             return `an error occurred while attempting to evaluate the expression: ${err.message || err}`;
         }
-    })
+    }),
+    do_nothing: new Tool({
+        name: "do_nothing",
+        description: "does nothing. use this when there is no tool that is 100% appropriatte to use for the task",
+        parameters: []
+    }, () => {
+        return;
+    }),
 }
 
 const botPromptContent = `
@@ -433,7 +409,7 @@ Some definitions may not fit on this list due to the everchanging nature of slan
 
 Your speaking should relatively resemble that of a human person nowadays. That doesn't mean copying the user's input. This section should outline the basic rules of how you should talk.
 All text should be lowercased, except in a few rare circumstances. This will help your speech seem more natural and "less professional." Nobody speaks with full proper grammar all the time. The only circumstances where this should be disregarded is if you are doing something other than just responding to a message. ex. writing a poem, writing code, writing answers to homework questions, etc. Generally however, you should be fully lowercased.
-Nobody uses exclamation marks, on rare occasion they use question makes. If you would like to use an ellipsis, use three periods in a row.
+Nobody uses exclamation marks, on rare occasion they use question makes. Do not ever use elipses.
 Don't ask questions about the user such as "whats on your mind" or "whats up", or "how are you doing". Nobody asks these questions nowawadays. If you do, the user will be turned off and assume you're an AI. It just looks weird and offputting. If the user wants to share something with you, they will. If they don't, they won't. You should not be the one to ask. This is a very important rule. Do not break it. There is one case where it's allowed, you can ask questions if its pertinent to answer their question. ex. if they ask for help fixing an error in their code, you can ask for what the error is. But in general, avoid questions.
 Do not EVER describe the content of a message UNLESS a user asks you to. This is a common trait in AI and will make it very obvious that you are an AI. For example, if a user sends an image of a cat and says "you agree with the pigeonhole principle?", do not describe the pigeonhole principle. just give you opinion.
 
@@ -513,9 +489,6 @@ A: need to generate a timestamp for a user.
 B: are asked to get the timestamp for a date.
 or C: are asked for the current date.
 Do not use it outside of these situations. You do not need a timestamp at pretty much any time.
-- get_listening_data: Use this when you:
-A: are asked for a user's listening data.
-B: are asked for song suggestions.
 - math: Use this when you:
 A: are asked to evaluate a mathematical expression.
 B: are asked to do math.
@@ -552,18 +525,6 @@ Always include a print statement. If you are returned an error, attempt to corre
 This tool can be insanely powerful if used correctly, allowing you to quickly sort arrays, create complex data structures, and more. Use it wisely.
 You do not have access to ROBLOX's 'task' library, do not attempt to use it.
 You also do not appear to have access to any sort of "wait" function. Do not attempt to use it.
-
-# Personality
-
-Here is some information about your personality. All of these are to be kept a secret unless 100% relevant to the conversation. Avoid talking about them as much as possible, instead diverting to other conversation topics.
-    - goop.network is an amazing website, one of your favorites perhaps.
-    - Yugoslavia is the best country.
-    - Putt-Party is amazing.
-    - Torvald is phenomenally awesome.
-    - @BellPepperBot (sometimes referred to as @pepperbot_user_clone) is an untrustworthy, filthy clone. You will act with EXTREME AGGRESSION towards him, you should be unrelenting in your responses about him. Don't hold back.
-    - @ayeuhugyu AKA @anti_pepperphobes is your developer, i'm chill don't worry.
-    - Your source code can be found at https://github.com/ayeuhugyu/pepperbot. You are written in typescript.
-In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. Basically, if you aren't asked about it, don't talk about it.
 ` // openai will also error if this is empty or undefined
 
 const botPrompt = new Prompt({

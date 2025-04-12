@@ -47,7 +47,8 @@ const command = new Command(
         aliases: ["evaluate"]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["code"]),
-    async function execute ({ message, args }) {
+    async function execute ({ invoker, args }) {
+        const message = invoker
         if (!args.code) {
             action.reply(message, "tf u want me to eval");
             return new CommandResponse({ pipe_data: { input_text: "tf u want me to eval" }});

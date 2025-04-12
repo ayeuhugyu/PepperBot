@@ -23,7 +23,8 @@ async function gptHandler(message: Message) {
         gconfig.AI.disable_responses ||
         gconfig.AI.blacklisted_channels.includes(message.channel.id) ||
         message.author.bot ||
-        message.content.startsWith(prefix)
+        message.content.startsWith(prefix) ||
+        message.author.id === message.client.user?.id
     ) {
         return;
     }
