@@ -60,7 +60,7 @@ const join = new Command(
         tags: [CommandTag.Voice],
         example_usage: "p/vc join general",
         allow_external_guild: false,
-        root_aliases: ["joinvc", "jvc", "vc"],
+        root_aliases: ["joinvc", "jvc"],
         options: [
             new CommandOption({
                 name: 'channel',
