@@ -12,7 +12,7 @@ const command = new Command(
         description: 'explains usages of specific commands',
         long_description: 'explains how to use certain commands as well as listing all commands',
         tags: [CommandTag.Utility],
-        pipable_to: [],
+        pipable_to: [CommandTag.TextPipable],
         options: [
             new CommandOption({
                 name: 'command',
@@ -52,7 +52,48 @@ const command = new Command(
             });
             embed.addFields(...fields);
             action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                pipe_data: {
+                    data: {
+                        input_text: embed.toJSON().description,
+                    }
+                }
+            });
         } else {
+            if (args.command == "-a" || args.command == "--all" || args.command == "-t" || args.command == "--tree") {
+                const commands = commandManager.default.mappings.filter(commandEntry => {
+                    const { whitelisted, blacklisted } = commandEntry.command.access.test(invoker);
+                    return (commandEntry.type === CommandEntryType.Command) || (!whitelisted || blacklisted);
+                });
+
+                const buildCommandTree = (command: Command, prefix: string = ""): string => {
+                    let tree = `${prefix}${guild_config.other.prefix}${command.parent_command ? `${command.parent_command} ` : ""}${command.name}\n`;
+                    if (command.subcommands && command.subcommands.list.length > 0) {
+                        const subcommands = command.subcommands.list;
+                        subcommands.forEach((subcommand, index) => {
+                            const isLast = index === subcommands.length - 1;
+                            const subPrefix = `${prefix}${isLast ? "    ╰ " : "    ├ "}`;
+                            tree += buildCommandTree(subcommand, subPrefix);
+                        });
+                    }
+                    return tree;
+                };
+
+                let commandTree = "```\n";
+                commands.forEach((commandEntry) => {
+                    commandTree += buildCommandTree(commandEntry.command);
+                });
+                commandTree += "```";
+
+                action.reply(invoker, { content: commandTree, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    pipe_data: {
+                        data: {
+                            input_text: commandTree,
+                        }
+                    }
+                });
+            }
             const command: Command | undefined = await commandManager.default.get(args.command.replace(guild_config.other.prefix, "").split(" ")[0]);
             const requestedSubcommand: string = args.command.replace(guild_config.other.prefix, "").split(" ")[1];
             if (!command) {
@@ -95,6 +136,13 @@ __EXAMPLE USE${typeof command.example_usage !== "string" ? "S:__\n" + (command.e
             } else {
                 const embed = createCommandEmbed(command);
                 action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    pipe_data: {
+                        data: {
+                            input_text: embed.toJSON().description,
+                        }
+                    }
+                });
             }
         }
     }
