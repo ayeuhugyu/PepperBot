@@ -14,6 +14,7 @@ const leave = new Command(
         long_description: 'make the bot leave the current voice channel',
         tags: [CommandTag.Voice],
         example_usage: "p/vc leave",
+        root_aliases: ["leavevc", "lvc", "fuckoff"],
         allow_external_guild: false,
     },
     async function getArguments () {
@@ -59,6 +60,7 @@ const join = new Command(
         tags: [CommandTag.Voice],
         example_usage: "p/vc join general",
         allow_external_guild: false,
+        root_aliases: ["joinvc", "jvc", "vc"],
         options: [
             new CommandOption({
                 name: 'channel',
