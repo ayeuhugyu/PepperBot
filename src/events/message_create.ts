@@ -119,11 +119,22 @@ async function commandHandler(message: Message<true>) {
 
     }
 }
+const shouldReconstructMessage = false;
+
+function reconstructMessage(message: Message<true>): Message<true> {
+    // Create a shallow clone of the message object and explicitly set the prototype to the correct Message class
+    const clonedMessage = Object.assign({}, message);
+    Object.setPrototypeOf(clonedMessage, Message.prototype);
+    return clonedMessage as Message<true>;
+}
 
 export default {
     name: Events.MessageCreate,
     async execute(message: Message<true>) {
-        // Wait for all handlers to finish.
+        if (shouldReconstructMessage) {
+            message = reconstructMessage(message)
+        }
+        // Wait for all handlers to finish
         return await Promise.all([
             gptHandler(message),
             commandHandler(message),
