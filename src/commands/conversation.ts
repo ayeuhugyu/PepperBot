@@ -18,7 +18,7 @@ const image = new Command(
         description: 'generates an image',
         long_description: 'generates an image from the provided prompt',
         tags: [CommandTag.AI],
-        example_usage: "p/gpt get",
+        example_usage: "p/conversation get",
         options: [
             new CommandOption({
                 name: 'prompt',
@@ -182,7 +182,7 @@ const setparam = new Command(
         description: 'allows you to change parameters for the gpt conversation',
         long_description: 'allows you to change parameters for the gpt conversation, notably things like temperature and top_p',
         tags: [CommandTag.AI],
-        example_usage: "p/gpt setparam temperature 1",
+        example_usage: "p/conversation setparam temperature 1",
         options: [
             new CommandOption({
                 name: 'parameter',
@@ -280,7 +280,7 @@ const get = new Command(
         description: 'returns your gpt conversation',
         long_description: 'returns your gpt conversation. Append any text after the command to receive the full conversation output.',
         tags: [CommandTag.Debug],
-        example_usage: "p/gpt get full",
+        example_usage: "p/conversation get full",
         pipable_to: [CommandTag.TextPipable],
         options: [
             new CommandOption({
@@ -310,7 +310,7 @@ const clear = new Command(
         description: 'removes you from your current conversation',
         long_description: 'removes your from your current conversation',
         tags: [CommandTag.AI],
-        example_usage: "p/gpt clear",
+        example_usage: "p/conversation clear",
         pipable_to: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
@@ -324,15 +324,16 @@ const clear = new Command(
 
 const command = new Command(
     {
-        name: 'gpt',
-        description: 'various gpt related commands',
+        name: 'conversation',
+        description: 'various gpt conversation related commands',
         long_description: 'allows you to manipulate your conversation with the AI',
         tags: [CommandTag.AI],
-        example_usage: "p/gpt get",
+        example_usage: "p/conversation get",
         subcommands: {
             deploy:  SubcommandDeploymentApproach.Split,
             list: [get, setparam, clear, image, modelcommand],
         },
+        aliases: ["conv", "gpt"],
         options: [],
         pipable_to: [] // todo: fix this so it just works on subcommands
     },
