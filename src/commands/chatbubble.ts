@@ -1,4 +1,4 @@
-import { AttachmentBuilder, Collection, Message } from "discord.js";
+import { Attachment, AttachmentBuilder, Collection, Message } from "discord.js";
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import sharp from "sharp";
@@ -72,32 +72,32 @@ const command = new Command(
     },
     async function getArguments ({ invoker, command_name_used, guild_config }) {
         invoker = invoker as Message<true>;
-        const args = new Collection();
+        const args: Record<string, string | undefined> = {};
         const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
         const text = invoker.content.slice(commandLength)?.trim();
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const foundUrls = text.match(urlRegex);
         if (foundUrls && foundUrls.length > 0) {
-            args.set('url', foundUrls[0]);
+            args.url = foundUrls[0]
         }
         const gravityMatch = text.match(/(south|north)/);
         if (gravityMatch) {
-            args.set('gravity', gravityMatch[0]);
+            args.gravity = gravityMatch[0];
         }
         const horizontalMatch = text.match(/(left|center|right)/);
         if (horizontalMatch) {
-            args.set('x', horizontalMatch[0]);
+            args.x = horizontalMatch[0];
         }
         const xMatch = text.match(/x=([^\s]+)/);
         if (xMatch) {
-            args.set('x', xMatch[1]);
+            args.x = xMatch[1]
         }
         const yMatch = text.match(/y=([^\s]+)/);
         if (yMatch) {
-            args.set('y', yMatch[1]);
+            args.y = yMatch[1]
         }
 
-        args.set('image', invoker.attachments.first());
+        args.image = invoker.attachments.first()?.url;
         return args;
     },
     async function execute ({ invoker, piped_data, args, guild_config }) {
@@ -141,15 +141,14 @@ const command = new Command(
         }
 
         const gravity: Gravity = (args.gravity as Gravity) || "north";
-        if (!args.url && !args.image && !piped_data?.data?.image_url) {
+        if (!(args.url || args.image || piped_data?.data?.image_url)) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
                 error: true,
                 message: "i cant make the air into a chatbubble, gimme an image"
             });
         }
-
-        const imageUrl = args.url || args.image?.url || piped_data?.data?.image_url;
+        const imageUrl = args.url || args.image || piped_data?.data?.image_url;
 
         if (!imageUrl) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });

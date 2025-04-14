@@ -31,11 +31,11 @@ const command = new Command(
     },
     async function getArguments ({ invoker, command_name_used, guild_config }) {
         invoker = invoker as Message<true>;
-        const args = new Collection();
+        const args: { request?: string; image?: Attachment } = {};
         const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
         const text = invoker.content.slice(commandLength)?.trim();
-        args.set('request', text);
-        if (invoker.attachments.size > 0) args.set('image', invoker.attachments.first());
+        args.request = text;
+        if (invoker.attachments.size > 0) args.image = invoker.attachments.first();
         return args;
     }, // No arguments template needed
     async function execute ({ args, invoker, guild_config, invoker_type, piped_data }) {
