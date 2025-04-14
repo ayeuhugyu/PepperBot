@@ -5,6 +5,7 @@ import { CommandTag, InvokerType, CommandOptionType, CommandEntryType } from "..
 import { createThemeEmbed, Theme } from "../lib/theme";
 import { APIEmbedField, Message } from "discord.js";
 import PagedMenu from "../lib/classes/pagination";
+import { textToAttachment } from "../lib/attachment_manager";
 
 const command = new Command(
     {
@@ -79,13 +80,83 @@ const command = new Command(
                     return tree;
                 };
 
-                let commandTree = "```\n";
-                commands.forEach((commandEntry) => {
-                    commandTree += buildCommandTree(commandEntry.command);
-                });
-                commandTree += "```";
+                const simpleCommands: string[] = [];
+                const treeCommands: string[] = [];
 
-                action.reply(invoker, { content: commandTree, ephemeral: guild_config.other.use_ephemeral_replies });
+                commands.forEach((commandEntry) => {
+                    const command = commandEntry.command;
+                    if (command.subcommands && command.subcommands.list.length > 0) {
+                        treeCommands.push(buildCommandTree(command));
+                    } else {
+                        simpleCommands.push(guild_config.other.prefix + command.name);
+                    }
+                });
+
+                // Split simple commands into 3 columns
+                const columnCount = 3;
+                const columnWidths = Array(columnCount).fill(0);
+                const columns: string[][] = Array.from({ length: columnCount }, () => []);
+
+                simpleCommands.forEach((command, index) => {
+                    const columnIndex = index % columnCount;
+                    columns[columnIndex].push(command);
+                    columnWidths[columnIndex] = Math.max(columnWidths[columnIndex], command.length);
+                });
+
+                // Format columns with padding
+                const paddedColumns = columns.map((column, columnIndex) =>
+                    column.map(command => command.padEnd(columnWidths[columnIndex] + 1))
+                );
+
+                // Combine columns into rows
+                const combinedRows: string[] = [];
+                const maxRows = Math.max(...columns.map(column => column.length));
+                for (let i = 0; i < maxRows; i++) {
+                    combinedRows.push(
+                        paddedColumns.map(column => column[i] || "").join("")
+                    );
+                }
+
+                // Split tree commands into 2 columns
+                const treeColumnCount = 2;
+                const treeColumnWidths = Array(treeColumnCount).fill(0);
+                const treeColumns: string[][] = Array.from({ length: treeColumnCount }, () => []);
+
+                treeCommands.forEach((tree, index) => {
+                    const columnIndex = index % treeColumnCount;
+                    treeColumns[columnIndex].push(tree);
+                    treeColumnWidths[columnIndex] = Math.max(treeColumnWidths[columnIndex], ...tree.split("\n").map(line => line.length));
+                });
+
+                // Format tree columns with padding
+                const paddedTreeColumns = treeColumns.map((column, columnIndex) =>
+                    column.map(tree => tree.split("\n").map(line => line.padEnd(treeColumnWidths[columnIndex] + 1)).join("\n"))
+                );
+
+                // Combine tree columns into rows
+                const combinedTreeRows: string[] = [];
+                const maxTreeRows = Math.max(...treeColumns.map(column => column.length));
+                for (let i = 0; i < maxTreeRows; i++) {
+                    const rowParts = paddedTreeColumns.map(column => column[i] || "");
+                    const rowLines = rowParts.map(part => part.split("\n"));
+                    const maxLines = Math.max(...rowLines.map(lines => lines.length));
+                    for (let j = 0; j < maxLines; j++) {
+                        combinedTreeRows.push(
+                            rowLines.map(lines => lines[j] || "".padEnd(treeColumnWidths[rowLines.indexOf(lines)] + 1)).join("")
+                        );
+                    }
+                }
+
+                let commandTree = "";
+                if (combinedRows.length > 0) {
+                    commandTree += combinedRows.join("\n") + "\n\n";
+                }
+                if (combinedTreeRows.length > 0) {
+                    commandTree += combinedTreeRows.join("\n");
+                }
+
+                const attachment = textToAttachment(commandTree, "commands.txt");
+                action.reply(invoker, { files: [attachment], ephemeral: guild_config.other.use_ephemeral_replies });
                 return new CommandResponse({
                     pipe_data: {
                         data: {
