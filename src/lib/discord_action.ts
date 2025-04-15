@@ -1,4 +1,4 @@
-import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel } from "discord.js"; // this import is horrific
+import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel, DMChannel, PartialDMChannel, NewsChannel, StageChannel, PublicThreadChannel, PrivateThreadChannel, VoiceChannel } from "discord.js"; // this import is horrific
 import { CommandInvoker, FormattedCommandInteraction } from "./classes/command";
 import { config } from "dotenv";
 config();
@@ -85,7 +85,9 @@ export function reply<T extends CommandInvoker>(invoker: T, content: Partial<Mes
     return invoker.reply(fixMessage(content)) as never
 }
 
-export function send(channel: TextChannel, content: Partial<MessageInput> | string): Promise<Message>  {
+export type SendableChannel = TextChannel | DMChannel | PartialDMChannel | NewsChannel | StageChannel | PublicThreadChannel<boolean> | PrivateThreadChannel | VoiceChannel
+
+export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message>  {
     return channel.send(fixMessage(content))
 }
 

@@ -1137,8 +1137,8 @@ export class GPTProcessor {
         } else if (t === GPTProcessorLogType.FollowUp) {
             if (this.repliedMessage instanceof Message) {
                 const channel = this.repliedMessage.channel;
-                if (channel && channel instanceof TextChannel) {
-                    return await channel.send(content);
+                if (channel && 'send' in channel) {
+                    return await action.send(channel, content);
                 } else {
                     return await action.edit(this.sentMessage, { content: this.currentContent + `\n${content}` });
                 }
@@ -1149,7 +1149,7 @@ export class GPTProcessor {
                     return await this.repliedMessage?.followUp({ content: content, flags: MessageFlags.Ephemeral}); // i dont feel like makin a whole method for this rn ngl
                 } else {
                     const channel = this.repliedMessage?.channel;
-                    if (channel && channel instanceof TextChannel) {
+                    if (channel && 'send' in channel) {
                         return await action.send(channel, content);
                     } else {
                         return await this.repliedMessage?.followUp({ content: content });
