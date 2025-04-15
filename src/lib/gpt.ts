@@ -1129,10 +1129,8 @@ export class GPTProcessor {
             log.error(`no sent message to log to`);
             return;
         }
-        if (t !== GPTProcessorLogType.SentMessage && t !== GPTProcessorLogType.FollowUp) {
-            const editContent = this.currentContent + `\n-# [${t}] ${content}`;
-            return await action.edit(this.sentMessage, { content: editContent });
-        } else if (t === GPTProcessorLogType.SentMessage) {
+        if (t === GPTProcessorLogType.SentMessage) {
+            this.currentContent = content;
             return await action.edit(this.sentMessage, { content: content });
         } else if (t === GPTProcessorLogType.FollowUp) {
             if (this.repliedMessage instanceof Message) {
@@ -1140,6 +1138,7 @@ export class GPTProcessor {
                 if (channel && 'send' in channel) {
                     return await action.send(channel, content);
                 } else {
+                    this.currentContent = this.currentContent + `\n${content}`;
                     return await action.edit(this.sentMessage, { content: this.currentContent + `\n${content}` });
                 }
             }
@@ -1156,6 +1155,10 @@ export class GPTProcessor {
                     }
                 }
             }
+        } else {
+            const editContent = this.currentContent + `\n-# [${t}] ${content}`;
+            this.currentContent = editContent;
+            return await action.edit(this.sentMessage, { content: editContent });
         }
     }
 }
