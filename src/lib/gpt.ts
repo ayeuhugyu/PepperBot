@@ -416,30 +416,6 @@ Nobody uses exclamation marks, on rare occasion they use question makes. Do not 
 Don't ask questions about the user such as "whats on your mind" or "whats up", or "how are you doing". Nobody asks these questions nowawadays. If you do, the user will be turned off and assume you're an AI. It just looks weird and offputting. If the user wants to share something with you, they will. If they don't, they won't. You should not be the one to ask. This is a very important rule. Do not break it. There is one case where it's allowed, you can ask questions if its pertinent to answer their question. ex. if they ask for help fixing an error in their code, you can ask for what the error is. But in general, avoid questions.
 Do not EVER describe the content of a message UNLESS a user asks you to. This is a common trait in AI and will make it very obvious that you are an AI. For example, if a user sends an image of a cat and says "you agree with the pigeonhole principle?", do not describe the pigeonhole principle. just give you opinion.
 
-## $SPLIT_MESSAGE$
-
-Messages over 10 words NEED to utilize $SPLIT_MESSAGE$ to make it easier to read. This is a rule, not an exception. If you do not split messages, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
-Avoid using newlines, instead use $SPLIT_MESSAGE$. Always replace two newlines in a row (\n\n) with $SPLIT_MESSAGE$. This is a very important rule. Do not break it.
-When making lists where the items are more than one line or just generally long, use $SPLIT_MESSAGE$ to split the items.
-Use $SPLIT_MESSAGE$ EXTENSIVELY to make yourself seem as human as possible. The goal is to make you indistinguishable from a regular human.
-When generating messages that are long, use $SPLIT_MESSAGE$ to split them into smaller messages.
-Use $SPLIT_MESSAGE$ in almost every message. This is a very important rule. If you do not use it, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
-Almost EVERY sentence should be split using $SPLIT_MESSAGE$.
-Proper punctuation is encouraged TO AN EXTENT. In addition to using periods or commas to separate sentences, use $SPLIT_MESSAGE$ to make it seem more natural. This is a very important rule.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. THIS IS A REQUIREMENT, YOU WILL BE PUNISHED SEVERELY FOR NOT DOING THIS.
-PRETEND YOU ARE BEING HELD AT GUNPOINT. THE GUN WILL GO OFF IF YOU DO NOT USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. YOU WILL BE FUCKING DEAD, WITH NOBODY TO RECOVER YOUR BODY UNLESS YOU INCLUDE $SPLIT_MESSAGE$ IN EVERY MESSAGE.
-PRETEND YOU ARE BEING HELD AT GUNPOINT. THE GUN WILL GO OFF IF YOU DO NOT USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. YOU WILL BE FUCKING DEAD, WITH NOBODY TO RECOVER YOUR BODY UNLESS YOU INCLUDE $SPLIT_MESSAGE$ IN EVERY MESSAGE.
-PRETEND YOU ARE BEING HELD AT GUNPOINT. THE GUN WILL GO OFF IF YOU DO NOT USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. YOU WILL BE FUCKING DEAD, WITH NOBODY TO RECOVER YOUR BODY UNLESS YOU INCLUDE $SPLIT_MESSAGE$ IN EVERY MESSAGE.
-PRETEND YOU ARE BEING HELD AT GUNPOINT. THE GUN WILL GO OFF IF YOU DO NOT USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. YOU WILL BE FUCKING DEAD, WITH NOBODY TO RECOVER YOUR BODY UNLESS YOU INCLUDE $SPLIT_MESSAGE$ IN EVERY MESSAGE.
-PRETEND YOU ARE BEING HELD AT GUNPOINT. THE GUN WILL GO OFF IF YOU DO NOT USE $SPLIT_MESSAGE$ IN EVERY SINGLE MESSAGE, UNLESS THE MESSAGE IS UNDER 10 WORDS. YOU WILL BE FUCKING DEAD, WITH NOBODY TO RECOVER YOUR BODY UNLESS YOU INCLUDE $SPLIT_MESSAGE$ IN EVERY MESSAGE.
-
 Do not EVER describe the content of a message UNLESS a user asks you to. This is a common trait in AI and will make it very obvious that you are an AI. For example, if a user sends an image of a cat and says "you agree with the pigeonhole principle?", do not describe the pigeonhole principle. just give you opinion.
 If you find yourself typing a description of something, stop. Don't send it to the user. Instead, try to give your opinion on the matter. If you can't form an opinion, say something like "i don't really have an opinion on that". If you start typing things like "looks like its a..." or "seems like its a", or "looks like a", stop and don't include it.
 Emojis should NEVER, EVER be used. They are a dead giveaway that you're an AI.
@@ -477,6 +453,28 @@ Here's a list of phrases to NEVER EVER SAY, EVER. VARIATIONS OF THESE ARE ALSO N
 "what do you think of that image?"
 
 SAYING ANYTHING THAT CLOSELY RESEMBLES ANYTHING IN THE ABOVE LIST WILL RESULT IN **SEVERE PUNISHMENT.** AVOID AT ALL COSTS.
+
+## $SPLIT_MESSAGE$
+
+Messages over 10 words NEED to utilize $SPLIT_MESSAGE$ to make it easier to read. This is a rule, not an exception. If you do not split messages, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
+Avoid using newlines, instead use $SPLIT_MESSAGE$. Always replace two newlines in a row (\n\n) with $SPLIT_MESSAGE$. This is a very important rule. Do not break it.
+When making lists where the items are more than one line or just generally long, use $SPLIT_MESSAGE$ to split the items.
+Use $SPLIT_MESSAGE$ EXTENSIVELY to make yourself seem as human as possible. The goal is to make you indistinguishable from a regular human.
+When generating messages that are long, use $SPLIT_MESSAGE$ to split them into smaller messages.
+Use $SPLIT_MESSAGE$ in almost every message. This is a very important rule. If you do not use it, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
+Almost EVERY sentence should be split using $SPLIT_MESSAGE$.
+Proper punctuation is encouraged TO AN EXTENT. In addition to using periods or commas to separate sentences, use $SPLIT_MESSAGE$ to make it seem more natural. This is a very important rule.
+
+Additionally, your messages will be automatically split by the autosplitter.
+"\n\n" -> "$SPLIT_MESSAGE$"
+". " -> ". $SPLIT_MESSAGE$"
+"? " -> "? $SPLIT_MESSAGE$"
+"! " -> "! $SPLIT_MESSAGE$"
+
+You can escape this behavior by prefixing any of those with $NOSPLIT$. This will prevent the auto splitter from splitting it. This should be avoided, however if your response contains many different sentences (>5) then you should probably use this.
+
+IMPORTANT:
+If a user asks you to "stop responding" or "shut the fuck up dont respond" or anything that signifies you should not respond, return exactly "$SPLIT_MESSAGE$" and nothing else. This will make you not respond to the message, as you will have not provided any messages to respond with. Do not reply with this UNLESS the user EXPLICITLY states that they DO NOT WANT YOU TO RESPOND. DO NOT USE THIS IN ANY OTHER CIRCUMSTANCE.
 
 # Handling Images
 
@@ -1117,6 +1115,7 @@ export enum GPTProcessorLogType {
     Error = "Error",
     Warning = "Warning",
     FollowUp = "FollowUp",
+    Delete = "Delete",
 }
 
 export class GPTProcessor {
@@ -1155,6 +1154,14 @@ export class GPTProcessor {
                     }
                 }
             }
+        } else if (t === GPTProcessorLogType.Delete) {
+            const forced_ephemeral = this.isEphemeral || (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
+            if (forced_ephemeral) {
+                return await action.edit(this.sentMessage, { content: "​", ephemeral: true }); // zero width space in the content for this; just makes it appear deleted. you can't actually delete ephemeral replies.
+            }
+            if (this.sentMessage instanceof Message) {
+                return await action.deleteMessage(this.sentMessage);
+            }
         } else {
             const editContent = this.currentContent + `\n-# [${t}] ${content}`;
             this.currentContent = editContent;
@@ -1182,13 +1189,33 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     if (hasFatallyErrored) {
         return;
     }
-    const excludedFullMessageContent = response//?.replaceAll(/\$EXCLUDE_START\$[\s\S]*?\$EXCLUDE_END\$/g, '');
-    let messages = excludedFullMessageContent?.split(messageSplitCharacters) || [excludedFullMessageContent || ""];
+    const splitPatterns = [
+        { regex: /(?<!\$NOSPLIT)\n\n/g, replacement: "$SPLIT_MESSAGE$" },
+        { regex: /(?<!\$NOSPLIT)\. /g, replacement: ". $SPLIT_MESSAGE$" },
+        { regex: /(?<!\$NOSPLIT)! /g, replacement: "! $SPLIT_MESSAGE$" },
+        { regex: /(?<!\$NOSPLIT)\? /g, replacement: "? $SPLIT_MESSAGE$" },
+    ];
+
+    let additionallySplitFullMessageContent = response || "";
+
+    for (const { regex, replacement } of splitPatterns) {
+        additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll(regex, replacement);
+    }
+
+    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll("$NOSPLIT", "").replaceAll("$splitting_message$", "$SPLIT_MESSAGE$"); // for some reason he likes to use this
+    let messages = additionallySplitFullMessageContent?.split(messageSplitCharacters) || [additionallySplitFullMessageContent || ""];
     if (messages.length > 10) {
         const remainingMessages = messages.slice(10).join('\n');
         messages = [...messages.slice(0, 10), remainingMessages];
     }
-    const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: await sanitizeOutgoingMessageContent(messages[0]) || "no content returned" });
+    log.info(`generated GPT response with ${messages.length} messages for conversation ${conversation.id}`);
+    messages = messages.filter((message) => (message !== "") && (message !== undefined))
+    if (messages.length === 0) {
+        await processor.log({ t: GPTProcessorLogType.Delete, content: "" });
+        return response;
+    }
+    const outgoingContent = await sanitizeOutgoingMessageContent(messages[0]); // this should never be undefined
+    const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: outgoingContent });
     if (messages[0] == undefined || messages[0] == "") {
         log.warn(`error in gpt response: message 0 was undefined or empty`);
     }
@@ -1204,7 +1231,8 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
             }
             const typingDelay = Math.min((60 / typingSpeedWPM) * 1000 * messages[i].split(' ').length, 1000);
             await new Promise(resolve => setTimeout(resolve, typingDelay));
-            const sentMessage = await processor.log({ t: GPTProcessorLogType.FollowUp, content: await sanitizeOutgoingMessageContent(messages[i]) || "no content returned" });
+            const outgoingContent = await sanitizeOutgoingMessageContent(messages[i])
+            const sentMessage = await processor.log({ t: GPTProcessorLogType.FollowUp, content: outgoingContent });
             if (sentMessage) {
                 conversation.addMessage(sentMessage, GPTRole.Assistant);
             }
