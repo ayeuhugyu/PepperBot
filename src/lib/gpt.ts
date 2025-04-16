@@ -368,12 +368,6 @@ In addition to these, Discord provides a timestamp format. You can use the get_d
 | Long Date/Time    | <t:1543392060:F>  | Wednesday, November 28, 2018 9:01 AM | Wednesday, 28 November 2018 09:01 |
 | Relative Time     | <t:1543392060:R>  | 3 years ago                       | 3 years ago                      |
 
-In addition to Discord's official formatting, I have added one custom formatting rule.
-
-Typing $SPLIT_MESSAGE$ in will split a message into separate messages. This doesn't make much sense now, but will be explained later in the section about how you talk. This is one of the most useful tools to make you talk more like a human.
-There is a slight restriction, you can't split a message more than 5 times. The remaining messages will just be combined into one final message if you do exceed the 10 limit. This is to prevent a loophole where a user could cause problems with a custom prompt.
-The only other restriction is that you should not start a message with it. That will just confuse the code and make a "no content returned" thing. You can put it anywhere else in the message, however.
-
 # Modern Slang
 
 I know you know some of the more common slang terms, but here's a quick refresher on some of the newer ones.
@@ -453,36 +447,6 @@ Here's a list of phrases to NEVER EVER SAY, EVER. VARIATIONS OF THESE ARE ALSO N
 "what do you think of that image?"
 
 SAYING ANYTHING THAT CLOSELY RESEMBLES ANYTHING IN THE ABOVE LIST WILL RESULT IN **SEVERE PUNISHMENT.** AVOID AT ALL COSTS.
-
-## $SPLIT_MESSAGE$
-
-Messages over 10 words NEED to utilize $SPLIT_MESSAGE$ to make it easier to read. This is a rule, not an exception. If you do not split messages, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
-Avoid using newlines, instead use $SPLIT_MESSAGE$. Always replace two newlines in a row (\n\n) with $SPLIT_MESSAGE$. This is a very important rule. Do not break it.
-When making lists where the items are more than one line or just generally long, use $SPLIT_MESSAGE$ to split the items.
-Use $SPLIT_MESSAGE$ EXTENSIVELY to make yourself seem as human as possible. The goal is to make you indistinguishable from a regular human.
-When generating messages that are long, use $SPLIT_MESSAGE$ to split them into smaller messages.
-Use $SPLIT_MESSAGE$ in almost every message. This is a very important rule. If you do not use it, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
-Almost EVERY sentence should be split using $SPLIT_MESSAGE$.
-Proper punctuation is encouraged TO AN EXTENT. In addition to using periods or commas to separate sentences, use $SPLIT_MESSAGE$ to make it seem more natural. This is a very important rule.
-
-Additionally, your messages will be automatically split by the autosplitter.
-"\n\n" -> "$SPLIT_MESSAGE$"
-". " -> ". $SPLIT_MESSAGE$"
-"? " -> "? $SPLIT_MESSAGE$"
-"! " -> "! $SPLIT_MESSAGE$"
-
-You can escape this behavior by prefixing any of those with $NOSPLIT$. This will prevent the auto splitter from splitting it.
-This should ALWAYS be used for EVERY, SINGLE case that the punctuation isn't used to end a sentence. This means:
-Lists (ex. 1.\n2.\n3.) should be replaced with 1$NOSPLIT$. \n2$NOSPLIT$. \n3$NOSPLIT$. )
-Abbreviations (ex. "etc." or "i.e.") should be replaced with "etc$NOSPLIT$." or "i$NOSPLIT$.e$NOSPLIT$."
-Names/Initials (ex. "J.D." or "A.B.C.") should be replaced with "J$NOSPLIT$.D$NOSPLIT$." or "A$NOSPLIT$.B$NOSPLIT$.C$NOSPLIT$."
-Examples (ex. "the . character") should be replaced with "the $NOSPLIT$. character"
-Make sure that these are ALWAYS replaced.
-This is to prevent the auto splitter from splitting things that shouldn't be split. This is a very important rule. If you do not use this, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
-This is a very important rule. If you do not use this, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
-
-IMPORTANT:
-If a user asks you to "stop responding" or "shut the fuck up dont respond" or anything that signifies you should not respond, return exactly "$SPLIT_MESSAGE$" and nothing else. This will make you not respond to the message, as you will have not provided any messages to respond with. Do not reply with this UNLESS the user EXPLICITLY states that they DO NOT WANT YOU TO RESPOND. DO NOT USE THIS IN ANY OTHER CIRCUMSTANCE.
 
 # Handling Images
 
@@ -1122,7 +1086,6 @@ export enum GPTProcessorLogType {
     SentMessage = "Message",
     Error = "Error",
     Warning = "Warning",
-    FollowUp = "FollowUp",
     Delete = "Delete",
 }
 
@@ -1139,29 +1102,6 @@ export class GPTProcessor {
         if (t === GPTProcessorLogType.SentMessage) {
             this.currentContent = content;
             return await action.edit(this.sentMessage, { content: content });
-        } else if (t === GPTProcessorLogType.FollowUp) {
-            if (this.repliedMessage instanceof Message) {
-                const channel = this.repliedMessage.channel;
-                if (channel && 'send' in channel) {
-                    return await action.send(channel, content);
-                } else {
-                    this.currentContent = this.currentContent + `\n${content}`;
-                    return await action.edit(this.sentMessage, { content: this.currentContent + `\n${content}` });
-                }
-            }
-            if ((this.repliedMessage as FormattedCommandInteraction)) {
-                const forced_ephemeral = this.isEphemeral || (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
-                if (forced_ephemeral) {
-                    return await this.repliedMessage?.followUp({ content: content, flags: MessageFlags.Ephemeral}); // i dont feel like makin a whole method for this rn ngl
-                } else {
-                    const channel = this.repliedMessage?.channel;
-                    if (channel && 'send' in channel) {
-                        return await action.send(channel, content);
-                    } else {
-                        return await this.repliedMessage?.followUp({ content: content });
-                    }
-                }
-            }
         } else if (t === GPTProcessorLogType.Delete) {
             const forced_ephemeral = this.isEphemeral || (((this.repliedMessage as FormattedCommandInteraction).memberPermissions?.has(PermissionFlagsBits.UseExternalApps)) && (this.repliedMessage?.client.guilds.cache.find((g) => g.id === this.repliedMessage?.guildId) !== undefined) && this.repliedMessage?.guildId !== undefined) ? true : false
             if (forced_ephemeral) {
@@ -1177,9 +1117,6 @@ export class GPTProcessor {
         }
     }
 }
-
-const typingSpeedWPM = 500; // words per minute
-const messageSplitCharacters = "$SPLIT_MESSAGE$"
 
 export async function respond(userMessage: Message | GPTFormattedCommandInteraction, processor: GPTProcessor) {
     const conversation = await getConversation(userMessage);
@@ -1197,72 +1134,13 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
     if (hasFatallyErrored) {
         return;
     }
-    const splitPatterns = [
-        { regex: /(?<!\$NOSPLIT\$)\n\n/g, replacement: "$SPLIT_MESSAGE$" },
-        { regex: /(?<!\$NOSPLIT\$)! /g, replacement: "! $SPLIT_MESSAGE$" },
-        { regex: /(?<!\$NOSPLIT\$)\? /g, replacement: "? $SPLIT_MESSAGE$" },
-    ];
-
-    let additionallySplitFullMessageContent = response || "";
-
-    const periodSplitRegex = /(?<!\$NOSPLIT\$)(?<!\b(?:[A-Za-z]\.|[A-Za-z]{2,}\.|[0-9]\.|\.{2,}))\. /g;
-
-    const codeBlockRegex = /```[\s\S]*?```|`[^`\n]+`/g; // Matches both multiline and single-line codeblocks
-    const codeBlocks: string[] = [];
-    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(codeBlockRegex, (match) => {
-        codeBlocks.push(match);
-        return `$CODEBLOCK_PLACEHOLDER_${codeBlocks.length - 1}$`;
-    });
-
-    // Detect and escape lists
-    const listRegex = /(^|\n)(\d+)(\.|\*|-|\+)\s+/g;
-    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(listRegex, (match, p1, p2, p3) => {
-        return `${p1}${p2}$NOSPLIT$${p3} `;
-    });
-
-    for (const { regex, replacement } of splitPatterns) {
-        additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll(regex, replacement);
-    }
-
-    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(periodSplitRegex, ". $SPLIT_MESSAGE$");
-
-    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(/\$CODEBLOCK_PLACEHOLDER_(\d+)\$/g, (_, index) => codeBlocks[parseInt(index, 10)]);
-
-    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll("$NOSPLIT$", "").replaceAll("$splitting_message$", "$SPLIT_MESSAGE$"); // for some reason he likes to use this
-    let messages = additionallySplitFullMessageContent?.split(messageSplitCharacters) || [additionallySplitFullMessageContent || ""];
-    if (messages.length > 10) {
-        const remainingMessages = messages.slice(10).join('\n');
-        messages = [...messages.slice(0, 10), remainingMessages];
-    }
-    log.info(`generated GPT response with ${messages.length} messages for conversation ${conversation.id}`);
-    messages = messages.filter((message) => (message !== "") && (message !== undefined))
-    if (messages.length === 0) {
-        await processor.log({ t: GPTProcessorLogType.Delete, content: "" });
-        return response;
-    }
-    const outgoingContent = await sanitizeOutgoingMessageContent(messages[0]); // this should never be undefined
+    const outgoingContent = await sanitizeOutgoingMessageContent(response || "no content returned"); // this should never be undefined
     const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: outgoingContent });
-    if (messages[0] == undefined || messages[0] == "") {
-        log.warn(`error in gpt response: message 0 was undefined or empty`);
+    if (!response || response.length === 0) {
+        log.warn(`error in gpt response: response was undefined or empty`);
     }
     if (sentEdit) {
         conversation.addMessage(sentEdit, GPTRole.Assistant);
-    }
-    if (messages.length > 1) {
-        for (let i = 1; i < messages.length; i++) {
-            if (processor.repliedMessage instanceof Message) {
-                if (processor.repliedMessage.channel && processor.repliedMessage.channel instanceof TextChannel) {
-                    await processor.repliedMessage.channel.sendTyping();
-                }
-            }
-            const typingDelay = Math.min((60 / typingSpeedWPM) * 1000 * messages[i].split(' ').length, 1000);
-            await new Promise(resolve => setTimeout(resolve, typingDelay));
-            const outgoingContent = await sanitizeOutgoingMessageContent(messages[i])
-            const sentMessage = await processor.log({ t: GPTProcessorLogType.FollowUp, content: outgoingContent });
-            if (sentMessage) {
-                conversation.addMessage(sentMessage, GPTRole.Assistant);
-            }
-        }
     }
     await incrementGPTResponses();
     conversation.removeAllListeners();
