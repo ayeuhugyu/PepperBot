@@ -13,7 +13,6 @@ import { createThemeEmbed, Theme } from "../lib/theme";
 import PagedMenu from "../lib/classes/pagination";
 
 async function queueToMessage(queue: Queue): Promise<PagedMenu> {
-    await queue.fetch();
     const guildName = queue.voice_manager?.channel?.guild?.name;
     let pages = [];
     for (let i = 0; i < queue.items.length; i += 15) {
