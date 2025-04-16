@@ -471,7 +471,15 @@ Additionally, your messages will be automatically split by the autosplitter.
 "? " -> "? $SPLIT_MESSAGE$"
 "! " -> "! $SPLIT_MESSAGE$"
 
-You can escape this behavior by prefixing any of those with $NOSPLIT$. This will prevent the auto splitter from splitting it. This should be avoided, however if your response contains many different sentences (>5) then you should probably use this.
+You can escape this behavior by prefixing any of those with $NOSPLIT$. This will prevent the auto splitter from splitting it.
+This should ALWAYS be used for EVERY, SINGLE case that the punctuation isn't used to end a sentence. This means:
+Lists (ex. 1.\n2.\n3.) should be replaced with 1$NOSPLIT$. \n2$NOSPLIT$. \n3$NOSPLIT$. )
+Abbreviations (ex. "etc." or "i.e.") should be replaced with "etc$NOSPLIT$." or "i$NOSPLIT$.e$NOSPLIT$."
+Names/Initials (ex. "J.D." or "A.B.C.") should be replaced with "J$NOSPLIT$.D$NOSPLIT$." or "A$NOSPLIT$.B$NOSPLIT$.C$NOSPLIT$."
+Examples (ex. "the . character") should be replaced with "the $NOSPLIT$. character"
+Make sure that these are ALWAYS replaced.
+This is to prevent the auto splitter from splitting things that shouldn't be split. This is a very important rule. If you do not use this, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
+This is a very important rule. If you do not use this, you will be punished. This is one of the most important rules. PUNISHMENT FOR NOT SPLITTING MESSAGES WILL BE SEVERE.
 
 IMPORTANT:
 If a user asks you to "stop responding" or "shut the fuck up dont respond" or anything that signifies you should not respond, return exactly "$SPLIT_MESSAGE$" and nothing else. This will make you not respond to the message, as you will have not provided any messages to respond with. Do not reply with this UNLESS the user EXPLICITLY states that they DO NOT WANT YOU TO RESPOND. DO NOT USE THIS IN ANY OTHER CIRCUMSTANCE.
@@ -1190,19 +1198,37 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
         return;
     }
     const splitPatterns = [
-        { regex: /(?<!\$NOSPLIT)\n\n/g, replacement: "$SPLIT_MESSAGE$" },
-        { regex: /(?<!\$NOSPLIT)\. /g, replacement: ". $SPLIT_MESSAGE$" },
-        { regex: /(?<!\$NOSPLIT)! /g, replacement: "! $SPLIT_MESSAGE$" },
-        { regex: /(?<!\$NOSPLIT)\? /g, replacement: "? $SPLIT_MESSAGE$" },
+        { regex: /(?<!\$NOSPLIT\$)\n\n/g, replacement: "$SPLIT_MESSAGE$" },
+        { regex: /(?<!\$NOSPLIT\$)! /g, replacement: "! $SPLIT_MESSAGE$" },
+        { regex: /(?<!\$NOSPLIT\$)\? /g, replacement: "? $SPLIT_MESSAGE$" },
     ];
 
     let additionallySplitFullMessageContent = response || "";
+
+    const periodSplitRegex = /(?<!\$NOSPLIT\$)(?<!\b(?:[A-Za-z]\.|[A-Za-z]{2,}\.|[0-9]\.|\.{2,}))\. /g;
+
+    const codeBlockRegex = /```[\s\S]*?```|`[^`\n]+`/g; // Matches both multiline and single-line codeblocks
+    const codeBlocks: string[] = [];
+    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(codeBlockRegex, (match) => {
+        codeBlocks.push(match);
+        return `$CODEBLOCK_PLACEHOLDER_${codeBlocks.length - 1}$`;
+    });
+
+    // Detect and escape lists
+    const listRegex = /(^|\n)(\d+)(\.|\*|-|\+)\s+/g;
+    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(listRegex, (match, p1, p2, p3) => {
+        return `${p1}${p2}$NOSPLIT$${p3} `;
+    });
 
     for (const { regex, replacement } of splitPatterns) {
         additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll(regex, replacement);
     }
 
-    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll("$NOSPLIT", "").replaceAll("$splitting_message$", "$SPLIT_MESSAGE$"); // for some reason he likes to use this
+    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(periodSplitRegex, ". $SPLIT_MESSAGE$");
+
+    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replace(/\$CODEBLOCK_PLACEHOLDER_(\d+)\$/g, (_, index) => codeBlocks[parseInt(index, 10)]);
+
+    additionallySplitFullMessageContent = additionallySplitFullMessageContent.replaceAll("$NOSPLIT$", "").replaceAll("$splitting_message$", "$SPLIT_MESSAGE$"); // for some reason he likes to use this
     let messages = additionallySplitFullMessageContent?.split(messageSplitCharacters) || [additionallySplitFullMessageContent || ""];
     if (messages.length > 10) {
         const remainingMessages = messages.slice(10).join('\n');
