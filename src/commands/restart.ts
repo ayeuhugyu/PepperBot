@@ -20,7 +20,7 @@ const command = new Command(
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, args }) {
         await action.reply(invoker, "restarting bot...");
-        process.send!("restart");
+        process.exit(0);
     }
 );
 
