@@ -18,6 +18,8 @@ dunno the name but something that just redirects to the discord bot invite link
 stuff to finish:
 update manager - add all past updates
 update display changed to image instead of embed
+fix the weird tools response thing not being after shit yk weird ass error
+allow diabolical reactions to use server emojis 
 gpt tools:
 - get_user
 - list_channels
@@ -84,6 +86,8 @@ the biggest new base feature
 - gpt conversations are now MUCH more customizable via the use of p/conversation setparam
 - gpt responses now use openai's seeding feature so they can be reproduced
 - AI can now see stickers
+- default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
+- GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. run `p/gpt model list` to see all the new data i store about them and the new ones i've given access to.
 
 **actual content:**
 
