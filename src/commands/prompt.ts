@@ -679,7 +679,7 @@ const setparam = new Command(
         if (parseInt(value) == defaultValue) {
             delete prompt.api_parameters[parameter as APIParameterKeys];
         } else {
-            prompt.api_parameters[parameter as APIParameterKeys] = parseInt(value);
+            prompt.api_parameters[parameter as APIParameterKeys] = parseFloat(value);
         }
 
         await action.reply(invoker, { content: `set \`${parameter}\` to \`${value}\``, ephemeral: guild_config.other.use_ephemeral_replies });

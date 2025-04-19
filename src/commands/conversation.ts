@@ -267,7 +267,7 @@ const setparam = new Command(
         }
         const conversation = await getConversation(invoker as Message);
         type APIParameterKeys = Exclude<keyof APIParameters, "model">;
-        conversation.api_parameters[parameter as APIParameterKeys] = parseInt(value);
+        conversation.api_parameters[parameter as APIParameterKeys] = parseFloat(value);
 
         await action.reply(invoker, { content: `set \`${parameter}\` to \`${value}\``, ephemeral: guild_config.other.use_ephemeral_replies });
         return;
