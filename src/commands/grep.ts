@@ -66,7 +66,7 @@ const command = new Command(
                             message: "no text found",
                         });
                     }
-                    found.unshift(`content: \`\`\`\n`)
+                    found.unshift(`found text: \`\`\`\n`)
                     if (captureGroups.length > 0) {
                         found.unshift(`captured: \`\`\`\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
                     }
