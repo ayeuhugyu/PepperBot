@@ -20,6 +20,7 @@ update manager - add all past updates
 update display changed to image instead of embed
 fix the weird tools response thing not being after shit yk weird ass error
 allow diabolical reactions to use server emojis 
+p/grep regex flags support (ex. /.?/g)
 gpt tools:
 - get_user
 - list_channels
