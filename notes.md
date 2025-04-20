@@ -54,7 +54,7 @@ the biggest new base feature
 - commands can now be piped by adding " | p/command" to the end of it. for example: "p/test | p/test | p/test"
 - new command p/grep which functions nearly identically to grep on linux, added exclusively for the purpose of piping to it
   there's too many commands that are pipable to eachother to really list, so just find out yourself by looking at the guide page.
-
+- also new p/tail and p/head which function again the same as head and tail on linux.
 **gpt stuff:**
 
 - tool calls have been improved, instead of using my own system i am yet again using another openai feature. i've found one that allows for tools but without the usage of the stupid assistants api, resulting in only a little bit slower response times, compared to the much slower times the last time i tried this. this has several benefits:

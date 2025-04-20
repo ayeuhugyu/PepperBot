@@ -57,6 +57,12 @@ const command = new Command(
                 message: `the log file \`${log_file}\` does not exist`,
             });
         }
+
+        if (will_be_piped) {
+            action.reply(invoker, { content: "piped log file contents", ephemeral: true });
+            return new CommandResponse({ pipe_data: { input_text: fs.readFileSync(log_file, "utf8") } });
+        }
+
         const sent = await action.reply(invoker, { content: `uploading...` });
         if (!sent) return;
         action.edit(sent, { content: `${log}${log.endsWith(".log") ? "" : ".log"}:`, files: [log_file] });
