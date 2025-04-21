@@ -116,6 +116,7 @@ the biggest new base feature
   - all options are displayed in one embed
   - uses the new tutorial values
 - p/gpt has been renamed to p/conversation
+- brought back p/sendlog because of the new piping related commands
 
 **technical details:**
 
