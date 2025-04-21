@@ -710,7 +710,7 @@ const set = new Command({
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ invoker, guild_config, args, piped_data, invoker_type }) {
-        let content = args.content || piped_data?.data?.input_text
+        let content = piped_data?.data?.input_text || args.content
         if (!content) {
             if (invoker_type === InvokerType.Message) {
                 if ((invoker as CommandInvoker<InvokerType.Message>).attachments.size > 0) {
