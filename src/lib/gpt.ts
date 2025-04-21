@@ -1037,7 +1037,7 @@ export class Conversation {
             }
         }
         if (message instanceof Message && message.reference && message.reference.messageId) {
-            message.channel.messages.fetch(message.reference.messageId).then((msg) => {
+            Promise.resolve(message.channel.messages.fetch(message.reference.messageId)).then((msg) => {
                 if (msg) {
                     let role = GPTRole.User;
                     if (msg.author.id === msg.client.user?.id) role = GPTRole.Assistant
