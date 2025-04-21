@@ -24,9 +24,10 @@ function processFile(filePath: string) {
             } else {
                 newContent += "\n";
             }
-            newContent += `import { Message } from "discord.js-selfbot-v13";` + after.replace("\n", "");  
-            fs.writeFileSync(filePath, newContent, "utf8");
-        }
+            if (path.basename(filePath) === "gpt.ts") {
+                newContent = newContent.replaceAll("PepperBot", "BellPepperBot");
+            }
+            fs.writeFileSync(filePath, newContent, "utf8");  }
     }
 }
 function traverseDir(dir: string) {
