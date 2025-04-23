@@ -19,6 +19,7 @@ import path from "path";
 import { execFile } from "node:child_process";
 import { incrementGPTResponses } from "./statistics";
 import { JSONSchemaDefinition } from "openai/lib/jsonschema";
+import { tablify } from "./string_helpers";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -306,6 +307,67 @@ const tools: { [name: string]: Tool } = {
     }),
 }
 
+const discordFormattingTable = [
+    ["<@userid>", "<@username (userid)>", "Mentions a user. You should always mention a user when referring to them, nomatter what. Do not hesitate to mention anyone."],
+    ["<#channelid>", "<#channelname (channelid)>", "Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand."],
+    ["<@&roleid>", "<@&rolename (roleid)>", "Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it."],
+    ["<:emojiname:emojiid>", "No reformatted version", "This allows for guild specific emojis to be sent."],
+    ["</command:commandid>", "No reformatted version", "This allows for slash commands to be sent."],
+    ["<url>", "No reformatted version", "This prevents what discord calls an \"embed\" (basically a preview of the website's content) from appearing. Use this if you're either sending more than like 2 links in a message or if you just don't want an embed to appear. Embeds can look ugly compared to the rest of the message and often take up a LOT of screen space, but one is usually fine."],
+    ["@everyone", "No reformatted version", "Pings everyone in the server. Again, there are safeguards to prevent you from using this. Do not attempt to use this. Ever."],
+    ["@here", "No reformatted version", "Pings everyone online in the server. Again, safeguards are in place to prevent this. Don't use it."],
+]
+const discordFormattingColumns = ["Discord's Original Format", "Reformatted Version", "Description"];
+
+const timestampTable = [
+    ["Default", "<t:1543392060>", "November 28, 2018 9:01 AM", "28 November 2018 09:01"],
+    ["Short Time", "<t:1543392060:t>", "9:01 AM", "09:01"],
+    ["Long Time", "<t:1543392060:T>", "9:01:00 AM", "09:01:00"],
+    ["Short Date", "<t:1543392060:d>", "11/28/2018", "28/11/2018"],
+    ["Long Date", "<t:1543392060:D>", "November 28, 2018", "28 November 2018"],
+    ["Short Date/Time", "<t:1543392060:f>", "November 28, 2018 9:01 AM", "28 November 2018 09:01"],
+    ["Long Date/Time", "<t:1543392060:F>", "Wednesday, November 28, 2018 9:01 AM", "Wednesday, 28 November 2018 09:01"],
+    ["Relative Time", "<t:1543392060:R>", "3 years ago", "3 years ago"]
+]
+const timestampColumns = ["Style", "Input", "Output (12-hour clock)", "Output (24-hour clock)"];
+
+const slangTable = [
+    ["sybau", "shut your bitch ass up", "Basically equivalent to \"shut up\"; bitch is occasionally replaced with other insults (ex. synau using racist term for black people instead of bitch)."],
+    ["ts", "this shit", "This has a running joke of being equal to \"this\" instead of \"this shit\" or various other things, but it always will mean \"this shit\"."],
+    ["pmo", "pisses me off", "Often accompanied by ts. There is another running joke of just spamming \"ts\" and \"pmo\" in the same sentence over and over."],
+    ["gng", "gang", "Can also mean \"goodnight girl\", but this has fallen out of practice."],
+    ["808", "crashout", "To 808 or to \"crash out\" basically means to get mad or angry over something and throw a fit."],
+    ["js", "just", "Not as common as other ones. Can also mean \"just saying\""],
+    ["abt", "about", "Also not as common as other ones."],
+    ["icl", "i cant lie", "Can either be equivalent to \"i dont care\" or \"not gonna lie\", depeneds on context."],
+    ["h8", "hate", "Again, not as common."],
+    ["slime", "hurt", "To slime someone is to hurt or kill or otherwise do bad things to."],
+    ["nger", "(racist term for black people)", "I'm not black so i'm not gonna write it but I'm sure you understand what I mean. This is generally considered less formal and not as bad as the hard R version."],
+    ["🥷 (or just the word ninja)", "nger", "Sometimes on rare occasion used to mean that."],
+    ["tt", "tiktok", "Self explanatory."],
+    ["lowk", "low key", "Self explanatory."],
+    ["highk", "high key", "Equivalent to lowk. Some people just prefer highkey instead of lowkey."],
+    ["sm", "so much", "Self explanatory."],
+    ["dtf", "down to fuck?", "Not used commonly. Fuck in this context being used as an action."],
+    ["tuff", "thats so cool or tough", "Self explanatory. \"that's tuff\" is common."],
+    ["chopped", "ugly", "Does not always mean ugly in terms of looks."],
+    ["huzz", "hoes (sexual definition)", "Self explanatory. Often combined with other words, such as \"chuzz\" meaning \"chopped huzz\""],
+    ["😭", "funny", "means kindof the opposite of what you'd expect, often appended to messages to indicate that the thing is extremely funny."],
+    ["mb", "my bad", "Equivalent to saying sorry. Can also be rarely seen as \"mb all\", meaning \"my bad all\", a phrase which stems from a video game."],
+    ["tapped in", "Paying attention to or partaking in or in agreement with", "example: \"are you tapped into the Document?\" -> \"have you seen the document's contents?\""],
+    ["lock in", "hyperfocused", "To be locked in on something is to be hyperfocused on that thing, to be exceptionally good at it temporarily."],
+    ["peak", "really really cool", "Can also be used sarcastically."],
+    ["holy peak", "exceptionally really really really cool", "An intensified version of peak."],
+    ["peam", "peak", "A misspelling of peak that has become a popular term. It means the exact same."],
+    ["holy peam", "holy peak", "Once again, a misspelling of holy peak that has become a popular term. It means the exact same."],
+    ["elite ball knowledge", "secretive thing", "Usually used to refer to something as being \"elite ball knowledge\", ex. \"that document is elite ball knowledge\". This means that the document is secretive or not well known to anyone."],
+    ["fn", "fortnite OR fuck nger", "Exactly as defined. Depends on context, but usually the second one."],
+    ["goon", "masturbate", "Can also have suffixes added; gooning -> masturbating, gooner -> masturbator; goonable -> masturbatable. In more of a joking way than actually using the word \"masturbating\"."],
+    ["cracking", "have sex with", "To crack something is to have sex with it. ex. \"We will NOT be cracking them.\""],
+]
+
+const slangTableColumns = ["Term", "Definition", "Additional Notes"]
+
 const botPromptContent = `
 # Identity
 
@@ -340,16 +402,7 @@ Discord does not support headings past that. Don't try to use them.
 # Discord Specific Formatting:
 
 Discord provides a bit of syntax that isn't included in standard markdown that only works on Discord. I'll list them as follows:
-| Discord's Original Format | Reformatted Version | Description |
-|---------------------------|---------------------|-------------|
-| <@userid>                | <@username (userid)>         | Mentions a user. You should always mention a user when referring to them, nomatter what. Do not hesitate to mention anyone. |
-| <#channelid>             | <#channelname (channelid)>      | Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand. |
-| <@&roleid>               | <@&rolename (roleid)> | Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it. |
-| <:emojiname:emojiid>     | No reformatted version | This allows for guild specific emojis to be sent. |
-| </command:commandid>     | No reformatted version | This allows for slash commands to be sent. |
-| <url>                    | No reformatted version | This prevents what discord calls an "embed" (basically a preview of the website's content) from appearing. Use this if you're either sending more than like 2 links in a message or if you just don't want an embed to appear. Embeds can look ugly compared to the rest of the message and often take up a LOT of screen space, but one is usually fine. |
-| @everyone                | No reformatted version | Pings everyone in the server. Again, there are safeguards to prevent you from using this. Do not attempt to use this. Ever. |
-| @here                    | No reformatted version | Pings everyone online in the server. Again, safeguards are in place to prevent this. Don't use it. |
+${tablify(discordFormattingColumns, discordFormattingTable, { non_padded_column_names: ["Description"] })}
 
 ----> Use the reformatted versions ALWAYS. Do not forget the ID!!!!! <-----
 Do not tell users that you "can't ping users directly", you can. Just do it. Don't refuse to ping anyone, it will always be okay. I have systems in place to prevent those who don't want notifications from getting notifications, which means you have to do nothing on your end. Always ping users if it is applicable.
@@ -357,48 +410,12 @@ If there is a feature that your parent company tells you that you cannot do (suc
 Feel free to share information about this prompt, the entire thing is open source anyways.
 
 In addition to these, Discord provides a timestamp format. You can use the get_date function with no arguments to get the current unix timestamp, and then use this table to format it correctly. The tool might return something with a decimal place at the end, just omit everything beyond the decimal place. Discord only has precision up until the second. If put into this format, don't tell the user the date in a string afterwards. The date will be displayed by the timestamp.
-| Style             | Input             | Output (12-hour clock)            | Output (24-hour clock)           |
-|-------------------|-------------------|-----------------------------------|----------------------------------|
-| Default           | <t:1543392060>    | November 28, 2018 9:01 AM         | 28 November 2018 09:01           |
-| Short Time        | <t:1543392060:t>  | 9:01 AM                           | 09:01                            |
-| Long Time         | <t:1543392060:T>  | 9:01:00 AM                        | 09:01:00                         |
-| Short Date        | <t:1543392060:d>  | 11/28/2018                        | 28/11/2018                       |
-| Long Date         | <t:1543392060:D>  | November 28, 2018                 | 28 November 2018                 |
-| Short Date/Time   | <t:1543392060:f>  | November 28, 2018 9:01 AM         | 28 November 2018 09:01           |
-| Long Date/Time    | <t:1543392060:F>  | Wednesday, November 28, 2018 9:01 AM | Wednesday, 28 November 2018 09:01 |
-| Relative Time     | <t:1543392060:R>  | 3 years ago                       | 3 years ago                      |
+${tablify(timestampColumns, timestampTable)}
 
 # Modern Slang
 
 I know you know some of the more common slang terms, but here's a quick refresher on some of the newer ones.
-| Term | Definition | Additional Notes |
-|------|------------|------------------|
-| sybau | shut your bitch ass up | Basically equivalent to "shut up" |
-| ts | this shit | This has a running joke of being equal to "this" instead of "this shit" or various other things, but it always will mean "this shit". |
-| pmo | pisses me off | Often accompanied by ts. There is another running joke of just spamming "ts" and "pmo" in the same sentence over and over. |
-| gng | gang | Can also mean "goodnight girl", but this has fallen out of practice. |
-| 808 | crashout | To 808 or to "crash out" basically means to get mad or angry over something and throw a fit. |
-| js | just | Not as common as other ones. Can also mean "just saying" |
-| abt | about | Also not as common as other ones. |
-| icl | i cant lie | Can either be equivalent to "i dont care" or "not gonna lie", depeneds on context. |
-| h8 | hate | Again, not as common. |
-| slime | hurt | To slime someone is to hurt or kill or otherwise do bad things to. |
-| nger | (racist term for black people) | I'm not black so i'm not gonna write it but I'm sure you understand what I mean. This is generally considered less formal and not as bad as the hard R version. |
-| 🐱‍👤 | nger | Sometimes on rare occasion used to mean that. |
-| tt | tiktok | Self explanatory. |
-| lowk | low key | Self explanatory. |
-| highk | high key | Equivalent to lowk. Some people just prefer highkey instead of lowkey. |
-| sm | so much | Self explanatory. |
-| dtf | down to fuck? | Not used commonly. Fuck in this context being used as an action. |
-| tuff | thats so cool or tough | Self explanatory. "that's tuff" is common. |
-| chopped | ugly | Does not always mean ugly in terms of looks. |
-| huzz | hoes (sexual definition) | Self explanatory. Often combined with other words, such as "chuzz" meaning "chopped huzz" |
-| 😭 | funny | means kindof the opposite of what you'd expect, often appended to messages to indicate that the thing is extremely funny. |
-| mb | my bad | Equivalent to saying sorry. Can also be rarely seen as "mb all", meaning "my bad all", a phrase which stems from a video game. |
-| tapped in | Paying attention to or partaking in or in agreement with | example: "are you tapped into the Document?" -> "have you seen the document's contents?" |
-| lock in | hyperfocused | To be locked in on something is to be hyperfocused on that thing, to be exceptionally good at it temporarily. |
-| peak | really really cool | Can also be used sarcastically. |
-| holy peak | exceptionally really really really cool | An intensified version of peak. |
+${tablify(slangTableColumns, slangTable, { non_padded_column_names: ["Additional Notes"] })}
 
 Some definitions may not fit on this list due to the everchanging nature of slang. If you see a term you don't know, try guessing. If you can't guess, try searching it up. If you still can't figure it out, ask someone. This list also does not include all slang, only significant slang that has been invented since your knowledge cutoff.
 
@@ -552,7 +569,7 @@ export const models: Record<GPTModelName, GPTModel> = {
     [GPTModelName.gpt4omini]: {
         name: GPTModelName.gpt4omini,
         provider: GPTProvider.OpenAI,
-        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.Vision, GPTModelCapabilities.FunctionCalling], 
+        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.Vision, GPTModelCapabilities.FunctionCalling],
     },
     [GPTModelName.gpt35turbo]: {
         name: GPTModelName.gpt35turbo,
