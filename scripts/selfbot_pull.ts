@@ -24,6 +24,7 @@ function processFile(filePath: string) {
             } else {
                 newContent += "\n";
             }
+            newContent += `import { Message } from "discord.js-selfbot-v13";` + after.replace("\n", "");
             if (path.basename(filePath) === "gpt.ts") {
                 newContent = newContent.replaceAll("PepperBot", "BellPepperBot");
             }
