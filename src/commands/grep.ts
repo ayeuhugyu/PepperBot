@@ -46,12 +46,12 @@ const command = new Command(
                 search = search.replace("-c", "");
                 count = true
             }
-            const regex = /\/(.*?[^\\])\//g;
-            const regexMatches = [...search.matchAll(regex)].map(match => match[1]);
+            const regex = /\/(.*?[^\\])\/([gimsuy]*)/g;
+            const regexMatches = [...search.matchAll(regex)].map(match => ({ pattern: match[1], flags: match[2] }));
             if (regexMatches.length > 0) {
-                const regexSearch = regexMatches[0];
+                const { pattern: regexSearch, flags } = regexMatches[0];
                 try {
-                    const r = new RegExp(regexSearch);
+                    const r = new RegExp(regexSearch, flags);
                     const found = lines.filter((line: string) => line.match(r));
                     const captureGroups = lines.map((line: string) => {
                         const match = line.match(r);
@@ -60,10 +60,10 @@ const command = new Command(
                         }
                     });
                     if (found.length === 0) {
-                        await action.reply(invoker, { content: "no text found", ephemeral: guild_config.other.use_ephemeral_replies });
+                        await action.reply(invoker, { content: `no text found for regex: \`${regexSearch}\` with flags: \`${flags}\``, ephemeral: guild_config.other.use_ephemeral_replies });
                         return new CommandResponse({
                             error: true,
-                            message: "no text found",
+                            message: `no text found for regex: \`${regexSearch}\` with flags: \`${flags}\``,
                         });
                     }
                     found.unshift(`found text: \`\`\`\n`)
@@ -71,6 +71,7 @@ const command = new Command(
                         found.unshift(`captured: \`\`\`\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
                     }
                     found.push("```");
+                    found.unshift(`regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\n`);
                     await action.reply(invoker, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
                     return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
                 } catch (e: any) {
@@ -83,13 +84,14 @@ const command = new Command(
             }
             const found = lines.filter((line: string) => line.includes(search));
             if (found.length === 0) {
-                await action.reply(invoker, { content: "no text found", ephemeral: guild_config.other.use_ephemeral_replies });
+                await action.reply(invoker, { content: `no text found for search: \`${search}\``, ephemeral: guild_config.other.use_ephemeral_replies });
                 return new CommandResponse({
                     error: true,
-                    message: "no text found",
+                    message: `no text found for search: \`${search}\``,
                 });
             }
             found.unshift(`content: \`\`\`\n`)
+            found.unshift(`search: \`${search}\`\n`);
             found.push("```");
             await action.reply(invoker, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
