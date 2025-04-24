@@ -66,8 +66,22 @@ const command = new Command(
                     { name: 'north', value: 'north' }
                 ]
             }),
+            new CommandOption({
+                name: 'border',
+                description: 'color of the border of the chatbubble',
+                long_description: 'color of the border of the chatbubble; accepts hex colors or color names (html color names); defaults to transparent',
+                required: false,
+                type: CommandOptionType.String
+            }),
+            new CommandOption({
+                name: 'background',
+                description: 'color of the background of the chatbubble',
+                long_description: 'color of the background of the chatbubble; accepts hex colors or color names (html color names); defaults to transparent',
+                required: false,
+                type: CommandOptionType.String
+            })
         ],
-        example_usage: ["p/chatbubble x=1/3 y=1/4 https://example.com/image.png", "p/chatbubble x=0.5, y=0.25 <attach your image>", "p/chatbubble left <attach your image>"],
+        example_usage: ["p/chatbubble x=1/3 y=1/4 https://example.com/image.png", "p/chatbubble x=0.5, y=0.25 <attach your image>", "p/chatbubble left <attach your image>", "p/chatbubble border=red background=blue <attach your image>", "p/chatbubble border=#00ff00 <attach your image>"],
         aliases: ["cb", "sb", "speechbubble", "bubble"]
     },
     async function getArguments ({ invoker, command_name_used, guild_config }) {
@@ -95,6 +109,15 @@ const command = new Command(
         const yMatch = text.match(/y=([^\s]+)/);
         if (yMatch) {
             args.y = yMatch[1]
+        }
+
+        const borderMatch = text.match(/(border|line|outline)=([^\s]+)/);
+        if (borderMatch) {
+            args.border = borderMatch[2];
+        }
+        const backgroundMatch = text.match(/(background|fill|bubble)=([^\s]+)/);
+        if (backgroundMatch) {
+            args.background = backgroundMatch[2];
         }
 
         args.image = invoker.attachments.first()?.url;
@@ -148,6 +171,10 @@ const command = new Command(
                 message: "i cant make the air into a chatbubble, gimme an image"
             });
         }
+
+        const borderColor = args.border || "transparent";
+        const backgroundColor = args.background || "transparent";
+
         const imageUrl = args.url || args.image || piped_data?.data?.image_url;
 
         if (!imageUrl) {
@@ -183,39 +210,92 @@ const command = new Command(
         const tailShift = (xPos <= (1/3) || xPos >= (2/3)) ? Math.round(xPos) : xPos;
 
         const overlayFlipped = gravity === "south";
-        const overlaySvg = `
-            <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-                <path d="
-                    M 0, ${overlayFlipped ? height : 0}
-                    Q
-                        ${width / 2},
-                        ${height * (overlayFlipped ? (1 - yPos * tailCurveDepth) : yPos * tailCurveDepth)} ${width},
-                        ${overlayFlipped ? height : 0}
-                " fill="white" stroke="none"/>
-                <polygon points="
-                    ${width * tailShift - tailWidth}, ${overlayFlipped ? height : 0}
-                    ${width * tailShift + tailWidth}, ${overlayFlipped ? height : 0}
-                    ${width * xPos}, ${height * (overlayFlipped ? (1 - yPos) : (yPos))}
-                " fill="white" stroke="none"/>
-            </svg>
-        `;
+        function createSvg(width: number, height: number, xPos: number, yPos: number, tailShift: number, tailWidth: number, overlayFlipped: boolean, color: string, isBorder: boolean): string {
+            const pathAttributes = isBorder ? `fill="none" stroke="${color}" stroke-width="5"` : `fill="${color}"`;
+            const polygonAttributes = isBorder ? `fill="none" stroke="${color}" stroke-width="5"` : `fill="${color}"`;
 
-        const overlayBuffer = await sharp(Buffer.from(overlaySvg))
+            const path = `
+            <path d="
+            M 0, ${overlayFlipped ? height : 0}
+            Q
+            ${width / 2},
+            ${height * (overlayFlipped ? (1 - yPos * tailCurveDepth) : yPos * tailCurveDepth)} ${width},
+            ${overlayFlipped ? height : 0}
+            " ${pathAttributes}/>`;
+
+            const polygon = `
+            <polygon points="
+            ${width * tailShift - tailWidth}, ${overlayFlipped ? height : 0}
+            ${width * tailShift + tailWidth}, ${overlayFlipped ? height : 0}
+            ${width * xPos}, ${height * (overlayFlipped ? (1 - yPos) : (yPos))}
+            " ${polygonAttributes}/>`;
+
+            return `
+            <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            ${isBorder ? path : `${path}${polygon}`}
+            </svg>
+            `;
+        }
+
+        let overlayBuffer: Buffer | undefined;
+        let borderBuffer: Buffer | undefined;
+        let backgroundCutSvg: Buffer | undefined;
+
+        if (backgroundColor !== "transparent") {
+            const overlaySvg = createSvg(width, height, xPos, yPos, tailShift, tailWidth, overlayFlipped, backgroundColor, false);
+            overlayBuffer = await sharp(Buffer.from(overlaySvg))
             .png()
             .toBuffer();
+        }
 
-        const outputBuffer = await inputImage
-            .composite([{
-                input: overlayBuffer,
+        if (borderColor !== "transparent") {
+            const borderSvg = createSvg(width, height, xPos, yPos, tailShift, tailWidth, overlayFlipped, borderColor, true);
+            borderBuffer = await sharp(Buffer.from(borderSvg))
+            .png()
+            .toBuffer();
+        }
+
+        if (backgroundColor === "transparent") {
+            const overlaySvg = createSvg(width, height, xPos, yPos, tailShift, tailWidth, overlayFlipped, "white", false);
+            backgroundCutSvg = await sharp(Buffer.from(overlaySvg))
+            .png()
+            .toBuffer();
+        }
+        const composites: sharp.OverlayOptions[] = [];
+        if (backgroundCutSvg) {
+            composites.push({
+                input: backgroundCutSvg,
                 blend: "dest-out",
                 gravity: "center",
                 tile: true,
-            }])
+            });
+        }
+
+        if (overlayBuffer) {
+            composites.push({
+                input: overlayBuffer,
+                blend: "over",
+                gravity: "center",
+                tile: true,
+            });
+        }
+        if (borderBuffer) {
+            composites.push({
+                input: borderBuffer,
+                blend: "over",
+                gravity: "center",
+                tile: true,
+            });
+        }
+
+        console.log(composites);
+        const outputBuffer = await inputImage
+            .composite(composites)
             .toFormat("gif")
             .toBuffer();
 
         action.reply(invoker, {
-            content: `here's your chat bubble\n x=\`${args.x || xPos}\`, y=\`${args.y || yPos}\`, gravity=\`${gravity}\``,
+            content: `here's your chat bubble\n x=\`${args.x || xPos}\`, y=\`${args.y || yPos}\`, gravity=\`${gravity}\`, border=\`${borderColor}\`, background=\`${backgroundColor}\``,
             files: [new AttachmentBuilder(outputBuffer, { name: "bubble.gif" })]
         })
     }
