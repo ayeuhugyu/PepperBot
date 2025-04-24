@@ -7,6 +7,7 @@ import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
 import { fixFileName } from "../lib/attachment_manager";
 import * as voice from "../lib/voice";
 import { CommandTag, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
+import { tablify } from "../lib/string_helpers";
 
 const list = new Command({
         name: 'list',
@@ -29,11 +30,18 @@ const list = new Command({
                 reply += `\n${sound.name}`;
             });
         } else {
-            const columnWidth = Math.max(...sounds.map(sound => sound.name.length)) + 4;
-            sounds.forEach((sound, index) => {
-                if (index % 3 === 0 && index !== 0) reply += "\n";
-                reply += sound.name.padEnd(columnWidth);
+            const rows: string[][] = [];
+            const columnCount = 3;
+            for (let i = 0; i < sounds.length; i += columnCount) {
+                rows.push(sounds.slice(i, i + columnCount).map(sound => sound.name));
+            }
+
+            const columns = ["1", "2", "3"];
+            const text = tablify(columns, rows, {
+                no_header: true,
+                column_separator: "  "
             });
+            reply += `\n${text}`;
         }
         reply += "```";
         action.reply(invoker, {

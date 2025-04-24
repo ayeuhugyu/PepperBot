@@ -5,6 +5,7 @@ import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, P
 import { userPrompts, generatePrompt, GPTModelName, APIParameters, models } from "../lib/gpt";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
+import { tablify } from "../lib/string_helpers";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -333,12 +334,30 @@ const list = new Command({
                 reply += `\n${prompt.name}`;
             });
         } else {
-            const columnWidth = Math.max(...prompts.map(prompt => prompt.name.length)) + 4;
-            prompts.forEach((prompt, index) => {
-                if (index % 3 === 0 && index !== 0) reply += "\n";
+            const rows: string[][] = [];
+            const columnCount = 3;
+            let currentRow: string[] = [];
+
+            prompts.forEach((prompt) => {
                 if (notUser && !prompt.published) return;
-                reply += prompt.name.padEnd(columnWidth);
+                currentRow.push(prompt.name);
+                if (currentRow.length === columnCount) {
+                    rows.push(currentRow);
+                    currentRow = [];
+                }
             });
+
+            if (currentRow.length > 0) {
+                rows.push(currentRow);
+            }
+
+            const table = rows;
+            const columns = ["1", "2", "3"];
+            const text = tablify(columns, table, {
+                no_header: true,
+                column_separator: "  "
+            })
+            reply += text;
         }
         reply += "```";
         action.reply(invoker, { content: reply, ephemeral: guild_config.other.use_ephemeral_replies });
