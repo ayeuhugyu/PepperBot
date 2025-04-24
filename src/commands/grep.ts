@@ -72,7 +72,7 @@ const command = new Command(
                     }
                     found.push("```");
                     found.unshift(`regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\n`);
-                    await action.reply(invoker, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
+                    await action.reply(invoker, { content: count ? `regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\ncount: ${found.length}` : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
                     return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
                 } catch (e: any) {
                     await action.reply(invoker, { content: `invalid regex (${regexSearch}): ${e.message}`, ephemeral: guild_config.other.use_ephemeral_replies });
@@ -93,7 +93,7 @@ const command = new Command(
             found.unshift(`content: \`\`\`\n`)
             found.unshift(`search: \`${search}\`\n`);
             found.push("```");
-            await action.reply(invoker, { content: count ? found.length : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
+            await action.reply(invoker, { content: count ? `search: \`${search}\`\ncount: ${found.length}` : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
         } else {
             await action.reply(invoker, { content: "no grep text found", ephemeral: guild_config.other.use_ephemeral_replies });
