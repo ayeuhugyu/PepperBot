@@ -202,7 +202,7 @@ const tools: { [name: string]: Tool } = {
             if (markdown.length > 100000) {
                 return markdown.slice(0, 100000) + " ... (truncated due to length)";
             }
-            return markdown
+            return markdown || "No text content returned."
         } catch (err: any) {
 
             log.warn(`an error occurred while attempting to fetch URL for GPT: ${err.message}`);
@@ -877,7 +877,7 @@ export class Conversation {
                         }
                         if (message.content) {
                             if (typeof message.content === "string") {
-                                apiMessage.content = message.content;
+                                apiMessage.content = message.content || "undefined"; // this avoids a dumbass openai error thing that throws when content.length == 0
                             } else {
                                 message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
                                     const apiContent: any = {
