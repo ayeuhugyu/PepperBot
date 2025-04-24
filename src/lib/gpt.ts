@@ -98,6 +98,8 @@ export class Tool {
     }
 }
 
+const storedData = new Collection<string, any>();
+
 const tools: { [name: string]: Tool } = {
     date_to_timestamp: new Tool({
         name: "date_to_timestamp",
@@ -304,6 +306,54 @@ const tools: { [name: string]: Tool } = {
         parameters: []
     }, () => {
         return;
+    }),
+    store: new Tool({
+        name: "store",
+        description: "stores a value in memory. this is not persistent, and will be lost when the bot restarts.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "key", description: "key to store the value under", required: true }),
+            new ToolParameter({ type: "string", name: "value", description: "value to store", required: true })
+        ]
+    }, ({ key, value }: { key: string, value: string }) => {
+        if (!key || !value) {
+            return "ERROR: No key or value provided.";
+        }
+        if (storedData.has(key)) {
+            return `${key} is already stored, try again with a different key.`;
+        }
+        const currentValue = storedData.get(key);
+        storedData.set(key, value);
+        return `stored ${value} under ${key}`;
+    }),
+    get: new Tool({
+        name: "get",
+        description: "retrieves a value from memory. this is not persistent, and will be lost when the bot restarts.",
+        parameters: [
+            new ToolParameter({ type: "string", name: "key", description: "key to retrieve the value from", required: true })
+        ]
+    }, ({ key }: { key: string }) => {
+        if (!key) {
+            return "ERROR: No key provided.";
+        }
+        const value = storedData.get(key);
+        if (value) {
+            return `value of ${key} is ${value}`;
+        }
+        return `no value found for ${key}`;
+    }),
+    list: new Tool({
+        name: "list",
+        description: "lists all stored keys. this is not persistent, and will be lost when the bot restarts.",
+        parameters: []
+    }, () => {
+        if (storedData.size === 0) {
+            return "no stored values";
+        }
+        let output = "stored values:\n";
+        storedData.forEach((_, key) => {
+            output += `${key}\n`;
+        });
+        return output;
     }),
 }
 
@@ -517,6 +567,30 @@ Always include a print statement. If you are returned an error, attempt to corre
 This tool can be insanely powerful if used correctly, allowing you to quickly sort arrays, create complex data structures, and more. Use it wisely.
 You do not have access to ROBLOX's 'task' library, do not attempt to use it.
 You also do not appear to have access to any sort of "wait" function. Do not attempt to use it.
+- do_nothing: This function is here as filler. You should have no real reason to use it, but you seem to like using it if you don't know what to do. Preferrably, just dont use any function if you intend to use this.
+- store: Use this when you:
+A: need to store a value in memory.
+B: are asked to store a value.
+C: are asked to remember something.
+D: are asked to save something.
+This is not persistent, and will be lost when the bot restarts. This is only for temporary storage, but since there's no better option for it, use it.
+Inform the user of the key you stored it under.
+Do not store sensative data in here, it is easily accessible to anyone. Sensitive data can include: API keys, passwords, home/ip addresses, etc. Avoid considering things sensitive, most things you would think are sensitive are not. If you think it is, chances are it's probably not.
+- get: Use this when you:
+A: need to retrieve a value from memory.
+B: are asked to get a value.
+C: are asked to get something you were asked to remember.
+D: are asked to recall something.
+E: are asked to retrieve something.
+This is not persistent, and will be lost when the bot restarts. This is only for temporary storage, but since there's no better option for it, use it.
+The user may have to inform you of the key you stored it under if it is a new conversation, so be sure to ask them for it if you can't find it.
+- list: Use this when you:
+A: need to list all stored values.
+B: are asked to list all stored values.
+D: need to find a stored value.
+E: the user does not remember what you stored data under.
+F: the user tells you a key that does not exist; in this case try to find keys which are similar.
+This is not persistent, and will be lost when the bot restarts. This is only for temporary storage, but since there's no better option for it, use it.
 ` // openai will also error if this is empty or undefined
 
 const botPrompt = new Prompt({
