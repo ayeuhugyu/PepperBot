@@ -20,14 +20,14 @@ export function tablify(input_columns: string[], rows: string[][], input_options
         if (!options.no_header) {
             columnData.unshift(column);
         }
-        const maxLength = Math.max(...columnData.map(item => item.length));
+        const maxLength = Math.max(...columnData.map(item => (item || "").length));
         const dontPad = options.non_padded_column_names.includes(column) || columnData.every(item => item.length === maxLength);
         if (!options.no_header) {
             const header_seperator = options.header_seperator.repeat(dontPad ? column.length : maxLength);
             columnData.splice(1, 0, header_seperator);
         }
         if (!dontPad) {
-            columnData = columnData.map(item => item.padEnd(maxLength, options.padding_character));
+            columnData = columnData.map(item => (item || "")?.padEnd(maxLength, options.padding_character));
         }
         columns.push(columnData);
     });
