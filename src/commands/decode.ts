@@ -51,19 +51,17 @@ const algorithms: Record<string, (text: string) => string> = {
         .map(char => String.fromCharCode(char.charCodeAt(0) + 1))
         .join(''),
     "rle": (text: string): string => {
-        const result: string[] = [];
-        let i = 0;
-        while (i < text.length) {
-            const char = text[i];
-            let count = '';
-            i++;
-            while (i < text.length && !isNaN(Number(text[i]))) {
-                count += text[i];
-                i++;
-            }
-            result.push(char.repeat(Number(count)));
+        const result: { char: string; count: number }[] = [];
+        const regex = /\(([\w\s])\)(\d+)/g;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            const [_, char, countStr] = match;
+            const count = parseInt(countStr, 10);
+            result.push({ char, count });
         }
-        return result.join('');
+
+        const decoded = result.map(({ char, count }) => char.repeat(count)).join('');
+        return decoded;
     },
 };
 
@@ -110,7 +108,7 @@ const command = new Command(
             return new CommandResponse({ error: true, message: `unknown algorithm: ${algorithmName}` });
         }
 
-        if (!input) {
+        if (!input && (algorithmName !== "list")) {
             action.reply(invoker, { content: `no input provided`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ error: true, message: `no input provided` });
         }

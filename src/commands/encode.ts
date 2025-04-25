@@ -50,7 +50,7 @@ const algorithms: Record<string, (text: string) => string> = {
             if (text[i] === text[i + 1]) {
                 count++;
             } else {
-                result.push(text[i] + count);
+                result.push(`(${text[i]})${count}`);
                 count = 1;
             }
         }
@@ -101,7 +101,7 @@ const command = new Command(
             return new CommandResponse({ error: true, message: `unknown algorithm: ${algorithmName}` });
         }
 
-        if (!input) {
+        if (!input && (algorithmName !== "list")) {
             action.reply(invoker, { content: `no input provided`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ error: true, message: `no input provided` });
         }
