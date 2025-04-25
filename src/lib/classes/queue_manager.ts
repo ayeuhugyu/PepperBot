@@ -5,12 +5,11 @@ import { GuildVoiceManager } from "../voice";
 import fs from "fs";
 import path from "path";
 import { fixFileName } from "../attachment_manager";
-import { execFile } from "child_process";
+import { execFile } from "child_process"; // TODO: use spawn instead of execFile
 import EventEmitter from "events";
 import * as voice from "../voice";
 import { CustomSound, getSoundNoAutocorrect } from "../custom_sound_manager";
 import { AudioPlayer, AudioPlayerState, AudioPlayerStatus, AudioResource } from "@discordjs/voice";
-import { re } from "mathjs";
 import { CommandInvoker } from "./command";
 import { GuildConfig } from "../guild_config_manager";
 
