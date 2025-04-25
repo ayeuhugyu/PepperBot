@@ -38,7 +38,7 @@ async function gptHandler(message: Message) {
 }
 
 async function commandHandler(message: Message<true>) {
-    if (message.author.bot) return;
+    if (message.author.bot || message.author.id === message.client.user?.id) return;
     const config = await fetchGuildConfig(message.guild?.id);
 
     const prefix = config.other.prefix;
