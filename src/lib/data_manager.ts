@@ -131,7 +131,6 @@ export function verifyData() {
         responses.push({ error: true, message: "lune not found; some features may not work, expect errors. have you added it to your PATH?", unrecoverable: false });
     }
 
-    // TODO: verify .env file
     return responses;
 }
 

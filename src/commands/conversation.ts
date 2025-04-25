@@ -335,7 +335,7 @@ const command = new Command(
         },
         aliases: ["conv", "gpt"],
         options: [],
-        pipable_to: [] // todo: fix this so it just works on subcommands
+        pipable_to: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ invoker, args, guild_config }) {

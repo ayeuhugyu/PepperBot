@@ -170,7 +170,7 @@ const command = new Command( // todo change descriptions
         },
         options: [],
         example_usage: "p/git",
-        pipable_to: ['grep'] // todo: allow for subcommands to be piped without parents
+        pipable_to: [],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ invoker, guild_config, args }) {
