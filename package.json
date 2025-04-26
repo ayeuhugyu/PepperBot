@@ -38,6 +38,7 @@
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
         "express-handlebars": "^8.0.1",
+        "ffmpeggy": "^3.0.5",
         "fs-extra": "^11.3.0",
         "googleapis": "^146.0.0",
         "knex": "^3.1.0",

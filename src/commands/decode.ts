@@ -39,8 +39,8 @@ const algorithms: Record<string, (text: string) => string> = {
             "-.--.": "(", "-.--.-": ")"
         };
         return text.split(' ')
-            .map(code => Object.keys(morseCode).find(key => morseCode[key] === code) || code)
-            .join(' ');
+            .map(code => morseCode[code] || code)
+            .join('');
     },
     "binary": (text: string): string => text.split(' ')
         .map(binary => String.fromCharCode(parseInt(binary, 2)))
@@ -48,7 +48,7 @@ const algorithms: Record<string, (text: string) => string> = {
     "base64": (text: string): string => Buffer.from(text, 'base64').toString('utf-8'),
     "hex": (text: string): string => Buffer.from(text, 'hex').toString('utf-8'),
     "bitshift": (text: string): string => Array.from(text)
-        .map(char => String.fromCharCode(char.charCodeAt(0) + 1))
+        .map(char => String.fromCharCode(char.charCodeAt(0) - 1))
         .join(''),
     "rle": (text: string): string => {
         const result: { char: string; count: number }[] = [];
@@ -116,7 +116,7 @@ const command = new Command(
         const decoded = algorithm(input);
         const response = (algorithmName === "list") ? decoded : `decoded string with ${algorithmName}: \n\`\`\`\n${decoded}\n\`\`\``;
         action.reply(invoker, { content: response, ephemeral: guild_config.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { data: { input_text: response } } });
+        return new CommandResponse({ pipe_data: { input_text: decoded } });
     }
 );
 

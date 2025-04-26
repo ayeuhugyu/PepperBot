@@ -109,7 +109,7 @@ const command = new Command(
         const encoded = algorithm(input);
         const response = (algorithmName === "list") ? encoded : `encoded string with \`${algorithmName}\`: \n\`\`\`\n${encoded}\n\`\`\``;
         action.reply(invoker, { content: response, ephemeral: guild_config.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { data: { input_text: response } } });
+        return new CommandResponse({ pipe_data: { input_text: encoded } });
     }
 );
 

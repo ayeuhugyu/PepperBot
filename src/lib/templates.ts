@@ -7,7 +7,8 @@ export enum GetArgumentsTemplateType {
     SingleStringFirstSpace = "single_string_first_space",
     SingleStringWholeMessage = "single_string_whole_message",
     TwoStringFirstSpaceSecondWholeMessage = "two_string_first_space_second_whole_message",
-    FirstAttachment = "first_attachment"
+    FirstAttachment = "first_attachment",
+    SingleStringFirstSpaceAndFirstAttachment = "single_string_first_space_and_first_attachment",
 }
 
 export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, argsToGet?: string[]): GetArgumentsFunction<Record<string, any>, InvokerType.Message>  {
@@ -56,6 +57,19 @@ export function getArgumentsTemplate(templateType: GetArgumentsTemplateType, arg
                     args[argsToGet[0]] = invoker.attachments.first();
                     return args;
                 }
+        case GetArgumentsTemplateType.SingleStringFirstSpaceAndFirstAttachment:
+            if (!argsToGet) throw new Error("argsToGet must be defined for SingleStringFirstSpaceAndFirstAttachment template");
+            return ({ invoker, command_name_used, guild_config }) => {
+                    invoker = invoker as CommandInvoker<InvokerType.Message>;
+                    const args: Record<string, string | Attachment | undefined> = {};
+                    const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+                    const arg = invoker.content.slice(commandLength)?.trim()?.split(" ")[0]?.trim();
+                    args[argsToGet[0]] = arg;
+                    args[argsToGet[1]] = invoker.attachments.first();
+                    return args;
+                }
+        default:
+            throw new Error(`Unknown template type: ${templateType}`);
     }
 }
 
