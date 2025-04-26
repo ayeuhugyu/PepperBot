@@ -4,37 +4,47 @@ import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates 
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import { generateImage } from "../lib/gpt";
 import { Message } from "discord.js";
-import { FFmpeggy } from "ffmpeggy";
 import { randomUUIDv7 } from "bun";
 import fs from "fs";
+/*
+import { FFmpeggy } from "ffmpeggy";
+import ffmpegBin from "ffmpeg-static";
+import { path as ffprobeBin } from "ffprobe-static";
+// bun install --save ffmpeggy ffmpeg-static ffprobe-static @types/ffprobe-static
+
+FFmpeggy.DefaultConfig = {
+    ...FFmpeggy.DefaultConfig,
+    ffprobeBin,
+    ffmpegBin: ffmpegBin ?? "node_modules/ffmpeg-static/ffmpeg.exe", // idc that this doesnt realyl work on all operating systems, it should realistically never happen
+};
 
 function downloadImage(url: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-        const request = require('request');
-        request({ url, encoding: null }, (error: any, response: any, body: Buffer) => {
-            if (error) {
-                reject(error);
-            } else if (response.statusCode !== 200) {
-                reject(new Error(`Failed to download image. Status code: ${response.statusCode}`));
+        fetch(url)
+            .then(async (response) => {
+            if (!response.ok) {
+                reject(new Error(`Failed to download image. Status code: ${response.status}`));
             } else {
-                resolve(body);
+                const buffer = await response.arrayBuffer();
+                resolve(Buffer.from(buffer));
             }
-        });
+            })
+            .catch((error) => reject(error));
     });
 }
 
 function genericFFmpeg(buffer: Buffer, format: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const filename = randomUUIDv7()
         const path = `cache/ffmpeg/input_${filename}.tmp`;
         fs.writeFileSync(path, buffer);
         const ffmpeg = new FFmpeggy();
-        ffmpeg
+        await ffmpeg
             .setInput(path)
             .setOutput(`cache/ffmpeg/output_${filename}.${format}`)
             .run()
 
-        ffmpeg.done()
+        await ffmpeg.done()
 
         resolve(`cache/ffmpeg/output_${filename}.${format}`);
     });
@@ -50,15 +60,12 @@ const encoders: Record<string, (imageUrl: string) => Promise<string>> = {
     jpeg: async (imageUrl: string) => {
         return genericFFmpeg(await downloadImage(imageUrl), "jpeg");
     },
-    gif: async (imageUrl: string) => {
-        return genericFFmpeg(await downloadImage(imageUrl), "gif");
-    },
     webp: async (imageUrl: string) => {
         return genericFFmpeg(await downloadImage(imageUrl), "webp");
     }
 }
 
-const convert = new Command(
+const convert = new Command( // currently unused due to being not that useful
     {
         name: 'convert',
         description: 'converts an image to a different format',
@@ -79,13 +86,9 @@ const convert = new Command(
                 long_description: 'the format to convert the image to',
                 type: CommandOptionType.String,
                 required: true,
-                choices: [
-                    { name: "png", value: "png" },
-                    { name: "jpg", value: "jpg" },
-                    { name: "jpeg", value: "jpeg" },
-                    { name: "gif", value: "gif" },
-                    { name: "webp", value: "webp" }
-                ]
+                choices: Object.keys(encoders).map((key) => {
+                    return { name: key, value: key };
+                }),
             })
         ],
         access: CommandAccessTemplates.public,
@@ -93,11 +96,55 @@ const convert = new Command(
         example_usage: "p/image convert png <attach your image>",
         aliases: ["encode", "format"]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["format", "image"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpaceAndFirstAttachment, ["format", "image"]),
     async function execute ({ invoker, args, guild_config }) {
 
+        if (!args.format) {
+            action.reply(invoker, {
+                content: "missing format to convert to",
+                ephemeral: guild_config.useEphemeralReplies
+            });
+            return new CommandResponse({
+                error: true,
+                message: "missing format to convert to",
+            });
+        }
+
+        const encoder = encoders[args.format];
+        const listing = args.format === "list" || args.format === "formats" || args.format === "help" || args.format === "ls";
+        if (!encoder) {
+            action.reply(invoker, {
+                content: `${listing ? "" : `invalid format provided. `}valid formats are: \`${Object.keys(encoders).join("`, `")}\``,
+                ephemeral: guild_config.useEphemeralReplies
+            });
+            return new CommandResponse({
+                error: true,
+                message: `${listing ? "" : `invalid format provided. `}valid formats are: \`${Object.keys(encoders).join("`, `")}\``,
+            });
+        }
+
+        if (!args.image) {
+            action.reply(invoker, {
+                content: "missing image to convert",
+                ephemeral: guild_config.useEphemeralReplies
+            });
+            return new CommandResponse({
+                error: true,
+                message: "missing image to convert",
+            });
+        }
+
+        const sent = await action.reply(invoker, { content: "converting image, please wait...", ephemeral: guild_config.useEphemeralReplies }) as Message;
+        const url = await encoder(args.image);
+        const currentExtension = args.image.name.split(".").pop();
+        const outputExtension = url.split(".").pop();
+        action.edit(sent, {
+            files: [{ name: `image.${outputExtension}`, attachment: url }],
+            content: `image converted from \`${currentExtension}\` to \`${args.format}\``,
+        });
     }
 );
+*/
 
 let lastUsedImageAt: { [key: string]: number } = {};
 let currentlyGenerating: { [key: string]: boolean } = {};
@@ -188,7 +235,7 @@ const command = new Command(
         aliases: [],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Merge,
-            list: [image, convert]
+            list: [image, /*convert*/]
         }
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
