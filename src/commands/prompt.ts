@@ -65,52 +65,93 @@ const generate = new Command({
 
 const deflt = new Command({
         name: 'default',
-        description: 'toggles your prompt being used as the default prompt',
-        long_description: 'toggles whether or not your prompt is used as the default prompt',
+        description: 'toggles a prompt being used as the default prompt',
+        long_description: 'toggles whether or not a prompt is used as the default prompt. If no prompt name is provided, it uses the current prompt you are using.',
         tags: [CommandTag.AI],
         pipable_to: [],
-        options: [],
-        example_usage: "p/prompt default",
+        options: [
+            new CommandOption({
+            name: 'name',
+            description: 'the name of the prompt to toggle as default',
+            type: CommandOptionType.String,
+            required: false,
+            })
+        ],
+        example_usage: "p/prompt default myprompt",
+        argument_order: "<name?>",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, guild_config, args }) {
-        let prompt = await getUserPrompt(invoker.author);
+        let prompt;
+        if (args.name) {
+            prompt = await getPrompt(args.name as string, invoker.author.id);
+            if (!prompt) {
+            action.reply(invoker, { content: `couldn't find prompt: \`${args.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt: \`${args.name}\``,
+            });
+            }
+        } else {
+            prompt = await getUserPrompt(invoker.author);
+        }
+
         const promptDefault = prompt.default;
         prompt.default = !promptDefault;
         await savePrompt(prompt, invoker.author);
         if (!prompt.default) userPrompts.delete(invoker.author.id);
-        action.reply(invoker, { content: prompt.default ? `prompt \`${prompt.name}\` is now the default prompt` : "prompt reset to base default", ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: prompt.default ? `prompt \`${prompt.name}\` is now the default prompt. if you want to go back to the base default prompt, use the command again.` : "prompt reset to base default", ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
 const get = new Command({
         name: 'get',
-        description: 'returns your current prompt',
-        long_description: 'returns your current prompt',
+        description: 'returns your current prompt or a specified prompt',
+        long_description: 'returns your current prompt or a specified prompt by name',
         tags: [CommandTag.AI],
         pipable_to: [CommandTag.TextPipable],
-        options: [],
+        options: [
+            new CommandOption({
+            name: 'name',
+            description: 'the name of the prompt to retrieve',
+            type: CommandOptionType.String,
+            required: false,
+            })
+        ],
         aliases: [],
-        example_usage: "p/prompt get",
+        example_usage: "p/prompt get myprompt",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, guild_config, args }) {
-        let prompt = await getUserPrompt(invoker.author);
+        let prompt;
+        if (args.name) {
+            prompt = await getPrompt(args.name as string, invoker.author.id);
+            if (!prompt) {
+            action.reply(invoker, { content: `couldn't find prompt: \`${args.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt: \`${args.name}\``,
+            });
+            }
+        } else {
+            prompt = await getUserPrompt(invoker.author);
+        }
+
         action.reply(invoker, {
             content: `\`\`\`
-name: ${prompt.name}
-description: ${prompt.description}
-content: ${prompt.content}
+    name: ${prompt.name}
+    description: ${prompt.description}
+    content: ${prompt.content}
 
-created at: ${new Date(prompt.created_at).toLocaleString()}
-last updated at: ${new Date(prompt.updated_at).toLocaleString()}
-${prompt.published ? `published at: ${new Date(prompt.published_at || "").toLocaleString()}\n` : ""}
-nsfw: ${prompt.nsfw ? "true" : "false"}
-default: ${prompt.default ? "true" : "false"}
+    created at: ${new Date(prompt.created_at).toLocaleString()}
+    last updated at: ${new Date(prompt.updated_at).toLocaleString()}
+    ${prompt.published ? `published at: ${new Date(prompt.published_at || "").toLocaleString()}\n` : ""}
+    nsfw: ${prompt.nsfw ? "true" : "false"}
+    default: ${prompt.default ? "true" : "false"}
 
-api parameters:
-${Object.entries(prompt.api_parameters).map(([key, value]) => `    ${key}: ${value}`).join("\n")}
-\`\`\``,
+    api parameters:
+    ${Object.entries(prompt.api_parameters).map(([key, value]) => `    ${key}: ${value}`).join("\n")}
+    \`\`\``,
             ephemeral: guild_config.other.use_ephemeral_replies
         });
         return new CommandResponse({ pipe_data: { input_text: prompt.content }});
@@ -119,24 +160,45 @@ ${Object.entries(prompt.api_parameters).map(([key, value]) => `    ${key}: ${val
 
 const publish = new Command({
         name: 'publish',
-        description: 'publishes your current prompt',
-        long_description: 'publishes your current prompt',
+        description: 'publishes a specified prompt or your current prompt',
+        long_description: 'publishes a specified prompt or your current prompt',
         tags: [CommandTag.AI],
         pipable_to: [],
-        options: [],
+        options: [
+            new CommandOption({
+            name: 'name',
+            description: 'the name of the prompt to publish',
+            type: CommandOptionType.String,
+            required: false,
+            })
+        ],
         aliases: ["unpublish"],
-        example_usage: "p/prompt publish",
+        example_usage: "p/prompt publish myprompt",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, guild_config, args }) {
-        let prompt = await getUserPrompt(invoker.author);
+        let prompt;
+        if (args.name) {
+            prompt = await getPrompt(args.name as string, invoker.author.id);
+            if (!prompt) {
+            action.reply(invoker, { content: `couldn't find prompt: \`${args.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt: \`${args.name}\``,
+            });
+            }
+        } else {
+            prompt = await getUserPrompt(invoker.author);
+        }
+
         if (prompt.name === "autosave") {
             action.reply(invoker, { content: "you can't publish the autosave prompt", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
-                error: true,
-                message: "you can't publish the autosave prompt",
-            })
+            error: true,
+            message: "you can't publish the autosave prompt",
+            });
         }
+
         prompt.published = !prompt.published;
         prompt.published_at = prompt.published ? new Date() : undefined;
         await savePrompt(prompt, invoker.author);
@@ -146,27 +208,48 @@ const publish = new Command({
 
 const del = new Command({
         name: 'delete',
-        description: 'deletes your current prompt',
-        long_description: 'deletes your current prompt',
+        description: 'deletes your current prompt or a specified prompt',
+        long_description: 'deletes your current prompt or a specified prompt by name',
         tags: [CommandTag.AI],
         pipable_to: [],
-        options: [],
+        options: [
+            new CommandOption({
+            name: 'name',
+            description: 'the name of the prompt to delete',
+            type: CommandOptionType.String,
+            required: false,
+            })
+        ],
         aliases: ["del", "remove", "rem", "rm"],
-        example_usage: "p/prompt delete",
+        example_usage: "p/prompt delete myprompt",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, guild_config, args }) {
-        let prompt = await getUserPrompt(invoker.author);
+        let prompt;
+        if (args.name) {
+            prompt = await getPrompt(args.name as string, invoker.author.id);
+            if (!prompt) {
+            action.reply(invoker, { content: `couldn't find prompt: \`${args.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt: \`${args.name}\``,
+            });
+            }
+        } else {
+            prompt = await getUserPrompt(invoker.author);
+        }
+
         if (prompt.name === "autosave") {
             action.reply(invoker, { content: "you can't delete the autosave prompt", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
-                error: true,
-                message: "you can't delete the autosave prompt",
-            })
+            error: true,
+            message: "you can't delete the autosave prompt",
+            });
         }
+
         await removePrompt(prompt.name, invoker.author.id);
-        userPrompts.delete(invoker.author.id);
-        action.reply(invoker, { content: `prompt \`${prompt.name}\` deleted; now using/editing default`, ephemeral: guild_config.other.use_ephemeral_replies });
+        if (!args.name) userPrompts.delete(invoker.author.id);
+        action.reply(invoker, { content: `prompt \`${prompt.name}\` deleted${!args.name ? "; now using/editing default" : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -227,16 +310,37 @@ const name = new Command({
 const nsfw = new Command({
         name: 'nsfw',
         description: 'toggles your prompt being marked as nsfw',
-        long_description: 'toggles whether or not your prompt is marked as nsfw',
+        long_description: 'toggles whether or not your prompt is marked as nsfw. If no prompt name is provided, it uses the current prompt you are using.',
         tags: [CommandTag.AI],
         pipable_to: [],
-        options: [],
-        example_usage: "p/prompt nsfw",
+        options: [
+            new CommandOption({
+            name: 'name',
+            description: 'the name of the prompt to toggle as nsfw',
+            type: CommandOptionType.String,
+            required: false,
+            })
+        ],
+        example_usage: "p/prompt nsfw myprompt",
+        argument_order: "<name?>",
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, guild_config, args }) {
-        let prompt = await getUserPrompt(invoker.author);
-        prompt.nsfw = !prompt.nsfw
+        let prompt;
+        if (args.name) {
+            prompt = await getPrompt(args.name as string, invoker.author.id);
+            if (!prompt) {
+            action.reply(invoker, { content: `couldn't find prompt: \`${args.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `couldn't find prompt: \`${args.name}\``,
+            });
+            }
+        } else {
+            prompt = await getUserPrompt(invoker.author);
+        }
+
+        prompt.nsfw = !prompt.nsfw;
         await savePrompt(prompt, invoker.author);
         action.reply(invoker, { content: `prompt \`${prompt.name}\` is ${prompt.nsfw ? "now marked as nsfw" : "no longer marked as nsfw"}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
