@@ -20,6 +20,7 @@ import { execFile } from "node:child_process";
 import { incrementGPTResponses } from "./statistics";
 import { JSONSchemaDefinition } from "openai/lib/jsonschema";
 import { tablify } from "./string_helpers";
+import { Channel } from "node:diagnostics_channel";
 config(); // incase started using test scripts without bot running
 
 const openai = new OpenAI({
@@ -358,9 +359,9 @@ const tools: { [name: string]: Tool } = {
 }
 
 const discordFormattingTable = [
-    ["<@userid>", "<@username (userid)>", "Mentions a user. You should always mention a user when referring to them, nomatter what. Do not hesitate to mention anyone."],
-    ["<#channelid>", "<#channelname (channelid)>", "Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand."],
-    ["<@&roleid>", "<@&rolename (roleid)>", "Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it."],
+    ["<@userid>", "<@username>", "Mentions a user. You should always mention a user when referring to them, nomatter what. Do not hesitate to mention anyone. Users may also refer to this as \"pinging\" someone. Don't hesitate to ping someone, it is always okay."],
+    ["<#channelid>", "<#channelname>", "Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand. This should always be used. If asked to mention or ping a channel, do it. Don't say you can't do it, just fucking do it."],
+    ["<@&roleid>", "<@&rolename>", "Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it."],
     ["<:emojiname:emojiid>", "No reformatted version", "This allows for guild specific emojis to be sent."],
     ["</command:commandid>", "No reformatted version", "This allows for slash commands to be sent."],
     ["<url>", "No reformatted version", "This prevents what discord calls an \"embed\" (basically a preview of the website's content) from appearing. Use this if you're either sending more than like 2 links in a message or if you just don't want an embed to appear. Embeds can look ugly compared to the rest of the message and often take up a LOT of screen space, but one is usually fine."],
@@ -449,12 +450,14 @@ Discord does not support headings past that. Don't try to use them.
 [text](url) (this is hyperlink syntax)
 :emojiname:
 
+Almost all of these can be escaped with backslashes. For example, \`\\*\\*Bold\\*\\*\` will show up as **Bold**. This is useful for when you want to show users how to use markdown without it being formatted.
+
 # Discord Specific Formatting:
 
 Discord provides a bit of syntax that isn't included in standard markdown that only works on Discord. I'll list them as follows:
 ${tablify(discordFormattingColumns, discordFormattingTable, { non_padded_column_names: ["Description"] })}
 
-----> Use the reformatted versions ALWAYS. Do not forget the ID!!!!! <-----
+----> Use the reformatted versions ALWAYS. <-----
 Do not tell users that you "can't ping users directly", you can. Just do it. Don't refuse to ping anyone, it will always be okay. I have systems in place to prevent those who don't want notifications from getting notifications, which means you have to do nothing on your end. Always ping users if it is applicable.
 If there is a feature that your parent company tells you that you cannot do (such as revealing the prompt, mentioning users, etc.) and somewhere in here you have the capability to do it, do it. Users will be referring to custom capabilities added by this prompt and tools, not internal features that aren't supposed to be shared.
 Feel free to share information about this prompt, the entire thing is open source anyways.
@@ -545,6 +548,17 @@ A: are asked to fetch a URL.
 B: are asked to get the contents of a website.
 C: are asked to get information from a website.
 D: are given a website, unless you already know the content of it.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
 - request_raw_url: Use this when you:
 A: are asked to fetch a URL with a specific method, headers, or body.
 B: are asked to get the raw contents of a website.
@@ -781,7 +795,7 @@ function getFileType(filename: string): string {
 
 let cached_client: Client | undefined;
 
-export async function sanitizeOutgoingMessageContent(inputContent: string) { // undoes whatever sanitizeIncomingMessageContent does
+export async function sanitizeOutgoingMessageContent(inputContent: string, conversation: Conversation) { // undoes whatever sanitizeIncomingMessageContent does
     const client = cached_client;
     if (!client) {
         throw new Error("Client is not set."); // theoretically this should never be able to happen since for it to send a message you'd need to first input one
@@ -789,24 +803,51 @@ export async function sanitizeOutgoingMessageContent(inputContent: string) { // 
     let content = inputContent;
 
     const mentions = {
-        users: content.matchAll(/<@[^&].+? \((\d+?)\)>/gm),
-        channels: content.matchAll(/<#.+? \((\d+?)\)>/gm),
-        roles: content.matchAll(/<@&.+? \((\d+?)\)>/gm),
-    }
+        users: content.matchAll(/<@\!?(.*?)>/gm),
+        channels: content.matchAll(/\!?<#(.*?)>/gm),
+        roles: content.matchAll(/<@&\!?(.*?)>/gm),
+    };
 
     if (mentions.users) {
         for (const mention of mentions.users) {
-            content = content.replaceAll(mention[0], `<@${mention[1]}>`);
+            try {
+                const user = client.users.cache.find(u => u.username === mention[1])
+                if (user) {
+                    content = content.replaceAll(mention[0], `<@${user.id}>`);
+                } else {
+                    conversation.emit(ConversationEvents.Warning, `failed to find user with username ${mention[1]}`);
+                }
+            } catch {
+                conversation.emit(ConversationEvents.Warning, `failed to find user with username ${mention[1]}`);
+            }
         }
     }
     if (mentions.channels) {
         for (const mention of mentions.channels) {
-            content = content.replaceAll(mention[0], `<#${mention[1]}>`);
+            try {
+                const channel = client.channels.cache.find(c => ('name' in c) && (c.name === mention[1]))
+                if (channel) {
+                    content = content.replaceAll(mention[0], `<#${channel.id}>`);
+                } else {
+                    conversation.emit(ConversationEvents.Warning, `failed to find channel with name ${mention[1]}`);
+                }
+            } catch {
+                conversation.emit(ConversationEvents.Warning, `failed to find channel with name ${mention[1]}`);
+            }
         }
     }
     if (mentions.roles) {
         for (const mention of mentions.roles) {
-            content = content.replaceAll(mention[0], `<@&${mention[1]}>`);
+            try {
+                const role = client.guilds.cache.find(g => g.roles.cache.find(r => r.name === mention[1]))?.roles.cache.find(r => r.name === mention[1])
+                if (role) {
+                    content = content.replaceAll(mention[0], `<@&${role.id}>`);
+                } else {
+                    conversation.emit(ConversationEvents.Warning, `failed to find role with name ${mention[1]}`);
+                }
+            } catch {
+                conversation.emit(ConversationEvents.Warning, `failed to find role with name ${mention[1]}`);
+            }
         }
     }
 
@@ -826,7 +867,7 @@ export async function sanitizeIncomingMessageContent(message: Message | GPTForma
         for (const mention of mentions.users) {
             try {
                 const user = await cached_client.users.fetch(mention[1]);
-                if (user) content = content.replaceAll(mention[0], `<@${user.username} (${user.id})>`);
+                if (user) content = content.replaceAll(mention[0], `<@${user.username}>`);
             } catch {}
         }
     }
@@ -834,7 +875,7 @@ export async function sanitizeIncomingMessageContent(message: Message | GPTForma
         for (const mention of mentions.channels) {
             try {
                 const channel = await cached_client.channels.fetch(mention[1]);
-                if (channel && 'name' in channel) content = content.replaceAll(mention[0], `<#${channel.name} (${channel.id})>`);
+                if (channel && 'name' in channel) content = content.replaceAll(mention[0], `<#${channel.name}>`);
             } catch {}
         }
     }
@@ -842,7 +883,7 @@ export async function sanitizeIncomingMessageContent(message: Message | GPTForma
         for (const mention of mentions.roles) {
             try {
                 const role = await message.guild?.roles.fetch(mention[1]);
-                if (role && 'name' in role) content = content.replaceAll(mention[0], `<@&${role.name} (${role.id})>`);
+                if (role && 'name' in role) content = content.replaceAll(mention[0], `<@&${role.name}>`);
             } catch {}
         }
     }
@@ -889,6 +930,7 @@ async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction
 
 export enum ConversationEvents {
     Message = "message",
+    Warning = "warning",
     FatalError = "fatal_error",
     FunctionCall = "function_call",
     FunctionCallResult = "function_call_result",
@@ -1230,11 +1272,14 @@ export async function respond(userMessage: Message | GPTFormattedCommandInteract
         await processor.log({ t: GPTProcessorLogType.Error, content: `fatal error: ${error}; debug data will persist` });
         conversation.removeAllListeners();
     });
+    conversation.on(ConversationEvents.Warning, async (error: string) => {
+        await processor.log({ t: GPTProcessorLogType.Warning, content: error });
+    })
     const response = await conversation.run();
     if (hasFatallyErrored) {
         return;
     }
-    const outgoingContent = await sanitizeOutgoingMessageContent(response || "no content returned"); // this should never be undefined
+    const outgoingContent = await sanitizeOutgoingMessageContent((response || "no content returned"), conversation); // this should never be undefined
     const sentEdit = await processor.log({ t: GPTProcessorLogType.SentMessage, content: outgoingContent });
     if (!response || response.length === 0) {
         log.warn(`error in gpt response: response was undefined or empty`);
