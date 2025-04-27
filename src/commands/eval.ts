@@ -11,6 +11,7 @@ import * as gpt from "../lib/gpt";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 import * as queue from "../lib/classes/queue_manager";
 import database from "../lib/data_manager"
+import * as components from "../lib/classes/components";
 
 const modules = {
     discord,
@@ -23,6 +24,7 @@ const modules = {
     gpt,
     queue,
     database,
+    components,
 } // this is some weird hacky thing to make bun not omit the modules due to them being unused
 
 const command = new Command(
