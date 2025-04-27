@@ -1,4 +1,4 @@
-import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, APIMessageActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel, DMChannel, PartialDMChannel, NewsChannel, StageChannel, PublicThreadChannel, PrivateThreadChannel, VoiceChannel } from "discord.js"; // this import is horrific
+import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel, DMChannel, PartialDMChannel, NewsChannel, StageChannel, PublicThreadChannel, PrivateThreadChannel, VoiceChannel } from "discord.js"; // this import is horrific
 import { CommandInvoker, FormattedCommandInteraction } from "./classes/command";
 import { config } from "dotenv";
 config();
@@ -12,7 +12,7 @@ export interface MessageInput {
     embeds?: (JSONEncodable<APIEmbed> | APIEmbed | Embed | EmbedBuilder)[];
     allowPings?: boolean;
     files?: (BufferResolvable | Stream | JSONEncodable<APIAttachment> | Attachment | AttachmentBuilder | AttachmentPayload)[];
-    components?: (JSONEncodable<APIActionRowComponent<APIMessageActionRowComponent>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<APIMessageActionRowComponent>)[];
+    components?: (JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>)[];
     attachments?: Attachment[] | AttachmentBuilder[];
     ephemeral: boolean;
 };
@@ -27,10 +27,10 @@ const replaceList = {
     "##LFMAK_coconut##": process.env.LASTFM_API_KEY
 };
 
-const pingReplacements = {
-    "Mister Everyone": /@everyone/g,
-    "Mister Here": /@here/g,
-    "Mister Role": /<@&\d+>/g
+const massPingReplacements = {
+    "<@Mister Everyone>": /@everyone/g,
+    "<@Mister Here>": /@here/g,
+    "<@&Mister Role>": /<@&\d+>/g
 }
 
 function isEmpty(message: Partial<MessageInput>): boolean {
@@ -54,7 +54,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
             }
         }
         if (!allowPings) {
-            for (const [key, value] of Object.entries(pingReplacements)) {
+            for (const [key, value] of Object.entries(massPingReplacements)) {
                 message.content = message.content.replaceAll(value, key);
             }
         }

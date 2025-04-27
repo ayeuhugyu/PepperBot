@@ -55,6 +55,13 @@ the biggest new base feature
   there's too many commands that are pipable to eachother to really list, so just find out yourself by looking at the guide page.
 - also new p/tail and p/head which function again the same as head and tail on linux.
 
+**new commands:**
+-# excluding previously mentioned commands
+
+- new p/random phrase allows you to generate phrases based off parts of speech (ex. p/random phrase noun adjective adverb verb noun)
+- new p/encode and p/decode allow you to encode and decode text via various algorithms. use `p/encode list` to get a list of all of the algorithms.
+- brought back p/sendlog because of the new piping related commands
+
 **gpt stuff:**
 
 - tool calls have been improved, instead of using my own system i am yet again using another openai feature. i've found one that allows for tools but without the usage of the stupid assistants api, resulting in only a little bit slower response times, compared to the much slower times the last time i tried this. this has several benefits:
@@ -88,13 +95,6 @@ the biggest new base feature
 - AI can now see stickers
 - default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
 - GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. run `p/gpt model list` to see all the new data i store about them and the new ones i've given access to.
-
-**new commands:**
--# excluding previously mentioned commands
-
-- new p/random phrase allows you to generate phrases based off parts of speech (ex. p/random phrase noun adjective adverb verb noun)
-- new p/encode and p/decode allow you to encode and decode text via various algorithms. use `p/encode list` to get a list of all of the algorithms.
-- brought back p/sendlog because of the new piping related commands
 
 **other actual content:**
 

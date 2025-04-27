@@ -99,8 +99,6 @@ export class Tool {
     }
 }
 
-const storedData = new Collection<string, any>();
-
 const tools: { [name: string]: Tool } = {
     date_to_timestamp: new Tool({
         name: "date_to_timestamp",
@@ -308,65 +306,17 @@ const tools: { [name: string]: Tool } = {
     }, () => {
         return;
     }),
-    store: new Tool({
-        name: "store",
-        description: "stores a value in memory. this is not persistent, and will be lost when the bot restarts.",
-        parameters: [
-            new ToolParameter({ type: "string", name: "key", description: "key to store the value under", required: true }),
-            new ToolParameter({ type: "string", name: "value", description: "value to store", required: true })
-        ]
-    }, ({ key, value }: { key: string, value: string }) => {
-        if (!key || !value) {
-            return "ERROR: No key or value provided.";
-        }
-        if (storedData.has(key)) {
-            return `${key} is already stored, try again with a different key.`;
-        }
-        const currentValue = storedData.get(key);
-        storedData.set(key, value);
-        return `stored ${value} under ${key}`;
-    }),
-    get: new Tool({
-        name: "get",
-        description: "retrieves a value from memory. this is not persistent, and will be lost when the bot restarts.",
-        parameters: [
-            new ToolParameter({ type: "string", name: "key", description: "key to retrieve the value from", required: true })
-        ]
-    }, ({ key }: { key: string }) => {
-        if (!key) {
-            return "ERROR: No key provided.";
-        }
-        const value = storedData.get(key);
-        if (value) {
-            return `value of ${key} is ${value}`;
-        }
-        return `no value found for ${key}`;
-    }),
-    list: new Tool({
-        name: "list",
-        description: "lists all stored keys. this is not persistent, and will be lost when the bot restarts.",
-        parameters: []
-    }, () => {
-        if (storedData.size === 0) {
-            return "no stored values";
-        }
-        let output = "stored values:\n";
-        storedData.forEach((_, key) => {
-            output += `${key}\n`;
-        });
-        return output;
-    }),
 }
 
 const discordFormattingTable = [
     ["<@userid>", "<@username>", "Mentions a user. You should always mention a user when referring to them, nomatter what. Do not hesitate to mention anyone. Users may also refer to this as \"pinging\" someone. Don't hesitate to ping someone, it is always okay."],
     ["<#channelid>", "<#channelname>", "Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand. This should always be used. If asked to mention or ping a channel, do it. Don't say you can't do it, just fucking do it."],
-    ["<@&roleid>", "<@&rolename>", "Mentions a role. Do not use this at all, I have safeguards to make sure it does not work. This is to prevent pinging a massive amount of people at once. It is included in this list so you understand what it is in the very rare case you see it."],
+    ["<@&roleid>", "<@&rolename>", "Mentions a role. Once again, this should always be used."],
     ["<:emojiname:emojiid>", "No reformatted version", "This allows for guild specific emojis to be sent."],
-    ["</command:commandid>", "No reformatted version", "This allows for slash commands to be sent."],
+    ["</command:commandid>", "No reformatted version", "This allows for slash commands to be mentioned. If a user clicks on it, it will be executed. You have little use for this."],
     ["<url>", "No reformatted version", "This prevents what discord calls an \"embed\" (basically a preview of the website's content) from appearing. Use this if you're either sending more than like 2 links in a message or if you just don't want an embed to appear. Embeds can look ugly compared to the rest of the message and often take up a LOT of screen space, but one is usually fine."],
-    ["@everyone", "No reformatted version", "Pings everyone in the server. Again, there are safeguards to prevent you from using this. Do not attempt to use this. Ever."],
-    ["@here", "No reformatted version", "Pings everyone online in the server. Again, safeguards are in place to prevent this. Don't use it."],
+    ["@everyone", "<@everyone>", "Pings/mentions everyone in the server."],
+    ["@here", "<@here>", "Pings/mentions everyone online in the server."],
 ]
 const discordFormattingColumns = ["Discord's Original Format", "Reformatted Version", "Description"];
 
@@ -456,6 +406,7 @@ Almost all of these can be escaped with backslashes. For example, \`\\*\\*Bold\\
 
 Discord provides a bit of syntax that isn't included in standard markdown that only works on Discord. I'll list them as follows:
 ${tablify(discordFormattingColumns, discordFormattingTable, { non_padded_column_names: ["Description"] })}
+Do not hesitate to use any of these, they will make your messages better and more readable. They should ALWAYS be used whenever applicable. Don't say you "won't" or "can't" do one of these.
 
 ----> Use the reformatted versions ALWAYS. <-----
 Do not tell users that you "can't ping users directly", you can. Just do it. Don't refuse to ping anyone, it will always be okay. I have systems in place to prevent those who don't want notifications from getting notifications, which means you have to do nothing on your end. Always ping users if it is applicable.
@@ -851,6 +802,8 @@ export async function sanitizeOutgoingMessageContent(inputContent: string, conve
         }
     }
 
+    content = content.replaceAll("<@everyone>", "@everyone").replaceAll("<@here>", "@here"); // the handling of these not pinging everyone is done by the action script, dont worry.
+
     return content;
 }
 
@@ -887,6 +840,7 @@ export async function sanitizeIncomingMessageContent(message: Message | GPTForma
             } catch {}
         }
     }
+    content = content.replaceAll("@everyone", "<@everyone>").replaceAll("@here", "<@here>");
 
     return content;
 }
@@ -1045,7 +999,7 @@ export class Conversation {
         if (!newMessage.content || newMessage.content.length === 0) {
             newMessage.content = [new GPTContentPart({ type: GPTContentPartType.Text, text: "No content provided." })];
         }
-        newMessage.name = message.author.id;
+        // newMessage.name = message.author.id;
         newMessage.role = role;
         this.messages.push(newMessage);
         return newMessage;
