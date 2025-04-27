@@ -85,7 +85,7 @@ export function reply<T extends CommandInvoker>(invoker: T, content: Partial<Mes
     }
     if (typeof content === "object" && 'components_v2' in content) {
         if (content.components_v2) {
-            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral // weird hack idfc that its not always interactionreplyoptions
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.IsComponentsV2 // weird hack idfc that its not always interactionreplyoptions
             delete content.components_v2
         }
     }
