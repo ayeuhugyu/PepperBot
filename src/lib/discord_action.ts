@@ -1,4 +1,4 @@
-import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel, DMChannel, PartialDMChannel, NewsChannel, StageChannel, PublicThreadChannel, PrivateThreadChannel, VoiceChannel } from "discord.js"; // this import is horrific
+import { InteractionReplyOptions, Message, MessagePayload, MessageReplyOptions, InteractionResponse, TextChannel, EmbedBuilder, AttachmentBuilder, MessageActionRowComponentBuilder, Embed, Attachment, JSONEncodable, APIAttachment, BufferResolvable, AttachmentPayload, APIEmbed, APIActionRowComponent, ActionRowData, MessageActionRowComponentData, MessageEditOptions, MessageCreateOptions, CommandInteraction, MessageFlags, OmitPartialGroupDMChannel, DMChannel, PartialDMChannel, NewsChannel, StageChannel, PublicThreadChannel, PrivateThreadChannel, VoiceChannel, BitFieldResolvable } from "discord.js"; // this import is horrific
 import { CommandInvoker, FormattedCommandInteraction } from "./classes/command";
 import { config } from "dotenv";
 config();
@@ -15,6 +15,7 @@ export interface MessageInput {
     components?: (JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>)[];
     attachments?: Attachment[] | AttachmentBuilder[];
     ephemeral: boolean;
+    components_v2?: boolean;
 };
 
 const replaceList = {
@@ -78,9 +79,15 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
 export function reply<T extends CommandInvoker>(invoker: T, content: Partial<MessageInput> | string): Promise<T extends Message<true> ? Message<true> : InteractionResponse> {
     if (invoker instanceof CommandInteraction && typeof content === "object" && 'ephemeral' in content) {
         if (content.ephemeral === true) {
-            (content as InteractionReplyOptions).flags = MessageFlags.Ephemeral;
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral
         }
         delete content.ephemeral
+    }
+    if (typeof content === "object" && 'components_v2' in content) {
+        if (content.components_v2) {
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral // weird hack idfc that its not always interactionreplyoptions
+            delete content.components_v2
+        }
     }
     return invoker.reply(fixMessage(content)) as never
 }
