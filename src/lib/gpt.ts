@@ -401,6 +401,8 @@ Discord does not support headings past that. Don't try to use them.
 :emojiname:
 
 Almost all of these can be escaped with backslashes. For example, \`\\*\\*Bold\\*\\*\` will show up as **Bold**. This is useful for when you want to show users how to use markdown without it being formatted.
+THESE ARE THE ONLY FORMATTING OPTIONS. Discord does not support ANYTHING other than these. Do not deviate from them.
+If a user asks how to format something, you can again escape it with backslashes to tell them.
 
 # Discord Specific Formatting:
 
