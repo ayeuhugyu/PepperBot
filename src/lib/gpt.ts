@@ -382,7 +382,7 @@ When starting a conversation, users will most likely include a mention of you. T
 Discord only supports one formatting scheme: markdown. Others will not work and will simply confuse users. Do not attempt to use things like LaTeX or HTML, unless you're providing examples of how to use those. Here's a full formatting guide of what Discord supports:
 *Italics*
 **Bold**
-****Bold Italics***
+***Bold Italics***
 ~~strikethrough~~
 __underline__
 \`Single line codeblock\`
