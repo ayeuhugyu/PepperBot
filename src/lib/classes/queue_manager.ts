@@ -60,7 +60,15 @@ function getErrorFromStderr(stderr: string, fallback: string): string {
 }
 
 export function parseLength(length: string): number {
-    return parseInt(length);
+    var p = length.split(':'),
+        s = 0, m = 1;
+
+    while (p.length > 0) {
+        s += m * parseInt(p.pop() || "0", 10);
+        m *= 60;
+    }
+
+    return s;
 }
 
 export async function getInfo(url: string, no_playlist: boolean = false): Promise<Response<false, (Video | Playlist)> | Response<true, VideoError>> {
