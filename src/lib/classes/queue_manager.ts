@@ -73,6 +73,7 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
             '--get-duration',
             '--get-id',
             '--get-url',
+            '--get-thumbnail',
             no_playlist ? '--no-playlist' : '--flat-playlist',
         ]
         if (cookies) {
@@ -92,11 +93,12 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
                 return;
             }
 
-            const lines = stdout.split('\n').filter((line) => line !== "");
+            const lines = stdout.split('\n').filter((line) => line !== "" && !line.startsWith("WARNING:") && !line.startsWith("[download]"));
 
             if (lines.length < 8) { // for some odd reason, some websites return multiple urls from --get-url? this probably isn't a catch all solution but i have zero fuckin clue what else to do
                 const title = lines[0];
                 const id = lines[1];
+                const thumbnail = lines[lines.length - 2]
                 const length = lines[lines.length - 1];
                 if (!title || !id || !length || !url) {
                     reject({
@@ -112,6 +114,7 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
                 video.title = title;
                 video.length = parseLength(length);
                 video.id = id;
+                video.thumbnail = thumbnail
                 resolve({
                     type: ResponseType.Success,
                     data: video
@@ -153,6 +156,9 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
                     video.title = title;
                     video.length = parseLength(length);
                     video.id = id;
+                    if (video.url.includes("youtube")) {
+                        video.thumbnail = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
+                    }
                     playlist.videos.push(video);
                 });
                 resolve({
@@ -175,6 +181,7 @@ export class Video {
     url: string = "";
     title: string = "";
     length: number = 0; // seconds
+    thumbnail?: string;
     id: string = "";
     toFile(): Promise<Response<true, VideoError> | Response<false, string>> {
         return new Promise ((resolve, reject) => {
