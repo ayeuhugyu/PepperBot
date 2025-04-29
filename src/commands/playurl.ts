@@ -1,12 +1,14 @@
-import { Collection, GuildMember, Message } from "discord.js";
+import { Collection, GuildMember, Message, MessageFlags } from "discord.js";
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import * as voice from "../lib/voice";
-import { getInfo, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
+import { embedVideoOrSound, getInfo, Response, ResponseType, Video, VideoError } from "../lib/classes/queue_manager";
 import { Readable } from "stream";
+import { Container, TextDisplay } from "../lib/classes/components";
+import { inspect } from "util";
 
 const command = new Command(
     {
@@ -121,9 +123,26 @@ const command = new Command(
             });
         }
         connectionManager.audio_player.play(resource);
-        await action.edit(sent, {
-            content: `playing \`${video.title}\`...`
-        });
+        const component = embedVideoOrSound(video)
+        try {
+            await action.edit(sent, {
+                content: "",
+                components: [
+                    new TextDisplay({
+                        content: `playing \`${video.title}\`...`,
+                    }),
+                    new Container({
+                        components: [component],
+                    })
+                ],
+                flags: MessageFlags.IsComponentsV2,
+            });
+        } catch (e) {
+            console.log(inspect(e, { depth: 10, colors: true }));
+            await action.edit(sent, {
+                content: `playing \`${video.title}\`...`,
+            });
+        }
     }
 );
 

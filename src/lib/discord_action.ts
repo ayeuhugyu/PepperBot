@@ -66,7 +66,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
 
     if (isEmpty(message)) {
         log.warn("attempt to send an empty message")
-        message.content = "<empty>";
+        //message.content = "<empty>";
     }
 
     if (message.content && message.content.length > 2000) {
@@ -76,6 +76,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
         message.files ??= [];
         message.files.push(attachment);
     } // todo: check embeds
+
     return message;
 }
 

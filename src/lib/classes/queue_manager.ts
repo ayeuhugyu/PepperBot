@@ -12,6 +12,7 @@ import { CustomSound, getSoundNoAutocorrect } from "../custom_sound_manager";
 import { AudioPlayer, AudioPlayerState, AudioPlayerStatus, AudioResource } from "@discordjs/voice";
 import { CommandInvoker } from "./command";
 import { GuildConfig } from "../guild_config_manager";
+import { Section, TextDisplay, Thumbnail } from "./components";
 
 config();
 
@@ -57,6 +58,17 @@ function getErrorFromStderr(stderr: string, fallback: string): string {
         }
     }
     return fallback;
+}
+
+function toHHMMSS(secs: number) {
+    const hours   = Math.floor(secs / 3600)
+    const minutes = Math.floor(secs / 60) % 60
+    const seconds = secs % 60
+
+    return [hours,minutes,seconds]
+        .map(v => v < 10 ? "0" + v : v)
+        .filter((v,i) => v !== "00" || i > 0)
+        .join(":")
 }
 
 export function parseLength(length: string): number {
@@ -606,4 +618,26 @@ export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfi
 
 export async function getQueueByGuildId(guildId: string): Promise<Queue | undefined> {
     return queues.find(queue => queue.guild_id === guildId);
+}
+
+export function embedVideoOrSound(item: Video | CustomSound, isCurrentIndex?: Boolean, index?: number): TextDisplay | Section {
+    const title = item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "????";
+    const length = item instanceof Video ? item.length : undefined;
+    const url = item instanceof Video ? item.url : undefined;
+    const readableLength = length ? toHHMMSS(length) : undefined;
+    const textDisplay = new TextDisplay({
+        content: `**${index != undefined ? `${index + 1}: ` : ""}${title}** ${(length) ? `\nDuration: ${readableLength}` : ""}${(isCurrentIndex && length) ? `\nending <t:${Math.floor(Date.now() / 1000 + (length))}:R>` : ""}${url ? `\n${url}` : ""}`
+    });
+    let section
+    if (item instanceof Video && item.thumbnail) {
+        section = new Section({
+            accessory: new Thumbnail({
+                url: item.thumbnail || "https://example.com/",
+            }),
+            components: [
+                textDisplay
+            ]
+        });
+    }
+    return section || textDisplay;
 }

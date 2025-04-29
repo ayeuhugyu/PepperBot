@@ -5,25 +5,13 @@ import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gp
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import * as voice from "../lib/voice";
-import { getInfo, Playlist, Queue, Response, ResponseType, Video, VideoError, getQueue } from "../lib/classes/queue_manager";
+import { getInfo, Playlist, Queue, Response, ResponseType, Video, VideoError, getQueue, embedVideoOrSound } from "../lib/classes/queue_manager";
 import { Readable } from "stream";
 import { GuildConfig } from "../lib/guild_config_manager";
 import { CustomSound, getSound } from "../lib/custom_sound_manager";
 import { createThemeEmbed, Theme } from "../lib/theme";
 import PagedMenuV2 from "../lib/classes/pagination_v2";
 import { Container, Section, Thumbnail, Separator, TextDisplay, Button, ButtonStyle } from "../lib/classes/components";
-
-
-function toHHMMSS(secs: number) {
-    const hours   = Math.floor(secs / 3600)
-    const minutes = Math.floor(secs / 60) % 60
-    const seconds = secs % 60
-
-    return [hours,minutes,seconds]
-        .map(v => v < 10 ? "0" + v : v)
-        .filter((v,i) => v !== "00" || i > 0)
-        .join(":")
-}
 
 async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
     const items = queue.items;
@@ -34,28 +22,11 @@ async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
 
     items.forEach((item, index) => {
         const isCurrentIndex = index === queue.current_index;
-        const title = item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "????";
-        const length = item instanceof Video ? item.length : undefined;
-        const url = item instanceof Video ? item.url : undefined;
-        const readableLength = length ? toHHMMSS(length) : undefined;
-        const textDisplay = new TextDisplay({
-            content: `**${index + 1}: ${title}** ${(length) ? `\nDuration: ${readableLength}` : ""}${(isCurrentIndex && length) ? `\nending <t:${Math.floor(Date.now() / 1000 + (length))}:R>` : ""}${url ? `\n${url}` : ""}`
-        });
-        let section
-        if (item instanceof Video) {
-            section = new Section({
-                accessory: new Thumbnail({
-                    url: item.thumbnail || "https://example.com/",
-                }),
-                components: [
-                    textDisplay
-                ]
-            });
-        }
+        let section = embedVideoOrSound(item, isCurrentIndex, index);
         const page = currentPage || new Container({
             components: []
         });
-        page.components.push(section || textDisplay);
+        page.components.push(section);
         page.components.push(new Separator());
         itemsInPage++;
         if (itemsInPage >= 5) {
