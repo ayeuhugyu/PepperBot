@@ -39,7 +39,7 @@ async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
         const url = item instanceof Video ? item.url : undefined;
         const readableLength = length ? toHHMMSS(length) : undefined;
         const textDisplay = new TextDisplay({
-            content: `**${index}: ${title}** ${(length) ? `\nDuration: ${readableLength} \n-# ${length} seconds long` : ""}${(isCurrentIndex && length) ? `\nending <t:${Math.floor(Date.now() / 1000 + (length))}:R>` : ""}${url ? `\n${url}` : ""}`
+            content: `**${index + 1}: ${title}** ${(length) ? `\nDuration: ${readableLength}` : ""}${(isCurrentIndex && length) ? `\nending <t:${Math.floor(Date.now() / 1000 + (length))}:R>` : ""}${url ? `\n${url}` : ""}`
         });
         let section
         if (item instanceof Video) {
