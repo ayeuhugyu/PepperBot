@@ -166,7 +166,7 @@ const tools: { [name: string]: Tool } = {
         if (!url) {
             return "ERROR: No URL provided.";
         }
-        if (url == "https://images.unsplash.com/photo-1506744038136-46273834b3fb") {
+        if (url.includes("https://images.unsplash.com/") || url.includes("imgur.com/")) {
             return "ERROR: you are BANNED from accessing this url. DO NOT ATTEMPT TO ACCESS IMAGES USING THIS TOOL. YOU WILL RECIEVE ETERNAL DAMNATION AND TORTURE IF YOU CONTINUE."
         }
         for (let ipStart of local_ips) {
