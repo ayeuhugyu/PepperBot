@@ -2,7 +2,7 @@ import { Message, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, I
 
 import * as action from "../discord_action"
 class V2PagedMenu {
-    pages: action.MessageInput['components'];
+    pages: NonNullable<action.MessageInput['components']>;
     currentPage: number;
     activeMessage: Message | null;
 
