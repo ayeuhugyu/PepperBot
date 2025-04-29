@@ -577,7 +577,7 @@ testQueue.currently_playing = response.data.videos[6] as any;
 export let queues: Queue[] = [];
 
 export async function getQueue(invoker: CommandInvoker, guild_config: GuildConfig): Promise<Response<false, Queue> | Response<true, string>> {
-    let queue = invoker.guildId ? queues.find(queue => { queue.guild_id === invoker.guildId }) : undefined;
+    let queue = queues.find((queue) => queue.guild_id == invoker.guild?.id)
     if (queue && queue.voice_manager?.destroyed) {
         let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
         if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {

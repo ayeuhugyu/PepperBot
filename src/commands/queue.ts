@@ -10,43 +10,77 @@ import { Readable } from "stream";
 import { GuildConfig } from "../lib/guild_config_manager";
 import { CustomSound, getSound } from "../lib/custom_sound_manager";
 import { createThemeEmbed, Theme } from "../lib/theme";
-import PagedMenu from "../lib/classes/pagination";
+import PagedMenuV2 from "../lib/classes/pagination_v2";
+import { Container, Section, Thumbnail, Separator, TextDisplay, Button, ButtonStyle } from "../lib/classes/components";
 
-async function queueToMessage(queue: Queue): Promise<PagedMenu> {
-    const guildName = queue.voice_manager?.channel?.guild?.name;
-    let pages = [];
-    for (let i = 0; i < queue.items.length; i += 15) {
-        const page = queue.items.slice(i, i + 15).map((item, index) => {
-            const displayIndex = i + index + 1;
-            if (item instanceof Video) {
-                return `${displayIndex}. [${item.title}](${item.url})`;
-            } else if (item instanceof CustomSound) {
-                return `${displayIndex}. ${item.name}`;
-            }
-            return `${displayIndex}. Unknown item`;
-        }).join("\n");
-        pages.push(page);
+
+function toHHMMSS(secs: number) {
+    const hours   = Math.floor(secs / 3600)
+    const minutes = Math.floor(secs / 60) % 60
+    const seconds = secs % 60
+
+    return [hours,minutes,seconds]
+        .map(v => v < 10 ? "0" + v : v)
+        .filter((v,i) => v !== "00" || i > 0)
+        .join(":")
+}
+
+async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
+    const items = queue.items;
+    let pages: Container[] = [];
+    let components = [];
+    let currentPage: undefined | Container = undefined;
+    let itemsInPage = 0;
+
+    items.forEach((item, index) => {
+        const isCurrentIndex = index === queue.current_index;
+        const title = item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "????";
+        const length = item instanceof Video ? item.length : undefined;
+        const url = item instanceof Video ? item.url : undefined;
+        const readableLength = length ? toHHMMSS(length) : undefined;
+        const textDisplay = new TextDisplay({
+            content: `**${index}: ${title}** ${(length) ? `\nDuration: ${readableLength} \n-# ${length} seconds long` : ""}${(isCurrentIndex && length) ? `\nending in <t:${Math.floor(Date.now() / 1000 + (length))}:R>` : ""}${url ? `\n${url}` : ""}`
+        });
+        let section
+        if (item instanceof Video) {
+            section = new Section({
+                accessory: new Thumbnail({
+                    url: item.thumbnail || "https://example.com/",
+                }),
+                components: [
+                    textDisplay
+                ]
+            });
+        }
+        const page = currentPage || new Container({
+            components: []
+        });
+        page.components.push(section || textDisplay);
+        page.components.push(new Separator());
+        itemsInPage++;
+        if (itemsInPage >= 5) {
+            page.components.pop(); // remove the last separator
+            pages.push(page);
+            itemsInPage = 0;
+            currentPage = undefined;
+        } else {
+            currentPage = page;
+        }
+    });
+    if (currentPage) {
+        pages.push(currentPage);
+    }
+    if (items.length === 0) {
+        pages = [new Container({
+            components: [
+                new TextDisplay({
+                    content: "no items in queue"
+                }),
+            ]
+        })]
     }
 
-    let embeds = [];
-
-    for (let i = 0; i < pages.length; i++) {
-        const embed = createThemeEmbed(Theme.CURRENT)
-            .setTitle(`queue${guildName ? ` for ${guildName}` : (queue.guild_id ? ` for ${queue.guild_id}` : "")} // page ${i + 1}/${pages.length}`)
-            .setDescription(pages[i])
-        embeds.push(embed);
-    }
-
-    if (pages.length === 0) {
-        const embed = createThemeEmbed(Theme.CURRENT)
-            .setTitle(`queue${guildName ? ` for ${guildName}` : (queue.guild_id ? ` for ${queue.guild_id}` : "")}`)
-            .setDescription("no items in queue")
-        embeds.push(embed);
-    }
-
-    const pagedMenu = new PagedMenu(embeds)
-
-    return pagedMenu;
+    return new PagedMenuV2(pages);
 }
 
 const shuffle = new Command(
@@ -362,7 +396,7 @@ const add = new Command(
             if (url.startsWith("file://")) {
                 url = url.slice(7);
             }
-            const sound = await getSound(args.url);
+            const sound = await getSound(url);
             if (!sound) {
                 action.reply(invoker, {
                     content: `the sound \`${args.url}\` does not exist`,
@@ -407,7 +441,7 @@ const view = new Command(
         }
         const queue = queueResponse.data;
         let pagedMenu = await queueToMessage(queue);
-        const reply = await action.reply(invoker, { embeds: [pagedMenu.embeds[0]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
+        const reply = await action.reply(invoker, { components: [pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(reply as Message<true>);
     }
 );
@@ -441,7 +475,7 @@ const command = new Command(
         }
         const queue = queueResponse.data;
         let pagedMenu = await queueToMessage(queue);
-        const reply = await action.reply(invoker, { embeds: [pagedMenu.embeds[pagedMenu.currentPage]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
+        const reply = await action.reply(invoker, { components: [pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(reply as Message<true>);
     }
 );
