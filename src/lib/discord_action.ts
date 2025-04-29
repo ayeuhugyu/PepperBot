@@ -6,16 +6,19 @@ import process from "node:process";
 import * as log from "./log";
 import { Stream } from "node:stream";
 import { textToAttachment } from "./attachment_manager";
+import { ActionRow, Container, File, MediaGallery, Separator, TextDisplay } from "./classes/components";
 
+type ApiMessageComponents = JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>
 export interface MessageInput {
     content?: string;
     embeds?: (JSONEncodable<APIEmbed> | APIEmbed | Embed | EmbedBuilder)[];
     allowPings?: boolean;
     files?: (BufferResolvable | Stream | JSONEncodable<APIAttachment> | Attachment | AttachmentBuilder | AttachmentPayload)[];
-    components?: (JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>)[];
+    components?: (ApiMessageComponents | Container | ActionRow | TextDisplay | Separator | File | MediaGallery)[];
     attachments?: Attachment[] | AttachmentBuilder[];
     ephemeral: boolean;
     components_v2?: boolean;
+    flags?: InteractionReplyOptions['flags']
 };
 
 const replaceList = {
@@ -89,13 +92,13 @@ export function reply<T extends CommandInvoker>(invoker: T, content: Partial<Mes
             delete content.components_v2
         }
     }
-    return invoker.reply(fixMessage(content)) as never
+    return invoker.reply(fixMessage(content) as InteractionReplyOptions & MessageReplyOptions) as never
 }
 
 export type SendableChannel = TextChannel | DMChannel | PartialDMChannel | NewsChannel | StageChannel | PublicThreadChannel<boolean> | PrivateThreadChannel | VoiceChannel
 
 export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message>  {
-    return channel.send(fixMessage(content))
+    return channel.send(fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions)
 }
 
 export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> {

@@ -1,8 +1,8 @@
 import { Message, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Interaction, InteractionResponse, JSONEncodable, APIActionRowComponent, ActionRowData, MessageActionRowComponent, MessageActionRowComponentData, MessageActionRowComponentBuilder, MessageFlags } from 'discord.js';
 
-
+import * as action from "../discord_action"
 class V2PagedMenu {
-    pages: (JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>)[];
+    pages: action.MessageInput['components'];
     currentPage: number;
     activeMessage: Message | null;
 
@@ -24,7 +24,7 @@ class V2PagedMenu {
                     .setCustomId('next')
                     .setLabel('Next')
                     .setStyle(ButtonStyle.Primary)
-                    .setDisabled(this.currentPage === this.pages.length - 1)
+                    .setDisabled(this.currentPage === this.pages!.length - 1)
             );
     }
 
@@ -39,7 +39,7 @@ class V2PagedMenu {
 
             if (interaction.customId === 'previous' && this.currentPage > 0) {
                 this.currentPage--;
-            } else if (interaction.customId === 'next' && this.currentPage < this.pages.length - 1) {
+            } else if (interaction.customId === 'next' && this.currentPage < this.pages!.length - 1) {
                 this.currentPage++;
             }
 
@@ -56,8 +56,8 @@ class V2PagedMenu {
 
     private async updateMessage(): Promise<void> {
         if (this.activeMessage) {
-            await this.activeMessage.edit({
-                components: [this.pages[this.currentPage], this.getActionRow()],
+            await action.edit(this.activeMessage, {
+                components: [this.pages![this.currentPage], this.getActionRow()],
                 flags: (this.activeMessage.flags?.bitfield ?? 0) | MessageFlags.IsComponentsV2,
             });
         }
