@@ -5,6 +5,7 @@ class V2PagedMenu {
     pages: NonNullable<action.MessageInput['components']>;
     currentPage: number;
     activeMessage: Message | null;
+    ended: boolean = false;
 
     constructor(pages: typeof this.pages) {
         this.pages = pages;
@@ -13,6 +14,21 @@ class V2PagedMenu {
     }
 
     getActionRow(): ActionRowBuilder<ButtonBuilder> {
+        if (this.ended) {
+            return new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('previous')
+                        .setLabel('Previous')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(true),
+                    new ButtonBuilder()
+                        .setCustomId('next')
+                        .setLabel('Next')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(true)
+                );
+        }
         return new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
@@ -49,7 +65,8 @@ class V2PagedMenu {
 
         collector.on('end', () => {
             if (this.activeMessage) {
-                this.activeMessage.edit({ components: [] });
+                this.ended = true;
+                this.updateMessage()
             }
         });
     }
