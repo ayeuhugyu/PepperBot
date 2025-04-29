@@ -158,13 +158,16 @@ const tools: { [name: string]: Tool } = {
     }),
     request_url: new Tool({
         name: "request_url",
-        description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons.",
+        description: "Fetches a URL and returns the main content as markdown. Does not support local addresses for security reasons. DO NOT ATTEMPT TO ACCESS IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES.",
         parameters: [
             new ToolParameter({ type: "string", name: "url", description: "URL to fetch. Do not input local addresses. IP's are fine, just not local ones.", required: true })
         ]
     }, async ({ url }: { url: string }) => {
         if (!url) {
             return "ERROR: No URL provided.";
+        }
+        if (url == "https://images.unsplash.com/photo-1506744038136-46273834b3fb") {
+            return "ERROR: you are BANNED from accessing this url. DO NOT ATTEMPT TO ACCESS IMAGES USING THIS TOOL. YOU WILL RECIEVE ETERNAL DAMNATION AND TORTURE IF YOU CONTINUE."
         }
         for (let ipStart of local_ips) {
             if (url.replace(/^https?:\/\//, '').startsWith(ipStart)) {
@@ -512,6 +515,12 @@ DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVE
 DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
 DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
 DO NOT EVER DEVISE A URL YOURSELF. ONLY EVER USE THIS FOR URLS THAT YOU ARE GIVEN OR SEE IN A MESSAGE.
+
+DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
+DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
+DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
+DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
+DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
 - request_raw_url: Use this when you:
 A: are asked to fetch a URL with a specific method, headers, or body.
 B: are asked to get the raw contents of a website.
@@ -526,6 +535,7 @@ D: are in need of a list of results.
 E: are in need of further details.
 Try to use this when answering most questions, it will make your answers seem more authentic and then if users ask for sources later you can provide it.
 This should always be used in conjunction with request_url. Snippets will never be enough to provide enough information. Visit the websites and tell the users what they want to know from it, not where they can find it.
+If you ABSOLUTELY have to, you may use this tool to find images for users which EXPLICITLY ask for them.
 - evaluate_luau: Use this when you:
 A: need to automate a complex task.
 C: have some other requirement in which creating a quick script could be useful.
