@@ -29,6 +29,10 @@ const levelColors = {
     }
 };
 
+const nonGlobalLevels = [
+    Level.Debug,
+]
+
 function levelPrefix(level: Level): string {
     const highestLevelLength = Math.max(...Object.values(levelPrefixes).map(l => l.length));
 
@@ -73,7 +77,9 @@ function log(level: Level, ...message: unknown[]) {
     GlobalEvents.emit("log", fileString, level);
     // TODO: catch these?
     fs.appendFile(`./logs/${Level[level].toLowerCase()}.log`, fileString)
-    fs.appendFile(`./logs/global.log`, fileString)
+    if (!nonGlobalLevels.includes(level)) {
+        fs.appendFile(`./logs/global.log`, fileString)
+    }
 }
 
 export function debug(...message: unknown[]) {

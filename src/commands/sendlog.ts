@@ -4,7 +4,7 @@ import fs from "fs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
 
-
+const debugWhitelist = ["440163494529073152"]
 
 function replaceLast(str: string, search: string, replacement: string): string {
     const lastIndex = str.lastIndexOf(search);
@@ -34,7 +34,6 @@ const command = new Command(
                     { name: "error.log", value: "error.log" },
                     { name: "warn.log", value: "warn.log" },
                     { name: "info.log", value: "info.log" },
-                    { name: "debug.log", value: "debug.log" },
                 ]
             })
         ]
@@ -57,6 +56,17 @@ const command = new Command(
                 message: `the log file \`${log_file}\` does not exist`,
             });
         }
+        let isDebug = false
+        if (log_file === "./logs/debug.log") {
+            isDebug = true
+        }
+        if (isDebug && !debugWhitelist.includes(invoker.author.id)) {
+            action.reply(invoker, { content: "user is not in debug logs whitelist", ephemeral: true });
+            return new CommandResponse({
+                error: true,
+                message: "user is not in debug logs whitelist",
+            });
+        }
 
         if (will_be_piped) {
             action.reply(invoker, { content: "piped log file contents", ephemeral: true });
@@ -65,7 +75,7 @@ const command = new Command(
 
         const sent = await action.reply(invoker, { content: `uploading...` });
         if (!sent) return;
-        action.edit(sent, { content: `${log}${log.endsWith(".log") ? "" : ".log"}:`, files: [log_file] });
+        action.edit(sent, { content: `${isDebug ? "-# debug whitelist exclusive file\n" : ""}${log}${log.endsWith(".log") ? "" : ".log"}:`, files: [log_file] });
         return new CommandResponse({ pipe_data: { input_text: fs.readFileSync(log_file, "utf8") } });
     }
 );
