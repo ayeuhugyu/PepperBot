@@ -235,11 +235,13 @@ li {
 /* queue */
 
 .queue-title {
-    padding-top: 0.25em;
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 .queue-controller {
     padding: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 .queue-controller .queue-input-element {
@@ -260,4 +262,13 @@ li {
     border-right: 0.1em solid var(--border-color);
     padding-left: 0.35em;
     padding-right: 0.35em;
+}
+
+.queue-item-thumbnail {
+    width: 5em;
+    height: 5em;
+    border-radius: 0.5em;
+    margin-right: 0.5em;
+    object-fit: cover;
+    overflow: hidden;
 }

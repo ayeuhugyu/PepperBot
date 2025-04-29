@@ -1,4 +1,4 @@
-<div class="queue-title card flex column no-margin">
+<div class="queue-title card flex column">
     <h1>{{guildName}}</h1>
     <p class="no-margin"><i>queue for {{guildName}}</i></p>
 </div>
@@ -26,14 +26,19 @@
                 <input type="hidden" name="queueId" value="{{../queueId}}">
                 <button type="submit" class="card hover-button background-standard remove-button">Remove</button> <!-- probably should change this to a simple X svg or something but im not doin styling rn -->
             </form>
-            {{#if this.isPlaying}}<b>{{/if}}
-            <span class="queue-item-index">{{this.index}}</span>
-            {{#if this.url}}
-                <a href="{{this.url}}">{{this.name}}</a>
-            {{else}}
-                file: {{this.name}}
+            {{#if this.thumbnail}}
+                <img src="{{this.thumbnail}}" alt="Thumbnail" class="queue-item-thumbnail">
             {{/if}}
-            {{#if this.isPlaying}}</b>{{/if}}
+            <div class="video-info" id="{{this.index}}">
+                {{#if this.isPlaying}}<b>{{/if}}
+                    <span class="queue-item-index">{{this.index}}</span>
+                    {{#if this.url}}
+                        <a href="{{this.url}}">{{this.name}}</a>
+                    {{else}}
+                        file: {{this.name}}
+                    {{/if}}
+                {{#if this.isPlaying}}</b>{{/if}}
+            </div>
         </li>
         {{/each}}
     </ul>

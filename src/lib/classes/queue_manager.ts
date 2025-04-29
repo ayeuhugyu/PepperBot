@@ -60,7 +60,7 @@ function getErrorFromStderr(stderr: string, fallback: string): string {
     return fallback;
 }
 
-function toHHMMSS(secs: number) {
+export function toHHMMSS(secs: number) {
     const hours   = Math.floor(secs / 3600)
     const minutes = Math.floor(secs / 60) % 60
     const seconds = secs % 60

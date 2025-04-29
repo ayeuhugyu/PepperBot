@@ -3,7 +3,7 @@ import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
-import { getInfo, Queue, ResponseType, Video, VideoError, getQueueByGuildId, QueueState } from "../lib/classes/queue_manager";
+import { getInfo, Queue, ResponseType, Video, VideoError, getQueueByGuildId, QueueState, toHHMMSS } from "../lib/classes/queue_manager";
 import { getStatistics } from "../lib/statistics";
 import { Client } from "discord.js";
 
@@ -156,6 +156,8 @@ export function listen(client: Client) {
                 index: (index + 1).toString().padStart(largestIndex.toString().length, '0'),
                 name: item instanceof Video ? item.title : item.name,
                 url: item instanceof Video ? item.url : undefined,
+                thumbnail: item instanceof Video ? item.thumbnail : undefined,
+                duration: toHHMMSS(item instanceof Video ? item.length : 0) || undefined,
                 type: item instanceof Video ? "video" : "sound",
                 isPlaying: index === queue.current_index && queue.state === QueueState.Playing,
             }
