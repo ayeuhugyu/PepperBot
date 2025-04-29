@@ -1,10 +1,10 @@
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import fs from "fs";
-import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
 
-const debugWhitelist = ["440163494529073152"]
+const debugWhitelist = CommandAccessTemplates.dev_only.whitelist.users;
 
 function replaceLast(str: string, search: string, replacement: string): string {
     const lastIndex = str.lastIndexOf(search);

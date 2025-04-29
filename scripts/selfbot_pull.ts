@@ -59,6 +59,7 @@ for (const file of eventFiles) {
     (async () => {
         const event = await import(\`./events/\${file}\`);
         client.on(event.default.name, event.default.execute);
+        log.info("registered event " + event.default.name);
     })();
 }
 
@@ -80,6 +81,7 @@ async function init() {
     try {
         await client.login(process.env.DISCORD_TOKEN);
         client.user?.setActivity("pepper whisperers.", { type: "LISTENING" });
+        log.info("set client activity")
     } catch (err) {
         log.error("failed to login into discord. wifi down? token invalid?");
         log.error(err);

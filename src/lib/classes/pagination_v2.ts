@@ -1,19 +1,25 @@
 import { Message, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Interaction, InteractionResponse, JSONEncodable, APIActionRowComponent, ActionRowData, MessageActionRowComponent, MessageActionRowComponentData, MessageActionRowComponentBuilder, MessageFlags } from 'discord.js';
+import * as action from "../discord_action";
+import * as log from "../log";
+import { randomUUIDv7 } from 'bun';
 
-import * as action from "../discord_action"
 class V2PagedMenu {
     pages: NonNullable<action.MessageInput['components']>;
     currentPage: number;
     activeMessage: Message | null;
     ended: boolean = false;
+    private id: string;
 
     constructor(pages: typeof this.pages) {
         this.pages = pages;
         this.currentPage = 0;
         this.activeMessage = null;
+        this.id = randomUUIDv7();
+        log.debug(`initialized V2PagedMenu with ${pages.length} pages and id ${this.id}`);
     }
 
     getActionRow(): ActionRowBuilder<ButtonBuilder> {
+        log.debug(`fetched${this.ended ? " disabled" : ""} action row for V2PagedMenu ${this.id}`);
         if (this.ended) {
             return new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(
@@ -65,6 +71,7 @@ class V2PagedMenu {
 
         collector.on('end', () => {
             if (this.activeMessage) {
+                log.debug(`disabling  V2PagedMenu on page ${this.currentPage} with id ${this.id}`);
                 this.ended = true;
                 this.updateMessage()
             }
@@ -72,6 +79,7 @@ class V2PagedMenu {
     }
 
     private async updateMessage(): Promise<void> {
+        log.debug(`updating message for V2PagedMenu on page ${this.currentPage} with id ${this.id}`);
         if (this.activeMessage) {
             await action.edit(this.activeMessage, {
                 components: [this.pages![this.currentPage], this.getActionRow()],

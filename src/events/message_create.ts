@@ -7,8 +7,9 @@ import { respond, GPTProcessor } from "../lib/gpt";
 import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
+import * as log from "../lib/log";
 
-async function gptHandler(message: Message) {
+async function gptHandler(message: Message<true>) {
     // Only process if the bot is mentioned.
     if (!message.mentions || !message.mentions.has(message.client.user?.id)) {
         return;
@@ -29,6 +30,8 @@ async function gptHandler(message: Message) {
         return;
     }
 
+    log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
+
     const processor = new GPTProcessor();
     processor.repliedMessage = message;
     processor.currentContent = "processing...";
@@ -38,13 +41,16 @@ async function gptHandler(message: Message) {
 }
 
 async function commandHandler(message: Message<true>) {
-    if (message.author.bot || message.author.id === message.client.user?.id) return;
+    if (message.author.bot || message.author.id === message.client.user?.id) {
+        return;
+    };
     const config = await fetchGuildConfig(message.guild?.id);
 
     const prefix = config.other.prefix;
     if (!message.content.startsWith(prefix) || message.author.bot) return;
-
-    const segments = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|')) || [message.content];
+    log.debug(`command handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id})`);
+    const segments = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|').trim()) || [message.content];
+    log.debug(`split message into ${segments.length} segments: ${segments.map(s => `"${s}"`).join(", ")}`);
     if (segments.length > 3) {
         await action.reply(message, "piping limit of 3 exceeded");
         return;
@@ -77,15 +83,10 @@ async function commandHandler(message: Message<true>) {
     let commandIndex = 0;
     for (const { command, provided_name } of queue) {
         if (!command) {
+            log.info(`command ${provided_name} not found`);
             await action.reply(message, `${prefix}${provided_name} doesn't exist :/`);
             return;
         }
-        /*
-        if (previous_command && !previous_command.pipable_to.includes(command.name)) {
-            await action.reply(message, `${prefix}${command.name} is not pipable to ${prefix}${provided_name}`);
-            return;
-        }
-        */ // should be checking for subcommand pipability, but im ngl im just too lazy to do allat rn and it doesn't really matter if this doesn't happen, some arguments will just be possibly undefined
         message.content = segments[commandIndex]?.trim();
         if (!message.content.startsWith(prefix)) {
             message.content = `${prefix}${message.content.replaceAll("\\|", "|")}`;
@@ -95,6 +96,7 @@ async function commandHandler(message: Message<true>) {
         if (commandEntryType === CommandEntryType.CommandAlias || commandEntryType === CommandEntryType.SubcommandRootAlias) {
             alias = provided_name;
         }
+        log.debug(`executing provided name ${provided_name} for command ${command.name}`);
         const input: CommandInput = await CommandInput.new(message, command, undefined!, {
             command_entry_type: commandEntryType,
             alias_used: alias,

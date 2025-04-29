@@ -93,19 +93,26 @@ export function reply<T extends CommandInvoker>(invoker: T, content: Partial<Mes
             delete content.components_v2
         }
     }
-    return invoker.reply(fixMessage(content) as InteractionReplyOptions & MessageReplyOptions) as never
+    const reply = fixMessage(content) as InteractionReplyOptions & MessageReplyOptions
+    log.debug(`replying to ${invoker.author.username} (cid: ${invoker.channel?.id}, mid: ${invoker.id}) with`, reply);
+    return invoker.reply(reply) as never
 }
 
 export type SendableChannel = TextChannel | DMChannel | PartialDMChannel | NewsChannel | StageChannel | PublicThreadChannel<boolean> | PrivateThreadChannel | VoiceChannel
 
 export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message>  {
-    return channel.send(fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions)
+    const reply = fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions
+    log.debug(`sending message to ${channel.id} with`, reply);
+    return channel.send(reply)
 }
 
 export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> {
-    return message.edit(fixMessage(content) as string | MessagePayload | MessageEditOptions);
+    const reply = fixMessage(content) as string | MessagePayload | MessageEditOptions
+    log.debug(`editing message ${message.id} with`, reply);
+    return message.edit(reply);
 }
 
 export function deleteMessage(message: Message): Promise<OmitPartialGroupDMChannel<Message>> {
+    log.debug(`deleting message ${message.id}`);
     return message.delete();
 }

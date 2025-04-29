@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, Coll
 import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { APIParameters, getConversation, GPTModelName, models } from "../lib/gpt";
+import { APIParameters, conversations, getConversation, GPTModelName, models } from "../lib/gpt";
 import { textToAttachment } from "../lib/attachment_manager";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
@@ -198,6 +198,8 @@ const setparam = new Command(
     }
 );
 
+const allWhitelist = CommandAccessTemplates.dev_only.whitelist.users;
+
 const get = new Command(
     {
         name: 'get',
@@ -220,7 +222,16 @@ const get = new Command(
     async function execute ({ invoker, args, guild_config }) {
         const conversation = await getConversation(invoker as Message);
         // "full" is true if there's any extra text after the command
-        const full = !!(args.full && args.full.trim().length);
+        const full = !!(args.full && ((typeof args.full === "string") ? args.full.trim().length : true));
+        const all = allWhitelist.includes(invoker.author.id) && (typeof args.full === "string") && (args.full == "all")
+        if (all) {
+            const output = conversations.map((conv) => {
+                return conv.toReasonableOutput(full);
+            });
+            const file = textToAttachment(JSON.stringify(output, null, 2), "conversations.txt");
+            await action.reply(invoker, { content: "here's all conversations", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({ pipe_data: { input_text: JSON.stringify(output, null, 2) } });
+        }
         const output = conversation.toReasonableOutput(full);
         const file = textToAttachment(JSON.stringify(output, null, 2), "conversation.txt");
         await action.reply(invoker, { content: "here's your conversation", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });

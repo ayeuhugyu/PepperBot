@@ -4,6 +4,7 @@ import commands from "../lib/command_manager";
 import * as log from "../lib/log";
 
 async function commandHandler(interaction: ChatInputCommandInteraction) {
+    log.debug(`recieved interaction command "${interaction.commandName}" from ${interaction.user.username} in <#${interaction.channel?.id}>`);
     const command = commands.get(interaction.commandName);
     if (!command) {
         log.warn(`invalid interaction command "${interaction.commandName}"`);
@@ -13,6 +14,7 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
     const args = {} as Record<string, unknown>
     const stack = Array.from(interaction.options.data);
 
+    log.debug(`parsing ${stack.length} interaction arguments`)
     while (stack.length !== 0) {
         const option = stack.pop()!;
 
@@ -30,6 +32,7 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
             case ApplicationCommandOptionType.User: { args[option.name] = option.user; break }
         }
     }
+    log.debug(`parsed interaction arguments: ${Object.entries(args).map(([k, v]) => `${k}: ${v}`).join(", ")}`)
 
     const authored = Object.assign(interaction, { author: interaction.user }) as FormattedCommandInteraction;
     const input = await CommandInput.new(authored, command as Command<any>, args, { will_be_piped: false }, commands)

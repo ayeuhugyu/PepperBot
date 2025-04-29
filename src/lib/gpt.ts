@@ -891,6 +891,7 @@ async function sanitizeMessage(message: Message | GPTFormattedCommandInteraction
                 }
             });
         }
+    log.debug(`sanitized message ${message.id} with content`, contentParts);
     return contentParts;
 }
 
@@ -1018,6 +1019,7 @@ export class Conversation {
     }
 
     async run() {
+        log.debug(`running conversation ${this.id} with ${this.messages.length} messages`);
         try {
             const apiInput = this.toApiInput();
             switch (this.api_parameters.model.provider) {

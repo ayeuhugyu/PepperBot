@@ -438,6 +438,7 @@ export class Command<
             log.info("executing command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
             await statistics.incrementCommandUsage((this.parent_command ? this.parent_command + " " + this.name : this.name));
             await statistics.incrementInvokerTypeUsage(input.invoker_type);
+            log.info("incremented statistics for command " + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " and invoker type " + input.invoker_type);
             const start = performance.now();
             const { invoker } = input;
             if (!invoker) {
@@ -451,6 +452,7 @@ export class Command<
                 ? InvokerType.Message
                 : InvokerType.Interaction;
 
+            log.info(`testing ${invoker.author.id} against access list for command ${this.name}`);
             const { whitelisted, blacklisted } = this.access.test(invoker);
 
             if (!whitelisted || blacklisted) {
@@ -487,7 +489,7 @@ export class Command<
             // todo: add context checks for bot dm and private channel
 
             const bot_is_admin = invoker.guild?.members.me?.permissions.has(PermissionFlagsBits.Administrator) || false;
-
+            if (!bot_is_admin) log.debug(`bot is not admin in guild ${invoker.guild?.name} ${invoker.guild?.id}`);
             if (!this.allow_external_guild && !bot_is_admin) {
                 log.info("external guilds are not enabled for command " + this.name);
                 action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "oh noes! i lack them permissions!", ephemeral: true });
@@ -510,10 +512,12 @@ export class Command<
 
                 if (subcommand === undefined) {
                     // pass to default executor
+                    log.debug("subcommand not found, passing to default executor");
                     const response = await this.execute_internal(input);
                     log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
                     return response;
                 }
+                log.debug("subcommand found: " + subcommand.name);
 
                 if (input.is_message()) {
                     input.invoker.content = input.invoker.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this makes get arguments functions easily standardizable
@@ -544,6 +548,7 @@ export class Command<
                 canPipe = pipableCommands.some((pipe) => next_pipe_message?.replace(input.guild_config.other.prefix, "")?.startsWith(pipe));
                 if (!canPipe) {
                     await action.reply(invoker, `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`);
+                    log.debug(`attempt to pipe command ${this.name} to ${piping_to} failed`);
                     return new CommandResponse({
                         error: true,
                         message: `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`,
@@ -560,6 +565,7 @@ export class Command<
                 log.info("executed command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " in " + ((performance.now() - start).toFixed(3)) + "ms");
             }
             await statistics.addExecutionTime(this.name, performance.now() - start);
+            log.debug(`added execution time for command ${this.name} (${(performance.now() - start).toFixed(3)}ms)`);
             return response;
         };
     }
