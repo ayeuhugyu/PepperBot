@@ -6,7 +6,7 @@ import process from "node:process";
 import * as log from "./log";
 import { Stream } from "node:stream";
 import { textToAttachment } from "./attachment_manager";
-import { ActionRow, Container, File, MediaGallery, Separator, TextDisplay } from "./classes/components";
+import { ActionRow, Container, File, MediaGallery, Section, Separator, TextDisplay } from "./classes/components";
 
 type ApiMessageComponents = JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>
 export interface MessageInput {
@@ -14,7 +14,7 @@ export interface MessageInput {
     embeds?: (JSONEncodable<APIEmbed> | APIEmbed | Embed | EmbedBuilder)[];
     allowPings?: boolean;
     files?: (BufferResolvable | Stream | JSONEncodable<APIAttachment> | Attachment | AttachmentBuilder | AttachmentPayload)[];
-    components?: (ApiMessageComponents | Container | ActionRow | TextDisplay | Separator | File | MediaGallery)[];
+    components?: (ApiMessageComponents | Container | ActionRow | TextDisplay | Separator | File | Section | MediaGallery)[];
     attachments?: Attachment[] | AttachmentBuilder[];
     ephemeral: boolean;
     components_v2?: boolean;
