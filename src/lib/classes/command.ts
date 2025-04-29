@@ -541,7 +541,7 @@ export class Command<
                         pipableCommands.push(pipe);
                     }
                 });
-                canPipe = pipableCommands.some((pipe) => next_pipe_message?.startsWith(pipe));
+                canPipe = pipableCommands.some((pipe) => next_pipe_message?.replace(input.guild_config.other.prefix, "")?.startsWith(pipe));
                 if (!canPipe) {
                     await action.reply(invoker, `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`);
                     return new CommandResponse({
