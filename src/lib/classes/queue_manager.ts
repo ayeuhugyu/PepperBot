@@ -83,117 +83,161 @@ export function parseLength(length: string): number {
     return s;
 }
 
+enum VideoParser {
+    Default = "Default",
+    Spotify = "Spotify",
+    AppleMusic = "Apple Music"
+}
+
+function getParser(url: string) {
+    if (url.includes("spotify.com")) {
+        return VideoParser.Spotify;
+    }
+    if (url.includes("music.apple.com")) {
+        return VideoParser.AppleMusic;
+    }
+    return VideoParser.Default;
+}
+
 export async function getInfo(url: string, no_playlist: boolean = false): Promise<Response<false, (Video | Playlist)> | Response<true, VideoError>> {
+    const parser = getParser(url);
+
     return new Promise((resolve, reject) => {
-        const command = `yt-dlp`;
-        const cookies = process.env.PATH_TO_COOKIES ? true : false;
-        const args = [
-            '--simulate',
-            '--get-title',
-            '--get-duration',
-            '--get-id',
-            '--get-url',
-            '--get-thumbnail',
-            no_playlist ? '--no-playlist' : '--flat-playlist',
-        ]
-        if (cookies) {
-            args.push("--cookies", process.env.PATH_TO_COOKIES || "");
-        }
-        args.push(sanitizeUrl(url));
-
-        execFile(command, args, (error, stdout, stderr) => {
-            if (error) {
-                reject({
-                    type: ResponseType.Error,
-                    data: {
-                        message: getErrorFromStderr(stderr, "failed to get video info"),
-                        full_error: stderr.replaceAll('\n', "")
-                    }
-                });
-                return;
-            }
-
-            const lines = stdout.split('\n').filter((line) => line !== "" && !line.startsWith("WARNING:") && !line.startsWith("[download]"));
-
-            if (lines.length < 8) { // for some odd reason, some websites return multiple urls from --get-url? this probably isn't a catch all solution but i have zero fuckin clue what else to do
-                const title = lines[0];
-                const id = lines[1];
-                const thumbnail = lines[lines.length - 2]
-                const length = lines[lines.length - 1];
-                if (!title || !id || !length || !url) {
-                    reject({
-                        type: ResponseType.Error,
-                        data: {
-                            message: "failed to get video info",
-                            full_error: "stdout.split('\\n') returned an array with less than 3 elements"
-                        }
+        switch (parser) {
+            case VideoParser.Spotify:
+                    const spotifyVideo = new Video(url);
+                    spotifyVideo.title = "Unknown Spotify Video";
+                    spotifyVideo.length = 0;
+                    spotifyVideo.id = "Unknown";
+                    spotifyVideo.thumbnail = "https://example.com"
+                    resolve({
+                        type: ResponseType.Success,
+                        data: spotifyVideo
                     });
-                    return;
+                break;
+            case VideoParser.AppleMusic:
+                    const appleMusicVideo = new Video(url);
+                    appleMusicVideo.title = "Unknown Apple Music Video";
+                    appleMusicVideo.length = 0;
+                    appleMusicVideo.id = "Unknown";
+                    appleMusicVideo.thumbnail = "https://example.com"
+                    resolve({
+                        type: ResponseType.Success,
+                        data: appleMusicVideo
+                    });
+                break;
+            default:
+                const command = `yt-dlp`;
+                const cookies = process.env.PATH_TO_COOKIES ? true : false;
+                const args = [
+                    '--simulate',
+                    '--get-title',
+                    '--get-duration',
+                    '--get-id',
+                    '--get-url',
+                    '--get-thumbnail',
+                    no_playlist ? '--no-playlist' : '--flat-playlist',
+                ]
+                if (cookies) {
+                    args.push("--cookies", process.env.PATH_TO_COOKIES || "");
                 }
-                const video = new Video(url);
-                video.title = title;
-                video.length = parseLength(length);
-                video.id = id;
-                video.thumbnail = thumbnail
-                resolve({
-                    type: ResponseType.Success,
-                    data: video
-                })
-                return;
-            }
+                args.push(sanitizeUrl(url));
 
-            const segments = lines.map((_, i) => {
-                const segment = lines.slice(i, i + 4);
-                const urlLine = segment.find(line => /^https?:\/\//.test(line));
-                const timeLine = segment.find(line => /^\d+:\d+$/.test(line));
-                if (urlLine) {
-                    segment[2] = urlLine;
-                }
-                if (timeLine) {
-                    segment[3] = timeLine;
-                }
-                return segment;
-            }).filter((_, i) => i % 4 === 0);
+                execFile(command, args, (error, stdout, stderr) => {
+                    if (error) {
+                        reject({
+                            type: ResponseType.Error,
+                            data: {
+                                message: getErrorFromStderr(stderr, "failed to get video info"),
+                                full_error: stderr.replaceAll('\n', "")
+                            }
+                        });
+                        return;
+                    }
 
-            if (segments.length > 1) {
-                const playlist = new Playlist(url);
-                segments.forEach(([title, id, url, length]) => {
-                    if (!title || !id || !url || !length) {
-                        if (playlist.videos.length === 0) {
+                    const lines = stdout.split('\n').filter((line) => line !== "" && !line.startsWith("WARNING:") && !line.startsWith("[download]"));
+
+                    if (lines.length < 8) { // for some odd reason, some websites return multiple urls from --get-url? this probably isn't a catch all solution but i have zero fuckin clue what else to do
+                        const title = lines[0];
+                        const id = lines[1];
+                        const thumbnail = lines[lines.length - 2]
+                        const length = lines[lines.length - 1];
+                        if (!title || !id || !length || !url) {
                             reject({
                                 type: ResponseType.Error,
                                 data: {
                                     message: "failed to get video info",
-                                    full_error: "stdout.split('\\n') returned an array with less than 4 elements"
+                                    full_error: "stdout.split('\\n') returned an array with less than 3 elements"
                                 }
                             });
                             return;
-                        } else {
-                            return;
                         }
+                        const video = new Video(url);
+                        video.title = title;
+                        video.length = parseLength(length);
+                        video.id = id;
+                        video.thumbnail = thumbnail
+                        resolve({
+                            type: ResponseType.Success,
+                            data: video
+                        })
+                        return;
                     }
-                    const video = new Video(url);
-                    video.title = title;
-                    video.length = parseLength(length);
-                    video.id = id;
-                    if (video.url.includes("youtube")) {
-                        video.thumbnail = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
+
+                    const segments = lines.map((_, i) => {
+                        const segment = lines.slice(i, i + 4);
+                        const urlLine = segment.find(line => /^https?:\/\//.test(line));
+                        const timeLine = segment.find(line => /^\d+:\d+$/.test(line));
+                        if (urlLine) {
+                            segment[2] = urlLine;
+                        }
+                        if (timeLine) {
+                            segment[3] = timeLine;
+                        }
+                        return segment;
+                    }).filter((_, i) => i % 4 === 0);
+
+                    if (segments.length > 1) {
+                        const playlist = new Playlist(url);
+                        segments.forEach(([title, id, url, length]) => {
+                            if (!title || !id || !url || !length) {
+                                if (playlist.videos.length === 0) {
+                                    reject({
+                                        type: ResponseType.Error,
+                                        data: {
+                                            message: "failed to get video info",
+                                            full_error: "stdout.split('\\n') returned an array with less than 4 elements"
+                                        }
+                                    });
+                                    return;
+                                } else {
+                                    return;
+                                }
+                            }
+                            const video = new Video(url);
+                            video.title = title;
+                            video.length = parseLength(length);
+                            video.id = id;
+                            if (video.url.includes("youtube")) {
+                                video.thumbnail = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
+                            }
+                            playlist.videos.push(video);
+                        });
+                        resolve({
+                            type: ResponseType.Success,
+                            data: playlist
+                        });
                     }
-                    playlist.videos.push(video);
+                    reject({
+                        type: ResponseType.Error,
+                        data: {
+                            message: "failed to get video info",
+                            full_error: "stdout.split('\\n') returned an empty array"
+                        }
+                    });
                 });
-                resolve({
-                    type: ResponseType.Success,
-                    data: playlist
-                });
-            }
-            reject({
-                type: ResponseType.Error,
-                data: {
-                    message: "failed to get video info",
-                    full_error: "stdout.split('\\n') returned an empty array"
-                }
-            });
-        });
+            break;
+        }
     });
 }
 
@@ -204,70 +248,93 @@ export class Video {
     thumbnail?: string;
     id: string = "";
     toFile(): Promise<Response<true, VideoError> | Response<false, string>> {
+        const parser = getParser(this.url);
         return new Promise ((resolve, reject) => {
-            if (!this.url) {
-                log.error("attempt to convert video to file with no url");
-                reject({
-                    type: ResponseType.Error,
-                    data: {
-                        message: "missing video url",
-                        full_error: "attempt to convert video to file with no url"
-                    }
-                });
-                return;
-            }
-            //let stream: internal.Readable;
-            try {
-                const cacheDir = path.resolve(__dirname, "../../../cache/ytdl");
-                if (!fs.existsSync(cacheDir)) {
-                    fs.mkdirSync(cacheDir, { recursive: true });
-                }
-
-                const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title + "_" + this.id))}.mp3`);
-                const archivePath = path.join(cacheDir, 'archive.txt');
-                const command = `yt-dlp`;
-                const cookies = process.env.PATH_TO_COOKIES ? true : false;
-                const args = [
-                    '-f', 'bestaudio/best',
-                    '--extract-audio',
-                    '--audio-format', 'mp3',
-                    '--no-playlist',
-                    '--download-archive', archivePath,
-                    '--limit-rate', '250k',
-                    '-o', filePath,
-                ];
-                if (cookies) {
-                    args.push("--cookies", process.env.PATH_TO_COOKIES || "");
-                }
-                args.push(this.url);
-
-                execFile(command, args, (error, stdout, stderr) => {
-                    if (error) {
+            switch (parser) {
+                case VideoParser.Spotify:
+                    resolve({
+                        type: ResponseType.Error,
+                        data: {
+                            message: "downloading from spotify is incomplete",
+                            full_error: "spotify video"
+                        }
+                    });
+                    break;
+                case VideoParser.AppleMusic:
+                    resolve({
+                        type: ResponseType.Error,
+                        data: {
+                            message: "downloading from apple music is incomplete",
+                            full_error: "apple music video"
+                        }
+                    });
+                    break;
+                default:
+                    if (!this.url) {
+                        log.error("attempt to convert video to file with no url");
                         reject({
                             type: ResponseType.Error,
                             data: {
-                                message: getErrorFromStderr(stderr, "failed to convert video to file"),
-                                full_error: stderr.replaceAll('\n', "")
+                                message: "missing video url",
+                                full_error: "attempt to convert video to file with no url"
                             }
                         });
                         return;
                     }
+                    //let stream: internal.Readable;
+                    try {
+                        const cacheDir = path.resolve(__dirname, "../../../cache/ytdl");
+                        if (!fs.existsSync(cacheDir)) {
+                            fs.mkdirSync(cacheDir, { recursive: true });
+                        }
 
-                    resolve({
-                        type: ResponseType.Success,
-                        data: filePath
-                    });
-                });
-            } catch (err) {
-                log.error("failed to convert video to file: ", err);
-                reject({
-                    type: ResponseType.Error,
-                    data: {
-                        message: "failed to convert video to file",
-                        full_error: err
+                        const filePath = path.join(cacheDir, `${fixFileName(sanitizeUrl(this.title + "_" + this.id))}.mp3`);
+                        const archivePath = path.join(cacheDir, 'archive.txt');
+                        const command = `yt-dlp`;
+                        const cookies = process.env.PATH_TO_COOKIES ? true : false;
+                        const args = [
+                            '-f', 'bestaudio/best',
+                            '--extract-audio',
+                            '--audio-format', 'mp3',
+                            '--no-playlist',
+                            '--download-archive', archivePath,
+                            '--limit-rate', '250k',
+                            '-o', filePath,
+                        ];
+                        if (cookies) {
+                            args.push("--cookies", process.env.PATH_TO_COOKIES || "");
+                        }
+                        args.push(this.url);
+
+                        execFile(command, args, (error, stdout, stderr) => {
+                            if (error) {
+                                reject({
+                                    type: ResponseType.Error,
+                                    data: {
+                                        message: getErrorFromStderr(stderr, "failed to convert video to file"),
+                                        full_error: stderr.replaceAll('\n', "")
+                                    }
+                                });
+                                return;
+                            }
+
+                            resolve({
+                                type: ResponseType.Success,
+                                data: filePath
+                            });
+                        });
+                    } catch (err) {
+                        log.error("failed to convert video to file: ", err);
+                        reject({
+                            type: ResponseType.Error,
+                            data: {
+                                message: "failed to convert video to file",
+                                full_error: err
+                            }
+                        });
+                        return;
                     }
-                });
-                return;
+                break;
             }
         });
     }
