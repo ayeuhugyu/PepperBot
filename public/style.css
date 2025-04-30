@@ -212,6 +212,20 @@ li {
 
 /* specific stuff */
 
+/* sidebar */
+
+.sidebar-container {
+    position: fixed;
+    top: 0.5em;
+    left: 0.5em;
+    z-index: 100;
+    padding: 0.5em;
+}
+
+.sidebar-button {
+    padding: 0.25em;
+}
+
 /* index */
 
 .landing-page-container {
