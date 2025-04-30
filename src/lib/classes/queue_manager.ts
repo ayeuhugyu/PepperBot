@@ -130,7 +130,8 @@ export async function getInfo(url: string, no_playlist: boolean = false): Promis
                 const command = `yt-dlp`;
                 const cookies = process.env.PATH_TO_COOKIES ? true : false;
                 const args = [
-                    '--simulate',
+                    '--skip-download',
+                    '--no-warnings',
                     '--get-title',
                     '--get-duration',
                     '--get-id',
