@@ -52,30 +52,44 @@ export function listen(client: Client) {
                 // fallback to empty object if statistics fails to load
                 log.error("Failed to load statistics");
             }
+            let executionTimesAverages: Record<string, number> = {};
+            Object.entries(statistics?.execution_times).forEach(([key, value]) => {
+                executionTimesAverages[key] = Math.round(value.reduce((sum, num) => sum + num, 0) / value.length);
+            });
+            executionTimesAverages = Object.fromEntries(
+                Object.entries(executionTimesAverages).sort(([, a], [, b]) => {
+                    // sort the execution times by average time (highest to lowest)
+                    return b - a;
+                })
+            );
+            let commandUsageSorted = Object.entries(statistics?.command_usage || {}).sort(([, a], [, b]) => {
+                // sort the command usage by count (highest to lowest)
+                return b - a;
+            });
             const formattedStatistics = {
                 "execution times": Object.fromEntries(
-                Object.entries(statistics?.execution_times || {}).map(([key, value]) => {
-                    // format the execution time for display
-                    return [key, value.reduce((sum, num) => sum + num, 0) / value.length];
-                })
+                    Object.entries(executionTimesAverages).map(([command, time]) => {
+                        // format the execution times for display
+                        return [`p/${command}`, `${time}ms`];
+                    })
                 ),
                 "command usage": Object.fromEntries(
-                Object.entries(statistics?.command_usage || {}).map(([command, count]) => {
-                    // format the command usage for display
-                    return [command, count];
-                })
+                    commandUsageSorted.map(([command, count]) => {
+                        // format the command usage for display
+                        return [`p/${command}`, count];
+                    })
+                ),
+                "invoker type usage": Object.fromEntries(
+                    Object.entries(statistics?.invoker_type_usage || {}).map(([type, count]) => {
+                        // format the invoker type usage for display
+                        return [type, count];
+                    })
                 ),
                 "totals": {
-                "gpt responses": statistics?.total_gpt_responses || 0, // total gpt responses
-                "command usage": Object.values(statistics?.command_usage || {}).reduce((sum, count) => sum + count, 0),
-                "piped commands": statistics?.total_piped_commands || 0 // total piped commands
+                    "gpt responses": statistics?.total_gpt_responses || 0, // total gpt responses
+                    "command usage": Object.values(statistics?.command_usage || {}).reduce((sum, count) => sum + count, 0),
+                    "piped commands": statistics?.total_piped_commands || 0 // total piped commands
                 },
-                "invoker type usage": Object.fromEntries(
-                Object.entries(statistics?.invoker_type_usage || {}).map(([type, count]) => {
-                    // format the invoker type usage for display
-                    return [type, count];
-                })
-                )
             };
 
             res.render("index", {
@@ -88,9 +102,6 @@ export function listen(client: Client) {
                 guildsPlural: guilds !== 1 ? "s" : "",
                 usersPlural: users !== 1 ? "s" : "",
                 statistics: formattedStatistics,
-                pages: {
-                    "home": "/",
-                }
             });
         } catch (err) {
             next(err);

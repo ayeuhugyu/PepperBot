@@ -156,6 +156,10 @@ li {
     flex-direction: row;
 }
 
+.nowrap {
+    flex-wrap: nowrap;
+}
+
 .gap {
     gap: 1em;
 }
@@ -236,6 +240,7 @@ li {
     display: flex;
     flex: 1;
     height: fit-content;
+    width: fit-content;
     flex-direction: column;
     justify-content: left;
     align-items: flex-start;
@@ -248,6 +253,12 @@ li {
     align-items: flex-start;
     flex-direction: row;
     gap: 1em;
+    overflow-x: auto;
+}
+
+.statistics-column > p {
+    white-space: nowrap;
+    text-wrap: nowrap;
 }
 
 .index-pages-list {

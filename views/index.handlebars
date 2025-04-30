@@ -1,14 +1,11 @@
-<div class="landing-page-container flex row gap page-centered">
+<div class="landing-page-container flex row gap page-centered nowrap">
     <div class="index-column-1 flex column gap">
         <div class="card no-margin index-serving-info">
             <h1>PepperBot</h1>
             <p><i>serving {{users}} user{{usersPlural}} across {{guilds}} server{{guildsPlural}}</i></p>
         </div>
         <div class="card no-margin index-pages-list">
-            <h2>Pages</h1>
-            {{#each pages}}
-                <a href="{{this}}">{{@key}}</a>
-            {{/each}}
+
         </div>
     </div>
     <div class="card no-margin index-statistics">
