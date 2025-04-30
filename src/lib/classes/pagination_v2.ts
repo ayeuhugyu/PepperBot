@@ -4,7 +4,7 @@ import * as log from "../log";
 import { randomUUIDv7 } from 'bun';
 
 class V2PagedMenu {
-    pages: NonNullable<action.MessageInput['components']>;
+    pages: NonNullable<action.MessageInput['components']>[];
     currentPage: number;
     activeMessage: Message | null;
     ended: boolean = false;
@@ -82,7 +82,7 @@ class V2PagedMenu {
         log.debug(`updating message for V2PagedMenu on page ${this.currentPage} with id ${this.id}`);
         if (this.activeMessage) {
             await action.edit(this.activeMessage, {
-                components: [this.pages![this.currentPage], this.getActionRow()],
+                components: [...this.pages![this.currentPage], this.getActionRow()],
                 flags: (this.activeMessage.flags?.bitfield ?? 0) | MessageFlags.IsComponentsV2,
             });
         }
