@@ -157,17 +157,22 @@ export function listen(client: Client) {
                 name: item instanceof Video ? item.title : item.name,
                 url: item instanceof Video ? item.url : undefined,
                 thumbnail: item instanceof Video ? item.thumbnail : undefined,
-                duration: toHHMMSS(item instanceof Video ? item.length : 0) || undefined,
+                duration: item instanceof Video ? toHHMMSS(item.length) : undefined,
                 type: item instanceof Video ? "video" : "sound",
                 isPlaying: index === queue.current_index && queue.state === QueueState.Playing,
             }
         })
+        const errorCookie = req.cookies.queueError;
+        if (errorCookie) {
+            res.clearCookie("queueError");
+        }
         res.render("queue", {
             title: "queue",
             description: "Queue for " + guild?.name || queueId,
             guildName: guild?.name || queueId,
             queue: items,
-            queueId: queueId
+            queueId: queueId,
+            err: errorCookie,
         });
     });
 
@@ -197,7 +202,8 @@ export function listen(client: Client) {
         }
         const response = await getInfo(url).catch((err: Response<true, VideoError>) => { return err });
         if (response.type === ResponseType.Error) {
-            return next(new HttpException(400, response.data.message || response.data.full_error || "Unknown error"));
+            res.cookie("queueError", response.data.message || response.data.full_error || "Unknown error", { maxAge: 5 * 60 * 1000 }); // 5 minutes expiration
+            return res.redirect(`/queue/${queueId}`);
         }
         if (response.type === ResponseType.Success) {
             await queue.add(response.data);

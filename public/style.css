@@ -234,6 +234,10 @@ li {
 
 /* queue */
 
+.queue-page {
+    width: fit-content;
+}
+
 .queue-title {
     padding-top: 0.5em;
     margin-bottom: 0.5em;
@@ -249,19 +253,26 @@ li {
     padding: 0.5em;
 }
 
+.queue-error-text {
+    color: lightcoral;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.queue-item-duration {
+    margin-left: 0.5em;
+}
 .remove-button {
     padding: 0.25em;
+    margin-left: 1em;
 }
 
 .queue-item {
+    padding-bottom: 0.25em;
     margin-bottom: 0.25em;
-}
-
-.queue-item-index {
-    border-left: 0.1em solid var(--border-color);
-    border-right: 0.1em solid var(--border-color);
-    padding-left: 0.35em;
-    padding-right: 0.35em;
+    border-bottom: var(--border-color) 0.1em solid;
 }
 
 .queue-item-thumbnail {

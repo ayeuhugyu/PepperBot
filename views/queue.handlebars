@@ -16,32 +16,39 @@
         <input type="text" name="url" class="queue-input-element card hover-button background-standard no-margin" placeholder="Enter URL" required>
         <button type="submit" class="queue-input-element card hover-button no-padding no-margin background-standard">Add</button> <!-- probably should change this to a simple + svg or something but im not doin styling rn -->
     </form>
+    <span class="queue-error-text">{{err}}</span>
 </div>
 {{#if queue}}
     <ul class="queue card flex column justify-center no-margin">
         {{#each queue}}
         <li class="queue-item flex row align-center small-gap no-margin">
-            <form action="/removeFromQueue" method="get" class="remove-form">
-                <input type="hidden" name="index" value="{{this.index}}">
-                <input type="hidden" name="queueId" value="{{../queueId}}">
-                <button type="submit" class="card hover-button background-standard remove-button">Remove</button> <!-- probably should change this to a simple X svg or something but im not doin styling rn -->
-            </form>
             {{#if this.thumbnail}}
                 <img src="{{this.thumbnail}}" alt="Thumbnail" class="queue-item-thumbnail">
+            {{else}}
+                <div class="queue-item-thumbnail hidden-thumbnail"></div>
             {{/if}}
             <div class="video-info" id="{{this.index}}">
                 {{#if this.isPlaying}}<b>{{/if}}
-                    <span class="queue-item-index">{{this.index}}</span>
                     {{#if this.url}}
-                        <a href="{{this.url}}">{{this.name}}</a>
+                        <span class="queue-item-name">{{this.index}}: <a href="{{this.url}}">{{this.name}}</a></span>
                     {{else}}
-                        file: {{this.name}}
+                        <span class="queue-item-name">{{this.index}}: file://{{this.name}}</span>
                     {{/if}}
                 {{#if this.isPlaying}}</b>{{/if}}
+                {{#if this.duration}}
+                    <br><span class="queue-item-duration">Duration: {{this.duration}}</span>
+                {{/if}}
+                <form action="/removeFromQueue" method="get" class="remove-form">
+                    <input type="hidden" name="index" value="{{this.index}}">
+                    <input type="hidden" name="queueId" value="{{../queueId}}">
+                <button type="submit" class="card hover-button background-standard remove-button">Remove</button> <!-- probably should change this to a simple X svg or something but im not doin styling rn -->
+            </form>
             </div>
         </li>
         {{/each}}
     </ul>
 {{else}}
-    <p>Queue is empty.</p>
+    <div class="queue card flex column justify-center no-margin">
+        <p class="no-margin">No items in queue</p>
+    </div>
 {{/if}}
