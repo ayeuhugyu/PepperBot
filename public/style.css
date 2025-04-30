@@ -244,6 +244,7 @@ li {
 
 .queue-page {
     width: fit-content;
+    max-width: 75%;
 }
 
 .queue-title {
@@ -259,6 +260,13 @@ li {
 .queue-controller .queue-input-element {
     margin: 0;
     padding: 0.5em;
+}
+
+.video-info {
+    text-wrap: break-word;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .queue-error-text {
@@ -280,6 +288,7 @@ li {
 .queue-item {
     padding-bottom: 0.25em;
     margin-bottom: 0.25em;
+    flex-wrap: nowrap;
 }
 
 .queue-item-thumbnail {
