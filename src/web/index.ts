@@ -160,6 +160,7 @@ export function listen(client: Client) {
                 duration: item instanceof Video ? toHHMMSS(item.length) : undefined,
                 type: item instanceof Video ? "video" : "sound",
                 isPlaying: index === queue.current_index && queue.state === QueueState.Playing,
+                isLast: (index === largestIndex - 1) ? '' : ' border-bottom'
             }
         })
         const errorCookie = req.cookies.queueError;

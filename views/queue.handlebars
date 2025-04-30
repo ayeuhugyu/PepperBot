@@ -21,7 +21,7 @@
 {{#if queue}}
     <ul class="queue card flex column justify-center no-margin">
         {{#each queue}}
-        <li class="queue-item flex row align-center small-gap no-margin">
+        <li class="queue-item flex row align-center small-gap no-margin{{this.isLast}}">
             {{#if this.thumbnail}}
                 <img src="{{this.thumbnail}}" alt="Thumbnail" class="queue-item-thumbnail">
             {{else}}
@@ -30,13 +30,13 @@
             <div class="video-info" id="{{this.index}}">
                 {{#if this.isPlaying}}<b>{{/if}}
                     {{#if this.url}}
-                        <span class="queue-item-name">{{this.index}}: <a href="{{this.url}}">{{this.name}}</a></span>
+                        <span class="queue-item-name"><span class="darkened-text">{{this.index}}: </span><a href="{{this.url}}">{{this.name}}</a></span>
                     {{else}}
-                        <span class="queue-item-name">{{this.index}}: file://{{this.name}}</span>
+                        <span class="queue-item-name"><span class="darkened-text">{{this.index}}: file://</span>{{this.name}}</span>
                     {{/if}}
                 {{#if this.isPlaying}}</b>{{/if}}
                 {{#if this.duration}}
-                    <br><span class="queue-item-duration">Duration: {{this.duration}}</span>
+                    <br><span class="queue-item-duration"><span class="darkened-text">Duration: </span>{{this.duration}}</span>
                 {{/if}}
                 <form action="/removeFromQueue" method="get" class="remove-form">
                     <input type="hidden" name="index" value="{{this.index}}">
