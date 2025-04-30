@@ -61,6 +61,10 @@ function format(thing: unknown) {
     }
 }
 
+function strtobl(str: string) {
+    return str.toLowerCase() === "true" || str === "1" || str === "yes" || str === "y";
+}
+
 function log(level: Level, ...message: unknown[]) {
     const formatted = message
         .map(m => format(m))
@@ -73,7 +77,7 @@ function log(level: Level, ...message: unknown[]) {
     const stdoutString = `${prefix}${formatted.split("\n").join("\n" + prefix)}\n`;
     const fileString = `${cleanPrefix}${formatted.split("\n").join("\n" + cleanPrefix)}\n`;
 
-    process.stdout.write(stdoutString);
+    if (!nonGlobalLevels.includes(level) || strtobl(process.env.PRINT_NON_GLOBAL || "")) process.stdout.write(stdoutString);
     GlobalEvents.emit("log", fileString, level);
     // TODO: catch these?
     fs.appendFile(`./logs/${Level[level].toLowerCase()}.log`, fileString)
