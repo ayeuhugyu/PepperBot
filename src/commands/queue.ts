@@ -13,9 +13,12 @@ import { createThemeEmbed, Theme } from "../lib/theme";
 import PagedMenuV2 from "../lib/classes/pagination_v2";
 import { Container, Section, Thumbnail, Separator, TextDisplay, Button, ButtonStyle } from "../lib/classes/components";
 
-async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
+async function queueToMessage(queue: Queue, invoker: CommandInvoker): Promise<PagedMenuV2> {
     const items = queue.items;
-    let pages: Container[] = [];
+    const title = new TextDisplay({
+        content: `### [queue for ${invoker.guild?.name}](https://pepperbot.online/queue/${queue.guild_id})`,
+    })
+    let pages: PagedMenuV2['pages'] = [];
     let currentPage: undefined | Container = undefined;
     let itemsInPage = 0;
 
@@ -30,7 +33,7 @@ async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
         itemsInPage++;
         if (itemsInPage >= 5) {
             page.components.pop(); // remove the last separator
-            pages.push(page);
+            pages.push([title, page]);
             itemsInPage = 0;
             currentPage = undefined;
         } else {
@@ -41,13 +44,13 @@ async function queueToMessage(queue: Queue): Promise<PagedMenuV2> {
         pages.push(currentPage);
     }
     if (items.length === 0) {
-        pages = [new Container({
+        pages = [[title, new Container({
             components: [
                 new TextDisplay({
                     content: "no items in queue"
                 }),
             ]
-        })]
+        })]]
     }
 
     return new PagedMenuV2(pages);
@@ -410,11 +413,8 @@ const view = new Command(
             return;
         }
         const queue = queueResponse.data;
-        let pagedMenu = await queueToMessage(queue);
-        const title = new TextDisplay({
-            content: `### [queue for ${invoker.guild?.name}](https://pepperbot.online/queue/${queue.guild_id})`,
-        })
-        const reply = await action.reply(invoker, { components: [title, pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
+        let pagedMenu = await queueToMessage(queue, invoker);
+        const reply = await action.reply(invoker, { components: [...pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(reply as Message<true>);
     }
 );
@@ -447,11 +447,8 @@ const command = new Command(
             return;
         }
         const queue = queueResponse.data;
-        let pagedMenu = await queueToMessage(queue);
-        const title = new TextDisplay({
-            content: `### [queue for ${invoker.guild?.name}](https://pepperbot.online/queue/${queue.guild_id})`,
-        })
-        const reply = await action.reply(invoker, { components: [title, pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
+        let pagedMenu = await queueToMessage(queue, invoker);
+        const reply = await action.reply(invoker, { components: [...pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(reply as Message<true>);
     }
 );
