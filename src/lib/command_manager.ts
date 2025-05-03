@@ -67,9 +67,9 @@ export class CommandManager {
             let command
             try {
                 command = (await import(`../commands/${file}`))?.default as unknown;
-            } catch (e) {
+            } catch (e: any) {
                 log.error(`failed to load command ${file}: `);
-                log.error(e);
+                log.error(e.message || e);
                 continue;
             }
             if (!command) { log.error(`command ${file} has no default export`); continue; }
