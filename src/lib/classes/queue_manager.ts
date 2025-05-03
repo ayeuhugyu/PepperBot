@@ -608,15 +608,14 @@ export class Queue {
         const item = this.items[this.current_index];
         this.emitter.emit(QueueEventType.Next, this.current_index);
         if (skipped) {
-            this.stop(true);
+            this.voice_manager?.audio_player.pause();
             this.emitter.emit(QueueEventType.Skipped, item);
-        } else { // this will be done by the audio player getting stopped, tis not a concern
-            this.current_index++;
-            if (this.current_index >= this.items.length -1) {
-                this.current_index = 0;
-            }
-            this.play(this.current_index);
         }
+        this.current_index++;
+        if (this.current_index >= this.items.length -1) {
+            this.current_index = 0;
+        }
+        this.play(this.current_index);
     }
     async previous() {
         this.current_index--;
