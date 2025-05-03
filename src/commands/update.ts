@@ -176,12 +176,12 @@ const command = new Command( // todo change descriptions
     async function execute ({ invoker, guild_config, args }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: "invalid subcommand: " + args.subcommand,
+                content: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help update for a list of subcommands`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({
                 error: true,
-                message: "invalid subcommand: " + args.subcommand,
+                message: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help update for a list of subcommands`,
             });
         }
         action.reply(invoker, {

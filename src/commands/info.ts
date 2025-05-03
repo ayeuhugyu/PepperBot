@@ -210,9 +210,9 @@ const command = new Command(
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["subcommand"]),
-    async function execute ({ invoker, args }) {
+    async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
-            action.reply(invoker, `invalid subcommand: ${args.subcommand}`);
+            action.reply(invoker, `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help info for a list of subcommands`);
             return new CommandResponse({});
         }
         action.reply(invoker, "this command does nothing if you dont supply a subcommand")

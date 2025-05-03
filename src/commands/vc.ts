@@ -241,12 +241,12 @@ const command = new Command(
     async function execute ({ invoker, args, piped_data, will_be_piped, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: "invalid subcommand: " + args.subcommand,
+                content: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help vc for a list of subcommands`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({
                 error: true,
-                message: "invalid subcommand: " + args.subcommand,
+                message: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help vc for a list of subcommands`,
             });
         }
         action.reply(invoker, {
