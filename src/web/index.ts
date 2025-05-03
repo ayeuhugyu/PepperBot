@@ -3,7 +3,6 @@ import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
-import { getInfo, Queue, ResponseType, Video, VideoError, getQueueByGuildId, QueueState, toHHMMSS } from "../lib/classes/queue_manager";
 import { getStatistics } from "../lib/statistics";
 import { Client } from "discord.js";
 
@@ -140,110 +139,6 @@ export function listen(client: Client) {
             updateCookies(res, token.access_token, token.refresh_token);
             return res.redirect('/'); // todo: implement redirect system
         }
-    });
-
-    app.get("/queue/:id", async (req, res, next) => {
-        const queueId = req.params.id as string;
-        if (!queueId) {
-            return next(new HttpException(400, "Missing queue id"));
-        }
-        if (isNaN(parseInt(queueId)) || parseInt(queueId) < 0) {
-            return next(new HttpException(400, "Invalid queue id"));
-        }
-        let guild;
-        let queue;
-        try {
-            guild = client.guilds.cache.get(queueId) || await client.guilds.fetch(queueId).catch(() => {});
-            queue = await getQueueByGuildId(queueId);
-        } catch (err) {
-            return next(err);
-        }
-        if (!queue) {
-            return next(new HttpException(404, `Queue not found for guild ${guild?.name || queueId}`));
-        }
-        const largestIndex = queue.items.length;
-        const items = queue.items.map((item, index) => {
-            return {
-                index: (index + 1).toString().padStart(largestIndex.toString().length, '0'),
-                name: item instanceof Video ? item.title : item.name,
-                url: item instanceof Video ? item.url : undefined,
-                thumbnail: item instanceof Video ? item.thumbnail : undefined,
-                duration: item instanceof Video ? toHHMMSS(item.length) : undefined,
-                type: item instanceof Video ? "video" : "sound",
-                isPlaying: index === queue.current_index && queue.state === QueueState.Playing,
-                isLast: (index === largestIndex - 1) ? '' : ' border-bottom'
-            }
-        })
-        const errorCookie = req.cookies.queueError;
-        if (errorCookie) {
-            res.clearCookie("queueError");
-        }
-        res.render("queue", {
-            title: "queue",
-            description: "Queue for " + guild?.name || queueId,
-            guildName: guild?.name || queueId,
-            queue: items,
-            queueId: queueId,
-            err: errorCookie,
-        });
-    });
-
-    app.get("/removeFromQueue", async (req, res, next) => {
-        const queueId = req.query.queueId as string;
-        const index = parseInt(req.query.index as string);
-        if (!queueId || !index) {
-            return next(new HttpException(400, "Missing queue id or index"));
-        }
-        const queue = await getQueueByGuildId(queueId);
-        if (!queue) {
-            return next(new HttpException(404, `Queue not found for guild ${queueId}`));
-        }
-        await queue.remove(Math.max(index - 1, 0)); // need to subtract 1 to undo the +1 done earlier
-        res.redirect(`/queue/${queueId}`);
-    });
-
-    app.get("/addToQueue", async (req, res, next) => {
-        const queueId = req.query.queueId as string;
-        const url = req.query.url as string;
-        if (!queueId || !url) {
-            return next(new HttpException(400, "Missing queue id or url"));
-        }
-        const queue = await getQueueByGuildId(queueId);
-        if (!queue) {
-            return next(new HttpException(404, `Queue not found for guild ${queueId}`));
-        }
-        const response = await getInfo(url).catch((err: Response<true, VideoError>) => { return err });
-        if (response.type === ResponseType.Error) {
-            res.cookie("queueError", response.data.message || response.data.full_error || "Unknown error", { maxAge: 5 * 60 * 1000 }); // 5 minutes expiration
-            return res.redirect(`/queue/${queueId}`);
-        }
-        if (response.type === ResponseType.Success) {
-            await queue.add(response.data);
-            res.redirect(`/queue/${queueId}`);
-        }
-    });
-    const queueActions = {
-        "clear": "clear",
-        "shuffle": "shuffle"
-    };
-
-    Object.entries(queueActions).forEach(([urlPart, action]) => {
-        app.get(`/${urlPart}Queue`, async (req, res, next) => {
-            const queueId = req.query.queueId as string;
-            if (!queueId) {
-                return next(new HttpException(400, "Missing queue id"));
-            }
-            const queue = await getQueueByGuildId(queueId);
-            if (!queue) {
-                return next(new HttpException(404, `Queue not found for guild ${queueId}`));
-            }
-            const fn = (queue as any)[action];
-            if (typeof fn !== "function") {
-                return next(new HttpException(500, "Invalid action"));
-            }
-            await fn.call(queue);
-            res.redirect(`/queue/${queueId}`);
-        });
     });
 
     // api endpoints (json)

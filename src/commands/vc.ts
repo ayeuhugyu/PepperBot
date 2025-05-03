@@ -1,10 +1,11 @@
-import { ChannelType, Collection, GuildMember, Message, StageChannel, VoiceChannel } from "discord.js";
+import { ChannelType, Collection, GuildMember, Message, StageChannel, VoiceBasedChannel, VoiceChannel } from "discord.js";
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import * as voice from "../lib/voice";
-import { Channel } from "diagnostics_channel";
-import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { CommandTag, SubcommandDeploymentApproach, CommandOptionType } from "../lib/classes/command_enums";
+import * as voice from "../lib/classes/voice";
+import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
+import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
+import { textToAttachment } from "../lib/attachment_manager";
+import { inspect } from "util";
 
 
 const leave = new Command(
@@ -21,7 +22,17 @@ const leave = new Command(
         return undefined;
     },
     async function execute ({ invoker, guild_config }) {
-        const voiceManager = voice.getVoiceManager(invoker.guild?.id || "");
+        if (!invoker.guild) {
+            action.reply(invoker, {
+                content: "this command can't be used outside of a guild",
+                ephemeral: guild_config.other.use_ephemeral_replies
+            });
+            return new CommandResponse({
+                error: true,
+                message: "this command can't be used outside of a guild"
+            })
+        }
+        const voiceManager = voice.getVoiceManager(invoker.guild);
         if (voiceManager) {
             if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, voiceManager.channel as VoiceChannel | StageChannel)) {
                 action.reply(invoker, {
@@ -33,11 +44,19 @@ const leave = new Command(
                     message: "you don't have permission to make me leave the voice channel",
                 });
             }
+            const previousChannel = voiceManager.channel
+            const managerResponse = voiceManager.disconnect();
+
+            if (!managerResponse.success) {
+                action.reply(invoker, {
+                    content: managerResponse.message,
+                    ephemeral: guild_config.other.use_ephemeral_replies
+                })
+            }
             action.reply(invoker, {
-                content: "left voice channel <#" + voiceManager.channel?.id + ">",
+                content: "left voice channel <#" + previousChannel?.id + ">",
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
-            voice.leaveVoiceChannel(invoker.guild?.id || "");
         } else {
             action.reply(invoker, {
                 content: "im not in a voice channel",
@@ -49,6 +68,44 @@ const leave = new Command(
             });
         }
         return new CommandResponse({});
+    }
+);
+
+const debug = new Command(
+    {
+        name: 'debug',
+        description: 'description',
+        long_description: 'description',
+        tags: [],
+        pipable_to: [],
+        options: [
+            new CommandOption({
+                name: 'argument',
+                description: 'description',
+                long_description: 'description',
+                type: CommandOptionType.String,
+                required: true
+            })
+        ],
+        access: CommandAccessTemplates.dev_only,
+        input_types: [InvokerType.Message, InvokerType.Interaction],
+        example_usage: "p/vc debug",
+        aliases: []
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["argument"]),
+    async function execute ({ invoker, args, guild_config }) {
+        let text = ``
+        voice.VoiceManagers.forEach((manager) => {
+            text += `-----${manager.guild.name} (${manager.guild.id})-----\n`
+            text += `state: ${manager.state}\n`
+            text += `connected: ${manager.connected}\n`
+            text += `channel: ${manager.channel?.name} (${manager.channel?.id})\n`
+            text += "\n"
+        })
+        action.reply(invoker, {
+            content: `voice manager debug data:`,
+            files: [textToAttachment(text, `debug.txt`)]
+        })
     }
 );
 
@@ -65,6 +122,7 @@ const join = new Command(
             new CommandOption({
                 name: 'channel',
                 description: 'the channel to join',
+                long_description: 'the channel to join. this tries many backups: the channel name, the channel id, the channel being mentioned, the channel you\'re currently connected to, the channel inputted from slash commands, in that order.',
                 type: CommandOptionType.Channel,
                 required: false,
             })
@@ -72,88 +130,88 @@ const join = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["channel"]),
     async function execute({ invoker, args, guild_config }) {
-        if ((args.channel instanceof VoiceChannel) || (args.channel instanceof StageChannel)) {
-            if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, args.channel as VoiceChannel | StageChannel)) {
-                action.reply(invoker, {
-                    content: "you don't have permission to make me join the voice channel",
-                    ephemeral: guild_config.other.use_ephemeral_replies
-                })
-                return new CommandResponse({
-                    error: true,
-                    message: "you don't have permission to make me join the voice channel",
-                });
-            }
-            voice.joinVoiceChannel(args.channel as VoiceChannel);
+        if (!invoker.guild) {
             action.reply(invoker, {
-                content: "joined voice channel: <#" + (args.channel as VoiceChannel).id + ">",
+                content: "this command can't be used outside of a guild",
                 ephemeral: guild_config.other.use_ephemeral_replies
+            });
+            return new CommandResponse({
+                error: true,
+                message: "this command can't be used outside of a guild"
             })
-            return new CommandResponse({});
         }
-        if (typeof args.channel === "string") {
-            let channel;
-            try {
-                channel = invoker.guild?.channels.cache.find(channel => channel.name.toLowerCase().startsWith(args.channel.toLowerCase()));
-                if (!channel) {
-                    channel = await invoker.guild?.channels.fetch(args.channel);
-                }
-            } catch (err) {
-                action.reply(invoker, {
-                    content: "channel not found: " + args.channel,
-                    ephemeral: guild_config.other.use_ephemeral_replies
-                })
-                return new CommandResponse({
-                    error: true,
-                    message: "channel not found: " + args.channel,
-                });
-            }
-            if (channel && (channel instanceof VoiceChannel || channel instanceof StageChannel)) {
-                if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, channel as VoiceChannel | StageChannel)) {
-                    action.reply(invoker, {
-                        content: "you don't have permission to make me join the voice channel",
-                        ephemeral: guild_config.other.use_ephemeral_replies
-                    })
-                    return new CommandResponse({
-                        error: true,
-                        message: "you don't have permission to make me join the voice channel",
-                    });
-                }
-                voice.joinVoiceChannel(channel as VoiceChannel);
-                action.reply(invoker, {
-                    content: "joined voice channel: <#" + (channel as VoiceChannel).id + ">",
-                    ephemeral: guild_config.other.use_ephemeral_replies
-                })
-                return new CommandResponse({});
-            }
-        }
-        if (!args.channel && invoker?.member instanceof GuildMember && invoker.member.voice.channel) {
-            if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, invoker.member.voice.channel)) {
-                action.reply(invoker, {
-                    content: "you don't have permission to make me join the voice channel",
-                    ephemeral: guild_config.other.use_ephemeral_replies
-                })
-                return new CommandResponse({
-                    error: true,
-                    message: "you don't have permission to make me join the voice channel",
-                });
-            }
-            voice.joinVoiceChannel(invoker.member.voice.channel);
+        const inputChannel = args.channel as string | VoiceBasedChannel | undefined
+        let channel: VoiceBasedChannel | undefined;
+        if (!inputChannel && (!(invoker.member instanceof GuildMember) && (invoker.member as unknown as GuildMember).voice.channel)) {
             action.reply(invoker, {
-                content: "joined voice channel: <#" + invoker.member.voice.channel.id + ">",
+                content: `missing input channel`,
                 ephemeral: guild_config.other.use_ephemeral_replies
+            });
+            return new CommandResponse({
+                error: true,
+                message: `missing input channel`
             })
-            return new CommandResponse({});
         }
-        if (!args.channel) {
+        if (typeof inputChannel == "string" && inputChannel.length > 0) { // for string inputs
+            channel = invoker.guild.channels.cache.find((channel) => // search by channel name
+                    ((channel.type === ChannelType.GuildVoice) || (channel.type === ChannelType.GuildStageVoice)) &&
+                    (channel.name.toLowerCase().startsWith(inputChannel.toLowerCase()))
+                ) as VoiceBasedChannel | undefined
+            if (!channel) {
+                channel = invoker.guild.channels.cache.find((channel) => // search by channel id
+                    ((channel.type === ChannelType.GuildVoice) || (channel.type === ChannelType.GuildStageVoice)) &&
+                    (channel.id == inputChannel)
+                ) as VoiceBasedChannel | undefined
+            }
+        }
+        if (inputChannel instanceof StageChannel || inputChannel instanceof VoiceChannel) { // for slash command inputs
+            channel = inputChannel
+        }
+        if (!channel && (invoker instanceof Message)) { // if the channel is mentioned in the message
+            const mentionedChannel = invoker.mentions.channels.first();
+            if (mentionedChannel && (mentionedChannel.type === ChannelType.GuildVoice || mentionedChannel?.type === ChannelType.GuildStageVoice)) {
+                channel = mentionedChannel
+            }
+        }
+
+        if (!channel) {
+            if ((invoker.member instanceof GuildMember) && invoker.member.voice.channel) {
+                channel = invoker.member.voice.channel
+            }
+        }
+
+        if (!channel) {
             action.reply(invoker, {
-                content: "please supply a voice channel",
+                content: `unable to find voice channel: \`${inputChannel || "undefined"}\`; \nyou need to input either a channel name, a channel id, a channel mention, a channel via slash commands, or be connected to the channel you want to be joined.`,
                 ephemeral: guild_config.other.use_ephemeral_replies
             })
             return new CommandResponse({
                 error: true,
-                message: "please supply a voice channel",
+                message: `unable to find voice channel: \`${inputChannel || "undefined"}\`; \nyou need to input either a channel name, a channel id, a channel mention, a channel via slash commands, or be connected to the channel you want to be joined.`
+            })
+        }
+        if (!voice.checkMemberPermissionsForVoiceChannel(invoker.member as GuildMember, channel as VoiceBasedChannel)) {
+            action.reply(invoker, {
+                content: "you don't have permission to make me join the voice channel",
+                ephemeral: guild_config.other.use_ephemeral_replies
+            })
+            return new CommandResponse({
+                error: true,
+                message: "you don't have permission to make me join the voice channel",
             });
         }
+
+        const manager = voice.getVoiceManager(invoker.guild)
+        const managerResponse = manager.connect(channel)
+        if (!managerResponse.success) {
+            action.reply(invoker, {
+                content: managerResponse.message,
+                ephemeral: guild_config.other.use_ephemeral_replies
+            })
+        }
+        action.reply(invoker, {
+            content: `joined voice channel <#${channel.id}>`
+        })
     }
 );
 
@@ -166,20 +224,11 @@ const command = new Command(
         example_usage: "p/vc join",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [join, leave],
+            list: [join, leave, debug],
         },
+        aliases: ["voice"],
         allow_external_guild: false,
         options: [
-            new CommandOption({
-                name: 'subcommand',
-                description: 'the subcommand to run',
-                type: CommandOptionType.String,
-                required: true,
-                choices: [
-                    { name: 'join', value: 'join' },
-                    { name: 'leave', value: 'leave' }
-                ]
-            }),
             new CommandOption({
                 name: 'channel',
                 description: 'the channel to join',

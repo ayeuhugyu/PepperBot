@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import * as log from "./log";
 import { execFile } from "node:child_process";
+import { generateDependencyReport } from "@discordjs/voice";
 
 const start = performance.now();
 
@@ -179,5 +180,7 @@ export const tables = ["prompts", "todos", "configs", "queues", "sounds", "updat
         process.exit(0);
     });
 });
+
+log.debug("@discordjs/voice DEPENDENCY REPORT:", generateDependencyReport())
 
 log.info("all data verified in " + (performance.now() - start).toFixed(3) + "ms");

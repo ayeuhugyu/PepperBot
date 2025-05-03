@@ -5,9 +5,10 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
 import { fixFileName } from "../lib/attachment_manager";
-import * as voice from "../lib/voice";
+import * as voice from "../lib/classes/voice";
 import { CommandTag, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import { tablify } from "../lib/string_helpers";
+import { createAudioResource } from "@discordjs/voice";
 
 const list = new Command({
         name: 'list',
@@ -83,6 +84,16 @@ const play = new Command({
                 message: "you need to specify a sound to play",
             });
         }
+        if (!invoker.guild) {
+            action.reply(invoker, {
+                content: "this command can't be used outside of a guild",
+                ephemeral: guild_config.other.use_ephemeral_replies
+            });
+            return new CommandResponse({
+                error: true,
+                message: "this command can't be used outside of a guild"
+            })
+        }
         const sound = await getSound(args.content);
         if (!sound) {
             action.reply(invoker, {
@@ -94,11 +105,11 @@ const play = new Command({
                 message: `the sound \`${fixFileName(args.content)}\` does not exist`,
             });
         }
-        let connectionManager = await voice.getVoiceManager(invoker.guildId || "");
-        if (!connectionManager && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
-            connectionManager = await voice.joinVoiceChannel((invoker.member.voice.channel));
+        const voiceManager = await voice.getVoiceManager(invoker.guild);
+        if (!voiceManager.connected && (invoker.member instanceof GuildMember) && invoker.member?.voice.channel) {
+            voiceManager.connect(invoker.member.voice.channel);
         }
-        if (!connectionManager) {
+        if (!voiceManager) {
             action.reply(invoker, {
                 content: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
@@ -108,19 +119,18 @@ const play = new Command({
                 message: `neither of us are in a voice channel, use ${guild_config.other.prefix}vc join to make me join one`,
             });
         }
-        voice.createAudioResource(sound.path).then((resource) => {
-            if (!resource) {
-                action.reply(invoker, {
-                    content: `failed to create audio resource for \`${sound.name}\``,
-                    ephemeral: guild_config.other.use_ephemeral_replies,
-                });
-                return new CommandResponse({
-                    error: true,
-                    message: `failed to create audio resource for \`${sound.name}\``,
-                });
-            }
-            connectionManager.audio_player.play(resource);
-        });
+        const resource = createAudioResource(sound.path)
+        if (!resource) {
+            action.reply(invoker, {
+                content: `failed to create audio resource for \`${sound.name}\``,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `failed to create audio resource for \`${sound.name}\``,
+            });
+        }
+        voiceManager.play(resource)
         await action.reply(invoker, {
             content: `playing \`${sound.name}\`...`
         });
@@ -150,12 +160,12 @@ const add = new Command({
     async function execute ({ invoker, guild_config, args }) {
         if (!args.sound) {
             action.reply(invoker, {
-                content: "you need to specify a sound to add",
+                content: "you need to attach a sound to add",
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({
                 error: true,
-                message: "you need to specify a sound to add",
+                message: "you need to attach a sound to add",
             });
         }
         const inputsound: Attachment = args.sound
