@@ -1,4 +1,4 @@
-import { AudioPlayer, AudioResource, VoiceConnection, joinVoiceChannel } from "@discordjs/voice";
+import { AudioPlayer, AudioResource, VoiceConnection, VoiceConnectionStatus, joinVoiceChannel } from "@discordjs/voice";
 import * as log from "../log";
 import { Client, Guild, GuildMember, VoiceBasedChannel } from "discord.js";
 import { EventEmitter } from "node:events";
@@ -46,6 +46,17 @@ export class GuildVoiceManager {
         this.guild = guild;
         this.client = guild.client;
         VoiceManagers.set(guild.id, this);
+
+        this.player.on('error', (error) => {
+            log.error(`audio player error: `, error);
+            if (this.channel) {
+                this.channel.send(`DISCONNECTING; audio player error: ${error.message}`);
+            }
+            if (this.connected) {
+                this.disconnect();
+            }
+        });
+
         log.debug(`created GuildVoiceManager for ${guild.name} (${guild.id})`);
     }
 
@@ -83,6 +94,13 @@ export class GuildVoiceManager {
             log.debug(`attempt to link events for a voice manager which was not already connected`);
             return new VoiceManagerResponse(false, `attempt to link events for a voice manager which was not already connected`);
         }
+
+        this.connection?.on('stateChange', (oldState, newState) => {
+            if (newState.status === VoiceConnectionStatus.Disconnected) {
+                log.debug(`voice connection disconnected by context menu for ${this.guild.name} (${this.guild.id}); removing connections`)
+                this.disconnect(); // this prevents a mismatch between the guild voice manager and the actual connection if people manually disconnect it using discord's context menu
+            }
+        });
     }
 
     disconnect() { // set state to disconnecting, pause audio player, destroy voice connection, emit disconnect and then set state to disconnected
@@ -95,6 +113,7 @@ export class GuildVoiceManager {
             log.debug(`disconnecting voice connection for a voice manager in ${this.channel?.name} (${this.channel?.id}) in guild ${this.guild.name} (${this.guild.id})`)
             this.connected = false;
             this.player.pause()
+            this.connection?.removeAllListeners();
             this.connection?.destroy()
             this.connection = undefined;
             const channel = this.channel;
@@ -134,6 +153,7 @@ export class GuildVoiceManager {
             this.connection.subscribe(this.player);
             this.channel = channel;
             this.connected = true;
+            this.linkEvents();
             this.emit(VoiceManagerEvent.Connect, channel)
             this.state = VoiceManagerState.Idle;
             return new VoiceManagerResponse(true)
