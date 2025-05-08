@@ -9,7 +9,7 @@ import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates
 import * as util from "util";
 import * as gpt from "../lib/gpt";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
-import * as queue from "../lib/classes/queue_manager";
+import * as queue from "../lib/classes/queue";
 import database from "../lib/data_manager"
 import * as components from "../lib/classes/components";
 
