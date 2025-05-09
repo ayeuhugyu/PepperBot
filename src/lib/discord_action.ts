@@ -81,7 +81,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
 }
 
 export function reply<T extends CommandInvoker>(invoker: T, content: Partial<MessageInput> | string): Promise<T extends Message<true> ? Message<true> : InteractionResponse> {
-    if (invoker instanceof CommandInteraction && typeof content === "object" && 'ephemeral' in content) {
+    if (typeof content === "object" && 'ephemeral' in content) {
         if (content.ephemeral === true) {
             (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral
         }

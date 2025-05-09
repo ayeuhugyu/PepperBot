@@ -61,6 +61,7 @@ the biggest new base feature
 - new p/random phrase allows you to generate phrases based off parts of speech (ex. p/random phrase noun adjective adverb verb noun)
 - new p/encode and p/decode allow you to encode and decode text via various algorithms. use `p/encode list` to get a list of all of the algorithms.
 - brought back p/sendlog because of the new piping related commands
+- new p/schedule allows you to schedule reminders and make pepperbot ping/dm you at a certain time to remind you of something. even if the bot goes offline temporarily, any events missed over the downtime will be caught up with. 
 
 **gpt stuff:**
 

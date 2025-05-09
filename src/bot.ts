@@ -4,6 +4,7 @@ import * as log from './lib/log';
 import { Theme, getThemeEmoji } from './lib/theme';
 import fs from "fs";
 import { listen } from './web/index';
+import { queueAllEvents } from './lib/schedule_manager';
 config();
 
 export const client = new Client({
@@ -50,6 +51,8 @@ async function init() {
         await client.login(process.env.DISCORD_TOKEN);
         client.user?.setActivity("pepper whisperers.", { type: 2 });
         log.info("set client activity")
+        await queueAllEvents(client);
+        log.info("scheduled all events");
     } catch (err) {
         log.error("failed to login into discord. wifi down? token invalid?");
         log.error(err);
