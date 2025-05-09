@@ -67,16 +67,20 @@ export function listen(client: Client) {
             });
             const formattedStatistics = {
                 "execution times": Object.fromEntries(
-                    Object.entries(executionTimesAverages).map(([command, time]) => {
-                        // format the execution times for display
-                        return [`p/${command}`, `${time}ms`];
-                    })
+                    Object.entries(executionTimesAverages)
+                        .slice(0, 20) // limit to 10 entries
+                        .map(([command, time]) => {
+                            // format the execution times for display
+                            return [`p/${command}`, `${time}ms`];
+                        })
                 ),
                 "command usage": Object.fromEntries(
-                    commandUsageSorted.map(([command, count]) => {
-                        // format the command usage for display
-                        return [`p/${command}`, count];
-                    })
+                    commandUsageSorted
+                        .slice(0, 20) // limit to 10 entries
+                        .map(([command, count]) => {
+                            // format the command usage for display
+                            return [`p/${command}`, count];
+                        })
                 ),
                 "invoker type usage": Object.fromEntries(
                     Object.entries(statistics?.invoker_type_usage || {}).map(([type, count]) => {
