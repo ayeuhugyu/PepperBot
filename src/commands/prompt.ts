@@ -1,11 +1,12 @@
-import { Collection, Message, User } from "discord.js";
-import { Command, CommandInvoker, CommandOption, CommandResponse } from "../lib/classes/command";
+import { Collection, Message, ModalBuilder, User } from "discord.js";
+import { Command, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
 import { userPrompts, generatePrompt, GPTModelName, APIParameters, models } from "../lib/gpt";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { tablify } from "../lib/string_helpers";
+import { Button, ButtonStyle, Container, Section, Separator, TextDisplay, TextInput, TextInputStyle, ActionRow } from "../lib/classes/components";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -26,6 +27,277 @@ function savePrompt(prompt: Prompt, user: User) {
     userPrompts.set(user.id, prompt.name);
     writePrompt(prompt);
 }
+
+function embedPrompt(prompt: Prompt, disabled: boolean = false) {
+    return new Container({
+        components: [
+            new TextDisplay({
+                content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as Number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as Number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as Number || 1) / 1000)}:F>` : ""}`,
+            }),
+            new Separator(),
+            new Section({
+                components: [
+                    new TextDisplay({
+                        content: `**Name**\n${prompt.name}`
+                    }),
+                ],
+                accessory: new Button({
+                    style: ButtonStyle.Primary,
+                    label: "Edit",
+                    custom_id: `edit_prompt_name`,
+                    disabled: disabled
+                })
+            }),
+            new Separator(),
+            new Section({
+                components: [
+                    new TextDisplay({
+                        content: `**Description**\n${prompt.description}`
+                    }),
+                ],
+                accessory: new Button({
+                    style: ButtonStyle.Primary,
+                    label: "Edit",
+                    custom_id: `edit_prompt_description`,
+                    disabled: disabled
+                })
+            }),
+            new Separator(),
+            new Section({
+                components: [
+                    new TextDisplay({
+                        content: `**Prompt**\n${prompt.content}`
+                    }),
+                ],
+                accessory: new Button({
+                    style: ButtonStyle.Primary,
+                    label: "Edit",
+                    custom_id: `edit_prompt_content`,
+                    disabled: disabled
+                })
+            }),
+            new Separator(),
+            new Section({
+                components: [
+                    new TextDisplay({
+                        content: `**NSFW**\n${prompt.nsfw ? "true" : "false"}`
+                    }),
+                ],
+                accessory: new Button({
+                    style: prompt.nsfw ? ButtonStyle.Danger : ButtonStyle.Success,
+                    label: prompt.nsfw ? "Unmark" : "Mark",
+                    custom_id: nsfw ? `edit_prompt_nsfw` : `edit_prompt_nsfw`,
+                    disabled: disabled
+                })
+            }),
+            new Section({
+                components: [
+                    new TextDisplay({
+                        content: `**Default**\n${prompt.default ? "true" : "false"}`
+                    }),
+                ],
+                accessory: new Button({
+                    style: prompt.default ? ButtonStyle.Danger : ButtonStyle.Success,
+                    label: prompt.default ? "Unmark" : "Mark",
+                    custom_id: prompt.default ? `edit_prompt_default` : `edit_prompt_default`,
+                    disabled: disabled
+                })
+            }),
+            new Section({
+                components: [
+                    new TextDisplay({
+                        content: `**Published**\n${prompt.published ? "true" : "false"}`
+                    }),
+                ],
+                accessory: new Button({
+                    style: prompt.published ? ButtonStyle.Danger : ButtonStyle.Success,
+                    label: prompt.published ? "Unpublish" : "Publish",
+                    custom_id: prompt.published ? `edit_prompt_publish` : `edit_prompt_publish`,
+                    disabled: disabled
+                })
+            }),
+            new Separator(),
+            new TextDisplay({
+                content: `for advanced editing of this prompt such as changing API parameters and AI model, use the commands.`
+            })
+        ]
+    })
+}
+
+const build = new Command(
+    {
+        name: 'build',
+        description: 'allows you to build a prompt more easily from a menu',
+        long_description: 'allows you to build a prompt more easily from an interactive menu with buttons to adjust the settings of the prompt',
+        tags: [CommandTag.AI],
+        pipable_to: [],
+        options: [
+            new CommandOption({
+                name: 'name',
+                description: 'the name of the prompt to use',
+                long_description: 'the name of the prompt to open a builder for',
+                type: CommandOptionType.String,
+                required: false
+            })
+        ],
+        access: CommandAccessTemplates.public,
+        input_types: [InvokerType.Message, InvokerType.Interaction],
+        example_usage: "p/prompt build",
+        argument_order: "<name?>",
+        aliases: ["builder", "edit"],
+    },
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
+    async function execute ({ invoker, args, guild_config }) {
+        let prompt;
+        if (args.name) {
+            prompt = await getPrompt(args.name as string, invoker.author.id);
+            if (!prompt) {
+                action.reply(invoker, { content: `couldn't find prompt: \`${args.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    error: true,
+                    message: `couldn't find prompt: \`${args.name}\``,
+                });
+            }
+        }
+        prompt = await getUserPrompt(invoker.author);
+        const sent = await action.reply(invoker, {
+            components: [embedPrompt(prompt)],
+            ephemeral: guild_config.other.use_ephemeral_replies,
+            components_v2: true
+        }) as Message;
+        const collector = sent.createMessageComponentCollector({ time: 60 * 60 * 1000 }); // 1 hour
+
+        collector.on('end', async () => {
+            if (sent) {
+                action.edit(sent, {
+                    components: [embedPrompt(prompt, true)]
+                });
+            }
+        });
+
+        collector.on('collect', async (interaction) => {
+            (interaction as unknown as FormattedCommandInteraction).author = interaction.user;
+            if (interaction.user.id !== invoker.author.id) {
+                action.reply((interaction as unknown as FormattedCommandInteraction), { content: "this is not your prompt", ephemeral: true });
+                return;
+            }
+
+            switch (interaction.customId) {
+                case "edit_prompt_nsfw":
+                    prompt.nsfw = !prompt.nsfw;
+                    await savePrompt(prompt, invoker.author);
+                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    interaction.deferUpdate();
+                    break;
+                case "edit_prompt_default":
+                    prompt.default = !prompt.default;
+                    await savePrompt(prompt, invoker.author);
+                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    interaction.deferUpdate();
+                    break;
+                case "edit_prompt_publish":
+                    prompt.published = !prompt.published;
+                    prompt.published_at = prompt.published ? new Date() : undefined;
+                    await savePrompt(prompt, invoker.author);
+                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    interaction.deferUpdate();
+                    break;
+                case "edit_prompt_name":
+                    await interaction.showModal({
+                        custom_id: "prompt_name_modal",
+                        title: "Prompt Name",
+                        components: [
+                            new ActionRow({
+                                components: [
+                                    new TextInput({
+                                        custom_id: "prompt_name",
+                                        label: "Prompt Name",
+                                        style: TextInputStyle.Short,
+                                        placeholder: "Enter the name of the prompt",
+                                        required: true,
+                                        value: prompt.name
+                                    })
+                                ]
+                            }) as any
+                        ]
+                    });
+                    const submittedName = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
+                    (submittedName as unknown as FormattedCommandInteraction).author = submittedName.user;
+                    const name = submittedName.fields.getTextInputValue("prompt_name");
+                    if (nameBlacklists.includes(name)) {
+                        action.reply(submittedName as unknown as FormattedCommandInteraction, { content: `you can't name your prompt \`${name}\`, choose another name`, ephemeral: true });
+                        return;
+                    }
+                    if (name.includes('/')) { // this will be used later for published prompts
+                        action.reply(submittedName as unknown as FormattedCommandInteraction, { content: "prompt names cannot contain `/`", ephemeral: true });
+                        return;
+                    }
+                    prompt.name = name;
+                    prompt.created_at = new Date();
+                    await savePrompt(prompt, invoker.author);
+                    userPrompts.set(invoker.author.id, prompt.name);
+                    action.reply(submittedName as unknown as FormattedCommandInteraction, { content: `prompt name set to \`${prompt.name}\``, ephemeral: true });
+                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    break;
+                case "edit_prompt_description":
+                    await interaction.showModal({
+                        custom_id: "prompt_description_modal",
+                        title: "Prompt Description",
+                        components: [
+                            new ActionRow({
+                                components: [
+                                    new TextInput({
+                                        custom_id: "prompt_description",
+                                        label: "Prompt Description",
+                                        style: TextInputStyle.Paragraph,
+                                        placeholder: "Enter the description of the prompt",
+                                        required: true,
+                                        value: prompt.description
+                                    })
+                                ]
+                            }) as any
+                        ]
+                    });
+                    const submittedDescription = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
+                    (submittedDescription as unknown as FormattedCommandInteraction).author = submittedDescription.user;
+                    prompt.description = submittedDescription.fields.getTextInputValue("prompt_description");
+                    await savePrompt(prompt, invoker.author);
+                    action.reply(submittedDescription as unknown as FormattedCommandInteraction, { content: `prompt description set to \`${prompt.description}\``, ephemeral: true });
+                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    break;
+                case "edit_prompt_content":
+                    await interaction.showModal({
+                        custom_id: "prompt_content_modal",
+                        title: "Prompt Content",
+                        components: [
+                            new ActionRow({
+                                components: [
+                                    new TextInput({
+                                        custom_id: "prompt_content",
+                                        label: "Prompt Content",
+                                        style: TextInputStyle.Paragraph,
+                                        placeholder: "Enter the content of the prompt",
+                                        required: true,
+                                        value: prompt.content
+                                    })
+                                ]
+                            }) as any
+                        ]
+                    });
+                    const submittedContent = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
+                    (submittedContent as unknown as FormattedCommandInteraction).author = submittedContent.user;
+                    prompt.content = submittedContent.fields.getTextInputValue("prompt_content");
+                    await savePrompt(prompt, invoker.author);
+                    action.reply(submittedContent as unknown as FormattedCommandInteraction, { content: `prompt content set to \`${prompt.content}\``, ephemeral: true });
+                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    break;
+                default:
+                    action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true });
+                    break;
+            }
+        });
+    }
+);
 
 const generate = new Command({
         name: 'generate',
@@ -369,7 +641,7 @@ const description = new Command({
             action.reply(invoker, {
                 content: "please supply a description",
                 ephemeral: guild_config.other.use_ephemeral_replies
-            })
+            });
             return new CommandResponse({
                 error: true,
                 message: "please supply a description",
@@ -880,7 +1152,7 @@ const command = new Command(
         argument_order: "<subcommand> <content?>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone, generate, modelcommand, setparam],
+            list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone, generate, modelcommand, setparam, build],
         },
         options: [],
         example_usage: "p/prompt set always respond with \"hi\"",

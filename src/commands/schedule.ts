@@ -185,7 +185,7 @@ const command = new Command(
                     ephemeral: true
                 });
             }
-            (interaction as FormattedCommandInteraction).author = interaction.user;
+            (interaction as unknown as FormattedCommandInteraction).author = interaction.user;
 
             switch (interaction.customId) {
                 case 'schedule_dm':
@@ -221,7 +221,7 @@ const command = new Command(
                                         required: true
                                     })
                                 ]
-                            }),
+                            }) as any,
                             new ActionRow({
                                 components: [
                                     new TextInput({
@@ -232,26 +232,26 @@ const command = new Command(
                                         placeholder: '0'
                                     })
                                 ]
-                            })
+                            }) as any
                         ]
                     });
                     let submitted = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 });
-                    (submitted as FormattedCommandInteraction).author = submitted.user;
-                    submitted = submitted as FormattedCommandInteraction
+                    (submitted as unknown as FormattedCommandInteraction).author = submitted.user;
+                    Object.assign(submitted, { author: submitted.user });
                     if (submitted.customId == 'schedule_date_modal') {
                         const dateInput = submitted.fields.getTextInputValue('date_input');
                         const gmtOffsetInput = submitted.fields.getTextInputValue('gmt_offset_input').replace(/[^0-9-]/g, "");
                         const date = new Date(dateInput);
                         let gmtOffset = Number(gmtOffsetInput);
                         if (isNaN(date.getTime())) {
-                            action.reply(submitted, {
+                            action.reply(submitted as unknown as FormattedCommandInteraction, {
                                 content: `please enter a valid date; \`${dateInput}\` is not valid. for example, use \`2025-10-01 24:00:00\`, a unix timestamp, or a date string like \`October 1, 2025\``,
                                 ephemeral: true
                             });
                             return;
                         }
                         if (isNaN(gmtOffset) || gmtOffset < -12 || gmtOffset > 14) {
-                            action.reply(submitted, {
+                            action.reply(submitted as unknown as FormattedCommandInteraction, {
                                 content: `please enter a valid GMT offset between -12 and +14. you entered: \`${gmtOffsetInput}\`. some common offsets are:\n- GMT-5 (EST)\nGMT-7 (PST)\n- GMT+0 (UTC)\n- GMT+1 (CET)\n- GMT+2 (EET)\n- GMT+3 (MSK)\n- GMT+8 (SGT)\n- GMT+9 (JST)\n- GMT+10 (AEDT)`,
                                 ephemeral: true
                             });
@@ -268,7 +268,7 @@ const command = new Command(
                             components_v2: true,
                             ephemeral: guild_config.other.use_ephemeral_replies
                         });
-                        action.reply(submitted, {
+                        action.reply(submitted as unknown as FormattedCommandInteraction, {
                             content: `date set to <t:${Math.floor(date.getTime() / 1000)}:F> (<t:${Math.floor(date.getTime() / 1000)}:R>) (GMT${gmtOffset >= 0 ? "+" : ""}${gmtOffset}). **if this appears incorrect, please try some of the following:**\n- convert to 24hr time\n- add a seconds place in your time part, ex. YYYY-MM-DD 12:00:00n\n- make sure to use MONTH THEN DAY, not the other way around.\n- check the gmt offset you entered\n- use a unix timestamp (search up a timestamp converter, if what you find asks for a timezone use GMT+0 in here. if what you find asks for a unit of time, use miliseconds)\nhere's what you entered: \`${dateInput}\` (GMT${gmtOffset})`,
                             ephemeral: true
                         });
@@ -288,7 +288,7 @@ const command = new Command(
                                         required: true
                                     })
                                 ]
-                            })
+                            }) as any
                         ]
                     });
                     const submittedMessage = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 });
@@ -300,7 +300,7 @@ const command = new Command(
                             components_v2: true,
                             ephemeral: guild_config.other.use_ephemeral_replies
                         });
-                        submittedMessage.reply({
+                        action.reply(submittedMessage as unknown as FormattedCommandInteraction, {
                             content: `message set to \`${messageInput}\``,
                             ephemeral: true
                         });
@@ -308,14 +308,14 @@ const command = new Command(
                     break;
                 case 'schedule_finalize':
                     if (!event.content) {
-                        action.reply(interaction, {
+                        action.reply(interaction as unknown as FormattedCommandInteraction, {
                             content: `please set a message`,
                             ephemeral: true
                         });
                         return;
                     }
                     if (!event.time || isNaN(new Date(event.time).getTime())) {
-                        action.reply(interaction, {
+                        action.reply(interaction as unknown as FormattedCommandInteraction, {
                             content: `please set a valid time`,
                             ephemeral: true
                         });
