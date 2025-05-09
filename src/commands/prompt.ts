@@ -32,7 +32,7 @@ function embedPrompt(prompt: Prompt, disabled: boolean = false) {
     return new Container({
         components: [
             new TextDisplay({
-                content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as Number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as Number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as Number || 1) / 1000)}:F>` : ""}`,
+                content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as number || 1) / 1000)}:F>` : ""}`,
             }),
             new Separator(),
             new Section({
