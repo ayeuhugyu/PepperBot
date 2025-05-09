@@ -5,7 +5,7 @@
 exports.up = async function(knex) {
     const exists = await knex.schema.hasTable('scheduled');
     if (!exists) {
-        console.log('Creating missing 'scheduled table');
+        console.log('Creating missing scheduled table');
         await knex.schema.createTable('scheduled', (table) => {
             table.string('id').primary();
             table.string('creator_id').notNullable();
