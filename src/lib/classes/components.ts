@@ -551,7 +551,7 @@ export class Separator {
 }
 
 /**
- * A Container is a top-level layout component that holds up to 10 components.
+ * A Container is a top-level layout component that holds up to 40 components. There is no actual limit on the number of components, but messages are limited to 40 components, which effectively limits the number of components in a container to 40.
  * Containers are visually distinct from surrounding components and have an optional customizable color bar.
  *
  * Containers are only available in messages.
