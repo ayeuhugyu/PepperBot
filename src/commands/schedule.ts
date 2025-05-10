@@ -153,20 +153,21 @@ const command = new Command(
                 })
             ]
         })
-        const response = await action.reply(invoker, {
+        const sent = await action.reply(invoker, {
             components: [embed, finalizeRow],
             components_v2: true,
             ephemeral: guild_config.other.use_ephemeral_replies
         });
+        if (!sent) return; // this should realistically never happen
 
-        const collector = response.createMessageComponentCollector({
+        const collector = sent.createMessageComponentCollector({
             filter: () => true,
             time: 20 * 60 * 1000, // 20 minutes? might need to be longer
         });
 
         collector.on('end', async () => {
             console.log("collector ended");
-            action.edit(response, {
+            action.edit(sent, {
                 components: [
                     new TextDisplay({
                         content: `event creation timed out`
@@ -175,7 +176,7 @@ const command = new Command(
                     disabledFinalizeRow
                 ],
                 ephemeral: guild_config.other.use_ephemeral_replies
-            });
+            }).catch(() => {});
         });
 
         collector.on('collect', async (interaction) => {
@@ -192,7 +193,7 @@ const command = new Command(
                     event.type = ScheduledEventType.send;
                     event.channel_id = invoker.channel?.id;
                     interaction.deferUpdate();
-                    action.edit(response, {
+                    action.edit(sent, {
                         components: [embedEvent(event), finalizeRow],
                         components_v2: true,
                         ephemeral: guild_config.other.use_ephemeral_replies
@@ -201,7 +202,7 @@ const command = new Command(
                 case 'schedule_channel':
                     event.type = ScheduledEventType.dm;
                     interaction.deferUpdate();
-                    action.edit(response, {
+                    action.edit(sent, {
                         components: [embedEvent(event), finalizeRow],
                         components_v2: true,
                         ephemeral: guild_config.other.use_ephemeral_replies
@@ -263,7 +264,7 @@ const command = new Command(
 
                         event.time = date;
                         event.channel_id = invoker.channel?.id;
-                        action.edit(response, {
+                        action.edit(sent, {
                             components: [embedEvent(event), finalizeRow],
                             components_v2: true,
                             ephemeral: guild_config.other.use_ephemeral_replies
@@ -295,7 +296,7 @@ const command = new Command(
                     if (submittedMessage.customId == 'schedule_message_modal') {
                         const messageInput = submittedMessage.fields.getTextInputValue('message_input');
                         event.content = messageInput;
-                        action.edit(response, {
+                        action.edit(sent, {
                             components: [embedEvent(event), finalizeRow],
                             components_v2: true,
                             ephemeral: guild_config.other.use_ephemeral_replies
@@ -323,7 +324,7 @@ const command = new Command(
                     }
                     await event.write();
                     await scheduleEvent(interaction.client, event);
-                    action.edit(response, {
+                    action.edit(sent, {
                         components: [
                             new TextDisplay({
                                 content: `event \`${event.id}\` scheduled; you will ${event.type === ScheduledEventType.dm ? "be sent a DM to notify you" : "be mentioned in this channel to notify you"} <t:${Math.floor(event.time.getTime() / 1000)}:R> (<t:${Math.floor(event.time.getTime() / 1000)}:F>)`

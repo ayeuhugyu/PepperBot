@@ -80,7 +80,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
     return message;
 }
 
-export function reply<T extends CommandInvoker>(invoker: T, content: Partial<MessageInput> | string): Promise<T extends Message<true> ? Message<true> : InteractionResponse> {
+export function reply<T extends CommandInvoker>(invoker: T, content: Partial<MessageInput> | string): Promise<(T extends Message<true> ? Message<true> : InteractionResponse) | void> {
     if (typeof content === "object" && 'ephemeral' in content) {
         if (content.ephemeral === true) {
             (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral
@@ -95,24 +95,32 @@ export function reply<T extends CommandInvoker>(invoker: T, content: Partial<Mes
     }
     const reply = fixMessage(content) as InteractionReplyOptions & MessageReplyOptions
     log.debug(`replying to ${invoker.author.username} (cid: ${invoker.channel?.id}, mid: ${invoker.id}) with`, reply);
-    return invoker.reply(reply) as never
+    return invoker.reply(reply).catch((err) => {
+        log.error(`failed to reply to ${invoker.id}`, err);
+    }) as never;
 }
 
 export type SendableChannel = TextChannel | DMChannel | PartialDMChannel | NewsChannel | StageChannel | PublicThreadChannel<boolean> | PrivateThreadChannel | VoiceChannel
 
-export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message>  {
+export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message | void>  {
     const reply = fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions
     log.debug(`sending message to ${channel.id} with`, reply);
-    return channel.send(reply)
+    return channel.send(reply).catch((err) => {
+        log.error(`failed to send message to ${channel.id}`, err);
+    })
 }
 
-export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message> {
+export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message | void> {
     const reply = fixMessage(content) as string | MessagePayload | MessageEditOptions
     log.debug(`editing message ${message.id} with`, reply);
-    return message.edit(reply);
+    return message.edit(reply).catch((err) => {
+        log.error(`failed to edit message ${message.id}`, err);
+    });
 }
 
-export function deleteMessage(message: Message): Promise<OmitPartialGroupDMChannel<Message>> {
+export function deleteMessage(message: Message): Promise<OmitPartialGroupDMChannel<Message> | void> {
     log.debug(`deleting message ${message.id}`);
-    return message.delete();
+    return message.delete().catch((err) => {
+        log.error(`failed to delete message ${message.id}`, err);
+    });
 }

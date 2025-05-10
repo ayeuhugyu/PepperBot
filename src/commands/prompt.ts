@@ -7,6 +7,7 @@ import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType 
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { tablify } from "../lib/string_helpers";
 import { Button, ButtonStyle, Container, Section, Separator, TextDisplay, TextInput, TextInputStyle, ActionRow } from "../lib/classes/components";
+import { GuildConfig } from "../lib/guild_config_manager";
 
 async function getUserPrompt(user: User): Promise<Prompt> {
     let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
@@ -28,7 +29,7 @@ function savePrompt(prompt: Prompt, user: User) {
     writePrompt(prompt);
 }
 
-function embedPrompt(prompt: Prompt, disabled: boolean = false) {
+function embedPrompt(prompt: Prompt, guild_config: GuildConfig, disabled: boolean = false) {
     return new Container({
         components: [
             new TextDisplay({
@@ -118,7 +119,7 @@ function embedPrompt(prompt: Prompt, disabled: boolean = false) {
             }),
             new Separator(),
             new TextDisplay({
-                content: `for advanced editing of this prompt such as changing API parameters and AI model, use the commands.\nto edit a different prompt, use the command \`prompt use <prompt name>\`, and to list your saved prompts use \`prompt list\`. to make a new prompt, change the prompt's name to something else.`
+                content: `for advanced editing of this prompt such as changing API parameters and AI model, use the commands.\n\nto edit a different prompt, use the command \`${guild_config.other.prefix}prompt use <prompt name>\`, and to list your saved prompts use \`${guild_config.other.prefix}prompt list\`. \nto make a new prompt, change the prompt's name to something else. \nto delete a prompt, use the command \`${guild_config.other.prefix}prompt delete <prompt name>\`. \nfinally, if your prompt doesn't appear to be working, try using the command \`${guild_config.other.prefix}prompt use <prompt name>\` to set it as the currently active prompt. after doing this, pinging the bot to start a new conversation should use the prompt you set.`,
             })
         ]
     })
@@ -161,7 +162,7 @@ const build = new Command(
         }
         prompt = await getUserPrompt(invoker.author);
         const sent = await action.reply(invoker, {
-            components: [embedPrompt(prompt)],
+            components: [embedPrompt(prompt, guild_config)],
             ephemeral: guild_config.other.use_ephemeral_replies,
             components_v2: true
         }) as Message;
@@ -170,8 +171,8 @@ const build = new Command(
         collector.on('end', async () => {
             if (sent) {
                 action.edit(sent, {
-                    components: [embedPrompt(prompt, true)]
-                });
+                    components: [embedPrompt(prompt, guild_config, true)]
+                }).catch(() => {});
             }
         });
 
@@ -186,20 +187,20 @@ const build = new Command(
                 case "edit_prompt_nsfw":
                     prompt.nsfw = !prompt.nsfw;
                     await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config)] });
                     interaction.deferUpdate();
                     break;
                 case "edit_prompt_default":
                     prompt.default = !prompt.default;
                     await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config)] });
                     interaction.deferUpdate();
                     break;
                 case "edit_prompt_publish":
                     prompt.published = !prompt.published;
                     prompt.published_at = prompt.published ? new Date() : undefined;
                     await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config)] });
                     interaction.deferUpdate();
                     break;
                 case "edit_prompt_name":
@@ -237,7 +238,7 @@ const build = new Command(
                     await savePrompt(prompt, invoker.author);
                     userPrompts.set(invoker.author.id, prompt.name);
                     action.reply(submittedName as unknown as FormattedCommandInteraction, { content: `prompt name set to \`${prompt.name}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config)] });
                     break;
                 case "edit_prompt_description":
                     await interaction.showModal({
@@ -263,7 +264,7 @@ const build = new Command(
                     prompt.description = submittedDescription.fields.getTextInputValue("prompt_description");
                     await savePrompt(prompt, invoker.author);
                     action.reply(submittedDescription as unknown as FormattedCommandInteraction, { content: `prompt description set to \`${prompt.description}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config)] });
                     break;
                 case "edit_prompt_content":
                     await interaction.showModal({
@@ -288,8 +289,8 @@ const build = new Command(
                     (submittedContent as unknown as FormattedCommandInteraction).author = submittedContent.user;
                     prompt.content = submittedContent.fields.getTextInputValue("prompt_content");
                     await savePrompt(prompt, invoker.author);
-                    action.reply(submittedContent as unknown as FormattedCommandInteraction, { content: `prompt content set to \`${prompt.content}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt)] });
+                    action.reply(submittedContent as unknown as FormattedCommandInteraction, { content: `${(prompt.content.split(" ").length < 10) ? `i suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer. i'll set the content anyways, but be advised it might not do anything.\n` : ""}prompt content set to \`\`\`\n${prompt.content}\n\`\`\``, ephemeral: true });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config)] });
                     break;
                 default:
                     action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true });

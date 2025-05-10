@@ -90,6 +90,7 @@ const command = new Command(
             content: currentContent,
             ephemeral: guild_config.other.use_ephemeral_replies,
         });
+        if (!sent) return; // this should realistically never happen
         currentContent = ``;
 
         // download the video

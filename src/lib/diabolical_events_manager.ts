@@ -4,6 +4,7 @@ import { fetchGuildConfig } from "./guild_config_manager";
 import * as log from "./log";
 import { AIReaction } from "./gpt";
 import { readFileSync } from "fs";
+import * as action from "./discord_action";
 
 enum DiabolicalEventType {
     Reaction = "reaction",
@@ -127,7 +128,7 @@ export function threadEvent(message: Message) {
                     autoArchiveDuration: 60,
                     reason: "It's quite diabolical.",
                 }).then((thread) => {
-                    thread.send("You've just been threaded! 🧵");
+                    action.send(thread, "You've just been threaded! 🧵");
                 });
         } else {
             log.warn("could not start thread on message due to channel type");
@@ -140,9 +141,9 @@ export async function replyEvent(message: Message) {
     const event = ReplyEvents[Math.floor(Math.random() * ReplyEvents.length)];
     const replyMessage = event.message;
     if (typeof replyMessage === "string") {
-        await message.reply(replyMessage);
+        await action.reply(message as Message<true>, replyMessage);
     } else {
-        await message.reply(replyMessage);
+        await action.reply(message as Message<true>, replyMessage);
     }
 }
 
