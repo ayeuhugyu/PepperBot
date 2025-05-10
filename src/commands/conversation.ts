@@ -5,6 +5,7 @@ import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType 
 import { APIParameters, conversations, getConversation, GPTModelName, models } from "../lib/gpt";
 import { textToAttachment } from "../lib/attachment_manager";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
+import chalk from "chalk";
 
 const templateAPIParameters = new APIParameters();
 
@@ -50,13 +51,13 @@ const modelcommand = new Command(
 
         if (args.model === "list" || args.model === "ls") {
             const mappedModels = Object.entries(models).map(([key, value]) => {
-                return `${value.name}:
-  - provider: ${value.provider}
-  - capabilities: ${value.capabilities ? value.capabilities.join(", ") : "none"}
+                return `${chalk.green(value.name)}:
+  - ${chalk.blue("provider")}: ${value.provider}
+  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}
                 `
             });
             await action.reply(invoker, {
-                content: `available models: \`\`\`md\n${mappedModels.join("\n")}\`\`\``,
+                content: `available models: \`\`\`ansi\n${mappedModels.join("\n")}\`\`\``,
                 ephemeral: guild_config.useEphemeralReplies,
             });
             return;
