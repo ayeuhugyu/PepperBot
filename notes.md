@@ -61,7 +61,7 @@ the biggest new base feature
 - new p/random phrase allows you to generate phrases based off parts of speech (ex. p/random phrase noun adjective adverb verb noun)
 - new p/encode and p/decode allow you to encode and decode text via various algorithms. use `p/encode list` to get a list of all of the algorithms.
 - brought back p/sendlog because of the new piping related commands
-- new p/schedule allows you to schedule reminders and make pepperbot ping/dm you at a certain time to remind you of something. even if the bot goes offline temporarily, any events missed over the downtime will be caught up with. 
+- new p/schedule allows you to schedule reminders and make pepperbot ping/dm you at a certain time to remind you of something. even if the bot goes offline temporarily, any events missed over the downtime will be caught up with.
 
 **gpt stuff:**
 
@@ -95,7 +95,12 @@ the biggest new base feature
 - gpt responses now use openai's seeding feature so they can be reproduced
 - AI can now see stickers
 - default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
-- GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. run `p/gpt model list` to see all the new data i store about them and the new ones i've given access to.
+- GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. run `p/gpt model list` to see all the new data i store about them. here's an updated list of available models:
+  - gpt-3.5-turbo (the oldest model i've ever used on pepperbot)
+  - gpt-4o-mini (slightly more up to date openai model)
+  - o3-mini (openai's cheapest reasoning model, still fairly good actually)
+  - gpt-4.1-nano (the new default, is ABSURDLY fast)
+  - grok-3-mini-beta (something from a provider other than openai)
 
 **other actual content:**
 

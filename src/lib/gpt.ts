@@ -26,6 +26,10 @@ config(); // incase started using test scripts without bot running
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
+const grok = new OpenAI({
+    apiKey: process.env.GROK_API_KEY,
+    baseURL: "https://api.x.ai/v1"
+})
 
 let local_ips = ["192.168", "172.16", "10", "localhost"];
 for (let i = 17; i <= 31; i++) {
@@ -582,12 +586,14 @@ export enum GPTModelName {
     gpt4omini = "gpt-4o-mini",
     gpt35turbo = "gpt-3.5-turbo",
     gpto3mini = "o3-mini",
+    grok3mini = "grok-3-mini-beta",
 }
 
 export enum GPTProvider {
     OpenAI = "OpenAI",
     Gemini = "GoogleGemini",
-    DeepSeek = "DeepSeek"
+    DeepSeek = "DeepSeek",
+    Grok = "Grok",
 }
 
 export enum GPTModelCapabilities {
@@ -603,6 +609,7 @@ export interface GPTModel {
     name: GPTModelName; // the name of the model
     provider: GPTProvider; // the provider of the model (OpenAI, Gemini, etc.)
     capabilities: GPTModelCapabilities[]; // the capabilities of the model (text, image, audio)
+    unsupported_arguments?: string[]; // API arguments that are not supported by the model
 }
 
 
@@ -626,6 +633,12 @@ export const models: Record<GPTModelName, GPTModel> = {
         name: GPTModelName.gpt35turbo,
         provider: GPTProvider.OpenAI,
         capabilities: [GPTModelCapabilities.Text],
+    },
+    [GPTModelName.grok3mini]: {
+        name: GPTModelName.grok3mini,
+        provider: GPTProvider.Grok,
+        capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.FunctionCalling],
+        unsupported_arguments: ["presence_penalty", "frequency_penalty"],
     },
 }
 
@@ -903,6 +916,122 @@ export enum ConversationEvents {
     FunctionCallResult = "function_call_result",
 }
 
+function getApiInputforOpenAI(conversation: Conversation) {
+    const apiConversation: any = {
+        model: conversation.api_parameters.model.name, // the model to use for the conversation
+        messages: conversation.messages.map((message) => {
+            const apiMessage: any = {
+                role: message.role,
+                tool_calls: message.tool_calls,
+                tool_call_id: message.tool_call_id
+            };
+            if (message.name) {
+                apiMessage.name = message.name;
+            }
+            if (message.content) {
+                if (typeof message.content === "string") {
+                    apiMessage.content = message.content || "undefined"; // this avoids a dumbass openai error thing that throws when content.length == 0
+                } else {
+                    message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
+                        const apiContent: any = {
+                            type: content.type,
+                        };
+                        if (content.text) {
+                            apiContent.text = content.text || "text content unknown";
+                        }
+                        if (content.image_url) {
+                            apiContent.image_url = content.image_url;
+                        }
+                        return apiContent;
+                    }) : message.content;
+                    apiMessage.content = message.content;
+                }
+            }
+            return apiMessage;
+        })
+    }; // i am not gonna make a whole type for this ngl i do not care enough
+    const bannedEntires = conversation.api_parameters.model.unsupported_arguments || [];
+    for (const [key, value] of Object.entries(conversation.api_parameters)) {
+        if (value !== undefined && key !== "model" && !(bannedEntires.includes(key))) { // don't include the model here because its already included above
+            apiConversation[key] = value;
+        }
+    }
+    return apiConversation;
+}
+
+async function runForOpenAI(conversation: Conversation, openai: OpenAI) {
+    const apiInput = conversation.toApiInput();
+    const formattedTools = Object.entries(tools).map(([key, tool]) => {
+        const formattedParameters: RunnableToolFunction<any>['function']['parameters'] = {
+            type: 'object',
+            properties: {},
+            additionalProperties: false,
+        }
+        tool.parameters.forEach((param) => {
+            if (!formattedParameters.properties) formattedParameters.properties = {};
+            let formattedParam: JSONSchemaDefinition = {
+                type: param.type,
+                description: param.description
+            }
+            if (param.arraytype) {
+                formattedParam.items = {
+                    type: param.arraytype
+                }
+            }
+            if (param.default !== undefined) {
+                formattedParam.default = param.default; // add default value if provided
+            }
+            formattedParameters.properties[param.name] = formattedParam; // add the parameter to the properties object
+            if (param.required) {
+                if (!formattedParameters.required) formattedParameters.required = []; // initialize required if it doesn't exist
+                formattedParameters.required.push(param.name); // if the parameter is required, add it to the required array
+            }
+        }); // format the parameters for the tool
+        const formattedTool: RunnableToolFunction<any> = {
+            type: 'function',
+            function: {
+                name: tool.name,
+                description: tool.description,
+                parse: JSON.parse,
+                parameters: formattedParameters,
+                function: tool.function
+            }
+        }
+        return formattedTool;
+    });
+    const response = await openai.beta.chat.completions.runTools({
+        tools: formattedTools,
+        ...apiInput
+    }).on('message', (msg) => {
+        switch (msg.role) {
+            case GPTRole.Tool: {
+                log.info(`finished processing tool (${msg.tool_call_id})`);
+                const message = new GPTMessage({ role: GPTRole.Tool, content: msg.content as string, tool_call_id: msg.tool_call_id });
+                conversation.addNonDiscordMessage(message);
+                break;
+            }
+            case GPTRole.Assistant: {
+                let message = new GPTMessage();
+                message.name = "PepperBot";
+                message.role = GPTRole.Assistant;
+                if (msg.tool_calls && msg.tool_calls.length >= 1) {
+                    for (const toolCall of msg.tool_calls) {
+                        log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
+                    }
+                    conversation.emitter.emit(ConversationEvents.FunctionCall, msg.tool_calls);
+                    message.tool_calls = msg.tool_calls;
+                    conversation.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
+                }
+                message.content = msg.content as string;
+                // we dont add the message because its not yet a discord message
+                break;
+            }
+        }
+    });
+    const finalResponse = await response.finalChatCompletion();
+    return finalResponse?.choices[0]?.message?.content;
+}
+
 export class Conversation {
     users: User[] = [];
     messages: GPTMessage[] = [];
@@ -947,48 +1076,16 @@ export class Conversation {
     toApiInput() {
         switch (this.api_parameters.model.provider) {
             case GPTProvider.OpenAI: {
-                const apiConversation: any = {
-                    model: this.api_parameters.model.name, // the model to use for the conversation
-                    messages: this.messages.map((message) => {
-                        const apiMessage: any = {
-                            role: message.role,
-                            tool_calls: message.tool_calls,
-                            tool_call_id: message.tool_call_id
-                        };
-                        if (message.name) {
-                            apiMessage.name = message.name;
-                        }
-                        if (message.content) {
-                            if (typeof message.content === "string") {
-                                apiMessage.content = message.content || "undefined"; // this avoids a dumbass openai error thing that throws when content.length == 0
-                            } else {
-                                message.content = Array.isArray(message.content) ? message.content.map((content) => { // this shouldn't have to exist but Typescripple Does Not Detect
-                                    const apiContent: any = {
-                                        type: content.type,
-                                    };
-                                    if (content.text) {
-                                        apiContent.text = content.text || "text content unknown";
-                                    }
-                                    if (content.image_url) {
-                                        apiContent.image_url = content.image_url;
-                                    }
-                                    return apiContent;
-                                }) : message.content;
-                                apiMessage.content = message.content;
-                            }
-                        }
-                        return apiMessage;
-                    })
-                }; // i am not gonna make a whole type for this ngl i do not care enough
-                for (const [key, value] of Object.entries(this.api_parameters)) {
-                    if (value !== undefined && key !== "model") { // don't include the model here because its already included above
-                        apiConversation[key] = value;
-                    }
-                }
-                return apiConversation;
+                return getApiInputforOpenAI(this);
             }
             case GPTProvider.Gemini: {
                 return "Not yet implemented for Gemini";
+            }
+            case GPTProvider.DeepSeek: {
+                return "Not yet implemented for DeepSeek";
+            }
+            case GPTProvider.Grok: {
+                return getApiInputforOpenAI(this); // grok is a fork of openai so it should work the same way
             }
             default:
                 throw new Error(`Unsupported provider: ${this.api_parameters.model.provider}`);
@@ -1021,81 +1118,19 @@ export class Conversation {
     async run() {
         log.debug(`running conversation ${this.id} with ${this.messages.length} messages`);
         try {
-            const apiInput = this.toApiInput();
+            //const apiInput = this.toApiInput();
             switch (this.api_parameters.model.provider) {
                 case GPTProvider.OpenAI: {
-                    const formattedTools = Object.entries(tools).map(([key, tool]) => {
-                        const formattedParameters: RunnableToolFunction<any>['function']['parameters'] = {
-                            type: 'object',
-                            properties: {},
-                            additionalProperties: false,
-                        }
-                        tool.parameters.forEach((param) => {
-                            if (!formattedParameters.properties) formattedParameters.properties = {};
-                            let formattedParam: JSONSchemaDefinition = {
-                                type: param.type,
-                                description: param.description
-                            }
-                            if (param.arraytype) {
-                                formattedParam.items = {
-                                    type: param.arraytype
-                                }
-                            }
-                            if (param.default !== undefined) {
-                                formattedParam.default = param.default; // add default value if provided
-                            }
-                            formattedParameters.properties[param.name] = formattedParam; // add the parameter to the properties object
-                            if (param.required) {
-                                if (!formattedParameters.required) formattedParameters.required = []; // initialize required if it doesn't exist
-                                formattedParameters.required.push(param.name); // if the parameter is required, add it to the required array
-                            }
-                        }); // format the parameters for the tool
-                        const formattedTool: RunnableToolFunction<any> = {
-                            type: 'function',
-                            function: {
-                                name: tool.name,
-                                description: tool.description,
-                                parse: JSON.parse,
-                                parameters: formattedParameters,
-                                function: tool.function
-                            }
-                        }
-                        return formattedTool;
-                    });
-                    const response = await openai.beta.chat.completions.runTools({
-                        tools: formattedTools,
-                        ...apiInput
-                    }).on('message', (msg) => {
-                        switch (msg.role) {
-                            case GPTRole.Tool: {
-                                log.info(`finished processing tool (${msg.tool_call_id})`);
-                                const message = new GPTMessage({ role: GPTRole.Tool, content: msg.content as string, tool_call_id: msg.tool_call_id });
-                                this.addNonDiscordMessage(message);
-                                break;
-                            }
-                            case GPTRole.Assistant: {
-                                let message = new GPTMessage();
-                                message.name = "PepperBot";
-                                message.role = GPTRole.Assistant;
-                                if (msg.tool_calls && msg.tool_calls.length >= 1) {
-                                    for (const toolCall of msg.tool_calls) {
-                                        log.info(`processing tool call "${toolCall.function.name}" (${toolCall.id})`);
-                                    }
-                                    this.emitter.emit(ConversationEvents.FunctionCall, msg.tool_calls);
-                                    message.tool_calls = msg.tool_calls;
-                                    this.addNonDiscordMessage(message); // have to do this because openai will error if it doesnt find it, also tool call messages have no content so it shouldn't matter.
-                                }
-                                message.content = msg.content as string;
-                                // we dont add the message because its not yet a discord message
-                                break;
-                            }
-                        }
-                    });
-                    const finalResponse = await response.finalChatCompletion();
-                    return finalResponse?.choices[0]?.message?.content;
+                    return await runForOpenAI(this, openai);
                 }
                 case GPTProvider.Gemini: {
                     return "Not yet implemented"
+                }
+                case GPTProvider.DeepSeek: {
+                    return "Not yet implemented"
+                }
+                case GPTProvider.Grok: {
+                    return await runForOpenAI(this, grok); // grok is a fork of openai so it should work the same way
                 }
             }
         } catch (err: any) {
