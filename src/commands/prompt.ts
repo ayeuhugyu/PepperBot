@@ -118,7 +118,7 @@ function embedPrompt(prompt: Prompt, disabled: boolean = false) {
             }),
             new Separator(),
             new TextDisplay({
-                content: `for advanced editing of this prompt such as changing API parameters and AI model, use the commands.`
+                content: `for advanced editing of this prompt such as changing API parameters and AI model, use the commands.\nto edit a different prompt, use the command \`prompt use <prompt name>\`, and to list your saved prompts use \`prompt list\`. to make a new prompt, change the prompt's name to something else.`
             })
         ]
     })
@@ -530,7 +530,7 @@ let nameBlacklists = ["reset", "default", "autosave"]
 const name = new Command({
         name: 'name',
         description: 'sets the name of your prompt',
-        long_description: 'sets the name of your current prompt',
+        long_description: 'sets the name of your current prompt; this clones your prompt and effectively creates a new one.',
         tags: [CommandTag.AI],
         pipable_to: [],
         options: [
@@ -543,6 +543,7 @@ const name = new Command({
         ],
         example_usage: "p/prompt name myprompt",
         argument_order: "<content>",
+        aliases: ["setname", "rename", "create", "new"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ invoker, guild_config, args }) {
