@@ -387,7 +387,7 @@ const build = new Command(
                     });
                     break;
                 default:
-                    action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true, components_v2: true });
+                    action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true });
                     break;
             }
         });
