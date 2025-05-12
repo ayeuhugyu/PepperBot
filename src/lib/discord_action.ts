@@ -18,7 +18,8 @@ export interface MessageInput {
     attachments?: Attachment[] | AttachmentBuilder[];
     ephemeral: boolean;
     components_v2?: boolean;
-    flags?: InteractionReplyOptions['flags']
+    flags?: InteractionReplyOptions['flags'];
+    fetchReply?: boolean;
 };
 
 const replaceList = {

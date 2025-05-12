@@ -1,4 +1,4 @@
-import { Collection, Message, ModalBuilder, User } from "discord.js";
+import { Collection, Message, MessageFlags, ModalBuilder, User } from "discord.js";
 import { Command, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
@@ -130,7 +130,7 @@ function embedPrompt(prompt: Prompt, guild_config: GuildConfig, disabled: boolea
     })
 }
 
-function getBuilderActionRow(disabled: boolean = false) {
+function getBuilderActionRow(disabled: boolean = false, prompt: Prompt) {
     return new ActionRow({
         components: [
             new Button({
@@ -138,7 +138,13 @@ function getBuilderActionRow(disabled: boolean = false) {
                 label: "set as active prompt",
                 custom_id: "edit_prompt_set_active",
                 disabled: disabled
-            })
+            }),
+            new Button({
+                style: ButtonStyle.Danger,
+                label: "delete prompt",
+                custom_id: "edit_prompt_delete",
+                disabled: prompt.name === "autosave" || disabled
+            }),
         ]
     })
 }
@@ -182,7 +188,7 @@ const build = new Command(
             prompt = await getUserPrompt(invoker.author);
         }
         const sent = await action.reply(invoker, {
-            components: [embedPrompt(prompt, guild_config), getBuilderActionRow()],
+            components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)],
             ephemeral: guild_config.other.use_ephemeral_replies,
             components_v2: true
         }) as Message;
@@ -191,7 +197,7 @@ const build = new Command(
         collector.on('end', async () => {
             if (sent) {
                 action.edit(sent, {
-                    components: [embedPrompt(prompt, guild_config, true), getBuilderActionRow(true)],
+                    components: [embedPrompt(prompt, guild_config, true), getBuilderActionRow(true, prompt)],
                 }).catch(() => {});
             }
         });
@@ -207,20 +213,20 @@ const build = new Command(
                 case "edit_prompt_nsfw":
                     prompt.nsfw = !prompt.nsfw;
                     await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow()] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     interaction.deferUpdate();
                     break;
                 case "edit_prompt_default":
                     prompt.default = !prompt.default;
                     await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow()] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     interaction.deferUpdate();
                     break;
                 case "edit_prompt_publish":
                     prompt.published = !prompt.published;
                     prompt.published_at = prompt.published ? new Date() : undefined;
                     await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow()] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     interaction.deferUpdate();
                     break;
                 case "edit_prompt_name":
@@ -258,7 +264,7 @@ const build = new Command(
                     await savePrompt(prompt, invoker.author);
                     userPrompts.set(invoker.author.id, prompt.name);
                     action.reply(submittedName as unknown as FormattedCommandInteraction, { content: `prompt name set to \`${prompt.name}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow()] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     break;
                 case "edit_prompt_description":
                     await interaction.showModal({
@@ -284,7 +290,7 @@ const build = new Command(
                     prompt.description = submittedDescription.fields.getTextInputValue("prompt_description");
                     await savePrompt(prompt, invoker.author);
                     action.reply(submittedDescription as unknown as FormattedCommandInteraction, { content: `prompt description set to \`${prompt.description}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow()] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     break;
                 case "edit_prompt_content":
                     await interaction.showModal({
@@ -310,14 +316,78 @@ const build = new Command(
                     prompt.content = submittedContent.fields.getTextInputValue("prompt_content");
                     await savePrompt(prompt, invoker.author);
                     action.reply(submittedContent as unknown as FormattedCommandInteraction, { content: `${(prompt.content.split(" ").length < 10) ? `i suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer. i'll set the content anyways, but be advised it might not do anything.\n` : ""}prompt content set to \`\`\`\n${prompt.content}\n\`\`\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow()] });
+                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     break;
                 case "edit_prompt_set_active":
                     userPrompts.set(invoker.author.id, prompt.name);
                     action.reply(interaction as unknown as FormattedCommandInteraction, { content: `prompt \`${prompt.name}\` is now set as the active prompt. pinging the bot to start a conversation will use this prompt.`, ephemeral: true });
                     break;
+                case "edit_prompt_delete":
+                    if (prompt.name === "autosave") {
+                        action.reply(interaction as unknown as FormattedCommandInteraction, { content: "you can't delete the autosave prompt", ephemeral: true });
+                        return;
+                    }
+                    // Show confirmation button
+                    const confirmationMessage = await action.reply(interaction as unknown as FormattedCommandInteraction, {
+                        components: [
+                            new TextDisplay({
+                                content: `are you sure you want to delete prompt \`${prompt.name}\`? this action cannot be undone.`
+                            }),
+                            new ActionRow({
+                                components: [
+                                    new Button({
+                                        style: ButtonStyle.Danger,
+                                        label: "Confirm Delete",
+                                        custom_id: "confirm_delete_prompt",
+                                    }),
+                                    new Button({
+                                        style: ButtonStyle.Secondary,
+                                        label: "Cancel",
+                                        custom_id: "cancel_delete_prompt",
+                                    }),
+                                ]
+                            })
+                        ],
+                        ephemeral: true,
+                        components_v2: true,
+                        fetchReply: true
+                    });
+                    if (!confirmationMessage) {
+                        action.reply(interaction as unknown as FormattedCommandInteraction, { content: "failed to send confirmation message", ephemeral: true });
+                        return;
+                    }
+
+                    // Wait for confirmation
+                    const confirmCollector = confirmationMessage.createMessageComponentCollector({
+                        time: 30 * 1000,
+                    });
+                    let edited = false;
+
+                    confirmCollector.on("collect", async (confirmInteraction) => {
+                        if (confirmInteraction.customId === "confirm_delete_prompt") {
+                            await removePrompt(prompt.name, invoker.author.id);
+                            userPrompts.delete(invoker.author.id);
+                            await interaction.editReply({ components: [new TextDisplay({ content: `prompt \`${prompt.name}\` deleted` })], flags: MessageFlags.IsComponentsV2 });
+                            confirmInteraction.deferUpdate();
+                            edited = true;
+                            collector.stop();
+                            confirmCollector.stop();
+                        } else {
+                            await interaction.editReply({ components: [new TextDisplay({ content: `deletion cancelled` })], flags: MessageFlags.IsComponentsV2 });
+                            confirmInteraction.deferUpdate();
+                            edited = true;
+                            confirmCollector.stop();
+                        }
+                    });
+
+                    confirmCollector.on("end", async () => {
+                        if (!edited) {
+                            await interaction.editReply({ components: [new TextDisplay({ content: `confirmation timed out` })], flags: MessageFlags.IsComponentsV2 });
+                        }
+                    });
+                    break;
                 default:
-                    action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true });
+                    action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true, components_v2: true });
                     break;
             }
         });
