@@ -1,11 +1,24 @@
+<noscript>
+    <style>
+        .commands-sidebar {
+            display: none;
+        }
+        .commands-data {
+            display: none;
+        }
+    </style>
+    <div class="card page-centered">
+        <h3>this page is fairly useless without scripts, please use <code>p/help</code> for assistance with commands or preferrably enable scripts in your browser settings.</h3>
+    </div>
+</noscript>
 <div class="card commands-sidebar">
-    <span class="commands-title">Commands</span>
+    <span class="commands-title"><b>Commands</b></span>
     <hr>
     <ul class="commands-list-container">
         {{#each commands}}
             <li class="commands-list-item">
-                <input type="checkbox" id="command-checkbox-{{name}}" class="command-checkbox">
-                <label for="command-checkbox-{{name}}" class="command-label hover-button card">
+                <input type="checkbox" id="command-checkbox-{{name}}" class="command-checkbox" hidden>
+                <label for="command-checkbox-{{name}}" class="command-label hover-button card {{whitelistOnly}}">
                     <span class="command-name">p/{{name}}</span>
                     <div class="command-tags-container">
                         {{#each tags}}
@@ -16,4 +29,22 @@
             </li>
         {{/each}}
     </ul>
+</div>
+<div class="commands-data">
+    {{#each commands}}
+        <div class="command-data card" id="command-data-{{name}}">
+            <h3 class="command-name">p/{{name}}</h3>
+            <div class="command-description">{{description}}</div>
+            <div class="command-tags-container">
+                {{#each tags}}
+                <span class="command-tag">{{this}}</span>
+                {{/each}}
+            </div>
+            <hr>
+            <div class="command-usage">
+                <h4>Usage</h4>
+                <pre><code>{{usage}}</code></pre>
+            </div>
+        </div>
+    {{/each}}
 </div>

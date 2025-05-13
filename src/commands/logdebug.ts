@@ -12,7 +12,7 @@ const command = new Command(
         name: 'logdebug',
         description: 'enables debug logging',
         long_description: 'enables debug logging',
-        tags: [CommandTag.Debug],
+        tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         pipable_to: [],
         options: [],
         access: CommandAccessTemplates.dev_only,

@@ -9,7 +9,7 @@ const command = new Command(
     {
         name: 'restart',
         description: 'restarts the given process',
-        tags: [CommandTag.Debug],
+        tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         input_types: [InvokerType.Message],
         pipable_to: [],
         example_usage: "p/restart",

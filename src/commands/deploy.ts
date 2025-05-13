@@ -9,7 +9,7 @@ const revoke = new Command(
         aliases: ["void"],
         description: 'undeploy commands',
         root_aliases: ["undeploy"],
-        tags: [CommandTag.Debug],
+        tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         subcommands: undefined,
         options: [
             new CommandOption({
@@ -36,7 +36,7 @@ const deploy = new Command(
     {
         name: 'deploy',
         description: 'deploy commands globally or to a guild',
-        tags: [CommandTag.Debug],
+        tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         input_types: [InvokerType.Message],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Merge,

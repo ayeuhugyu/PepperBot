@@ -53,6 +53,7 @@ export enum CommandTag {
     Other = "#other",
     TextPipable = "#text pipable",
     ImagePipable = "#image pipable",
+    WhitelistOnly = "#whitelist only",
 }
 
 export const CommandOptionType = ApplicationCommandOptionType;

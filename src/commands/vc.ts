@@ -76,7 +76,7 @@ const debug = new Command(
         name: 'debug',
         description: 'description',
         long_description: 'description',
-        tags: [],
+        tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         pipable_to: [],
         options: [
             new CommandOption({

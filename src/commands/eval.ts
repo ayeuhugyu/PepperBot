@@ -31,7 +31,7 @@ const command = new Command(
     {
         name: 'eval',
         description: 'evaluates the provided code',
-        tags: [CommandTag.Debug],
+        tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         options: [
             new CommandOption({
                 name: 'code',

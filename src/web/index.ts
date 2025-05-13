@@ -6,7 +6,7 @@ import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 import { getStatistics } from "../lib/statistics";
 import { Client } from "discord.js";
 import commands from "../lib/command_manager";
-import { CommandEntryType } from "../lib/classes/command_enums";
+import { CommandEntryType, CommandTag } from "../lib/classes/command_enums";
 import { Command } from "../lib/classes/command";
 import { CommandAccessTemplates } from "../lib/templates";
 
@@ -160,14 +160,14 @@ export function listen(client: Client) {
     //     })
     // })
     app.get("/commands", (req, res, next) => {
-        let simpleFormattedCommands: { name: string, tags: string[], whitelistOnly: boolean }[] = [];
+        let simpleFormattedCommands: { name: string, tags: string[], whitelistOnly: string }[] = [];
 
         commands.mappings.forEach((entry) => {
             if (entry.type === CommandEntryType.Command) {
             const command = entry.command as Command;
             const name = command.name;
             const tags = command.tags;
-            const whitelistOnly = command.access !== CommandAccessTemplates.public;
+            const whitelistOnly = command.tags.includes(CommandTag.WhitelistOnly)
 
             // check if the command is a subcommand
             if (req.query.name && req.query.name !== name) return;
@@ -178,14 +178,14 @@ export function listen(client: Client) {
             simpleFormattedCommands.push({
                 name: name,
                 tags: tags,
-                whitelistOnly: whitelistOnly
+                whitelistOnly: whitelistOnly ? "command-whitelist-only" : ""
             });
             }
         });
 
         // Sort so that whitelist-only commands appear towards the bottom
         simpleFormattedCommands = simpleFormattedCommands.sort((a, b) => {
-            return Number(a.whitelistOnly) - Number(b.whitelistOnly);
+            return Number(a.whitelistOnly !== "") - Number(b.whitelistOnly !== "");
         });
 
         return res.render("commands", {
