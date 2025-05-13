@@ -98,6 +98,14 @@ li {
     list-style-type: none;
 }
 
+hr {
+    border: 0;
+    height: 0.1em;
+    background: linear-gradient(to right, var(--border-color), transparent);
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
 /* shamelessly stolen from forgejo/gitea, thanks! */
 .error-code {
     color: transparent;
@@ -323,4 +331,11 @@ li {
     margin-right: 0.5em;
     object-fit: cover;
     overflow: hidden;
+}
+
+/* commands */
+
+.commands-sidebar {
+    width: fit-content;
+    max-width: 50%;
 }

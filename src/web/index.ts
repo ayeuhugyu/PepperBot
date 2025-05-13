@@ -156,6 +156,21 @@ export function listen(client: Client) {
     //     })
     // })
 
+    app.get("/commands", (req, res, next) => {
+        return res.render("commands", {
+            title: "commands",
+            description: "a list of all commands and their usage",
+            path: "/commands" + req.query.name ? `/${req.query.name}` : "",
+        })
+    })
+
+    app.get("/commands/:name", (req, res, next) => {
+        res.redirect("/commands?name=" + req.params.name);
+    });
+    app.get("/commands/:name/:subcommand", (req, res, next) => {
+        res.redirect("/commands?name=" + req.params.name + "&subcommand=" + req.params.subcommand);
+    });
+
     app.use(express.static("public"));
 
     // errors
