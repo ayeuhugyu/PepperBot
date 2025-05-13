@@ -1146,7 +1146,7 @@ export class Conversation {
             log.info(`removing user ${user.id} from conversation ${this.id}`);
             this.users = this.users.filter((user2) => user2.id !== user.id);
         }
-        if (this.users.length === 0) {
+        if (this.users.filter((user) => user !== cached_client?.user).length === 0) {
             log.info(`deleting conversation ${this.id} due to no remaining users`);
             conversations = conversations.filter((conv) => conv.id !== this.id);
         }
