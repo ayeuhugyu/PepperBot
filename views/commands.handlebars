@@ -1,6 +1,19 @@
-<div class="card page-centered commands-sidebar">
-    <span>Commands</span>
+<div class="card commands-sidebar">
+    <span class="commands-title">Commands</span>
     <hr>
-    <input type="checkbox" id="menu-checkbox-commandname" class="menu-checkbox">
-    <label for="menu-checkbox-commandname"></label>
+    <ul class="commands-list-container">
+        {{#each commands}}
+            <li class="commands-list-item">
+                <input type="checkbox" id="command-checkbox-{{name}}" class="command-checkbox">
+                <label for="command-checkbox-{{name}}" class="command-label hover-button card">
+                    <span class="command-name">p/{{name}}</span>
+                    <div class="command-tags-container">
+                        {{#each tags}}
+                        <span class="command-tag">{{this}}</span>
+                        {{/each}}
+                    </div>
+                </label>
+            </li>
+        {{/each}}
+    </ul>
 </div>

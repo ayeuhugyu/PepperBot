@@ -5,6 +5,10 @@ import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 import { getStatistics } from "../lib/statistics";
 import { Client } from "discord.js";
+import commands from "../lib/command_manager";
+import { CommandEntryType } from "../lib/classes/command_enums";
+import { Command } from "../lib/classes/command";
+import { CommandAccessTemplates } from "../lib/templates";
 
 const port = 53134
 const isDev = process.env.IS_DEV === "True";
@@ -155,12 +159,40 @@ export function listen(client: Client) {
     //         users: client.users.cache.size
     //     })
     // })
-
     app.get("/commands", (req, res, next) => {
+        let simpleFormattedCommands: { name: string, tags: string[], whitelistOnly: boolean }[] = [];
+
+        commands.mappings.forEach((entry) => {
+            if (entry.type === CommandEntryType.Command) {
+            const command = entry.command as Command;
+            const name = command.name;
+            const tags = command.tags;
+            const whitelistOnly = command.access !== CommandAccessTemplates.public;
+
+            // check if the command is a subcommand
+            if (req.query.name && req.query.name !== name) return;
+
+            // check if the command is a subcommand of a parent command
+            if (req.query.subcommand && req.query.subcommand !== name) return;
+
+            simpleFormattedCommands.push({
+                name: name,
+                tags: tags,
+                whitelistOnly: whitelistOnly
+            });
+            }
+        });
+
+        // Sort so that whitelist-only commands appear towards the bottom
+        simpleFormattedCommands = simpleFormattedCommands.sort((a, b) => {
+            return Number(a.whitelistOnly) - Number(b.whitelistOnly);
+        });
+
         return res.render("commands", {
             title: "commands",
             description: "a list of all commands and their usage",
             path: "/commands" + req.query.name ? `/${req.query.name}` : "",
+            commands: simpleFormattedCommands.filter((entry) => entry !== null),
         })
     })
 

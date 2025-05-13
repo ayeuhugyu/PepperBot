@@ -99,11 +99,12 @@ li {
 }
 
 hr {
-    border: 0;
+    border: 0.1em solid linear-gradient(to right, var(--border-color), transparent);
     height: 0.1em;
     background: linear-gradient(to right, var(--border-color), transparent);
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+    margin-top: 0;
+    margin-bottom: 0;
+    width: 100%;
 }
 
 /* shamelessly stolen from forgejo/gitea, thanks! */
@@ -337,5 +338,53 @@ hr {
 
 .commands-sidebar {
     width: fit-content;
-    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5em;
+    height: fit-content;
+    position: absolute;
+    top: 1em;
+    right: 50vw;
+    transform: translate(50%, 0);
+}
+
+.commands-list-container {
+    margin: 0;
+    column-count: 2;
+    column-gap: 0.5em;
+    padding: 0;
+}
+
+.command-checkbox {
+    display: none;
+}
+
+.command-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5em;
+    margin-bottom: 0.5em;
+    background-color: var(--background-color-extra-dark);
+    border-radius: 0.5em;
+    cursor: pointer;
+}
+
+.command-tags-container {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5em;
+    margin-left: 1em;
+}
+
+.command-tag {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 0.25em;
+    border-radius: 0.5em;
+    font-size: 0.8em;
 }
