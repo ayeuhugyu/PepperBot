@@ -11,7 +11,7 @@
         "pull:selfbot": "bun run scripts/selfbot_pull.ts",
         "migrate": "bunx knex migrate:latest",
         "migrate:make": "bunx knex migrate:make",
-        "setup": "cp .env.example .env && bun install && bun run migrate",
+        "setup": "cp .env.example .env && bun install && bun run migrate && mkdir -p logs",
         "start:server": "bun run pull && bun run start",
         "extras:install": "bun run scripts/install_extras.ts"
     },
