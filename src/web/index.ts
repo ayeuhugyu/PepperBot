@@ -160,7 +160,8 @@ export function listen(client: Client) {
     //     })
     // })
     app.get("/commands", (req, res, next) => {
-        let simpleFormattedCommands: { name: string, tags: string[], whitelistOnly: string }[] = [];
+        let formattedCommands: { name: string, tags: string[], whitelistOnly: string }[] = [];
+        const selectedCommands = req.query.commands?.split(",")
 
         commands.mappings.forEach((entry) => {
             if (entry.type === CommandEntryType.Command) {
@@ -169,38 +170,34 @@ export function listen(client: Client) {
             const tags = command.tags;
             const whitelistOnly = command.tags.includes(CommandTag.WhitelistOnly)
 
-            // check if the command is a subcommand
-            if (req.query.name && req.query.name !== name) return;
-
-            // check if the command is a subcommand of a parent command
-            if (req.query.subcommand && req.query.subcommand !== name) return;
-
-            simpleFormattedCommands.push({
+            formattedCommands.push({
                 name: name,
                 tags: tags,
-                whitelistOnly: whitelistOnly ? "command-whitelist-only" : ""
+                whitelistOnly: whitelistOnly ? "command-whitelist-only" : "",
+                ...command,
+                isPreSelected: selectedCommands && selectedCommands.includes(name),
             });
             }
         });
 
         // Sort so that whitelist-only commands appear towards the bottom
-        simpleFormattedCommands = simpleFormattedCommands.sort((a, b) => {
+        formattedCommands = formattedCommands.sort((a, b) => {
             return Number(a.whitelistOnly !== "") - Number(b.whitelistOnly !== "");
         });
 
         return res.render("commands", {
             title: "commands",
             description: "a list of all commands and their usage",
-            path: "/commands" + req.query.name ? `/${req.query.name}` : "",
-            commands: simpleFormattedCommands.filter((entry) => entry !== null),
-        })
+            path: "/commands" + (req.query.name ? `/${req.query.name}` : ""),
+            commands: formattedCommands.filter((entry) => entry !== null),
+        });
     })
 
     app.get("/commands/:name", (req, res, next) => {
-        res.redirect("/commands?name=" + req.params.name);
+        res.redirect("/commands?commands=" + req.params.name);
     });
     app.get("/commands/:name/:subcommand", (req, res, next) => {
-        res.redirect("/commands?name=" + req.params.name + "&subcommand=" + req.params.subcommand);
+        res.redirect("/commands?commands=" + req.params.name + "&subcommands=" + req.params.subcommand);
     });
 
     app.use(express.static("public"));

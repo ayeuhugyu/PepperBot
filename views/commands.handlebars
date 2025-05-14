@@ -1,4 +1,4 @@
-<noscript>
+<noscript> <!-- TODO: find a way to do this without scripts, its probably possible? -->
     <style>
         .commands-sidebar {
             display: none;
@@ -17,34 +17,51 @@
     <ul class="commands-list-container">
         {{#each commands}}
             <li class="commands-list-item">
-                <input type="checkbox" id="command-checkbox-{{name}}" class="command-checkbox" hidden>
-                <label for="command-checkbox-{{name}}" class="command-label hover-button card {{whitelistOnly}}">
-                    <span class="command-name">p/{{name}}</span>
-                    <div class="command-tags-container">
-                        {{#each tags}}
-                        <span class="command-tag">{{this}}</span>
-                        {{/each}}
-                    </div>
-                </label>
+            <input type="checkbox" id="command-checkbox-{{name}}" class="command-checkbox" hidden {{#if isPreSelected}}checked{{/if}}>
+            <label for="command-checkbox-{{name}}" class="command-label borderless-card hover-button card {{whitelistOnly}}">
+                <span class="command-name">p/{{name}}</span>
+                <div class="command-tags-container">
+                {{#each tags}}
+                <span class="command-tag">{{this}}</span>
+                {{/each}}
+                </div>
+            </label>
             </li>
         {{/each}}
     </ul>
 </div>
-<div class="commands-data">
+<div class="commands-data-list flex column">
     {{#each commands}}
         <div class="command-data card" id="command-data-{{name}}">
-            <h3 class="command-name">p/{{name}}</h3>
-            <div class="command-description">{{description}}</div>
-            <div class="command-tags-container">
+            <div class="command-label borderless-card no-margin">
+                <h3 class="command-name">p/{{name}}</h3>
+                <div class="command-tags-container">
                 {{#each tags}}
-                <span class="command-tag">{{this}}</span>
+                    <span class="command-tag">{{this}}</span>
                 {{/each}}
             </div>
-            <hr>
-            <div class="command-usage">
-                <h4>Usage</h4>
-                <pre><code>{{usage}}</code></pre>
             </div>
+            <hr>
+            <span class="borderless-card little-padding">{{description}}</span>
         </div>
     {{/each}}
 </div>
+<script>
+    const commandCheckboxes = document.querySelectorAll('.command-checkbox');
+    const commandData = document.querySelectorAll('.command-data');
+
+    // On page load, set display based on checkbox status
+    commandCheckboxes.forEach((checkbox, index) => {
+        commandData[index].style.display = checkbox.checked ? 'flex' : 'none';
+    });
+
+    commandCheckboxes.forEach((checkbox, index) => {
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                commandData[index].style.display = 'flex';
+            } else {
+                commandData[index].style.display = 'none';
+            }
+        });
+    });
+</script>

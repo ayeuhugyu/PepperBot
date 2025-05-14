@@ -146,6 +146,10 @@ hr {
     margin: 0;
 }
 
+.top-margin {
+    margin-top: 0.5em;
+}
+
 .no-padding {
     padding: 0;
 }
@@ -203,6 +207,11 @@ hr {
     border: 0.1em solid var(--border-color);
     border-radius: 0.5em;
     padding: 1em;
+}
+
+.borderless-card {
+    background-color: var(--background-color-extra-dark);
+    border-radius: 0.5em;
 }
 
 .hover-button {
@@ -338,6 +347,15 @@ hr {
 
 /* commands */
 
+.commands-page {
+    padding: 1em;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+}
+
 .commands-sidebar {
     width: fit-content;
     display: flex;
@@ -346,10 +364,6 @@ hr {
     align-items: center;
     gap: 0.5em;
     height: fit-content;
-    position: absolute;
-    top: 1em;
-    right: 50vw;
-    transform: translate(50%, 0);
 }
 
 .commands-list-container {
@@ -369,8 +383,6 @@ hr {
     align-items: center;
     padding: 0.5em;
     margin-bottom: 0.5em;
-    background-color: var(--background-color-extra-dark);
-    border-radius: 0.5em;
     cursor: pointer;
 }
 
@@ -415,10 +427,13 @@ hr {
     background-color: var(--background-color-extra-dark);
     border-radius: 0.5em;
     margin-top: 0.5em;
+    width: 100%;
 }
 
-/* Show the corresponding data display when the checkbox is checked */
-.command-checkbox:checked ~ .command-data-display {
-    display: flex; /* Shown when the corresponding checkbox is checked */
-    flex-direction: column;
+.commands-data-list {
+    justify-content: flex-start;
+    align-items: flex-start;
+    min-height: 100%;
+    max-width: fit-content;
+    flex-grow: 1;
 }
