@@ -388,6 +388,7 @@ hr {
 
 .command-whitelist-only {
     color: var(--text-color-dark);
+    font-style: italic;
 }
 
 .command-tags-container {
@@ -415,19 +416,45 @@ hr {
     transform: scale(1.025);
 }
 
+.subcommand-checkbox:checked ~ .command-label {
+    background-color: var(--background-color-extra-dark);
+    border-color: var(--border-color-light);
+    color: var(--text-color-light);
+    box-shadow: 0 0 0.15em var(--glow-color);
+    transform: scale(1.025);
+}
+
 /* Command data display styling */
-.command-data {
+.command-data-container {
     display: none; /* Hidden by default */
-    flex: 1; /* Allow it to grow and fill available space */
+}
+
+.command-data-section {
+    width: 20em;
+    padding: 0.5em;
+}
+
+.command-basic-data {
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
     gap: 0.5em;
-    padding: 0.5em;
     background-color: var(--background-color-extra-dark);
     border-radius: 0.5em;
-    margin-top: 0.5em;
-    width: 100%;
+}
+
+.command-data-name {
+    padding: 0.25em;
+    padding-left: 0.5em;
+    margin-right: 0.5em;
+    margin-bottom: 0;
+    width: calc(100% - 0.75em);
+    justify-content: space-between;
+}
+
+.command-data-description {
+    padding-left: 0.5em;
+    width: calc(100% - 0.75em);
 }
 
 .commands-data-list {
@@ -436,4 +463,19 @@ hr {
     min-height: 100%;
     max-width: fit-content;
     flex-grow: 1;
+}
+
+.command-data-usage {
+    padding: 0.25em;
+    padding-left: 0.5em;
+    margin-right: 0.5em;
+    margin-bottom: 0;
+    width: calc(100% - 0.75em);
+    justify-content: space-between;
+}
+
+.subcommands-list-container {
+    margin: 0;
+    padding: 0;
+    padding-right: 0.75em;
 }

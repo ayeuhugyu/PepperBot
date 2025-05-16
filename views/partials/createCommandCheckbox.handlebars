@@ -1,0 +1,11 @@
+<li class="commands-list-item">
+    <input type="checkbox" id="command-checkbox-{{#if parentName}}{{parentName}}-{{/if}}{{name}}" class="{{#if parentName}}sub{{/if}}command-checkbox" hidden {{#if isPreSelected}}checked{{/if}}>
+    <label for="command-checkbox-{{#if parentName}}{{parentName}}-{{/if}}{{name}}" class="command-label borderless-card hover-button card {{whitelistOnly}}">
+        <span class="command-name">p/{{#if parentName}}{{parentName}} {{/if}}{{name}}</span>
+        <div class="command-tags-container">
+        {{#each tags}}
+            <span class="command-tag">{{this}}</span>
+        {{/each}}
+        </div>
+    </label>
+</li>

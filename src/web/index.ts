@@ -4,9 +4,9 @@ import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
 import { getStatistics } from "../lib/statistics";
-import { Client } from "discord.js";
+import { ApplicationIntegrationType, Client, InteractionContextType, Options } from "discord.js";
 import commands from "../lib/command_manager";
-import { CommandEntryType, CommandTag } from "../lib/classes/command_enums";
+import { CommandEntryType, CommandOptionType, CommandTag } from "../lib/classes/command_enums";
 import { Command } from "../lib/classes/command";
 import { CommandAccessTemplates } from "../lib/templates";
 
@@ -24,6 +24,31 @@ class HttpException extends Error {
         this.status = status;
         this.message = message;
     }
+}
+
+const argTypeIndex: Record<CommandOptionType, string> = {
+    [CommandOptionType.Subcommand]: "subcommand",
+    [CommandOptionType.SubcommandGroup]: "subcommand_group",
+    [CommandOptionType.String]: "string",
+    [CommandOptionType.Integer]: "integer",
+    [CommandOptionType.Boolean]: "boolean",
+    [CommandOptionType.User]: "user",
+    [CommandOptionType.Channel]: "channel",
+    [CommandOptionType.Role]: "role",
+    [CommandOptionType.Mentionable]: "mentionable",
+    [CommandOptionType.Number]: "number",
+    [CommandOptionType.Attachment]: "attachment",
+};
+
+const integrationTypesIndex: Record<ApplicationIntegrationType, string> = {
+    [ApplicationIntegrationType.GuildInstall]: "guild install",
+    [ApplicationIntegrationType.UserInstall]: "user install"
+}
+
+const contextsIndex: Record<InteractionContextType, string> = {
+    [InteractionContextType.Guild]: "Guild",
+    [InteractionContextType.BotDM]: "Bot DM",
+    [InteractionContextType.PrivateChannel]: "Private Channel"
 }
 
 export function listen(client: Client) {
@@ -159,24 +184,68 @@ export function listen(client: Client) {
     //         users: client.users.cache.size
     //     })
     // })
+    function formatCommand(command: Command, selectedCommand: string, selectedSubcommand?: string): any {
+        const name = command.name;
+        const whitelistOnly = command.tags.includes(CommandTag.WhitelistOnly)
+        return {
+                whitelistOnly: whitelistOnly ? "command-whitelist-only" : "",
+                ...command,
+                usage: Array.isArray(command.example_usage) ? command.example_usage.map((value, index) => {
+                    return `EXAMPLE ${index + 1}: ${value}`;
+                }) : ["EXAMPLE: " + command.example_usage],
+                argOrder: command.options.filter((option) => option.type !== CommandOptionType.Subcommand).length === 0
+                    ? undefined
+                    : `p/${command.parent_command ? command.parent_command + " " : ""}${name} ` + (command.argument_order.length > 0
+                        ? command.argument_order
+                        : "<" + command.options.map((option) => option.name).join("> <") + ">"),
+                isPreSelected: (selectedCommand === name) || selectedCommand === (command.parent_command + " " + name),
+                arguments: (command.options.filter((option) => option.type !== CommandOptionType.Subcommand).length === 0) ? undefined : command.options.filter((option) => option.type !== CommandOptionType.Subcommand).map((option) => {
+                    return {
+                        argType: argTypeIndex[option.type],
+                        ...option,
+                    }
+                }),
+                meta: {
+                    integration_types: command.integration_types.map((type) => integrationTypesIndex[type]).join(", "),
+                    contexts: command.contexts.map((type) => contextsIndex[type]).join(", "),
+                    nsfw: new String(command.nsfw),
+                    aliases: (command.aliases.length > 0)
+                        ? (
+                            command.parent_command
+                                ? command.aliases.map(alias => `p/${command.parent_command} ${alias}`).join(", ")
+                                : command.aliases.map(alias => `p/${alias}`).join(", ")
+                        )
+                        : undefined,
+                    rootAliases: command.root_aliases.length > 0 ? command.root_aliases.map(alias => `p/${alias}`).join(", ") : undefined,
+                    parent: command.parent_command ? command.parent_command : undefined,
+                },
+                subcommands: (command.subcommands?.list.length || -1) > 0 ? command.subcommands?.list.map((subcommand) => {
+                    return {
+                        name: subcommand.name,
+                        parentName: subcommand.parent_command,
+                        tags: subcommand.tags,
+                        isPreSelected: selectedSubcommand === (subcommand.parent_command + " " + subcommand.name),
+                    }
+                }) : undefined,
+            }
+    }
+
     app.get("/commands", (req, res, next) => {
-        let formattedCommands: { name: string, tags: string[], whitelistOnly: string }[] = [];
-        const selectedCommands = req.query.commands?.split(",")
+        let formattedCommands: any[] = [];
+        let formattedSubcommands: any[] = [];
+        const selectedCommand = req.query.command
+        const selectedSubcommand = req.query.command + " " + req.query.subcommand
 
         commands.mappings.forEach((entry) => {
             if (entry.type === CommandEntryType.Command) {
-            const command = entry.command as Command;
-            const name = command.name;
-            const tags = command.tags;
-            const whitelistOnly = command.tags.includes(CommandTag.WhitelistOnly)
+                const command = entry.command as Command;
 
-            formattedCommands.push({
-                name: name,
-                tags: tags,
-                whitelistOnly: whitelistOnly ? "command-whitelist-only" : "",
-                ...command,
-                isPreSelected: selectedCommands && selectedCommands.includes(name),
-            });
+                formattedCommands.push(formatCommand(command, selectedCommand as string, selectedSubcommand as string));
+                if (command.subcommands && command.subcommands.list.length > 0) {
+                    command.subcommands.list.forEach((subcommand) => {
+                        formattedSubcommands.push(formatCommand(subcommand, selectedSubcommand as string));
+                    });
+                }
             }
         });
 
@@ -190,14 +259,15 @@ export function listen(client: Client) {
             description: "a list of all commands and their usage",
             path: "/commands" + (req.query.name ? `/${req.query.name}` : ""),
             commands: formattedCommands.filter((entry) => entry !== null),
+            subcommands: formattedSubcommands.filter((entry) => entry !== null),
         });
     })
 
     app.get("/commands/:name", (req, res, next) => {
-        res.redirect("/commands?commands=" + req.params.name);
+        res.redirect("/commands?command=" + req.params.name);
     });
     app.get("/commands/:name/:subcommand", (req, res, next) => {
-        res.redirect("/commands?commands=" + req.params.name + "&subcommands=" + req.params.subcommand);
+        res.redirect("/commands?command=" + req.params.name + "&subcommand=" + req.params.subcommand);
     });
 
     app.use(express.static("public"));
