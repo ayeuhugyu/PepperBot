@@ -1,4 +1,4 @@
-import { Collection, Message, MessageFlags, ModalBuilder, User } from "discord.js";
+import { AutocompleteInteraction, ButtonInteraction, Interaction, Message, MessageComponentInteraction, MessageFlags, ModalSubmitInteraction, User } from "discord.js";
 import { Command, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
@@ -30,104 +30,80 @@ function savePrompt(prompt: Prompt, user: User) {
     writePrompt(prompt);
 }
 
-function embedPrompt(prompt: Prompt, guild_config: GuildConfig, disabled: boolean = false) {
-    return new Container({
+function sectionWithEdit(label: string, value: string, custom_id: string, disabled = false, note?: string) {
+    return new Section({
         components: [
             new TextDisplay({
-                content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as number || 1) / 1000)}:F>` : ""}`,
+                content: `**${label}**\n${value}${note ? `\n-# ${note}` : ""}`
             }),
-            new Separator(),
-            new Section({
-                components: [
-                    new TextDisplay({
-                        content: `**Name**\n${prompt.name}`
-                    }),
-                ],
-                accessory: new Button({
-                    style: ButtonStyle.Primary,
-                    label: "Edit",
-                    custom_id: `edit_prompt_name`,
-                    disabled: disabled
-                })
-            }),
-            new Separator(),
-            new Section({
-                components: [
-                    new TextDisplay({
-                        content: `**Description**\n${prompt.description}`
-                    }),
-                ],
-                accessory: new Button({
-                    style: ButtonStyle.Primary,
-                    label: "Edit",
-                    custom_id: `edit_prompt_description`,
-                    disabled: disabled
-                })
-            }),
-            new Separator(),
-            new Section({
-                components: [
-                    new TextDisplay({
-                        content: `**Prompt**\n${prompt.content}`
-                    }),
-                ],
-                accessory: new Button({
-                    style: ButtonStyle.Primary,
-                    label: "Edit",
-                    custom_id: `edit_prompt_content`,
-                    disabled: disabled
-                })
-            }),
-            new Separator(),
-            new Section({
-                components: [
-                    new TextDisplay({
-                        content: `**NSFW**\n${prompt.nsfw ? "true" : "false"}`
-                    }),
-                ],
-                accessory: new Button({
-                    style: prompt.nsfw ? ButtonStyle.Danger : ButtonStyle.Success,
-                    label: prompt.nsfw ? "Unmark" : "Mark",
-                    custom_id: nsfw ? `edit_prompt_nsfw` : `edit_prompt_nsfw`,
-                    disabled: disabled
-                })
-            }),
-            new Section({
-                components: [
-                    new TextDisplay({
-                        content: `**Default**\n${prompt.default ? "true" : "false"}`
-                    }),
-                ],
-                accessory: new Button({
-                    style: prompt.default ? ButtonStyle.Danger : ButtonStyle.Success,
-                    label: prompt.default ? "Unmark" : "Mark",
-                    custom_id: prompt.default ? `edit_prompt_default` : `edit_prompt_default`,
-                    disabled: disabled
-                })
-            }),
-            new Section({
-                components: [
-                    new TextDisplay({
-                        content: `**Published**\n${prompt.published ? "true" : "false"}`
-                    }),
-                ],
-                accessory: new Button({
-                    style: prompt.published ? ButtonStyle.Danger : ButtonStyle.Success,
-                    label: prompt.published ? "Unpublish" : "Publish",
-                    custom_id: prompt.published ? `edit_prompt_publish` : `edit_prompt_publish`,
-                    disabled: disabled
-                })
-            }),
-            new Separator(),
+        ],
+        accessory: new Button({
+            style: ButtonStyle.Primary,
+            label: "Edit",
+            custom_id,
+            disabled
+        })
+    });
+}
+
+function toggleSection(label: string, value: boolean, custom_id: string, disabled = false, trueLabel = "Unmark", falseLabel = "Mark") {
+    return new Section({
+        components: [
             new TextDisplay({
-                content: `to edit a different prompt, first list your saved prompts with \`${guild_config.other.prefix}prompt list\`. \nthen, run this command again but with the chosen prompt's name, like this: \n\`${guild_config.other.prefix}prompt build <prompt name>\`\n\nto make a new prompt, change the prompt's name to something else. \nfinally, to delete a prompt, use the command \`${guild_config.other.prefix}prompt delete <prompt name>\`.`,
+                content: `**${label}**\n${value ? "true" : "false"}`
             }),
-            new Separator(),
-            new TextDisplay({
-                content: `for advanced editing of this prompt such as changing API parameters and AI model, use the \`${guild_config.other.prefix}prompt setparam\` and \`${guild_config.other.prefix}prompt model\` commands. see the help page for those commands for more information on how to use them (\`${guild_config.other.prefix}help prompt setparam\`).`,
-            })
-        ]
-    })
+        ],
+        accessory: new Button({
+            style: value ? ButtonStyle.Danger : ButtonStyle.Success,
+            label: value ? trueLabel : falseLabel,
+            custom_id,
+            disabled
+        })
+    });
+}
+
+function buildSections(prompt: Prompt, guild_config: GuildConfig, disabled: boolean = false) {
+    return [
+        new TextDisplay({
+            content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as number || 1) / 1000)}:F>` : ""}`,
+        }),
+        new Separator(),
+        sectionWithEdit("Name", prompt.name, "edit_prompt_name", disabled, "changing the name of the prompt will effectively create a new prompt."),
+        new Separator(),
+        sectionWithEdit("Description", prompt.description, "edit_prompt_description", disabled),
+        new Separator(),
+        sectionWithEdit("Prompt", prompt.content, "edit_prompt_content", disabled),
+        new Separator(),
+        ...["NSFW", "Default"].map(field => toggleSection(field, (prompt as any)[field.toLowerCase() as keyof Prompt], `edit_prompt_${field.toLowerCase()}`, disabled)),
+        toggleSection("Published", prompt.published, "edit_prompt_publish", disabled, "Unpublish", "Publish"),
+        new Separator(),
+        new TextDisplay({ content: "__**Advanced**__\n\n" }),
+        sectionWithEdit(
+            "AI Model", // the label will make this automatically start and end with **
+            `${prompt.api_parameters.model || defaultModel}\n-# run \`${guild_config.other.prefix}prompt model list\` for a more detailed list of models and their capabilities.`,
+            "edit_prompt_model",
+            disabled
+        ),
+        sectionWithEdit(
+            "API Parameters",
+            Object.entries(prompt.api_parameters)
+                .filter(([key, _]) => key !== "model")
+                .map(([key, value]) => `**${key}**: ${value}`)
+                .join("\n"),
+            "edit_prompt_api_parameters",
+            disabled
+        ),
+        new Separator(),
+        new TextDisplay({
+            content: `to edit a different prompt, first list your saved prompts with \`${guild_config.other.prefix}prompt list\`. \nthen, run this command again but with the chosen prompt's name, like this: \n\`${guild_config.other.prefix}prompt edit promptname\``,
+        }),
+    ];
+}
+
+function embedPrompt(prompt: Prompt, guild_config: GuildConfig, disabled: boolean = false) {
+    return new Container({
+        components: buildSections(prompt, guild_config, disabled)
+    });
 }
 
 function getBuilderActionRow(disabled: boolean = false, prompt: Prompt) {
@@ -147,6 +123,122 @@ function getBuilderActionRow(disabled: boolean = false, prompt: Prompt) {
             }),
         ]
     })
+}
+
+const defaultModel = "gpt-4.1-nano"
+
+function getModelButtons(prompt: Prompt, disabled: boolean = false) {
+    const modelButtons: ActionRow[] = []
+    Object.values(models).forEach((model) => {
+        const modelButton = new Button({
+            style: (model.name === defaultModel) ? ButtonStyle.Success : ButtonStyle.Primary,
+            label: model.name,
+            custom_id: `edit_prompt_model_${model.name}`,
+            disabled: (prompt.api_parameters.model === model.name) || (!(prompt.api_parameters.model) && (model.name === defaultModel)) || disabled
+        });
+        if (modelButtons.length === 0 || modelButtons[modelButtons.length - 1].components.length >= 5) {
+            const row = new ActionRow({ components: [modelButton] });
+            modelButtons.push(row);
+        } else {
+            modelButtons[modelButtons.length - 1].components.push(modelButton);
+        }
+    });
+    return modelButtons;
+}
+
+const templateAPIParameters = new APIParameters();
+
+function getAPIParametersButtons(prompt: Prompt, disabled: boolean = false) {
+    const apiParameterButtons: ActionRow[] = []
+    Object.keys(templateAPIParameters).filter((key) => key !== "model").forEach((key) => {
+        const apiParameterButton = new Button({
+            style: ButtonStyle.Primary,
+            label: key,
+            custom_id: `edit_prompt_api_parameter_${key}`,
+            disabled: disabled
+        });
+        if (apiParameterButtons.length === 0 || apiParameterButtons[apiParameterButtons.length - 1].components.length >= 5) {
+            const row = new ActionRow({ components: [apiParameterButton] });
+            apiParameterButtons.push(row);
+        } else {
+            apiParameterButtons[apiParameterButtons.length - 1].components.push(apiParameterButton);
+        }
+    });
+    return apiParameterButtons;
+}
+
+// Helper for toggling boolean fields
+async function togglePromptField(
+    field: keyof Prompt,
+    prompt: Prompt,
+    invoker: CommandInvoker<any>,
+    sent: Message,
+    guild_config: GuildConfig,
+    actionRow: ActionRow,
+    buttonInteraction: MessageComponentInteraction,
+) {
+    (prompt as any)[field as keyof Prompt] = !prompt[field];
+    await savePrompt(prompt, invoker.author);
+    action.edit(sent, { components: [embedPrompt(prompt, guild_config), actionRow] });
+    buttonInteraction.deferUpdate();
+    return prompt;
+}
+
+interface ModalValueFilterResponse {
+    success: boolean;
+    message: string | undefined;
+}
+
+type ModalValueFilterFunction = (value: string) => ModalValueFilterResponse;
+
+// Helper for showing a modal and updating a field
+async function showModalAndUpdateField(
+    interaction: Exclude<Interaction, AutocompleteInteraction | ModalSubmitInteraction>,
+    prompt: Prompt,
+    field: keyof Prompt,
+    modalOptions: { custom_id: string, title: string, label: string, style: TextInputStyle, placeholder: string },
+    invoker: CommandInvoker<any>,
+    sent: Message,
+    guild_config: GuildConfig,
+    actionRow: ActionRow,
+    filter: ModalValueFilterFunction | undefined = undefined,
+    extraReply?: (value: string) => string,
+) {
+    await interaction.showModal({
+        custom_id: modalOptions.custom_id,
+        title: modalOptions.title,
+        components: [
+            new ActionRow({
+                components: [
+                    new TextInput({
+                        custom_id: modalOptions.custom_id.replace('_modal', ''),
+                        label: modalOptions.label,
+                        style: modalOptions.style,
+                        placeholder: modalOptions.placeholder,
+                        required: true,
+                        value: prompt[field] as string
+                    })
+                ]
+            }) as any
+        ]
+    });
+    const submitted = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
+    (submitted as unknown as FormattedCommandInteraction).author = submitted.user;
+    const value = submitted.fields.getTextInputValue(modalOptions.custom_id.replace('_modal', ''));
+    if (filter) {
+        const filterResponse = filter(value);
+        if (!filterResponse.success) {
+            action.reply(submitted as unknown as FormattedCommandInteraction, { content: filterResponse.message || "unknown error", ephemeral: true });
+            return;
+        }
+    }
+    (prompt as any)[field as keyof Prompt] = value;
+    await savePrompt(prompt, invoker.author);
+    action.reply(submitted as unknown as FormattedCommandInteraction, {
+        content: extraReply ? extraReply(value) : `prompt ${field} set to \`${value}\``,
+        ephemeral: true
+    });
+    action.edit(sent, { components: [embedPrompt(prompt, guild_config), actionRow] });
 }
 
 const build = new Command(
@@ -209,120 +301,140 @@ const build = new Command(
                 return;
             }
 
-            switch (interaction.customId) {
-                case "edit_prompt_nsfw":
-                    prompt.nsfw = !prompt.nsfw;
-                    await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
-                    interaction.deferUpdate();
-                    break;
-                case "edit_prompt_default":
-                    prompt.default = !prompt.default;
-                    await savePrompt(prompt, invoker.author);
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
-                    interaction.deferUpdate();
-                    break;
-                case "edit_prompt_publish":
+            const handlers: Record<string, Function> = {
+                "edit_prompt_nsfw": () => togglePromptField("nsfw", prompt, invoker, sent, guild_config, getBuilderActionRow(false, prompt), interaction),
+                "edit_prompt_default": () => togglePromptField("default", prompt, invoker, sent, guild_config, getBuilderActionRow(false, prompt), interaction),
+                "edit_prompt_publish": async () => {
                     prompt.published = !prompt.published;
-                    prompt.published_at = prompt.published ? new Date() : undefined;
+                    prompt.published_at = prompt.published ? new Date() : undefined; // this one has a very slight little custom thing
                     await savePrompt(prompt, invoker.author);
                     action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     interaction.deferUpdate();
-                    break;
-                case "edit_prompt_name":
-                    await interaction.showModal({
+                },
+                "edit_prompt_name": () => showModalAndUpdateField(
+                    interaction, prompt, "name",
+                    {
                         custom_id: "prompt_name_modal",
                         title: "Prompt Name",
-                        components: [
-                            new ActionRow({
-                                components: [
-                                    new TextInput({
-                                        custom_id: "prompt_name",
-                                        label: "Prompt Name",
-                                        style: TextInputStyle.Short,
-                                        placeholder: "Enter the name of the prompt",
-                                        required: true,
-                                        value: prompt.name
-                                    })
-                                ]
-                            }) as any
-                        ]
-                    });
-                    const submittedName = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
-                    (submittedName as unknown as FormattedCommandInteraction).author = submittedName.user;
-                    const name = submittedName.fields.getTextInputValue("prompt_name");
-                    if (nameBlacklists.includes(name)) {
-                        action.reply(submittedName as unknown as FormattedCommandInteraction, { content: `you can't name your prompt \`${name}\`, choose another name`, ephemeral: true });
-                        return;
+                        label: "Prompt Name",
+                        style: TextInputStyle.Short,
+                        placeholder: "Enter the name of the prompt"
+                    },
+                    invoker, sent, guild_config, getBuilderActionRow(false, prompt), (value) => {
+                        if (nameBlacklists.includes(value)) {
+                            return { success: false, message: `you can't name your prompt \`${value}\`, choose another name` };
+                        }
+                        if (value.includes('/')) {
+                            return { success: false, message: "prompt names cannot contain `/`" };
+                        }
+                        return { success: true, message: undefined };
                     }
-                    if (name.includes('/')) { // this will be used later for published prompts
-                        action.reply(submittedName as unknown as FormattedCommandInteraction, { content: "prompt names cannot contain `/`", ephemeral: true });
-                        return;
-                    }
-                    prompt.name = name;
-                    prompt.created_at = new Date();
-                    await savePrompt(prompt, invoker.author);
-                    userPrompts.set(invoker.author.id, prompt.name);
-                    action.reply(submittedName as unknown as FormattedCommandInteraction, { content: `prompt name set to \`${prompt.name}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
-                    break;
-                case "edit_prompt_description":
-                    await interaction.showModal({
+                ),
+                "edit_prompt_description": () => showModalAndUpdateField(
+                    interaction, prompt, "description",
+                    {
                         custom_id: "prompt_description_modal",
                         title: "Prompt Description",
-                        components: [
-                            new ActionRow({
-                                components: [
-                                    new TextInput({
-                                        custom_id: "prompt_description",
-                                        label: "Prompt Description",
-                                        style: TextInputStyle.Paragraph,
-                                        placeholder: "Enter the description of the prompt",
-                                        required: true,
-                                        value: prompt.description
-                                    })
-                                ]
-                            }) as any
-                        ]
-                    });
-                    const submittedDescription = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
-                    (submittedDescription as unknown as FormattedCommandInteraction).author = submittedDescription.user;
-                    prompt.description = submittedDescription.fields.getTextInputValue("prompt_description");
-                    await savePrompt(prompt, invoker.author);
-                    action.reply(submittedDescription as unknown as FormattedCommandInteraction, { content: `prompt description set to \`${prompt.description}\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
-                    break;
-                case "edit_prompt_content":
-                    await interaction.showModal({
+                        label: "Prompt Description",
+                        style: TextInputStyle.Paragraph,
+                        placeholder: "Enter the description of the prompt"
+                    },
+                    invoker, sent, guild_config, getBuilderActionRow(false, prompt)
+                ),
+                "edit_prompt_content": () => showModalAndUpdateField(
+                    interaction, prompt, "content",
+                    {
                         custom_id: "prompt_content_modal",
                         title: "Prompt Content",
-                        components: [
-                            new ActionRow({
-                                components: [
-                                    new TextInput({
-                                        custom_id: "prompt_content",
-                                        label: "Prompt Content",
-                                        style: TextInputStyle.Paragraph,
-                                        placeholder: "Enter the content of the prompt",
-                                        required: true,
-                                        value: prompt.content
-                                    })
-                                ]
-                            }) as any
-                        ]
+                        label: "Prompt Content",
+                        style: TextInputStyle.Paragraph,
+                        placeholder: "Enter the content of the prompt"
+                    },
+                    invoker, sent, guild_config, getBuilderActionRow(false, prompt),
+                    undefined,
+                    (value) => `${(value.split(" ").length < 10) ? `i suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer. i'll set the content anyways, but be advised it might not do anything.\n` : ""}prompt content set to \`\`\`\n${value}\n\`\`\``
+                ),
+                // For more complex cases, call the original logic
+                "edit_prompt_model": async () => {
+                    const modelReply = await action.reply(interaction as unknown as FormattedCommandInteraction, {
+                        content: `select a model to use for this prompt. currently selected: \`${prompt.api_parameters.model || defaultModel}\``,
+                        components: getModelButtons(prompt),
+                        fetchReply: true,
+                        ephemeral: true,
                     });
-                    const submittedContent = await interaction.awaitModalSubmit({ time: 20 * 60 * 1000 });
-                    (submittedContent as unknown as FormattedCommandInteraction).author = submittedContent.user;
-                    prompt.content = submittedContent.fields.getTextInputValue("prompt_content");
-                    await savePrompt(prompt, invoker.author);
-                    action.reply(submittedContent as unknown as FormattedCommandInteraction, { content: `${(prompt.content.split(" ").length < 10) ? `i suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer. i'll set the content anyways, but be advised it might not do anything.\n` : ""}prompt content set to \`\`\`\n${prompt.content}\n\`\`\``, ephemeral: true });
-                    action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
-                    break;
-                case "edit_prompt_set_active":
+                    if (!modelReply) return;
+                    const modelCollector = modelReply.createMessageComponentCollector({ time: 30 * 60 * 1000 });
+                    modelCollector.on("collect", async (modelInteraction) => {
+                        if (modelInteraction.user.id !== invoker.author.id) {
+                            action.reply(modelInteraction as unknown as FormattedCommandInteraction, { content: "this is not your prompt", ephemeral: true });
+                            return;
+                        }
+                        const model = modelInteraction.customId.split("_")[3] as GPTModelName;
+                        prompt.api_parameters.model = model;
+                        await savePrompt(prompt, invoker.author);
+                        interaction.editReply({
+                            content: `select a model to use for this prompt. currently selected: \`${prompt.api_parameters.model || defaultModel}\``,
+                            components: getModelButtons(prompt),
+                        });
+                        action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
+                        modelInteraction.deferUpdate();
+                    });
+                    modelCollector.on("end", async () => {
+                        if (modelReply) {
+                            interaction.editReply({
+                                content: `select a model to use for this prompt. currently selected: \`${prompt.api_parameters.model || defaultModel}\``,
+                                components: getModelButtons(prompt, true),
+                            });
+                        }
+                    });
+                },
+                "edit_prompt_api_parameters": async () => {
+                    const reply = await action.reply(interaction as unknown as FormattedCommandInteraction, {
+                        content: `select an API parameter to edit`,
+                        components: getAPIParametersButtons(prompt),
+                        ephemeral: true,
+                        fetchReply: true,
+                    });
+                    if (!reply) return;
+                    const apiParameterCollector = reply.createMessageComponentCollector({ time: 30 * 60 * 1000 });
+                    apiParameterCollector.on("collect", async (apiParameterInteraction) => {
+                        if (apiParameterInteraction.user.id !== invoker.author.id) {
+                            action.reply(apiParameterInteraction as unknown as FormattedCommandInteraction, { content: "this is not your prompt", ephemeral: true });
+                            return;
+                        }
+                        const key = apiParameterInteraction.customId.split("_")[4];
+                        const value = prompt.api_parameters[key];
+                        await apiParameterInteraction.showModal({
+                            custom_id: `prompt_api_parameter_modal`,
+                            title: `API Parameter: ${key}`,
+                            components: [
+                                new ActionRow({
+                                    components: [
+                                        new TextInput({
+                                            custom_id: "prompt_api_parameter",
+                                            label: `API Parameter: ${key}`,
+                                            style: TextInputStyle.Short,
+                                            placeholder: `Enter the value of the API parameter`,
+                                            required: true,
+                                            value: value
+                                        })
+                                    ]
+                                }) as any
+                            ]
+                        });
+                        const submittedAPIParameter = await apiParameterInteraction.awaitModalSubmit({ time: 20 * 60 * 1000 });
+                        (submittedAPIParameter as unknown as FormattedCommandInteraction).author = submittedAPIParameter.user;
+                        prompt.api_parameters[key] = submittedAPIParameter.fields.getTextInputValue("prompt_api_parameter");
+                        await savePrompt(prompt, invoker.author);
+                        action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: `prompt API parameter \`${key}\` set to \`${prompt.api_parameters[key]}\``, ephemeral: true });
+                        action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
+                    });
+                },
+                "edit_prompt_set_active": async () => {
                     userPrompts.set(invoker.author.id, prompt.name);
                     action.reply(interaction as unknown as FormattedCommandInteraction, { content: `prompt \`${prompt.name}\` is now set as the active prompt. pinging the bot to start a conversation will use this prompt.`, ephemeral: true });
-                    break;
-                case "edit_prompt_delete":
+                },
+                "edit_prompt_delete": async () => {
                     if (prompt.name === "autosave") {
                         action.reply(interaction as unknown as FormattedCommandInteraction, { content: "you can't delete the autosave prompt", ephemeral: true });
                         return;
@@ -385,10 +497,12 @@ const build = new Command(
                             await interaction.editReply({ components: [new TextDisplay({ content: `confirmation timed out` })], flags: MessageFlags.IsComponentsV2 });
                         }
                     });
-                    break;
-                default:
-                    action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true });
-                    break;
+                }
+            };
+            if (handlers[interaction.customId]) {
+                await handlers[interaction.customId]();
+            } else {
+                action.reply(invoker, { content: "what the fuck did you do. how did you press a non existant button.", ephemeral: true });
             }
         });
     }
@@ -1072,8 +1186,6 @@ const modelcommand = new Command(
         });
     }
 );
-
-const templateAPIParameters = new APIParameters();
 
 const setparam = new Command(
     {
