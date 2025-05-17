@@ -130,11 +130,17 @@ const defaultModel = "gpt-4.1-nano"
 function getModelButtons(prompt: Prompt, disabled: boolean = false) {
     const modelButtons: ActionRow[] = []
     Object.values(models).forEach((model) => {
+        const isDefault = model.name === defaultModel;
+        const isCurrent = prompt.api_parameters.model === model.name || (!prompt.api_parameters.model && isDefault);
         const modelButton = new Button({
-            style: (model.name === defaultModel) ? ButtonStyle.Success : ButtonStyle.Primary,
+            style: isDefault
+            ? ButtonStyle.Success
+            : isCurrent
+                ? ButtonStyle.Primary
+                : ButtonStyle.Secondary,
             label: model.name,
             custom_id: `edit_prompt_model_${model.name}`,
-            disabled: (prompt.api_parameters.model === model.name) || (!(prompt.api_parameters.model) && (model.name === defaultModel)) || disabled
+            disabled: isCurrent || (model.whitelist && !model.whitelist.includes(prompt.author.id)) || disabled
         });
         if (modelButtons.length === 0 || modelButtons[modelButtons.length - 1].components.length >= 5) {
             const row = new ActionRow({ components: [modelButton] });
@@ -1146,10 +1152,10 @@ const modelcommand = new Command(
 
         if (args.model === "list" || args.model === "ls") {
             const mappedModels = Object.entries(models).map(([key, value]) => {
-                return `${chalk.green(value.name)}:
+                const userIsNotWhitelisted = (value.whitelist && !value.whitelist.includes(invoker.author.id));
+                return `${userIsNotWhitelisted ? chalk.red(value.name) : chalk.green(value.name)}:
   - ${chalk.blue("provider")}: ${value.provider}
-  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}
-                `
+  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}${userIsNotWhitelisted ? `\n  - ${chalk.red("this model is whitelist only; you cannot use it.")}` : ""}`
             });
             await action.reply(invoker, {
                 content: `available models: \`\`\`ansi\n${mappedModels.join("\n")}\`\`\``,
@@ -1171,6 +1177,18 @@ const modelcommand = new Command(
             return new CommandResponse({
                 error: true,
                 message: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
+            });
+        }
+
+        // Check if the model is whitelisted and the user is not in the whitelist
+        if (modelInfo.whitelist && !modelInfo.whitelist.includes(invoker.author.id)) {
+            await action.reply(invoker, {
+                content: `model '${args.model}' is whitelist only. you cannot use it.`,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `model '${args.model}' is whitelist only. you cannot use it.`,
             });
         }
 

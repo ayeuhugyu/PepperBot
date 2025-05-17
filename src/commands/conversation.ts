@@ -51,10 +51,10 @@ const modelcommand = new Command(
 
         if (args.model === "list" || args.model === "ls") {
             const mappedModels = Object.entries(models).map(([key, value]) => {
-                return `${chalk.green(value.name)}:
+                const userIsNotWhitelisted = (value.whitelist && !value.whitelist.includes(invoker.author.id));
+                return `${userIsNotWhitelisted ? chalk.red(value.name) : chalk.green(value.name)}:
   - ${chalk.blue("provider")}: ${value.provider}
-  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}
-                `
+  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}${userIsNotWhitelisted ? `\n  - ${chalk.red("this model is whitelist only; you cannot use it.")}` : ""}`
             });
             await action.reply(invoker, {
                 content: `available models: \`\`\`ansi\n${mappedModels.join("\n")}\`\`\``,
@@ -76,6 +76,18 @@ const modelcommand = new Command(
             return new CommandResponse({
                 error: true,
                 message: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
+            });
+        }
+
+        // Check if the model is whitelisted and the user is not in the whitelist
+        if (modelInfo.whitelist && !modelInfo.whitelist.includes(invoker.author.id)) {
+            await action.reply(invoker, {
+                content: `model '${args.model}' is whitelist only. you cannot use it.`,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `model '${args.model}' is whitelist only. you cannot use it.`,
             });
         }
 

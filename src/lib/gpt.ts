@@ -610,6 +610,7 @@ export interface GPTModel {
     provider: GPTProvider; // the provider of the model (OpenAI, Gemini, etc.)
     capabilities: GPTModelCapabilities[]; // the capabilities of the model (text, image, audio)
     unsupported_arguments?: string[]; // API arguments that are not supported by the model
+    whitelist?: string[]; // a list of whitelisted users for the model
 }
 
 
@@ -639,6 +640,7 @@ export const models: Record<GPTModelName, GPTModel> = {
         provider: GPTProvider.Grok,
         capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.FunctionCalling],
         unsupported_arguments: ["presence_penalty", "frequency_penalty"],
+        whitelist: ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222"]
     },
 }
 
@@ -1130,6 +1132,22 @@ export class Conversation {
                     return "Not yet implemented"
                 }
                 case GPTProvider.Grok: {
+                    let whitelisted = true;
+                    let notWhitelistedUsers: User[] = [];
+                    if (this.api_parameters.model.whitelist) {
+                        this.users.forEach((user) => {
+                            if (!this.api_parameters.model?.whitelist?.includes(user.id) && user.id !== cached_client?.user?.id) {
+                                whitelisted = false;
+                                notWhitelistedUsers.push(user);
+                            }
+                        });
+                    }
+                    if (!whitelisted) {
+                        let plural = notWhitelistedUsers.length > 1
+                        log.warn(`user${(plural) ? "s" : ""} ${notWhitelistedUsers.map((user) => user.id).join(", ")} ${plural ? "are" : "is"} not whitelisted for model ${this.api_parameters.model.name}`);
+                        this.emitter.emit(ConversationEvents.Warning, `user${(plural) ? "s" : ""} ${notWhitelistedUsers.map((user) => user.id).join(", ")} ${plural ? "are" : "is"} not whitelisted for model ${this.api_parameters.model.name}`);
+                        return `user${(plural) ? "s" : ""} ${notWhitelistedUsers.map((user) => user.id).join(", ")} ${plural ? "are" : "is"} not whitelisted for model ${this.api_parameters.model.name}`;
+                    }
                     return await runForOpenAI(this, grok); // grok is a fork of openai so it should work the same way
                 }
             }
