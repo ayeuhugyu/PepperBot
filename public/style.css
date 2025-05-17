@@ -428,6 +428,9 @@ hr {
 .command-data-container {
     display: none; /* Hidden by default */
 }
+.subcommand-data-container {
+    display: none; /* Hidden by default */
+}
 
 .command-data-section {
     width: 20em;

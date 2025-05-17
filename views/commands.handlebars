@@ -37,48 +37,83 @@
     const subcommandCheckboxes = document.querySelectorAll('.subcommand-checkbox');
     const subcommandData = document.querySelectorAll('.subcommand-data-container');
 
+    console.log('Found commandCheckboxes:', commandCheckboxes.length);
+    console.log('Found commandData:', commandData.length);
+    console.log('Found subcommandCheckboxes:', subcommandCheckboxes.length);
+    console.log('Found subcommandData:', subcommandData.length);
+
+    // Helper to map data containers by id
+    function mapDataById(dataContainers) {
+        const map = {};
+        dataContainers.forEach(container => {
+            // Assumes command-name attribute matches checkbox id
+            const id = container.getAttribute('command-name');
+            if (id) {
+                map[id] = container;
+                console.log('Mapped data container for command/subcommand:', id);
+            }
+        });
+        return map;
+    }
+
+    const commandDataMap = mapDataById(commandData);
+    const subcommandDataMap = mapDataById(subcommandData);
+
     // Helper to set display based on checkbox status
-    function syncDisplay(checkboxes, dataContainers) {
-        checkboxes.forEach((checkbox, index) => {
-            const id = checkbox.id || `(index ${index})`;
-            dataContainers[index].style.display = checkbox.checked ? 'flex' : 'none';
-            console.log(`[syncDisplay] Checkbox ${id} checked: ${checkbox.checked}, data container display: ${dataContainers[index].style.display}`);
+    function syncDisplay(checkboxes, dataMap) {
+        checkboxes.forEach((checkbox) => {
+            const id = checkbox.getAttribute('command-name');
+            const container = dataMap[id];
+            if (container) {
+                container.style.display = checkbox.checked ? 'flex' : 'none';
+                console.log(
+                    `syncDisplay: ${checkbox.classList.contains('subcommand-checkbox') ? 'Subcommand' : 'Command'} "${id}" is now`,
+                    checkbox.checked ? 'visible' : 'hidden'
+                );
+            }
         });
     }
 
     // On page load, set display for both commands and subcommands
-    console.log('[syncDisplay] Initializing display for commands');
-    syncDisplay(commandCheckboxes, commandData);
-    console.log('[syncDisplay] Initializing display for subcommands');
-    syncDisplay(subcommandCheckboxes, subcommandData);
+    console.log('Syncing initial display state for commands');
+    syncDisplay(commandCheckboxes, commandDataMap);
+    console.log('Syncing initial display state for subcommands');
+    syncDisplay(subcommandCheckboxes, subcommandDataMap);
 
     // Ensure only one checkbox is checked at a time within each group
-    function setupExclusiveCheckboxes(checkboxes, dataContainers) {
-        checkboxes.forEach((checkbox, index) => {
-            const id = checkbox.id || `(index ${index})`;
+    function setupExclusiveCheckboxes(checkboxes, dataMap) {
+        checkboxes.forEach((checkbox) => {
             checkbox.addEventListener('change', () => {
-                console.log(`[setupExclusiveCheckboxes] Checkbox ${id} changed to: ${checkbox.checked}`);
+                const id = checkbox.getAttribute('command-name');
                 if (checkbox.checked) {
-                    checkboxes.forEach((otherCheckbox, otherIndex) => {
-                        const otherId = otherCheckbox.id || `(index ${otherIndex})`;
+                    console.log(`Checkbox checked: ${id}`);
+                    checkboxes.forEach((otherCheckbox) => {
                         if (otherCheckbox !== checkbox) {
-                            if (otherCheckbox.checked) {
-                                console.log(`[setupExclusiveCheckboxes] Unchecking ${otherId}`);
-                            }
                             otherCheckbox.checked = false;
-                            dataContainers[otherIndex].style.display = 'none';
+                            const otherId = otherCheckbox.getAttribute('command-name');
+                            const otherContainer = dataMap[otherId];
+                            if (otherContainer) {
+                                otherContainer.style.display = 'none';
+                                console.log(`Unchecked and hid: ${otherId}`);
+                            }
                         }
                     });
-                    dataContainers[index].style.display = 'flex';
-                    console.log(`[setupExclusiveCheckboxes] Showing data container for ${id}`);
+                    const container = dataMap[id];
+                    if (container) {
+                        container.style.display = 'flex';
+                        console.log(`Displayed container for: ${id}`);
+                    }
                 } else {
-                    dataContainers[index].style.display = 'none';
-                    console.log(`[setupExclusiveCheckboxes] Hiding data container for ${id}`);
+                    const container = dataMap[id];
+                    if (container) {
+                        container.style.display = 'none';
+                        console.log(`Hid container for: ${id}`);
+                    }
                 }
             });
         });
     }
 
-    setupExclusiveCheckboxes(commandCheckboxes, commandData);
-    setupExclusiveCheckboxes(subcommandCheckboxes, subcommandData);
+    setupExclusiveCheckboxes(commandCheckboxes, commandDataMap);
+    setupExclusiveCheckboxes(subcommandCheckboxes, subcommandDataMap);
 </script>
