@@ -1217,23 +1217,32 @@ async function getPrompt(user: string): Promise<Prompt> { // userid
     return prompt;
 }
 
+function removeUserFromConversations(user: User) {
+    conversations.forEach((conv) => {
+        conv.removeUser(user);
+    });
+}
+
 export async function getConversation(message: Message | GPTFormattedCommandInteraction) {
+    // attempt to find the conversation by searching if the message is a reply to another message which is in a conversation
     let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && (msg.message_id === message.reference?.messageId) && (msg.message_id !== undefined) && (message.id !== undefined)));
-    if (!currentConversation) {
+    if (currentConversation) {
+        removeUserFromConversations(message.author);
+        // we dont have to readd the user to the conversation because it will be added when the message is processed, and that also will check if the user is already in the conversation
+    }
+    if (!currentConversation) { // if the conversation isn't found with the message search, try to find it via the users array
         log.warn("conversation not found with message search, using user search")
         currentConversation = conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
         if (!currentConversation) {
             log.warn("conversation not found with user search")
         }
     }
-    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@${message.client.user?.id}>`)) { // if the message is a mention of the bot, start a new conversation
+    if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@${message.client.user?.id}>`)) { // if the message is a mention of the bot, clear currentConversation so that the next section will create a new conversation
         log.info("starting new conversation due to mention")
         if (currentConversation) {
-            conversations.forEach((conv) => {
-                conv.removeUser(message.author);
-            });
+            removeUserFromConversations(message.author);
             currentConversation = undefined;
-        } // if you include a ping, you're removed from the users list in the conversation. if you were the only user in it, the conversation is deleted.
+        } // if you include a ping, you're removed from the users list in the conversation. if you were the only user in it, the conversation is deleted because the removeUser function will delete it.
     }
     if (!currentConversation) {
         log.info("did not find conversation, creating new conversation")
