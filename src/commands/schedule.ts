@@ -242,9 +242,9 @@ const command = new Command(
                     if (submitted.customId == 'schedule_date_modal') {
                         const dateInput = submitted.fields.getTextInputValue('date_input');
                         const gmtOffsetInput = submitted.fields.getTextInputValue('gmt_offset_input').replace(/[^0-9-]/g, "");
-                        const date = new Date(dateInput);
+                        const verificationDate = new Date(dateInput);
                         let gmtOffset = Number(gmtOffsetInput);
-                        if (isNaN(date.getTime())) {
+                        if (isNaN(verificationDate.getTime())) {
                             action.reply(submitted as unknown as FormattedCommandInteraction, {
                                 content: `please enter a valid date; \`${dateInput}\` is not valid. for example, use \`2025-10-01 24:00:00\`, a unix timestamp, or a date string like \`October 1, 2025\``,
                                 ephemeral: true
@@ -260,7 +260,21 @@ const command = new Command(
                         }
                         // Offset the date by the GMT offset (in hours)
                         // User input is local time in their GMT offset, so convert to UTC
-                        date.setUTCHours(date.getUTCHours() - gmtOffset);
+                        // Parse the date input as if it's in the user's GMT offset, then convert to UTC
+                        const [datePart, timePart] = dateInput.split(" ");
+                        let [year, month, day] = datePart.split("-").map(Number);
+                        let [hour = 0, minute = 0, second = 0] = (timePart ? timePart.split(":") : []).map(Number);
+
+                        // If month is 1-based (e.g., "2025-10-01"), subtract 1 for JS Date
+                        month = (month || 1) - 1;
+
+                        // Construct a Date object as if it's in the user's local time (their GMT offset)
+                        const localDate = new Date(Date.UTC(year, month, day, hour, minute, second));
+
+                        // Now, subtract the GMT offset to get the correct UTC time
+                        localDate.setUTCHours(localDate.getUTCHours() - gmtOffset);
+
+                        const date = localDate;
 
                         event.time = date;
                         event.channel_id = invoker.channel?.id;
@@ -293,6 +307,7 @@ const command = new Command(
                         ]
                     });
                     const submittedMessage = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 });
+                    (submittedMessage as unknown as FormattedCommandInteraction).author = submittedMessage.user;
                     if (submittedMessage.customId == 'schedule_message_modal') {
                         const messageInput = submittedMessage.fields.getTextInputValue('message_input');
                         event.content = messageInput;
