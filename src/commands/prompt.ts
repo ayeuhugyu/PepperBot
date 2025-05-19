@@ -532,7 +532,7 @@ const generate = new Command({
         argument_order: "<input>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["input"]),
-    async function execute ({ invoker, guild_config, args }) {
+    async function execute ({ invoker, guild_config, args, will_be_piped }) {
         if (!args.input) {
             action.reply(invoker, {
             content: "please supply input for the prompt",
@@ -545,7 +545,7 @@ const generate = new Command({
         }
         const sent = await action.reply(invoker, { content: "processing...", ephemeral: guild_config.other.use_ephemeral_replies }) as Message;
         const response = await generatePrompt(args.input as string);
-        action.edit(sent, { content: `generated prompt: \`\`\`\n${response}\`\`\`use ${guild_config.other.prefix}prompt set to use it. (or just pipe it)`, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.edit(sent, { content: will_be_piped ? "piped generated prompt" : `generated prompt: \`\`\`\n${response}\`\`\`use ${guild_config.other.prefix}prompt set to use it. (or just pipe it)`, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({ pipe_data: { input_text: response }});
     }
 );
@@ -1378,7 +1378,7 @@ const command = new Command(
         argument_order: "<subcommand> <content?>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [set, use, list, description, nsfw, name, del, publish, get, deflt, clone, generate, modelcommand, setparam, build],
+            list: [build, list, generate, set, use, description, nsfw, name, del, publish, get, deflt, clone, modelcommand, setparam],
         },
         options: [],
         example_usage: "p/prompt set always respond with \"hi\"",
