@@ -1,11 +1,12 @@
 import * as log from "../log";
 import type { GuildConfig } from "../guild_config_manager";
-import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits, User, Attachment, Awaitable } from "discord.js";
+import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits, User, Attachment, Awaitable, Utils } from "discord.js";
 import * as contributors from "../../../constants/contributors.json";
 import * as action from "../discord_action";
 import * as statistics from "../statistics";
 import { InvokerType, SubcommandDeploymentApproach, CommandTag, CommandOptionType, CommandEntryType } from "./command_enums";
 import type { CommandManager } from "../command_manager";
+import { inspect } from "node:util";
 
 let guildConfigManager
 if (!guildConfigManager) { // avoids circular dependency
@@ -520,8 +521,13 @@ export class Command<
                 log.debug("subcommand found: " + subcommand.name);
 
                 if (input.is_message()) {
-                    input.invoker.content = input.invoker.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this makes get arguments functions easily standardizable
-                    input.message.content = input.message.content.replace(` ${input.args[this.subcommand_argument]}`, ""); // this will not affect subcommands executed with root aliases due to the space, this is intentional though
+                    const subArg = input.args[this.subcommand_argument];
+                    input.invoker.content = input.invoker.content.replace(new RegExp(`\\s+${subArg}\\b`), "");
+                    input.message.content = input.message.content.replace(new RegExp(`\\s+${subArg}\\b`), "");
+                    // this makes get arguments functions easily standardizable
+                    // this will not affect subcommands executed with root aliases due to the space, this is intentional though
+                    // also if this fucking thing does what it has been doing and just not fucking working on some operating systems i will do terrible things
+                    log.debug("replaced subcommand in message content: " + input.invoker.content);
                     input.enrich(subcommand.parse_arguments?.(input) ?? {})
                 }
 
@@ -557,8 +563,9 @@ export class Command<
             }
 
             let response
+            log.debug("executing command, input: ", inspect(input, { depth: 1, colors: true, compact: true }));
             if (usedSubcommand) {
-                response = await usedSubcommand.execute(input);
+                response = await usedSubcommand.execute_internal(input);
                 log.info("executed subcommand p/" + this.name + " " + usedSubcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
             } else {
                 response = await this.execute_internal(input);
