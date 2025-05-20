@@ -1029,6 +1029,17 @@ export class Conversation {
         }
     }
 
+    setPrompt(prompt: Prompt) {
+        this.api_parameters = new APIParameters(prompt.api_parameters);
+        const currentPromptMessage = this.messages.find((message) => message.role === GPTRole.System);
+        if (currentPromptMessage) {
+            currentPromptMessage.content = prompt.content;
+        } else {
+            this.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        }
+        this.api_parameters.model = models[prompt.api_parameters.model as GPTModelName];
+    }
+
     toApiInput() {
         switch (this.api_parameters.model.provider) {
             case GPTProvider.OpenAI: {

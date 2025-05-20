@@ -2,7 +2,7 @@ import { AutocompleteInteraction, ButtonInteraction, Interaction, Message, Messa
 import { Command, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
-import { userPrompts, generatePrompt, GPTModelName, APIParameters, models } from "../lib/gpt";
+import { userPrompts, generatePrompt, GPTModelName, APIParameters, models, getConversation } from "../lib/gpt";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { tablify } from "../lib/string_helpers";
@@ -438,6 +438,12 @@ const build = new Command(
                 },
                 "edit_prompt_set_active": async () => {
                     userPrompts.set(invoker.author.id, prompt.name);
+                    if (invoker instanceof Message) {
+                        const conversation = await getConversation(invoker);
+                        if (conversation) {
+                            conversation.setPrompt(prompt);
+                        }
+                    }
                     action.reply(interaction as unknown as FormattedCommandInteraction, { content: `prompt \`${prompt.name}\` is now set as the active prompt. pinging the bot to start a conversation will use this prompt.`, ephemeral: true });
                 },
                 "edit_prompt_delete": async () => {
@@ -1103,6 +1109,13 @@ const use = new Command({
                 error: true,
                 message: `couldn't find prompt: \`${args.content}\``,
             });
+        }
+
+        if (invoker instanceof Message) {
+            const conversation = await getConversation(invoker);
+            if (conversation) {
+                conversation.setPrompt(prompt);
+            }
         }
         userPrompts.set(invoker.author.id, prompt.name);
         action.reply(invoker, { content: "now using/editing prompt `" + prompt.name + "`", ephemeral: guild_config.other.use_ephemeral_replies });
