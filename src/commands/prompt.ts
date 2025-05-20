@@ -247,6 +247,48 @@ async function showModalAndUpdateField(
     action.edit(sent, { components: [embedPrompt(prompt, guild_config), actionRow] });
 }
 
+interface APIParamVerifyResponse {
+    error: boolean;
+    message: string;
+}
+
+function verifyAPIParameter(parameter: string, value: number): APIParamVerifyResponse {
+    switch (parameter) {
+        case "temperature": {
+            if (value < 0 || value > 2) {
+                return { error: true, message: "temperature must be between 0 and 2" };
+            }
+            break;
+        }
+        case "top_p": {
+            if (value < 0 || value > 1) {
+                return { error: true, message: "top_p must be between 0 and 1" };
+            }
+            break;
+        }
+        case "presence_penalty": {
+            if (value < -2 || value > 2) {
+                return { error: true, message: "presence_penalty must be between -2 and 2" };
+            }
+            break;
+        }
+        case "frequency_penalty": {
+            if (value < -2 || value > 2) {
+                return { error: true, message: "frequency_penalty must be between -2 and 2" };
+            }
+            break;
+        }
+        case "max_tokens": {
+            if (value < 0 || value > 4096) {
+                return { error: true, message: "max_tokens must be between 0 and 4096" };
+            }
+            break;
+        }
+        default: break;
+    }
+    return { error: false, message: "" };
+}
+
 const build = new Command(
     {
         name: 'edit',
@@ -430,7 +472,15 @@ const build = new Command(
                         });
                         const submittedAPIParameter = await apiParameterInteraction.awaitModalSubmit({ time: 20 * 60 * 1000 });
                         (submittedAPIParameter as unknown as FormattedCommandInteraction).author = submittedAPIParameter.user;
-                        prompt.api_parameters[key] = submittedAPIParameter.fields.getTextInputValue("prompt_api_parameter");
+                        const userValue = parseFloat(submittedAPIParameter.fields.getTextInputValue("prompt_api_parameter"));
+
+                        const verifyResponse = verifyAPIParameter(key, userValue);
+                        if (verifyResponse.error) {
+                            action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: verifyResponse.message, ephemeral: true });
+                            return;
+                        }
+                        
+                        prompt.api_parameters[key] = userValue
                         await savePrompt(prompt, invoker.author);
                         action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: `prompt API parameter \`${key}\` set to \`${prompt.api_parameters[key]}\``, ephemeral: true });
                         action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
@@ -1269,43 +1319,13 @@ const setparam = new Command(
             });
         }
         // constraints on values
-        switch (parameter) {
-            case "temperature": {
-                if (value < 0 || value > 2) {
-                    action.reply(invoker, { content: "temperature must be between 0 and 2", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "top_p": {
-                if (value < 0 || value > 1) {
-                    action.reply(invoker, { content: "top_p must be between 0 and 1", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "presence_penalty": {
-                if (value < -2 || value > 2) {
-                    action.reply(invoker, { content: "presence_penalty must be between -2 and 2", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "frequency_penalty": {
-                if (value < -2 || value > 2) {
-                    action.reply(invoker, { content: "frequency_penalty must be between -2 and 2", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "max_tokens": {
-                if (value < 0 || value > 4096) {
-                    action.reply(invoker, { content: "max_tokens must be between 0 and 4096", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            default: break;
+        const verifyResponse = verifyAPIParameter(parameter, value);
+        if (verifyResponse.error) {
+            action.reply(invoker, { content: `invalid value for parameter \`${parameter}\`: \`${value}\`. ${verifyResponse.message}`, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `invalid value for parameter \`${parameter}\`: \`${value}\`. ${verifyResponse.message}`,
+            });
         }
         const prompt = await getUserPrompt(invoker.author);
         type APIParameterKeys = Exclude<keyof APIParameters, "model">;
