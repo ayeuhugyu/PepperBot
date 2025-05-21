@@ -1,195 +1,127 @@
-import { Playlist, Video } from "../classes/queue";
-import { DownloaderPromise } from "./types";
-import { spawn } from "node:child_process";
-import { fixFileName } from "../attachment_manager";
-import fs from "fs";
+import { DownloaderBase, DownloadContext } from "./base";
+import { Video, Playlist } from "./media";
+import { spawn } from "child_process";
+import * as log from "../log"
+import fs from "fs/promises";
 import path from "path";
-import { Downloader } from "./router";
 
-const error_messages: Record<string, string> = {
-    "is not a valid URL.": "invalid url",
-    "Unsupported URL": "unsupported url",
-    "Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies": "internal error: yt-dlp has not been passed required cookies. ",
-    "Requested format is not available. Use --list-formats for a list of available formats": "this website does not provide an audio only format",
-    "Error 403: rate limit exceeded": "rate limit exceeded",
-    "Error 429: Too Many Requests": "rate limit exceeded",
-    "Error 404: Not Found": "video not found",
-    "Error 410: Gone": "video has been removed",
-}
+export class YtDlpDownloader extends DownloaderBase {
+    getPriority(_url: string) { return 1; } // catch-all
+    /**
+     * Fetch info for video or playlist using yt-dlp -J.
+     * Returns Video or Playlist object, or null on error.
+     */
+    async getInfo(url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
+        ctx.log("fetching info using yt-dlp...");
+        const args = [ "-J", url ];
+        const cookies = process.env.PATH_TO_COOKIES ? true : false;
+        if (cookies) {
+            args.push("--cookies", process.env.PATH_TO_COOKIES || "");
+        }
+        const info = await this._runYtDlp(args, ctx);
+        if (!info) return null;
 
-function getErrorFromStderr(stderr: string): string {
-    for (const key in error_messages) {
-        if (stderr.includes(key)) {
-            return error_messages[key];
+        // Playlist
+        if (info._type === "playlist" && Array.isArray(info.entries)) {
+            const videos: Video[] = info.entries
+                .filter((v: any) => v && v.url)
+                .map((v: any) => new Video(
+                    v.url, v.title, v.duration,
+                    v.thumbnail, v.description, v.uploader,
+                    undefined, "yt-dlp"
+                ));
+            return new Playlist(
+                info.webpage_url || url,
+                info.title,
+                videos,
+                info.thumbnail, info.description, info.uploader, "yt-dlp"
+            );
+        }
+        // Single video
+        return new Video(
+            info.webpage_url || url,
+            info.title,
+            info.duration,
+            info.thumbnail,
+            info.description,
+            info.uploader,
+            undefined,
+            "yt-dlp"
+        );
+    }
+
+    /**
+     * Download a single video as webm audio.
+     * Returns Video object with filePath, or null on error.
+     * Playlists are not downloaded.
+     */
+    async download(info: Video, ctx: DownloadContext): Promise<Video | null> {
+        const url = info.url;
+        ctx.log("fetching info for download using yt-dlp...");
+        if (!info || info instanceof Playlist) {
+            ctx.log("cannot download playlists, only single videos are supported.");
+            return null;
+        }
+        const filePath = path.join("cache/ytdl", sanitize(info.title + info.url) + ".webm");
+        info.filePath = filePath;
+
+        try {
+            await fs.mkdir("cache/ytdl", { recursive: true });
+            try {
+                await fs.access(filePath);
+                ctx.log("file already exists in cache.");
+                return info;
+            } catch { /* Not cached, continue */ }
+
+            ctx.log("downloading with yt-dlp...");
+            const args = [ "-x", '-f', 'bestaudio/best', '--extract-audio', '--audio-format', 'mp3', '--limit-rate', '250k', "-o", filePath, url ]
+            const cookies = process.env.PATH_TO_COOKIES ? true : false;
+            if (cookies) {
+                args.push("--cookies", process.env.PATH_TO_COOKIES || "");
+            }
+            await this._runYtDlp(args, ctx, true);
+            ctx.log("download complete!");
+            return info;
+        } catch (err: any) {
+            ctx.log(`download failed: ${err?.message || err}`);
+            return null;
         }
     }
-    return stderr;
-}
 
-export function parseLength(length: string): number {
-    var p = length.split(':'),
-        s = 0, m = 1;
+    // infoOnly disables logging stdout for download, only logs errors
+    private async _runYtDlp(args: string[], ctx: DownloadContext, infoOnly = false): Promise<any> {
+        return new Promise(resolve => {
+            const proc = spawn("yt-dlp", args, { stdio: ["ignore", "pipe", "pipe"] });
+            let output = "";
+            let errorOutput = "";
 
-    while (p.length > 0) {
-        s += m * parseInt(p.pop() || "0", 10);
-        m *= 60;
-    }
-
-    return s;
-}
-
-export async function getInfo(url: string, { log, resolve, reject }: DownloaderPromise) {
-    log(`getting video info with yt-dlp...`);
-    const command = `yt-dlp`;
-    const args = [
-        '--skip-download',
-        '--no-warnings',
-        '--get-title',
-        '--get-duration',
-        '--get-id',
-        '--get-url',
-        '--get-thumbnail',
-        '--flat-playlist',
-    ]
-    const cookies = process.env.PATH_TO_COOKIES ? true : false;
-    if (cookies) {
-        args.push("--cookies", process.env.PATH_TO_COOKIES || "");
-    }
-    args.push(url);
-    let errored = false;
-    const stdout = await new Promise<string>((resolve, reject) => {
-        let out = "";
-        const child = spawn(command, args);
-        child.on("error", (err) => { reject(err); });
-        child.stderr.on("data", (data) => { reject(data.toString()); });
-        child.stdout.on("data", (data) => { out += data.toString(); });
-        child.on("exit", () => { resolve(out); });
-    }).catch((err) => {
-        errored = true;
-        reject(getErrorFromStderr(err));
-    })
-    if (errored) {
-        return;
-    }
-    if (!stdout) {
-        reject("failed to get video info; stdout is empty");
-        return;
-    }
-    const lines = stdout.split('\n').filter((line) => line !== "" && !line.startsWith("WARNING:") && !line.startsWith("[download]"));
-
-    if (lines.length < 8) { // for some odd reason, some websites return multiple urls from --get-url? this probably isn't a catch all solution but i have zero fuckin clue what else to do
-        const title = lines[0];
-        const id = lines[1];
-        const thumbnail = lines[lines.length - 2]
-        const length = lines[lines.length - 1];
-        if (!title || !id || !length || !url) {
-            reject("failed to get video info; stdout split returned an array with less than 3 elements");
-            return;
-        }
-        const video = new Video(url);
-        video.title = title;
-        video.length = parseLength(length) || undefined;
-        if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) {
-            video.thumbnailUrl = thumbnail;
-        } else {
-            video.thumbnailUrl = false;
-        }
-        video.id = id;
-        video.fetched = true;
-        video.fetcher = Downloader.ytdlp;
-        resolve(video)
-        return;
-    }
-
-    const segments = lines.map((_, i) => {
-        const segment = lines.slice(i, i + 4);
-        const urlLine = segment.find(line => /^https?:\/\//.test(line));
-        const timeLine = segment.find(line => /^\d+:\d+$/.test(line));
-        if (urlLine) {
-            segment[2] = urlLine;
-        }
-        if (timeLine) {
-            segment[3] = timeLine;
-        }
-        return segment;
-    }).filter((_, i) => i % 4 === 0);
-
-    if (segments.length > 1) {
-        const playlist = new Playlist(url);
-        segments.forEach(([title, id, url, length]) => {
-            if (!title || !id || !url || !length) {
-                if (playlist.items?.length === 0) {
-                    reject("failed to get video info; stdout split returned an array with less than 4 elements");
-                    return;
+            proc.stdout.on("data", (chunk) => {
+                const msg = chunk.toString();
+                log.debug(msg);
+                output += msg;
+            });
+            proc.stderr.on("data", (chunk) => {
+                const msg = chunk.toString();
+                if (msg.trim().length > 0) ctx.log(msg);
+                errorOutput += msg;
+            });
+            proc.on("close", (code) => {
+                if (code !== 0 && !infoOnly) {
+                    ctx.log(`yt-dlp exited with code ${code}`);
+                    resolve(null);
                 } else {
-                    return;
+                    try {
+                        resolve(output ? JSON.parse(output) : undefined);
+                    } catch (err: any) {
+                        ctx.log(`yt-dlp output parse failure: ${err?.message || err}`);
+                        resolve(null);
+                    }
                 }
-            }
-            const video = new Video(url);
-            video.title = title;
-            video.length = parseLength(length) || undefined;
-            if (video.url.includes("youtube")) {
-                video.thumbnailUrl = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
-            } else {
-                video.thumbnailUrl = false;
-            }
-            video.id = id;
-            if (!playlist.items) {
-                playlist.items = [];
-            }
-            video.fetched = true;
-            video.fetcher = Downloader.ytdlp;
-            playlist.items.push(video);
+            });
         });
-        playlist.fetched = true;
-        resolve(playlist);
     }
 }
 
-export async function download(video: Video, { log, resolve, reject }: DownloaderPromise) {
-    log(`downloading \`${video.title}\` with yt-dlp...`);
-    const cacheDir = path.resolve(__dirname, "../../../cache/ytdl");
-    if (!fs.existsSync(cacheDir)) {
-        fs.mkdirSync(cacheDir, { recursive: true });
-    }
-
-    const filePath = path.join(cacheDir, `${fixFileName(video.title || "")}_${video.id}.mp3`);
-    const archivePath = path.join(cacheDir, 'archive.txt');
-    const command = `yt-dlp`;
-    const cookies = process.env.PATH_TO_COOKIES ? true : false;
-    const args = [
-        '-f', 'bestaudio/best',
-        '--extract-audio',
-        '--audio-format', 'mp3',
-        '--no-playlist',
-        '--download-archive', archivePath,
-        '--limit-rate', '250k',
-        '-o', filePath,
-    ];
-    if (cookies) {
-        args.push("--cookies", process.env.PATH_TO_COOKIES || "");
-    }
-    args.push(video.url);
-
-    let errored = false;
-    const stdout = await new Promise<string>((resolve, reject) => {
-        let out = "";
-        const child = spawn(command, args);
-        child.on("error", (err) => { reject(err); });
-        child.stderr.on("data", (data) => { reject(data.toString()); });
-        child.stdout.on("data", (data) => { out += data.toString(); });
-        child.on("exit", () => { resolve(out); });
-    }).catch((err) => {
-        errored = true;
-        reject(getErrorFromStderr(err));
-    })
-    if (errored) {
-        return;
-    }
-
-    video.file = filePath;
-    video.downloaded = true;
-    video.downloader = Downloader.ytdlp;
-
-    resolve(video);
+function sanitize(str: string) {
+    return str.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 }

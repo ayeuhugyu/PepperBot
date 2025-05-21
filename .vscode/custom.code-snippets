@@ -86,22 +86,5 @@
             "},"
         ],
         "description": "Boilerplate code for a getArguments function"
-    },
-    "downloader": {
-        "scope": "typescript",
-        "prefix": "templatedownloader",
-        "body": [
-            "import { Video } from \"../classes/queue\";",
-            "import { DownloaderPromise } from \"./types\";",
-            "",
-            "export function getInfo(url: string, { log, resolve, reject }: DownloaderPromise) {",
-            "    reject(\"Downloader is not implemented. Info cannot be fetched.\");",
-            "}",
-            "",
-            "export function download(video: Video, { log, resolve, reject }: DownloaderPromise) {",
-            "    reject(\"Downloader is not implemented. Video cannot be downloaded.\");",
-            "}"
-        ],
-        "description": "Boilerplate code for a queue or playurl video/audio downloader"
     }
 }

@@ -4,9 +4,8 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import * as voice from "../lib/classes/voice";
-import { DownloaderEvents, DownloaderPromise } from "../lib/downloaders/types";
-import { Playlist, Video } from "../lib/classes/queue";
-import { getInfo, download } from "../lib/downloaders/router";
+import { Playlist, Video } from "../lib/downloaders/media";
+import { fetchMediaInfo, downloadMedia } from "../lib/downloaders"; // <-- new downloader imports
 import { createAudioResource } from "@discordjs/voice";
 import * as log from "../lib/log";
 
@@ -69,7 +68,6 @@ const command = new Command(
             }
         }
 
-
         const voiceManager = voice.getVoiceManager(invoker.guild);
         if (!voiceManager.connected) {
             if (invoker.member && invoker.member instanceof GuildMember) {
@@ -85,46 +83,29 @@ const command = new Command(
                 message: `neither of us are in a voice channel; use \`${guild_config.other.prefix}vc join\` to make me join one OR join one and run this command again to be automatically joined`,
             });
         }
-        let currentContent = `routing...`;
+        let currentContent = `-# routing...`;
         const sent = await action.reply(invoker, {
             content: currentContent,
             ephemeral: guild_config.other.use_ephemeral_replies,
         });
-        if (!sent) return; // this should realistically never happen
-        currentContent = ``;
+        if (!sent) return;
 
-        // download the video
-        const emitter = new DownloaderPromise();
-        let errored = false;
-        emitter.on(DownloaderEvents.Log, (message: string) => {
-            if (message) {
-                currentContent += `\n${message}`;
+        // Fetch info using new downloader system
+        let lastLog = "";
+        const logFunc = (msg: string) => {
+            if (msg && msg !== lastLog && msg.replaceAll("\n", " ").trim().length > 0) {
+                lastLog = msg;
+                currentContent += `\n-# ${msg.replaceAll("\n", " ").trim()}`;
                 action.edit(sent, {
                     content: currentContent,
                     ephemeral: guild_config.other.use_ephemeral_replies,
                 });
             }
-        });
-        emitter.on(DownloaderEvents.Reject, (message: string) => {
-            currentContent += `\n${message}`
-            errored = true;
-            action.edit(sent, {
-                content: currentContent,
-                ephemeral: guild_config.other.use_ephemeral_replies,
-            });
-        });
-        let video: Video | undefined;
-        emitter.on(DownloaderEvents.Resolve, (data: Video) => {
-            video = data;
-        })
-        await getInfo(args.url, emitter);
-        if (video instanceof Playlist && video.items) {
-            video = video.items[0];
-        }
-        log.debug(`got video info`, video);
-        if (errored) return;
-        if (!video) {
-            currentContent += `\nfailed to get video info; no video returned`;
+        };
+
+        let media = await fetchMediaInfo(args.url, logFunc);
+        if (!media) {
+            currentContent += `\nfailed to get media info; no result returned`;
             action.edit(sent, {
                 content: currentContent,
                 ephemeral: guild_config.other.use_ephemeral_replies,
@@ -134,13 +115,27 @@ const command = new Command(
                 message: currentContent,
             });
         }
-        await download(video, emitter);
+        // If playlist, use the first item
+        if (media instanceof Playlist && Array.isArray((media as Playlist).videos) && (media as Playlist).videos.length > 0) {
+            media = (media as Playlist).videos[0];
+        }
+        if (!(media instanceof Video)) {
+            currentContent += `\nfailed to get a playable video from that URL`;
+            action.edit(sent, {
+                content: currentContent,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: currentContent,
+            });
+        }
+
+        // Download the video using new downloader system
+        let video = await downloadMedia(media, logFunc);
         log.debug(`downloaded video`, video);
-        if (errored) return;
-
-        const path = video.file;
-        if (!path) {
-            currentContent += `\nfailed to get video path; no path returned`;
+        if (!video || !video.filePath) {
+            currentContent += `\nfailed to get video file; download failed or no path returned`;
             action.edit(sent, {
                 content: currentContent,
                 ephemeral: guild_config.other.use_ephemeral_replies,
@@ -150,16 +145,19 @@ const command = new Command(
                 message: currentContent,
             });
         }
-        const resource = createAudioResource(path);
 
+        const resource = createAudioResource(video.filePath);
         voiceManager.play(resource);
+
+        // Components v2 embed: you can adjust this to fit your V2 embeds/components
         currentContent = `playing \`${video.title}\``;
         action.edit(sent, {
             content: currentContent,
             ephemeral: guild_config.other.use_ephemeral_replies,
+            // embed/components v2 params go here if you have them
         });
 
-        emitter.removeAllListeners();
+        // Clean up if needed (listeners etc.)
     }
 );
 
