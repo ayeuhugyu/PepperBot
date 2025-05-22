@@ -594,7 +594,7 @@ export const models: Record<GPTModelName, GPTModel> = {
         provider: GPTProvider.Grok,
         capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.FunctionCalling],
         unsupported_arguments: ["presence_penalty", "frequency_penalty"],
-        whitelist: ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222"]
+        whitelist: ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065"]
     },
 }
 
