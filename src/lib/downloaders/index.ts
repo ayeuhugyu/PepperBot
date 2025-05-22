@@ -2,10 +2,12 @@ import { DownloaderRegistry } from "./base";
 import { YtDlpDownloader } from "./ytdlp";
 // import { ExampleDownloader } from "./example";
 import * as realLog from "../log"
-import { Video } from "./media";
+import { Video } from "../music/media";
+import { AppleMusicDownloader } from "./amdl";
 
 const registry = new DownloaderRegistry();
 registry.register(new YtDlpDownloader());
+registry.register(new AppleMusicDownloader());
 // registry.register(new ExampleDownloader());
 
 export async function fetchMediaInfo(url: string, log: (msg: string) => void) {
@@ -14,7 +16,7 @@ export async function fetchMediaInfo(url: string, log: (msg: string) => void) {
         log("No suitable downloader found for this URL.");
         return null;
     }
-    log(`using downloader: ${downloader.constructor.name}`);
+    log(`fetching info with downloader: ${downloader.constructor.name}`);
     const data = await downloader.getInfo(url, { log });
     realLog.debug(`Fetched media info`, data);
     return data;
@@ -26,6 +28,6 @@ export async function downloadMedia(video: Video, log: (msg: string) => void) {
         log("No suitable downloader found for this URL.");
         return null;
     }
-    log(`using downloader: ${downloader.constructor.name}`);
+    log(`downloading file with downloader: ${downloader.constructor.name}`);
     return await downloader.download(video, { log });
 }

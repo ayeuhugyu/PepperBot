@@ -59,9 +59,9 @@ const expectedOther: string[] = [
     "resources/sounds",
     "cache",
     "cache/ytdl",
+    "cache/amdl",
     "cache/containers",
     "cache/luau",
-    "cache/ffmpeg",
     "logs",
 ];
 const expectedLogs: string[] = [

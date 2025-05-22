@@ -4,10 +4,12 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import * as voice from "../lib/classes/voice";
-import { Playlist, Video } from "../lib/downloaders/media";
+import { Playlist, Video } from "../lib/music/media";
 import { fetchMediaInfo, downloadMedia } from "../lib/downloaders"; // <-- new downloader imports
 import { createAudioResource } from "@discordjs/voice";
 import * as log from "../lib/log";
+import { embedVideoOrSound } from "../lib/music/embed";
+import { Container, TextDisplay } from "../lib/classes/components";
 
 const command = new Command(
     {
@@ -85,7 +87,12 @@ const command = new Command(
         }
         let currentContent = `-# routing...`;
         const sent = await action.reply(invoker, {
-            content: currentContent,
+            components: [
+                new TextDisplay({
+                    content: currentContent,
+                })
+            ],
+            components_v2: true,
             ephemeral: guild_config.other.use_ephemeral_replies,
         });
         if (!sent) return;
@@ -97,7 +104,12 @@ const command = new Command(
                 lastLog = msg;
                 currentContent += `\n-# ${msg.replaceAll("\n", " ").trim()}`;
                 action.edit(sent, {
-                    content: currentContent,
+                    components: [
+                        new TextDisplay({
+                            content: currentContent,
+                        })
+                    ],
+                    components_v2: true,
                     ephemeral: guild_config.other.use_ephemeral_replies,
                 });
             }
@@ -106,8 +118,13 @@ const command = new Command(
         let media = await fetchMediaInfo(args.url, logFunc);
         if (!media) {
             currentContent += `\nfailed to get media info; no result returned`;
-            action.edit(sent, {
-                content: currentContent,
+            await action.edit(sent, {
+                components: [
+                    new TextDisplay({
+                        content: currentContent,
+                    })
+                ],
+                components_v2: true,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return new CommandResponse({
@@ -121,8 +138,13 @@ const command = new Command(
         }
         if (!(media instanceof Video)) {
             currentContent += `\nfailed to get a playable video from that URL`;
-            action.edit(sent, {
-                content: currentContent,
+            await action.edit(sent, {
+                components: [
+                    new TextDisplay({
+                        content: currentContent,
+                    })
+                ],
+                components_v2: true,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return new CommandResponse({
@@ -136,8 +158,13 @@ const command = new Command(
         log.debug(`downloaded video`, video);
         if (!video || !video.filePath) {
             currentContent += `\nfailed to get video file; download failed or no path returned`;
-            action.edit(sent, {
-                content: currentContent,
+            await action.edit(sent, {
+                components: [
+                    new TextDisplay({
+                        content: currentContent,
+                    })
+                ],
+                components_v2: true,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return new CommandResponse({
@@ -149,15 +176,19 @@ const command = new Command(
         const resource = createAudioResource(video.filePath);
         voiceManager.play(resource);
 
-        // Components v2 embed: you can adjust this to fit your V2 embeds/components
         currentContent = `playing \`${video.title}\``;
-        action.edit(sent, {
-            content: currentContent,
+        await action.edit(sent, {
+            components: [
+                new TextDisplay({
+                    content: currentContent,
+                }),
+                new Container({
+                    components: [embedVideoOrSound(media, true)]
+                })
+            ],
+            components_v2: true,
             ephemeral: guild_config.other.use_ephemeral_replies,
-            // embed/components v2 params go here if you have them
         });
-
-        // Clean up if needed (listeners etc.)
     }
 );
 

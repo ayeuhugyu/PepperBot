@@ -66,6 +66,7 @@ export class GuildVoiceManager {
     removeAllListeners = this.emitter.removeAllListeners;
 
     play = (resource: AudioResource) => {
+        log.debug(`playing audio in ${this.channel?.name} (${this.channel?.id}) in guild ${this.guild.name} (${this.guild.id})`)
         this.emit(VoiceManagerEvent.Play, resource)
         this.state = VoiceManagerState.Playing
         return this.player.play(resource);

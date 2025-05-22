@@ -1,4 +1,4 @@
-import { Video, Playlist } from "./media";
+import { Video, Playlist } from "../music/media";
 
 export interface DownloadContext {
     log: (msg: string) => void;

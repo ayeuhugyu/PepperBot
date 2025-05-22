@@ -1,5 +1,5 @@
 import { DownloaderBase, DownloadContext } from "./base";
-import { Video, Playlist } from "./media";
+import { Video, Playlist } from "../music/media";
 import { spawn } from "child_process";
 import * as log from "../log"
 import fs from "fs/promises";

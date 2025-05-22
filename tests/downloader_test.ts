@@ -1,5 +1,5 @@
 import { fetchMediaInfo, downloadMedia } from "../src/lib/downloaders";
-import { Video, Playlist } from "../src/lib/downloaders/media";
+import { Video, Playlist } from "../src/lib/music/media";
 
 const url = "hielkemaps.com/media/video/clip.mp4";
 

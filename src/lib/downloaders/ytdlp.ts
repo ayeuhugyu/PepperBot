@@ -1,5 +1,5 @@
 import { DownloaderBase, DownloadContext } from "./base";
-import { Video, Playlist } from "./media";
+import { Video, Playlist } from "../music/media";
 import { spawn } from "child_process";
 import * as log from "../log"
 import fs from "fs/promises";
@@ -13,7 +13,7 @@ export class YtDlpDownloader extends DownloaderBase {
      */
     async getInfo(url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
         ctx.log("fetching info using yt-dlp...");
-        const args = [ "-J", url ];
+        const args = [ "-J", '--no-warnings', url ];
         const cookies = process.env.PATH_TO_COOKIES ? true : false;
         if (cookies) {
             args.push("--cookies", process.env.PATH_TO_COOKIES || "");
@@ -62,19 +62,28 @@ export class YtDlpDownloader extends DownloaderBase {
             ctx.log("cannot download playlists, only single videos are supported.");
             return null;
         }
-        const filePath = path.join("cache/ytdl", sanitize(info.title + info.url) + ".webm");
+        const filePath = path.join("cache/ytdl", sanitize(info.title + info.url) + ".mp3");
         info.filePath = filePath;
 
         try {
             await fs.mkdir("cache/ytdl", { recursive: true });
             try {
-                await fs.access(filePath);
-                ctx.log("file already exists in cache.");
-                return info;
+            await fs.access(filePath);
+            ctx.log("file already exists in cache.");
+            return info;
             } catch { /* Not cached, continue */ }
 
             ctx.log("downloading with yt-dlp...");
-            const args = [ "-x", '-f', 'bestaudio/best', '--extract-audio', '--audio-format', 'mp3', '--limit-rate', '250k', "-o", filePath, url ]
+            const args = [
+                "-x",
+                "-f", "bestaudio/best",
+                "--no-warnings",
+                "--extract-audio",
+                "--audio-format", "mp3",
+                "--limit-rate", "250k",
+                "-o", filePath,
+                url
+            ];
             const cookies = process.env.PATH_TO_COOKIES ? true : false;
             if (cookies) {
                 args.push("--cookies", process.env.PATH_TO_COOKIES || "");
