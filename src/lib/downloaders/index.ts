@@ -10,24 +10,24 @@ registry.register(new YtDlpDownloader());
 registry.register(new AppleMusicDownloader());
 // registry.register(new ExampleDownloader());
 
-export async function fetchMediaInfo(url: string, log: (msg: string) => void) {
+export async function fetchMediaInfo(url: string, log: (msg: string) => void, editLatest: (msg: string) => void) {
     const downloader = registry.getDownloader(url);
     if (!downloader) {
         log("No suitable downloader found for this URL.");
         return null;
     }
     log(`fetching info with downloader: ${downloader.constructor.name}`);
-    const data = await downloader.getInfo(url, { log });
+    const data = await downloader.getInfo(url, { log, editLatest });
     realLog.debug(`Fetched media info`, data);
     return data;
 }
 
-export async function downloadMedia(video: Video, log: (msg: string) => void) {
+export async function downloadMedia(video: Video, log: (msg: string) => void, editLatest: (msg: string) => void) {
     const downloader = registry.getDownloader(video.url);
     if (!downloader) {
         log("No suitable downloader found for this URL.");
         return null;
     }
     log(`downloading file with downloader: ${downloader.constructor.name}`);
-    return await downloader.download(video, { log });
+    return await downloader.download(video, { log, editLatest });
 }

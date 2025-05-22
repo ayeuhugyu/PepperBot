@@ -22,32 +22,37 @@ export class YtDlpDownloader extends DownloaderBase {
         if (!info) return null;
 
         // Playlist
-        if (info._type === "playlist" && Array.isArray(info.entries)) {
-            const videos: Video[] = info.entries
-                .filter((v: any) => v && v.url)
-                .map((v: any) => new Video(
-                    v.url, v.title, v.duration,
-                    v.thumbnail, v.description, v.uploader,
-                    undefined, "yt-dlp"
-                ));
-            return new Playlist(
+        try {
+            if (info._type === "playlist" && Array.isArray(info.entries)) {
+                const videos: Video[] = info.entries
+                    .filter((v: any) => v && v.url)
+                    .map((v: any) => new Video(
+                        v.url, v.title, v.duration,
+                        v.thumbnail, v.description, v.uploader,
+                        undefined, "yt-dlp"
+                    ));
+                return new Playlist(
+                    info.webpage_url || url,
+                    info.title,
+                    videos,
+                    info.thumbnail, info.description, info.uploader, "yt-dlp"
+                );
+            }
+            // Single video
+            return new Video(
                 info.webpage_url || url,
                 info.title,
-                videos,
-                info.thumbnail, info.description, info.uploader, "yt-dlp"
+                info.duration,
+                info.thumbnail,
+                info.description.slice(0, 400) + info.description.length > 400 ? "..." : "",
+                info.uploader,
+                undefined,
+                "yt-dlp"
             );
+        } catch (err: any) {
+            ctx.log(`failed to parse yt-dlp output: ${err?.message || err}`);
+            return null;
         }
-        // Single video
-        return new Video(
-            info.webpage_url || url,
-            info.title,
-            info.duration,
-            info.thumbnail,
-            info.description,
-            info.uploader,
-            undefined,
-            "yt-dlp"
-        );
     }
 
     /**
@@ -103,10 +108,24 @@ export class YtDlpDownloader extends DownloaderBase {
             const proc = spawn("yt-dlp", args, { stdio: ["ignore", "pipe", "pipe"] });
             let output = "";
             let errorOutput = "";
+            let downloadProgressCount = 0;
+            let downloadLogCounter = 0;
 
             proc.stdout.on("data", (chunk) => {
                 const msg = chunk.toString();
                 log.debug(msg);
+                if (msg.trim().startsWith("[download]")) {
+                    const progress = msg.match(/(\d+(\.\d+)?)%/);
+                    const fileSize = msg.match(/(?:\d+(?:\.\d+)?)% of +(\d+(?:\.\d+)?)MiB/);
+                    if (progress) {
+                        const percent = parseFloat(progress[1]);
+                        downloadLogCounter++;
+                        if (downloadLogCounter % 3 === 0 && percent > downloadProgressCount) {
+                            downloadProgressCount = percent;
+                            ctx.editLatest(`downloading: ${percent}% of ${fileSize ? fileSize[1] : "unknown"} MiB`);
+                        }
+                    }
+                }
                 output += msg;
             });
             proc.stderr.on("data", (chunk) => {
@@ -122,7 +141,7 @@ export class YtDlpDownloader extends DownloaderBase {
                     try {
                         resolve(output ? JSON.parse(output) : undefined);
                     } catch (err: any) {
-                        ctx.log(`yt-dlp output parse failure: ${err?.message || err}`);
+                        if (!infoOnly) ctx.log(`yt-dlp output parse failure: ${err?.message || err}`);
                         resolve(null);
                     }
                 }

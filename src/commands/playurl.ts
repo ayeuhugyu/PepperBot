@@ -15,7 +15,7 @@ const command = new Command(
     {
         name: 'playurl',
         description: 'play a url over voice',
-        long_description: 'play a url over voice; this supports most audio related urls. internally, it uses yt-dlp, so anything that supports will be supported here. ',
+        long_description: 'play a url over voice; this supports most audio related urls. if provided a playlist or album, the first item will be the one that gets played.',
         tags: [CommandTag.Voice],
         pipable_to: [],
         example_usage: "p/playurl https://www.youtube.com/watch?v=tbBwELgDPD8",
@@ -115,7 +115,34 @@ const command = new Command(
             }
         };
 
-        let media = await fetchMediaInfo(args.url, logFunc);
+        const editLatest = (msg: string) => {
+            if (msg && msg !== lastLog && msg.replaceAll("\n", " ").trim().length > 0) {
+            lastLog = msg;
+            // Replace the last line (after the last '\n-# ') with the new message
+            const lines = currentContent.split('\n');
+            let lastIdx = lines.length - 1;
+            // Find the last line that starts with '-# '
+            for (let i = lines.length - 1; i >= 0; i--) {
+                if (lines[i].startsWith('-# ')) {
+                lastIdx = i;
+                break;
+                }
+            }
+            lines[lastIdx] = `-# ${msg.replaceAll("\n", " ").trim()}`;
+            currentContent = lines.join('\n');
+            action.edit(sent, {
+                components: [
+                new TextDisplay({
+                    content: currentContent,
+                })
+                ],
+                components_v2: true,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            }
+        }
+
+        let media = await fetchMediaInfo(args.url, logFunc, editLatest);
         if (!media) {
             currentContent += `\nfailed to get media info; no result returned`;
             await action.edit(sent, {
@@ -154,7 +181,7 @@ const command = new Command(
         }
 
         // Download the video using new downloader system
-        let video = await downloadMedia(media, logFunc);
+        let video = await downloadMedia(media, logFunc, editLatest);
         log.debug(`downloaded video`, video);
         if (!video || !video.filePath) {
             currentContent += `\nfailed to get video file; download failed or no path returned`;

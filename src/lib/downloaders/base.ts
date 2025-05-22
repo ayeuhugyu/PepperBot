@@ -1,6 +1,7 @@
 import { Video, Playlist } from "../music/media";
 
 export interface DownloadContext {
+    editLatest: (msg: string) => void;
     log: (msg: string) => void;
 }
 
