@@ -1,12 +1,36 @@
 import { DownloaderBase, DownloadContext } from "./base";
 import { Video, Playlist } from "../music/media";
-import { spawn } from "child_process";
 import * as log from "../log"
 import fs from "fs/promises";
 import path from "path";
-import { Writable } from "stream";
+import { createWriteStream } from "fs";
 
-const urlRegex = /https?:\/\/music.apple.com\/.+\?i=(\d+)/; // TODO: update this regex to match playlists and albums
+const urlRegex = /https?:\/\/music.apple.com\/\w+\/(?:album|playlist)\/[\w-]+\/(?:\d+|pl\.[\w\-]+)(?:\?i=\d+)?/g // should match all of the links below
+const idGatheringRegex = {
+    track: /https?:\/\/music.apple.com\/\w+\/(?:album)\/[\w-]+\/(?:\d+)\?i=(\d+)/, // should match https://music.apple.com/us/album/new-noise-resolutionz/1765212414?i=1765212428
+    album: /https?:\/\/music.apple.com\/\w+\/(?:album)\/[\w-]+\/(\d+)/, // should match https://music.apple.com/us/album/pizza-tower-original-game-soundtrack-bonus-tracks/1765212414
+    playlist: /https?:\/\/music.apple.com\/\w+\/(?:playlist)\/[\w-]+\/(pl\.[\w\-]+)/, // should match https://music.apple.com/us/playlist/fast-swing-like-songs/pl.u-zPyLmZYFZy503Nl
+}
+
+function getIdAndMediaType(url: string) {
+    const trackMatch = url.match(idGatheringRegex.track);
+    const albumMatch = url.match(idGatheringRegex.album);
+    const playlistMatch = url.match(idGatheringRegex.playlist);
+
+    log.debug("amdl matches: ", trackMatch, albumMatch, playlistMatch);
+
+    if (trackMatch) {
+        log.debug("amdl track match found: ", trackMatch[1]);
+        return { id: trackMatch[1], mediaType: AppleMusicMediaType.Track };
+    } else if (albumMatch) {
+        log.debug("amdl album match found: ", albumMatch[1]);
+        return { id: albumMatch[1], mediaType: AppleMusicMediaType.Album };
+    } else if (playlistMatch) {
+        log.debug("amdl playlist match found: ", playlistMatch[1]);
+        return { id: playlistMatch[1], mediaType: AppleMusicMediaType.Playlist };
+    }
+    return null;
+}
 
 enum AppleMusicMediaType {
     Track = "track",
@@ -16,6 +40,19 @@ enum AppleMusicMediaType {
 
 const baseUrl = "https://amdl.reidlab.pink/api/"
 
+function trackToVideo(track: any): Video {
+    return new Video(
+        track.attributes.url,
+        track.attributes.name,
+        Math.floor(track.attributes.durationInMillis / 1000),
+        track.attributes.artwork.url.replace("{w}x{h}", "512x512"),
+        `\n     album: ${track.attributes.albumName} \n     release Date: ${track.attributes.releaseDate}`,
+        track.attributes.artistName,
+        undefined,
+        "amdl",
+    );
+}
+
 export class AppleMusicDownloader extends DownloaderBase {
     getPriority(url: string) {
         if (url.match(urlRegex)) {
@@ -24,10 +61,15 @@ export class AppleMusicDownloader extends DownloaderBase {
         return 0;
     }
     async getInfo(url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
-        const id = url.match(urlRegex)?.[1];
-        const mediaType = AppleMusicMediaType.Track; // temporary, need to make this logic
+        const match = getIdAndMediaType(url);
+        if (!match) {
+            ctx.log("**url does not match regex**");
+            return null;
+        }
+        const id = match.id;
+        const mediaType = match.mediaType;
         if (!id) {
-            ctx.log("url does not match example downloader regex");
+            ctx.log("**couldn't extract id from url**");
             return null;
         }
         if (mediaType === AppleMusicMediaType.Track) {
@@ -39,41 +81,68 @@ export class AppleMusicDownloader extends DownloaderBase {
             }
             const json = await response.json();
             if (!json) {
-                ctx.log("failed to parse track metadata");
+                ctx.log("**failed to parse track metadata**");
                 return null;
             }
             let video: Video;
             try {
                 const data = json.data[0];
-                video = new Video(
-                    data.attributes.url,
-                    data.attributes.name,
-                    Math.floor(data.attributes.durationInMillis / 1000),
-                    data.attributes.artwork.url.replace("{w}x{h}", "512x512"),
-                    `\n     album: ${data.attributes.albumName} \n     release Date: ${data.attributes.releaseDate}`,
-                    data.attributes.artistName,
-                    undefined,
-                    "amdl",
-                )
-            } catch (e) { // TODO: add real error handling so that everything doenst fall to shit whenever anything happens
-                ctx.log("failed to parse track metadata: " + e);
+                video = trackToVideo(data);
+            } catch (e) {
+                ctx.log("**failed to parse track metadata: " + e + "**");
                 return null;
             }
 
             if (!video) {
-                ctx.log("failed to parse track metadata");
+                ctx.log("**failed to parse track metadata**");
                 return null;
             }
             return video;
         }
-        ctx.log("failed to fetch track metadata; media type not found");
+        if (mediaType === AppleMusicMediaType.Album || mediaType === AppleMusicMediaType.Playlist) {
+            ctx.log("fetching album metadata using apple music downloader (AMDL)...");
+            const response = await fetch(baseUrl + (mediaType === AppleMusicMediaType.Album ? "getAlbumMetadata" : "getPlaylistMetadata") + "?id=" + id);
+            if (!response.ok) {
+                ctx.log("failed to fetch album metadata; status: " + response.status);
+                return null;
+            }
+            const json = await response.json();
+            if (!json) {
+                ctx.log("**failed to parse album metadata**");
+                return null;
+            }
+            let playlist: Playlist;
+            try {
+                const data = json.data[0];
+                const videos: Video[] = data.relationships.tracks.data.map(trackToVideo);
+                playlist = new Playlist(
+                    data.attributes.url,
+                    data.attributes.name,
+                    videos,
+                    data.attributes.artwork.url.replace("{w}x{h}", "512x512"),
+                    undefined,
+                    "artistName" in data.attributes ? data.attributes.artistName : data.attributes.creatorName,
+                    "amdl",
+                );
+            } catch (e) {
+                ctx.log("**failed to parse album metadata: " + e + "**");
+                return null;
+            }
+
+            if (!playlist) {
+                ctx.log("**failed to parse album metadata**");
+                return null;
+            }
+            return playlist;
+        }
+        ctx.log("**failed to fetch track metadata; media type not found**");
         return null;
     }
     async download(info: Video, ctx: DownloadContext): Promise<Video | null> {
         const outputDir = "cache/amdl";
-        const id = info.url.match(urlRegex)?.[1];
+        const id = idGatheringRegex.track.exec(info.url)?.[1];
         if (!id) {
-            ctx.log("url does not match example downloader regex");
+            ctx.log("**url does not match track regex**");
             return null;
         }
         const fileName = sanitize(info.title) + id + ".m4a";
@@ -82,7 +151,7 @@ export class AppleMusicDownloader extends DownloaderBase {
         // Check if file already exists
         try {
             await fs.access(filePath);
-            ctx.log(`file already exists at ${filePath}, skipping download`);
+            ctx.log(`**file already exists at ${filePath}, skipping download**`);
             info.filePath = filePath;
             return info;
         } catch {
@@ -92,7 +161,7 @@ export class AppleMusicDownloader extends DownloaderBase {
         ctx.log("downloading track using apple music downloader (AMDL)...");
         const response = await fetch(baseUrl + "download?codec=aac_he_legacy&id=" + id);
         if (!response.ok || !response.body) {
-            ctx.log("failed to fetch track download url; status: " + response.status);
+            ctx.log("**failed to fetch track download url; status: " + response.status + "**");
             return null;
         }
 
@@ -102,7 +171,6 @@ export class AppleMusicDownloader extends DownloaderBase {
         await fs.mkdir(outputDir, { recursive: true });
 
         // Use Node.js streams to pipe the response body to the file
-        const { createWriteStream } = await import("fs");
         const fileStream = createWriteStream(filePath);
 
         // Convert the web ReadableStream to a Node.js stream and pipe to file
@@ -124,7 +192,7 @@ export class AppleMusicDownloader extends DownloaderBase {
                 info.filePath = filePath;
                 resolve(info);
             } catch (err: any) {
-                ctx.log("error writing file: " + err);
+                ctx.log("**error writing file: " + err + "**");
                 try { await fs.unlink(filePath); } catch {}
                 resolve(null);
             }
