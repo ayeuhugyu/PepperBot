@@ -1,4 +1,4 @@
-import { DownloaderBase, DownloadContext } from "./base";
+import { DownloaderBase, DownloadContext, DownloadedVideo } from "./base";
 import { Video, Playlist } from "../music/media";
 import { spawn } from "child_process";
 import * as log from "../log"
@@ -15,7 +15,7 @@ export class ExampleDownloader extends DownloaderBase {
         return 0;
     }
     async getInfo(_url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
-        ctx.log("fetching info using example downloader...");
+        await ctx.log("fetching info using example downloader...");
         return new Video(
             "https://example.com/", // media url
             "Example Media", // media title
@@ -28,8 +28,8 @@ export class ExampleDownloader extends DownloaderBase {
         );
         // see playlist class for how those are created
     }
-    async download(info: Video, ctx: DownloadContext): Promise<Video | null> {
-        ctx.log("fetching info for download using example downloader...");
+    async download(info: Video, ctx: DownloadContext): Promise<DownloadedVideo | null> {
+        await ctx.log("fetching info for download using example downloader...");
         return Object.assign(info, {
             filePath: "cache/exampledownloader/" + sanitize(info.title) + ".mp3",
         })

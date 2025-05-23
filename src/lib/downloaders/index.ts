@@ -1,4 +1,4 @@
-import { DownloaderRegistry } from "./base";
+import { DownloadedVideo, DownloaderRegistry } from "./base";
 import { YtDlpDownloader } from "./ytdlp";
 // import { ExampleDownloader } from "./example";
 import * as realLog from "../log"
@@ -22,12 +22,12 @@ export async function fetchMediaInfo(url: string, log: (msg: string) => void, ed
     return data;
 }
 
-export async function downloadMedia(video: Video, log: (msg: string) => void, editLatest: (msg: string) => void) {
+export async function downloadMedia(video: Video, log: (msg: string) => void, editLatest: (msg: string) => void): Promise<DownloadedVideo | null> {
     const downloader = registry.getDownloader(video.url);
     if (!downloader) {
         log("No suitable downloader found for this URL.");
         return null;
     }
     log(`downloading file with downloader: ${downloader.constructor.name}`);
-    return await downloader.download(video, { log, editLatest });
+    return await downloader.download(video, { log, editLatest })
 }

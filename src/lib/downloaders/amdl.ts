@@ -1,4 +1,4 @@
-import { DownloaderBase, DownloadContext } from "./base";
+import { DownloaderBase, DownloadContext, DownloadedVideo } from "./base";
 import { Video, Playlist } from "../music/media";
 import * as log from "../log"
 import fs from "fs/promises";
@@ -68,25 +68,25 @@ export class AppleMusicDownloader extends DownloaderBase {
     async getInfo(url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
         const match = getIdAndMediaType(url);
         if (!match) {
-            ctx.log("**url does not match regex**");
+            await ctx.log("**url does not match regex**");
             return null;
         }
         const id = match.id;
         const mediaType = match.mediaType;
         if (!id) {
-            ctx.log("**couldn't extract id from url**");
+            await ctx.log("**couldn't extract id from url**");
             return null;
         }
         if (mediaType === AppleMusicMediaType.Track) {
-            ctx.log("fetching track metadata using apple music downloader (AMDL)...");
+            await ctx.log("fetching track metadata using apple music downloader (AMDL)...");
             const response = await fetch(baseUrl + "getTrackMetadata?id=" + id);
             if (!response.ok) {
-                ctx.log("failed to fetch track metadata; status: " + response.status);
+                await ctx.log("failed to fetch track metadata; status: " + response.status);
                 return null;
             }
             const json = await response.json();
             if (!json) {
-                ctx.log("**failed to parse track metadata**");
+                await ctx.log("**failed to parse track metadata**");
                 return null;
             }
             let video: Video;
@@ -94,26 +94,26 @@ export class AppleMusicDownloader extends DownloaderBase {
                 const data = json.data[0];
                 video = trackToVideo(data);
             } catch (e) {
-                ctx.log("**failed to parse track metadata: " + e + "**");
+                await ctx.log("**failed to parse track metadata: " + e + "**");
                 return null;
             }
 
             if (!video) {
-                ctx.log("**failed to parse track metadata**");
+                await ctx.log("**failed to parse track metadata**");
                 return null;
             }
             return video;
         }
         if (mediaType === AppleMusicMediaType.Album || mediaType === AppleMusicMediaType.Playlist) {
-            ctx.log("fetching album metadata using apple music downloader (AMDL)...");
+            await ctx.log("fetching album metadata using apple music downloader (AMDL)...");
             const response = await fetch(baseUrl + (mediaType === AppleMusicMediaType.Album ? "getAlbumMetadata" : "getPlaylistMetadata") + "?id=" + id);
             if (!response.ok) {
-                ctx.log("failed to fetch album metadata; status: " + response.status);
+                await ctx.log("failed to fetch album metadata; status: " + response.status);
                 return null;
             }
             const json = await response.json();
             if (!json) {
-                ctx.log("**failed to parse album metadata**");
+                await ctx.log("**failed to parse album metadata**");
                 return null;
             }
             let playlist: Playlist;
@@ -130,24 +130,24 @@ export class AppleMusicDownloader extends DownloaderBase {
                     "amdl",
                 );
             } catch (e) {
-                ctx.log("**failed to parse album metadata: " + e + "**");
+                await ctx.log("**failed to parse album metadata: " + e + "**");
                 return null;
             }
 
             if (!playlist) {
-                ctx.log("**failed to parse album metadata**");
+                await ctx.log("**failed to parse album metadata**");
                 return null;
             }
             return playlist;
         }
-        ctx.log("**failed to fetch track metadata; media type not found**");
+        await ctx.log("**failed to fetch track metadata; media type not found**");
         return null;
     }
-    async download(info: Video, ctx: DownloadContext): Promise<Video | null> {
+    async download(info: Video, ctx: DownloadContext): Promise<DownloadedVideo | null> {
         const outputDir = "cache/amdl";
         const id = idGatheringRegex.track.exec(info.url)?.[1];
         if (!id) {
-            ctx.log("**url does not match track regex**");
+            await ctx.log("**url does not match track regex**");
             return null;
         }
         const fileName = sanitize(info.title) + id + ".m4a";
@@ -156,17 +156,17 @@ export class AppleMusicDownloader extends DownloaderBase {
         // Check if file already exists
         try {
             await fs.access(filePath);
-            ctx.log(`**file already exists at ${filePath}, skipping download**`);
+            await ctx.log(`**file already exists at ${filePath}, skipping download**`);
             info.filePath = filePath;
-            return info;
+            return info as DownloadedVideo;
         } catch {
             // File does not exist, continue to download
         }
 
-        ctx.log("downloading track using apple music downloader (AMDL)...");
+        await ctx.log("downloading track using apple music downloader (AMDL)...");
         const response = await fetch(baseUrl + "download?codec=aac_he_legacy&id=" + id);
         if (!response.ok || !response.body) {
-            ctx.log("**failed to fetch track download url; status: " + response.status + "**");
+            await ctx.log("**failed to fetch track download url; status: " + response.status + "**");
             return null;
         }
 
@@ -181,7 +181,7 @@ export class AppleMusicDownloader extends DownloaderBase {
         // Convert the web ReadableStream to a Node.js stream and pipe to file
         const stream = require('stream');
         const { finished } = require('stream/promises');
-        return new Promise<Video | null>(async (resolve) => {
+        return new Promise<DownloadedVideo | null>(async (resolve) => {
             try {
                 // Reconstruct the stream with the first chunk
                 const nodeStream = stream.Readable.from((async function* () {
@@ -195,9 +195,9 @@ export class AppleMusicDownloader extends DownloaderBase {
                 nodeStream.pipe(fileStream);
                 await finished(fileStream);
                 info.filePath = filePath;
-                resolve(info);
+                resolve(info as DownloadedVideo);
             } catch (err: any) {
-                ctx.log("**error writing file: " + err + "**");
+                await ctx.log("**error writing file: " + err + "**");
                 try { await fs.unlink(filePath); } catch {}
                 resolve(null);
             }

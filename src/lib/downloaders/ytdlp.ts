@@ -1,4 +1,4 @@
-import { DownloaderBase, DownloadContext } from "./base";
+import { DownloaderBase, DownloadContext, DownloadedVideo } from "./base";
 import { Video, Playlist } from "../music/media";
 import { spawn } from "child_process";
 import * as log from "../log"
@@ -12,7 +12,7 @@ export class YtDlpDownloader extends DownloaderBase {
      * Returns Video or Playlist object, or null on error.
      */
     async getInfo(url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
-        ctx.log("fetching info using yt-dlp...");
+        await ctx.log("fetching info using yt-dlp...");
         const args = [ "-J", '--no-warnings', url ];
         const cookies = process.env.PATH_TO_COOKIES ? true : false;
         if (cookies) {
@@ -50,7 +50,7 @@ export class YtDlpDownloader extends DownloaderBase {
                 "yt-dlp"
             );
         } catch (err: any) {
-            ctx.log(`failed to parse yt-dlp output: ${err?.message || err}`);
+            await ctx.log(`failed to parse yt-dlp output: ${err?.message || err}`);
             return null;
         }
     }
@@ -60,25 +60,25 @@ export class YtDlpDownloader extends DownloaderBase {
      * Returns Video object with filePath, or null on error.
      * Playlists are not downloaded.
      */
-    async download(info: Video, ctx: DownloadContext): Promise<Video | null> {
+    async download(info: Video, ctx: DownloadContext): Promise<DownloadedVideo | null> {
         const url = info.url;
-        ctx.log("fetching info for download using yt-dlp...");
+        await ctx.log("fetching info for download using yt-dlp...");
         if (!info || info instanceof Playlist) {
-            ctx.log("cannot download playlists, only single videos are supported.");
+            await ctx.log("cannot download playlists, only single videos are supported.");
             return null;
         }
         const filePath = path.join("cache/ytdl", sanitize(info.title + info.url) + ".mp3");
-        info.filePath = filePath;
+        const downloadedInfo: DownloadedVideo = { ...info, filePath };
 
         try {
             await fs.mkdir("cache/ytdl", { recursive: true });
             try {
-            await fs.access(filePath);
-            ctx.log("file already exists in cache.");
-            return info;
+                await fs.access(filePath);
+                await ctx.log("file already exists in cache.");
+                return downloadedInfo;
             } catch { /* Not cached, continue */ }
 
-            ctx.log("downloading with yt-dlp...");
+            await ctx.log("downloading with yt-dlp...");
             const args = [
                 "-x",
                 "-f", "bestaudio/best",
@@ -94,14 +94,14 @@ export class YtDlpDownloader extends DownloaderBase {
                 args.push("--cookies", process.env.PATH_TO_COOKIES || "");
             }
             await this._runYtDlp(args, ctx, true);
-            ctx.log("download complete!");
-            return info;
+            await this._runYtDlp(args, ctx, true);
+            await ctx.log("download complete!");
+            return downloadedInfo;
         } catch (err: any) {
-            ctx.log(`download failed: ${err?.message || err}`);
+            await ctx.log(`download failed: ${err?.message || err}`);
             return null;
         }
     }
-
     // infoOnly disables logging stdout for download, only logs errors
     private async _runYtDlp(args: string[], ctx: DownloadContext, infoOnly = false): Promise<any> {
         return new Promise(resolve => {
@@ -111,7 +111,7 @@ export class YtDlpDownloader extends DownloaderBase {
             let downloadProgressCount = 0;
             let downloadLogCounter = 0;
 
-            proc.stdout.on("data", (chunk) => {
+            proc.stdout.on("data", async (chunk) => {
                 const msg = chunk.toString();
                 log.debug(msg);
                 if (msg.trim().startsWith("[download]")) {
@@ -122,26 +122,26 @@ export class YtDlpDownloader extends DownloaderBase {
                         downloadLogCounter++;
                         if (downloadLogCounter % 3 === 0 && percent > downloadProgressCount) {
                             downloadProgressCount = percent;
-                            ctx.editLatest(`downloading: ${percent}% of ${fileSize ? fileSize[1] : "unknown"} MiB`);
+                            await ctx.editLatest(`downloading: ${percent}% of ${fileSize ? fileSize[1] : "unknown"} MiB`);
                         }
                     }
                 }
                 output += msg;
             });
-            proc.stderr.on("data", (chunk) => {
+            proc.stderr.on("data", async (chunk) => {
                 const msg = chunk.toString();
-                if (msg.trim().length > 0) ctx.log(msg);
+                if (msg.trim().length > 0) await ctx.log(msg);
                 errorOutput += msg;
             });
-            proc.on("close", (code) => {
+            proc.on("close", async (code) => {
                 if (code !== 0 && !infoOnly) {
-                    ctx.log(`yt-dlp exited with code ${code}`);
+                    await ctx.log(`yt-dlp exited with code ${code}`);
                     resolve(null);
                 } else {
                     try {
                         resolve(output ? JSON.parse(output) : undefined);
                     } catch (err: any) {
-                        if (!infoOnly) ctx.log(`yt-dlp output parse failure: ${err?.message || err}`);
+                        if (!infoOnly) await ctx.log(`yt-dlp output parse failure: ${err?.message || err}`);
                         resolve(null);
                     }
                 }
