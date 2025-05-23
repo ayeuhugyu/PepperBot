@@ -420,7 +420,7 @@ const build = new Command(
                         const model = modelInteraction.customId.split("_")[3] as GPTModelName;
                         prompt.api_parameters.model = model;
                         await savePrompt(prompt, invoker.author);
-                        interaction.editReply({
+                        action.editReply(interaction as unknown as FormattedCommandInteraction, {
                             content: `select a model to use for this prompt. currently selected: \`${prompt.api_parameters.model || defaultModel}\``,
                             components: getModelButtons(prompt),
                         });
@@ -429,7 +429,7 @@ const build = new Command(
                     });
                     modelCollector.on("end", async () => {
                         if (modelReply) {
-                            interaction.editReply({
+                            action.editReply(interaction as unknown as FormattedCommandInteraction, {
                                 content: `select a model to use for this prompt. currently selected: \`${prompt.api_parameters.model || defaultModel}\``,
                                 components: getModelButtons(prompt, true),
                             });
@@ -479,7 +479,7 @@ const build = new Command(
                             action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: verifyResponse.message, ephemeral: true });
                             return;
                         }
-                        
+
                         prompt.api_parameters[key] = userValue
                         await savePrompt(prompt, invoker.author);
                         action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: `prompt API parameter \`${key}\` set to \`${prompt.api_parameters[key]}\``, ephemeral: true });
@@ -541,13 +541,13 @@ const build = new Command(
                         if (confirmInteraction.customId === "confirm_delete_prompt") {
                             await removePrompt(prompt.name, invoker.author.id);
                             userPrompts.delete(invoker.author.id);
-                            await interaction.editReply({ components: [new TextDisplay({ content: `prompt \`${prompt.name}\` deleted` })], flags: MessageFlags.IsComponentsV2 });
+                            await action.editReply(interaction as unknown as FormattedCommandInteraction, { components: [new TextDisplay({ content: `prompt \`${prompt.name}\` deleted` })], flags: MessageFlags.IsComponentsV2 });
                             confirmInteraction.deferUpdate();
                             edited = true;
                             collector.stop();
                             confirmCollector.stop();
                         } else {
-                            await interaction.editReply({ components: [new TextDisplay({ content: `deletion cancelled` })], flags: MessageFlags.IsComponentsV2 });
+                            await action.editReply(interaction as unknown as FormattedCommandInteraction, { components: [new TextDisplay({ content: `deletion cancelled` })], flags: MessageFlags.IsComponentsV2 });
                             confirmInteraction.deferUpdate();
                             edited = true;
                             confirmCollector.stop();
@@ -556,7 +556,7 @@ const build = new Command(
 
                     confirmCollector.on("end", async () => {
                         if (!edited) {
-                            await interaction.editReply({ components: [new TextDisplay({ content: `confirmation timed out` })], flags: MessageFlags.IsComponentsV2 });
+                            await action.editReply(interaction as unknown as FormattedCommandInteraction, { components: [new TextDisplay({ content: `confirmation timed out` })], flags: MessageFlags.IsComponentsV2 });
                         }
                     });
                 }

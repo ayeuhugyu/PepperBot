@@ -106,22 +106,34 @@ export type SendableChannel = TextChannel | DMChannel | PartialDMChannel | NewsC
 export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message | void>  {
     const reply = fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions
     log.debug(`sending message to ${channel.id} with`, reply);
-    return channel.send(reply).catch((err) => {
-        log.error(`failed to send message to ${channel.id}`, err);
-    })
+    return channel.send(reply)
+        .catch((err) => {
+            log.error(`failed to send message to ${channel.id}`, err);
+        });
 }
 
 export function edit(message: Message | InteractionResponse, content: Partial<MessageInput> | string): Promise<Message | void> {
     const reply = fixMessage(content) as string | MessagePayload | MessageEditOptions
     log.debug(`editing message ${message.id} with`, reply);
-    return message.edit(reply).catch((err) => {
-        log.error(`failed to edit message ${message.id}`, err);
-    });
+    return message.edit(reply)
+        .catch((err) => {
+            log.error(`failed to edit message ${message.id}`, err);
+        });
 }
 
 export function deleteMessage(message: Message): Promise<OmitPartialGroupDMChannel<Message> | void> {
     log.debug(`deleting message ${message.id}`);
-    return message.delete().catch((err) => {
-        log.error(`failed to delete message ${message.id}`, err);
-    });
+    return message.delete()
+        .catch((err) => {
+            log.error(`failed to delete message ${message.id}`, err);
+        });
+}
+
+export function editReply(commandInteraction: FormattedCommandInteraction, content: Partial<MessageInput> | string): Promise<Message | void> {
+    const reply = fixMessage(content) as string | MessagePayload | MessageEditOptions
+    log.debug(`editing reply to ${commandInteraction.user.username} (${commandInteraction.user.id}) with`, reply);
+    return commandInteraction.editReply(reply)
+        .catch((err) => {
+            log.error(`failed to edit reply to ${commandInteraction.user.username} (${commandInteraction.user.id})`, err);
+        });
 }
