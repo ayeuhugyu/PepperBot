@@ -32,7 +32,7 @@ const command = new Command(
         }
         return options;
     },
-    async function execute({ invoker, piped_data, guild_config, args }) {
+    async function execute({ invoker, piped_data, guild_config, args, will_be_piped }) {
         if (!piped_data?.data) {
             await action.reply(invoker, { content: "this command must be piped", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
@@ -44,7 +44,7 @@ const command = new Command(
             const inputText = piped_data.data.input_text;
             const linesArg = args["-n"];
             const bytesArg = args["-c"];
-            
+
             if (linesArg || !bytesArg) {
                 const numLines = parseInt(linesArg || "10", 10); // Default to 10 lines
                 if (isNaN(numLines) || numLines <= 0) {
@@ -70,7 +70,7 @@ const command = new Command(
                     });
                 }
                 const output = inputText.slice(0, numBytes);
-                await action.reply(invoker, { content: `content: \`\`\`\n${output}\n\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
+                await action.reply(invoker, { content: will_be_piped ? "piping head" : `content: \`\`\`\n${output}\n\`\`\``, ephemeral: guild_config.other.use_ephemeral_replies });
                 return new CommandResponse({ pipe_data: { input_text: output } });
             }
         } else {

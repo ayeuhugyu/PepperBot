@@ -23,7 +23,7 @@ const command = new Command(
         example_usage: "p/git log | grep months",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["search"]),
-    async function execute ({ invoker, piped_data, guild_config, args }) {
+    async function execute ({ invoker, piped_data, guild_config, args, will_be_piped }) {
         if (!piped_data?.data) {
             await action.reply(invoker, { content: "this command must be piped", ephemeral: guild_config.other.use_ephemeral_replies})
             return new CommandResponse({
@@ -66,14 +66,16 @@ const command = new Command(
                             message: `no text found for regex: \`${regexSearch}\` with flags: \`${flags}\``,
                         });
                     }
+                    let pipeText = found.join("\n");
                     found.unshift(`found text: \`\`\`\n`)
                     if (captureGroups.length > 0) {
+                        pipeText += `\n\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}`
                         found.unshift(`captured: \`\`\`\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
                     }
                     found.push("```");
                     found.unshift(`regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\n`);
-                    await action.reply(invoker, { content: count ? `regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\ncount: ${found.length}` : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
-                    return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
+                    await action.reply(invoker, { content: will_be_piped ? `piping ${found.length} lines found with regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`` : (count ? `regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\ncount: ${found.length}` : found.join("\n")), ephemeral: guild_config.other.use_ephemeral_replies });
+                    return new CommandResponse({ pipe_data: { input_text: pipeText } });
                 } catch (e: any) {
                     await action.reply(invoker, { content: `invalid regex (${regexSearch}): ${e.message}`, ephemeral: guild_config.other.use_ephemeral_replies });
                     return new CommandResponse({
@@ -93,7 +95,7 @@ const command = new Command(
             found.unshift(`content: \`\`\`\n`)
             found.unshift(`search: \`${search}\`\n`);
             found.push("```");
-            await action.reply(invoker, { content: count ? `search: \`${search}\`\ncount: ${found.length}` : found.join("\n"), ephemeral: guild_config.other.use_ephemeral_replies });
+            await action.reply(invoker, { content: will_be_piped ? `piping ${found.length} lines found with \`${search}\`` : (count ? `search: \`${search}\`\ncount: ${found.length}` : found.join("\n")), ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ pipe_data: { input_text: found.join("\n") } });
         } else {
             await action.reply(invoker, { content: "no grep text found", ephemeral: guild_config.other.use_ephemeral_replies });
