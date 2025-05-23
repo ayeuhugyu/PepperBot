@@ -5,15 +5,17 @@ import fs from "fs/promises";
 import path from "path";
 import { createWriteStream } from "fs";
 
-const urlRegex = /https?:\/\/music.apple.com\/\w+\/(?:album|playlist)\/[\w-]+\/(?:\d+|pl\.[\w\-]+)(?:\?i=\d+)?/g // should match all of the links below
+const urlRegex = /https?:\/\/music.apple.com\/\w+\/(?:album|playlist|song)\/[\w-]+\/(?:\d+|pl\.[\w\-]+)(?:\?i=\d+)?/g // should match all of the links below
 const idGatheringRegex = {
     track: /https?:\/\/music.apple.com\/\w+\/(?:album)\/[\w-]+\/(?:\d+)\?i=(\d+)/, // should match https://music.apple.com/us/album/new-noise-resolutionz/1765212414?i=1765212428
+    song: /https?:\/\/music.apple.com\/\w+\/(?:song)\/[\w-]+\/(\d+)/,
     album: /https?:\/\/music.apple.com\/\w+\/(?:album)\/[\w-]+\/(\d+)/, // should match https://music.apple.com/us/album/pizza-tower-original-game-soundtrack-bonus-tracks/1765212414
     playlist: /https?:\/\/music.apple.com\/\w+\/(?:playlist)\/[\w-]+\/(pl\.[\w\-]+)/, // should match https://music.apple.com/us/playlist/fast-swing-like-songs/pl.u-zPyLmZYFZy503Nl
 }
 
 function getIdAndMediaType(url: string) {
     const trackMatch = url.match(idGatheringRegex.track);
+    const songMatch = url.match(idGatheringRegex.song);
     const albumMatch = url.match(idGatheringRegex.album);
     const playlistMatch = url.match(idGatheringRegex.playlist);
 
@@ -22,6 +24,9 @@ function getIdAndMediaType(url: string) {
     if (trackMatch) {
         log.debug("amdl track match found: ", trackMatch[1]);
         return { id: trackMatch[1], mediaType: AppleMusicMediaType.Track };
+    } else if (songMatch) {
+        log.debug("amdl track match (using song regex) found: ", songMatch[1]);
+        return { id: songMatch[1], mediaType: AppleMusicMediaType.Track };
     } else if (albumMatch) {
         log.debug("amdl album match found: ", albumMatch[1]);
         return { id: albumMatch[1], mediaType: AppleMusicMediaType.Album };
