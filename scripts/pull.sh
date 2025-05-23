@@ -4,7 +4,7 @@
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Pull the latest changes from the current branch
-git pull origin "$current_branch"
+git pull origin "$current_branch" --rebase --autostash
 
 # Check if package.json was updated in the last pull
 if git diff --name-only HEAD@{1} HEAD | grep -q 'package.json'; then
