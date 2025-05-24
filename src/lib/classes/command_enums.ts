@@ -48,6 +48,7 @@ export enum CommandTag {
     Utility = "#utility",
     Info = "#info",
     Voice = "#voice",
+    Music = "#music",
     Moderation = "#moderation",
     Debug = "#debug",
     Other = "#other",

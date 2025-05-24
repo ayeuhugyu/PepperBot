@@ -16,7 +16,7 @@ const command = new Command(
         name: 'playurl',
         description: 'play a url over voice',
         long_description: 'play a url over voice; this supports most audio related urls. if provided a playlist or album, the first item will be the one that gets played.',
-        tags: [CommandTag.Voice],
+        tags: [CommandTag.Voice, CommandTag.Music],
         pipable_to: [],
         example_usage: "p/playurl https://www.youtube.com/watch?v=tbBwELgDPD8",
         argument_order: "<url>",

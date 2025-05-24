@@ -51,7 +51,7 @@ function trackToVideo(track: any): Video {
         track.attributes.name,
         Math.floor(track.attributes.durationInMillis / 1000),
         track.attributes.artwork.url.replace("{w}x{h}", "512x512"),
-        `\n     album: ${track.attributes.albumName} \n     release Date: ${track.attributes.releaseDate}`,
+        `\n     album: ${track.attributes.albumName} \n     release date: ${track.attributes.releaseDate}`,
         track.attributes.artistName,
         undefined,
         "amdl",
@@ -156,7 +156,7 @@ export class AppleMusicDownloader extends DownloaderBase {
         // Check if file already exists
         try {
             await fs.access(filePath);
-            await ctx.log(`**file already exists at ${filePath}, skipping download**`);
+            await ctx.log(`file already exists at \`${filePath}\`, skipping download`);
             info.filePath = filePath;
             return info as DownloadedVideo;
         } catch {

@@ -594,7 +594,7 @@ export const models: Record<GPTModelName, GPTModel> = {
         provider: GPTProvider.Grok,
         capabilities: [GPTModelCapabilities.Text, GPTModelCapabilities.FunctionCalling],
         unsupported_arguments: ["presence_penalty", "frequency_penalty"],
-        whitelist: ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065"]
+        whitelist: ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065", "1162874217935675392"]
     },
 }
 
@@ -1111,6 +1111,9 @@ export class Conversation {
                         let plural = notWhitelistedUsers.length > 1
                         log.warn(`user${(plural) ? "s" : ""} ${notWhitelistedUsers.map((user) => user.id).join(", ")} ${plural ? "are" : "is"} not whitelisted for model ${this.api_parameters.model.name}`);
                         this.emitter.emit(ConversationEvents.Warning, `user${(plural) ? "s" : ""} ${notWhitelistedUsers.map((user) => user.id).join(", ")} ${plural ? "are" : "is"} not whitelisted for model ${this.api_parameters.model.name}`);
+                        notWhitelistedUsers.forEach((user) => {
+                            this.removeUser(user);
+                        });
                         return `user${(plural) ? "s" : ""} ${notWhitelistedUsers.map((user) => user.id).join(", ")} ${plural ? "are" : "is"} not whitelisted for model ${this.api_parameters.model.name}`;
                     }
                     return await runForOpenAI(this, grok); // grok is a fork of openai so it should work the same way

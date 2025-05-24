@@ -172,7 +172,7 @@ const database = knex({
 log.info("opened database connection");
 
 export default database;
-export const tables = ["prompts", "todos", "configs", "queues", "sounds", "updates", "statistics"];
+export const tables = ["prompts", "todos", "configs", "sounds", "updates", "statistics"];
 
 ['SIGINT', 'SIGTERM', 'SIGQUIT', 'EXIT'].forEach(signal => {
     process.on(signal, () => {

@@ -1,4 +1,4 @@
-import { Video } from "./media";
+import { Playlist, Video } from "./media";
 import { CustomSound } from "../custom_sound_manager";
 import { TextDisplay, Section, Thumbnail } from "../classes/components.js";
 
@@ -13,21 +13,21 @@ function toHHMMSS(secs: number) {
         .join(":")
 }
 
-export function embedVideoOrSound(item: Video | CustomSound, isCurrentIndex?: Boolean, index?: number): TextDisplay | Section {
-    const title = item instanceof Video ? item.title : item instanceof CustomSound ? item.name : "????";
+export function embedVideoOrSound(item: Video | CustomSound | Playlist, isCurrentIndex?: Boolean, index?: number): TextDisplay | Section {
+    const title = (item instanceof Video || item instanceof Playlist) ? item.title : item instanceof CustomSound ? item.name : "????";
     const length = item instanceof Video ? item.duration : undefined;
-    const url = item instanceof Video ? item.url : undefined;
+    const url = (item instanceof Video || item instanceof Playlist) ? item.url : undefined;
     const readableLength = length ? toHHMMSS(length) : undefined;
     const textDisplay = new TextDisplay({
         content: `**${index != undefined ? `${index + 1}: ` : ""}${title}**` +
             (length ? `\nduration: ${readableLength}` : "") + (isCurrentIndex && length ? `; ending <t:${Math.floor(Date.now() / 1000 + length)}:R>` : "") +
-            (item instanceof Video ? `\nuploader: ${item.uploader}` : "") +
-            (item instanceof Video ? `\ndescription: ${item.description}` : "") +
+            ((item instanceof Video || item instanceof Playlist) ? `\nuploader: ${item.uploader}` : "") +
+            ((item instanceof Video || item instanceof Playlist) ? `\ndescription: ${item.description}` : "") +
             (url ? `\nurl: ${url}` : "") +
-            (item instanceof Video ? `\ndownloader used: ${item.downloader}` : "")
+            ((item instanceof Video || item instanceof Playlist) ? `\ndownloader used: ${item.downloader}` : "")
     });
     let section
-    if (item instanceof Video && item.thumbnail) {
+    if (item instanceof Video || item instanceof Playlist) {
         section = new Section({
             accessory: new Thumbnail({
                 url: item.thumbnail || "https://example.com/",

@@ -44,7 +44,7 @@ export class YtDlpDownloader extends DownloaderBase {
                 info.title,
                 info.duration,
                 info.thumbnail,
-                info.description.slice(0, 400) + info.description.length > 400 ? "..." : "",
+                info.description?.slice(0, 400) + info.description?.length > 400 ? "..." : "",
                 info.uploader,
                 undefined,
                 "yt-dlp"
@@ -74,7 +74,7 @@ export class YtDlpDownloader extends DownloaderBase {
             await fs.mkdir("cache/ytdl", { recursive: true });
             try {
                 await fs.access(filePath);
-                await ctx.log("file already exists in cache.");
+                await ctx.log(`file already exists at \`${filePath}\`, skipping download.`);
                 return downloadedInfo;
             } catch { /* Not cached, continue */ }
 
@@ -85,7 +85,7 @@ export class YtDlpDownloader extends DownloaderBase {
                 "--no-warnings",
                 "--extract-audio",
                 "--audio-format", "mp3",
-                "--limit-rate", "250k",
+                "--limit-rate", "2048k",
                 "-o", filePath,
                 url
             ];

@@ -1,4 +1,4 @@
-import { Guild, Message, VoiceBasedChannel } from "discord.js";
+import { AnyComponent, Guild, Message, MessageFlags, VoiceBasedChannel } from "discord.js";
 import { GuildVoiceManager, VoiceEventListener, VoiceManagerEvent, getVoiceManager } from "../classes/voice";
 import { Playlist, Video } from "./media";
 import { downloadMedia } from "../downloaders";
@@ -6,211 +6,303 @@ import * as action from "../discord_action";
 import { DownloadedVideo } from "../downloaders/base";
 import { createAudioResource } from "@discordjs/voice";
 import { CustomSound } from "../custom_sound_manager";
+import { Container, ContainerComponent, TextDisplay } from "../classes/components";
+import { embedVideoOrSound } from "./embed";
+import * as log from "../log";
 
 enum QueueState {
     Playing = "playing",
+    Downloading = "downloading",
+    StartingPlayer = "starting_player",
     Idle = "idle",
 }
 
 function shuffleArray<T>(array: T[]): T[] {
+    log.debug("Shuffling array", array);
     return array
         .map((item) => ({ item, sort: Math.random() }))
         .sort((a, b) => a.sort - b.sort)
         .map(({ item }) => item);
 }
 
-type QueueItem = Video | Playlist | CustomSound;
+// Only Video or CustomSound now
+type QueueItem = Video | CustomSound;
 
 let queues = new Map<string, QueueManager>();
 
 export function getQueue(guild: Guild): QueueManager {
+    log.debug("getQueue called for guild", guild.id);
     const queue = queues.get(guild.id);
     if (!queue) {
+        log.debug("No queue found, creating new QueueManager");
         const voiceManager = getVoiceManager(guild);
         return new QueueManager(voiceManager);
     }
+    log.debug("Returning existing queue");
     return queue;
+}
+
+function textComponentify(text: string) {
+    log.debug("textComponentify called with text:", text);
+    return new TextDisplay({
+        content: text,
+    });
+}
+
+function wrapInContainer(components: ContainerComponent) {
+    log.debug("wrapInContainer called");
+    return new Container({
+        components: [components],
+    })
 }
 
 export class QueueManager implements VoiceEventListener {
     items: QueueItem[] = [];
     currentIndex: number = 0;
-    currentPlaylistIndex: number | undefined = undefined;
     voiceManager: GuildVoiceManager | undefined = undefined;
     state: QueueState = QueueState.Idle;
     channel: VoiceBasedChannel | undefined = undefined;
+    silent: boolean = false;
     lastSentLog: Message<true> | undefined = undefined;
     guild: GuildVoiceManager["guild"];
 
     constructor(voiceManager: GuildVoiceManager) {
+        log.debug("QueueManager constructor called", voiceManager.guild.id);
         this.voiceManager = voiceManager;
         this.channel = voiceManager.channel;
         this.guild = voiceManager.guild;
         this.voiceManager.addListener(this);
         this.voiceManager.on(VoiceManagerEvent.Disconnect, () => {
+            log.debug("VoiceManagerEvent.Disconnect triggered");
             this.state = QueueState.Idle;
+            this.stop();
+            this.outputLog("disconnected from voice channel");
+            this.channel = undefined;
         });
         queues.set(voiceManager.guild.id, this);
     }
 
     onVoiceStop() {
-        // Only auto-advance if not suppressed (handled by voice manager)
-        this.next();
+        log.debug("onVoiceStop called, state:", this.state);
+        if (this.state === QueueState.Playing) {
+            this.next();
+        }
+    }
+
+    async outputError(message: string) {
+        log.debug("outputError called:", message);
+        if (!this.channel) {
+            log.error(`attempt to use outputError while channel is not set; log: ${message}`);
+            return;
+        }
+        log.error(message);
+        (await action.send(this.channel, `> **[ERROR]:** ${message}`)) as Message<true>;
+        // dont set lastSentLog since this is an error message, dont want that being overwritten with something else
     }
 
     async outputLog(message: string) {
+        log.debug("outputLog called:", message, "silent:", this.silent, "channel:", !!this.channel);
+        if (this.silent) {
+            return;
+        }
         if (!this.channel) {
-            throw new Error("Channel is not set");
+            log.error(`attempt to use outputLog while channel is not set; log: ${message}`);
+            return;
         }
         this.lastSentLog = (await action.send(this.channel, `> ${message}`)) as Message<true>;
     }
 
+    async outputComponentsLog(components: (action.ApiMessageComponents | action.TopLevelComponent)[]) {
+        log.debug("outputComponentsLog called", components, "silent:", this.silent, "channel:", !!this.channel);
+        if (this.silent) {
+            return;
+        }
+        if (!this.channel) {
+            log.error(`attempt to use outputComponentsLog while channel is not set; log: ${components}`);
+            return;
+        }
+        return (await action.send(this.channel, { components, flags: MessageFlags.IsComponentsV2 })) as Message<true>;
+        // do not set lastSentLog to this since editLastLog will break, discord errors if you try to edit content of a message with components_v2
+    }
+
     async editLastLog(message: string) {
+        log.debug("editLastLog called:", message, "silent:", this.silent, "lastSentLog:", !!this.lastSentLog);
+        if (this.silent) {
+            return;
+        }
         if (!this.lastSentLog) {
-            throw new Error("No message to edit");
+            log.error(`attempt to use editLastLog while lastSentLog is undefined; log: ${message}`);
+            return;
         }
         await action.edit(this.lastSentLog, `> ${message}`);
     }
 
     async playVideo(inputVideo: Video) {
+        log.debug("playVideo called", inputVideo, "state:", this.state);
         if (!this.voiceManager) {
-            throw new Error("Voice manager is not set");
+            this.outputError("attempt to play a video while voice manager is not set");
+            return;
         }
         if (!this.voiceManager.connection) {
-            throw new Error("Voice connection is not established");
+            this.outputError("attempt to play a video while voice connection is not established");
+            return;
         }
         let downloadedVideo: DownloadedVideo
-        if (!inputVideo.filePath) {
-            this.outputLog(`downloading ${inputVideo.title} video...`);
-            const output = await downloadMedia(inputVideo, this.outputLog, this.editLastLog)
+        if (!inputVideo.filePath && !(this.state === QueueState.Downloading)) {
+            log.debug("Downloading video", inputVideo.title);
+            this.state = QueueState.Downloading;
+            this.outputLog(`downloading \`${inputVideo.title}\`...`);
+            const logFunc = this.outputLog.bind(this);
+            const editLatest = this.editLastLog.bind(this);
+            const output = await downloadMedia(inputVideo, logFunc, editLatest)
             if (!output) {
-                throw new Error("Failed to download video");
+                log.debug("Failed to download video", inputVideo.title);
+                this.outputError("failed to download video, skipping...");
+                this.next();
+                return;
             }
             this.lastSentLog = undefined;
             downloadedVideo = output;
-        } else {
+            this.items[this.currentIndex] = downloadedVideo;
+        } else if (!(this.state === QueueState.Downloading)) {
+            log.debug("Video already downloaded or not downloading", inputVideo.title);
             downloadedVideo = inputVideo as DownloadedVideo;
+        } else {
+            log.debug("Already downloading, aborting playVideo");
+            this.outputError("attempt to play a video while already downloading");
+            return;
         }
         const video = downloadedVideo as DownloadedVideo
 
         if (!video) {
-            throw new Error("Video is null");
+            log.debug("Downloaded video is undefined/null", inputVideo.title);
+            this.outputError("failed to download video, skipping...");
+            this.next();
+            return;
         }
 
+        log.debug("Creating audio resource for video", video.filePath);
         const audioResource = createAudioResource(video.filePath)
-        this.outputLog(`playing ${video.title}...`);
+        this.outputComponentsLog([textComponentify(`> playing \`${video.title}\`...`), wrapInContainer(embedVideoOrSound(video, true, this.currentIndex))]);
         this.voiceManager.play(audioResource);
         this.state = QueueState.Playing;
     }
 
     async playCustomSound(sound: CustomSound) {
+        log.debug("playCustomSound called", sound, "state:", this.state);
         if (!this.voiceManager) {
-            throw new Error("Voice manager is not set");
+            this.outputError("attempt to play a custom sound while voice manager is not set");
+            return;
         }
         if (!this.voiceManager.connection) {
-            throw new Error("Voice connection is not established");
+            this.outputError("attempt to play a custom sound while voice connection is not established");
+            return;
         }
+        log.debug("Creating audio resource for custom sound", sound.path);
         const audioResource = createAudioResource(sound.path);
-        this.outputLog(`playing ${sound.name}...`);
+        this.outputComponentsLog([textComponentify(`> playing \`${sound.name}\`...`), wrapInContainer(embedVideoOrSound(sound, true, this.currentIndex))]);
         this.voiceManager.play(audioResource);
         this.state = QueueState.Playing;
     }
 
-    async playPlaylist(playlist: Playlist, index: number) {
-        const item = playlist.videos[index];
-        if (!item) {
-            throw new Error("Item not found in playlist");
-        }
-        this.currentPlaylistIndex = index;
-        return await this.playVideo(item);
-    }
-
     async play(index?: number) {
+        log.debug("play called", "index:", index, "state:", this.state, "currentIndex:", this.currentIndex, "items.length:", this.items.length);
+        if (this.state !== QueueState.Playing && this.state !== QueueState.Idle) {
+            this.outputError("attempt to play an item while queue is not idle or playing");
+            return;
+        }
+        this.state = QueueState.StartingPlayer;
         const currentItem = this.items[index ?? this.currentIndex];
+        log.debug("Current item to play:", currentItem);
         if (!currentItem) {
-            throw new Error("Item not found in queue");
-        }
-        const title = (currentItem instanceof CustomSound) ? currentItem.name : (currentItem as Video | Playlist).title || `index ${index}`;
-        if (currentItem instanceof Video) {
-            return await this.playVideo(currentItem);
-        }
-        if (currentItem instanceof Playlist) {
-            if (this.currentPlaylistIndex === undefined) {
-                this.currentPlaylistIndex = 0;
-            }
-            return await this.playPlaylist(currentItem, this.currentPlaylistIndex);
+            this.outputError("attempt to play an item which does not exist");
+            return;
         }
         if (currentItem instanceof CustomSound) {
-            return await this.playCustomSound(currentItem);
+            log.debug("Current item is CustomSound");
+            return await this.playCustomSound(currentItem as CustomSound);
+        } else {
+            log.debug("Current item is Video");
+            return await this.playVideo(currentItem as Video);
         }
-        throw new Error("Item is not a video, playlist, or custom sound");
     }
 
-    private updateIndices(direction: 1 | -1) {
-        if (this.currentPlaylistIndex !== undefined) {
-            this.currentPlaylistIndex += direction;
-            const currentItem = this.items[this.currentIndex];
-            if (currentItem instanceof Playlist) {
-                if (this.currentPlaylistIndex >= currentItem.videos.length) {
-                    this.currentPlaylistIndex = undefined;
-                    this.currentIndex += direction;
-                } else if (this.currentPlaylistIndex < 0) {
-                    this.currentPlaylistIndex = undefined;
-                    this.currentIndex += direction;
-                }
-            }
-        } else {
-            this.currentIndex += direction;
-        }
-
+    private updateIndices(direction: number) {
+        log.debug("updateIndices called", "direction:", direction, "currentIndex before:", this.currentIndex, "items.length:", this.items.length);
+        this.currentIndex += direction;
         if (this.currentIndex >= this.items.length) {
             this.currentIndex = 0;
-            this.currentPlaylistIndex = undefined;
+            this.outputLog("reached end of queue, looping back to start");
         } else if (this.currentIndex < 0) {
             this.currentIndex = this.items.length - 1;
-            this.currentPlaylistIndex = undefined;
+            this.outputLog("reached start of queue, looping back to end");
         }
+        log.debug("currentIndex after:", this.currentIndex);
     }
 
-    async next() {
-        this.updateIndices(1);
+    async next(amount: number = 1, isSkipping: boolean = false) {
+        log.debug("next called", "amount:", amount);
+        this.updateIndices(amount);
         return await this.play(this.currentIndex);
     }
 
-    async previous() {
-        this.updateIndices(-1);
+    async previous(amount: number = 1) {
+        log.debug("previous called", "amount:", amount);
+        this.updateIndices(-amount);
         return await this.play(this.currentIndex);
     }
 
-    addItem(item: QueueItem, index?: number) {
-        if (index !== undefined) {
-            this.items.splice(index, 0, item);
+    addItem(item: QueueItem | Playlist, index?: number) {
+        log.debug("addItem called", item, "index:", index);
+        if ((item instanceof CustomSound) || (item instanceof Video)) {
+            if (index !== undefined) {
+                log.debug("Inserting item at index", index);
+                this.items.splice(index, 0, item as QueueItem);
+            } else {
+                log.debug("Pushing item to end of queue");
+                this.items.push(item as QueueItem);
+            }
+            const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${this.items.length - 1}`;
+            this.outputComponentsLog([textComponentify(`> added \`${title}\` to queue`), wrapInContainer(embedVideoOrSound(item, true, index ?? this.items.length - 1))]);
+        } else if (item instanceof Playlist) {
+            log.debug("Adding playlist to queue", item.title, "videos:", item.videos.length, "index:", index);
+            const playlist = item as Playlist;
+            const insertAt = index ?? this.items.length;
+            this.items.splice(insertAt, 0, ...playlist.videos);
+            this.outputComponentsLog([textComponentify(`> added playlist \`${playlist.title}\` (${playlist.videos.length} items) to queue`), wrapInContainer(embedVideoOrSound(playlist, true, insertAt))]);
         } else {
-            this.items.push(item);
+            log.debug("Invalid item type in addItem", item);
+            this.outputError("attempt to add an item with an invalid item type");
+            return;
         }
-        const title = (item instanceof CustomSound) ? item.name : (item as Video | Playlist).title || `index ${this.items.length - 1}`;
-        this.outputLog(`added "${title}" to queue`);
+        log.debug("Queue after addItem:", this.items);
     }
 
     removeItem(index: number) {
+        log.debug("removeItem called", "index:", index, "items.length:", this.items.length);
         if (index < 0 || index >= this.items.length) {
-            throw new Error("Index out of bounds");
+            this.outputError("attempt to remove item using index which is out of bounds");
+            return;
         }
         const item = this.items[index];
         this.items.splice(index, 1);
-        const title = (item instanceof CustomSound) ? item.name : (item as Video | Playlist).title || `index ${index}`;
-        this.outputLog(`removed "${title}" from queue`);
+        const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${index}`;
+        this.outputComponentsLog([textComponentify(`> removed \`${title}\` from queue`), wrapInContainer(embedVideoOrSound(item, true, index))]);
+        log.debug("Queue after removeItem:", this.items);
     }
 
     clear() {
+        log.debug("clear called", "items.length before:", this.items.length);
+        const itemCount = this.items.length;
         this.items = [];
         this.currentIndex = 0;
-        this.currentPlaylistIndex = undefined;
         this.state = QueueState.Idle;
-        this.outputLog("queue cleared");
+        this.outputLog("queue cleared, removed " + itemCount + " items");
+        log.debug("Queue after clear:", this.items);
     }
 
     stop() {
+        log.debug("stop called");
         if (this.voiceManager) {
             this.voiceManager.stop();
         }
@@ -218,29 +310,42 @@ export class QueueManager implements VoiceEventListener {
         this.outputLog("queue stopped");
     }
 
-    shuffle(excludePlaylists: boolean = false) {
+    shuffle() {
+        log.debug("shuffle called", "items before:", this.items);
         this.items = shuffleArray(this.items);
-
-        if (!excludePlaylists) {
-            for (const item of this.items) {
-                if (item instanceof Playlist) {
-                    item.videos = shuffleArray(item.videos);
-                }
-            }
-        }
         this.currentIndex = 0;
         this.outputLog("queue shuffled");
+        log.debug("items after shuffle:", this.items);
     }
 
     swap(indexA: number, indexB: number) {
+        log.debug("swap called", "indexA:", indexA, "indexB:", indexB, "items.length:", this.items.length);
         if (indexA < 0 || indexB < 0 || indexA >= this.items.length || indexB >= this.items.length) {
-            throw new Error("Index out of bounds");
+            this.outputError("attempt to swap items using index which is out of bounds");
+            return;
         }
         const temp = this.items[indexA];
         this.items[indexA] = this.items[indexB];
         this.items[indexB] = temp;
-        const titleA = (this.items[indexA] instanceof CustomSound) ? this.items[indexA].name : (this.items[indexA] as Video | Playlist).title || `index ${indexA}`;
-        const titleB = (this.items[indexB] instanceof CustomSound) ? this.items[indexB].name : (this.items[indexB] as Video | Playlist).title || `index ${indexB}`;
-        this.outputLog(`swapped "${titleA}" with "${titleB}"`);
+        const titleA = (this.items[indexA] instanceof CustomSound) ? this.items[indexA].name : (this.items[indexA] as Video).title || `index ${indexA}`;
+        const titleB = (this.items[indexB] instanceof CustomSound) ? this.items[indexB].name : (this.items[indexB] as Video).title || `index ${indexB}`;
+        this.outputComponentsLog([
+            textComponentify(`> swapped \`${titleA}\` and \`${titleB}\``),
+            wrapInContainer(embedVideoOrSound(this.items[indexA], true, indexA)),
+            wrapInContainer(embedVideoOrSound(this.items[indexB], true, indexB)),
+        ]);
+        log.debug("Queue after swap:", this.items);
+    }
+
+    silence() {
+        log.debug("silence called", "silent before:", this.silent);
+        if (!this.silent) {
+            this.outputLog("silent queue enabled, no more logs will be sent");
+        }
+        this.silent = !this.silent;
+        if (!this.silent) {
+            this.outputLog("silent queue disabled, logs will be sent again");
+        }
+        log.debug("silent after:", this.silent);
     }
 }

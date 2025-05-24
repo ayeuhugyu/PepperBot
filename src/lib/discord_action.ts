@@ -8,13 +8,14 @@ import { Stream } from "node:stream";
 import { textToAttachment } from "./attachment_manager";
 import { ActionRow, Container, File, MediaGallery, Section, Separator, TextDisplay } from "./classes/components";
 
-type ApiMessageComponents = JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>
+export type ApiMessageComponents = JSONEncodable<APIActionRowComponent<any>> | ActionRowData<MessageActionRowComponentData | MessageActionRowComponentBuilder> | APIActionRowComponent<any>
+export type TopLevelComponent = Container | ActionRow | TextDisplay | Separator | File | Section | MediaGallery
 export interface MessageInput {
     content?: string;
     embeds?: (JSONEncodable<APIEmbed> | APIEmbed | Embed | EmbedBuilder)[];
     allowPings?: boolean;
     files?: (BufferResolvable | Stream | JSONEncodable<APIAttachment> | Attachment | AttachmentBuilder | AttachmentPayload)[];
-    components?: (ApiMessageComponents | Container | ActionRow | TextDisplay | Separator | File | Section | MediaGallery)[];
+    components?: (ApiMessageComponents | TopLevelComponent)[];
     attachments?: Attachment[] | AttachmentBuilder[];
     ephemeral: boolean;
     components_v2?: boolean;
