@@ -11,6 +11,8 @@ export class Video {
     ) {}
 }
 
+export type DownloadResult = (Video & { filePath: string }) | null;
+
 export class Playlist {
     constructor(
         public url: string,

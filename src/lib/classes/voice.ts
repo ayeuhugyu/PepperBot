@@ -1,4 +1,4 @@
-import { AudioPlayer, AudioResource, VoiceConnection, VoiceConnectionStatus, joinVoiceChannel } from "@discordjs/voice";
+import { AudioPlayer, AudioPlayerStatus, AudioResource, VoiceConnection, VoiceConnectionStatus, joinVoiceChannel } from "@discordjs/voice";
 import * as log from "../log";
 import { Client, Guild, GuildMember, VoiceBasedChannel } from "discord.js";
 import { EventEmitter } from "node:events";
@@ -32,6 +32,10 @@ export enum VoiceManagerEvent {
     Unpause = "unpause"
 }
 
+export interface VoiceEventListener {
+    onVoiceStop: () => void;
+}
+
 export class GuildVoiceManager {
     guild: Guild;
     connected: boolean = false;
@@ -41,6 +45,8 @@ export class GuildVoiceManager {
     client: Client
     state: VoiceManagerState = VoiceManagerState.Disconnected
     emitter: EventEmitter = new EventEmitter()
+    private listeners: Set<VoiceEventListener> = new Set();
+    private suppressAutoAdvance = false;
 
     constructor(guild: Guild) {
         this.guild = guild;
@@ -69,11 +75,20 @@ export class GuildVoiceManager {
         log.debug(`playing audio in ${this.channel?.name} (${this.channel?.id}) in guild ${this.guild.name} (${this.guild.id})`)
         this.emit(VoiceManagerEvent.Play, resource)
         this.state = VoiceManagerState.Playing
+        this.player.stop(true);
         return this.player.play(resource);
     };
     stop = () => {
         this.emit(VoiceManagerEvent.Stop)
         this.state = VoiceManagerState.Idle
+        // Notify listeners only if not suppressed
+        if (this.suppressAutoAdvance) {
+            this.suppressAutoAdvance = false;
+        } else {
+            for (const listener of this.listeners) {
+                listener.onVoiceStop();
+            }
+        }
         return this.player.stop();
     }
     pause = () => {
@@ -90,6 +105,19 @@ export class GuildVoiceManager {
         return unpaused
     }
 
+    addListener(listener: VoiceEventListener) {
+        this.listeners.add(listener);
+    }
+
+    removeListener(listener: VoiceEventListener) {
+        this.listeners.delete(listener);
+    }
+
+    // Call this before stop() to suppress auto-advance for the next stop event
+    suppressNextAutoAdvance() {
+        this.suppressAutoAdvance = true;
+    }
+
     linkEvents = () => {
         if (!this.connected) {
             log.debug(`attempt to link events for a voice manager which was not already connected`);
@@ -100,6 +128,16 @@ export class GuildVoiceManager {
             if (newState.status === VoiceConnectionStatus.Disconnected) {
                 log.debug(`voice connection disconnected by context menu for ${this.guild.name} (${this.guild.id}); removing connections`)
                 this.disconnect(); // this prevents a mismatch between the guild voice manager and the actual connection if people manually disconnect it using discord's context menu
+            }
+        });
+        this.player.on('stateChange', (oldState, newState) => {
+            if (newState.status === AudioPlayerStatus.Playing) {
+                log.debug(`audio player state changed to playing for ${this.guild.name} (${this.guild.id})`)
+            } else if (newState.status === AudioPlayerStatus.Idle) {
+                log.debug(`audio player state changed to idle for ${this.guild.name} (${this.guild.id})`)
+                this.stop();
+            } else if (newState.status === AudioPlayerStatus.Paused) {
+                log.debug(`audio player state changed to paused for ${this.guild.name} (${this.guild.id})`)
             }
         });
     }

@@ -5,7 +5,7 @@ const url = "hielkemaps.com/media/video/clip.mp4";
 
 async function testDownloader() {
     console.log("Fetching media info...");
-    const info = await fetchMediaInfo(url, (msg) => process.stdout.write(`[INFO] ${msg}\n`));
+    const info = await fetchMediaInfo(url, (msg) => process.stdout.write(`[INFO] ${msg}\n`), (msg) => process.stdout.write(`[INFO-EDITLAST] ${msg}\n`));
 
     if (!info) {
         console.error("Failed to fetch media info!");
@@ -21,7 +21,7 @@ async function testDownloader() {
             return;
         }
         console.log("Attempting to download first video in playlist...");
-        const video = await downloadMedia(info.videos[0], (msg) => process.stdout.write(`[DL] ${msg}\n`));
+        const video = await downloadMedia(info.videos[0], (msg) => process.stdout.write(`[DL] ${msg}\n`), (msg) => process.stdout.write(`[DL-EDITLAST] ${msg}\n`));
         if (!video) {
             console.error("Failed to download video from playlist!");
             return;
@@ -32,7 +32,7 @@ async function testDownloader() {
         console.log(`Fetched video: "${info.title}"`);
         console.dir(info, { depth: 4 });
         console.log("Attempting to download video...");
-        const downloaded = await downloadMedia(info, (msg) => process.stdout.write(`[DL] ${msg}\n`));
+        const downloaded = await downloadMedia(info, (msg) => process.stdout.write(`[DL] ${msg}\n`), (msg) => process.stdout.write(`[DL-EDITLAST] ${msg}\n`));
         if (!downloaded) {
             console.error("Failed to download video!");
             return;
