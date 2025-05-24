@@ -262,7 +262,6 @@ export class QueueManager implements VoiceEventListener {
             return;
         }
         log.debug("Current index after update:", this.currentIndex);
-        this.emitter.emit("refresh");
     }
 
     async next(amount: number = 1, isSkipping: boolean = false) {
@@ -303,16 +302,66 @@ export class QueueManager implements VoiceEventListener {
         this.emitter.emit("refresh");
     }
 
-    removeItem(index: number) {
-        log.debug("removeItem called", "index:", index, "items.length:", this.items.length);
+    removeItem(index: number, endIndex?: number) {
+        log.debug("removeItem called", "index:", index, "endIndex:", endIndex, "items.length:", this.items.length);
         if (index < 0 || index >= this.items.length) {
             this.outputError("attempt to remove item using index which is out of bounds");
             return;
         }
-        const item = this.items[index];
-        this.items.splice(index, 1);
-        const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${index}`;
-        this.outputComponentsLog([textComponentify(`> removed \`${title}\` from queue`), wrapInContainer(embedVideoOrSound(item, true, index))]);
+
+        if (endIndex !== undefined) {
+            // Remove a range of items
+            if (endIndex < index || endIndex >= this.items.length) {
+                this.outputError("attempt to remove items using invalid endIndex");
+                return;
+            }
+            const count = endIndex - index + 1;
+            const removedItems = this.items.splice(index, count);
+            // Helper to format removed item titles with "and" for the last item
+            function formatTitles(items: QueueItem[], startIndex: number) {
+                if (items.length === 1) {
+                    return `\`${(items[0] instanceof CustomSound) ? items[0].name : (items[0] as Video).title || `index ${startIndex}`}\``;
+                } else if (items.length === 2) {
+                    const first = (items[0] instanceof CustomSound) ? items[0].name : (items[0] as Video).title || `index ${startIndex}`;
+                    const second = (items[1] instanceof CustomSound) ? items[1].name : (items[1] as Video).title || `index ${startIndex + 1}`;
+                    return `\`${first}\` and \`${second}\``;
+                } else {
+                    const names = items.map((item, i) =>
+                        (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${startIndex + i}`
+                    );
+                    const last = names.pop();
+                    return `\`${names.join("`, `")}\`, and \`${last}\``;
+                }
+            }
+
+            if (count > 15) {
+                // Show only the count of removed items.
+                this.outputLog(`removed ${count} items from queue`);
+            } else if (count > 3) {
+                // Show the titles of each removed item, but not the summary
+                const titles = formatTitles(removedItems, index);
+                this.outputLog(`removed ${count} items from queue: ${titles}`);
+            } else {
+                // Show summary and then each removed item in its own container
+                const titles = formatTitles(removedItems, index);
+                const components: (action.ApiMessageComponents | action.TopLevelComponent)[] = [
+                    textComponentify(`> removed ${titles} from queue`),
+                    ...removedItems.map((item, i) =>
+                        wrapInContainer(embedVideoOrSound(item, true, index + i))
+                    )
+                ];
+                this.outputComponentsLog(components);
+            }
+        } else {
+            // Remove a single item
+            const item = this.items[index];
+            this.items.splice(index, 1);
+            const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${index}`;
+            this.outputComponentsLog([
+                textComponentify(`> removed ${title} from queue`),
+                wrapInContainer(embedVideoOrSound(item, true, index))
+            ]);
+        }
         this.emitter.emit("refresh");
     }
 

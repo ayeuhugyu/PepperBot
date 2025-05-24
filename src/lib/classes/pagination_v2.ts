@@ -30,12 +30,12 @@ class V2PagedMenu {
             return new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(
                     new ButtonBuilder()
-                        .setCustomId('previous')
+                        .setCustomId('pagination_previous')
                         .setLabel('Previous')
                         .setStyle(ButtonStyle.Primary)
                         .setDisabled(true),
                     new ButtonBuilder()
-                        .setCustomId('next')
+                        .setCustomId('pagination_next')
                         .setLabel('Next')
                         .setStyle(ButtonStyle.Primary)
                         .setDisabled(true)
@@ -44,12 +44,12 @@ class V2PagedMenu {
         return new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
-                    .setCustomId('previous')
+                    .setCustomId('pagination_previous')
                     .setLabel('Previous')
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(this.currentPage === 0),
                 new ButtonBuilder()
-                    .setCustomId('next')
+                    .setCustomId('pagination_next')
                     .setLabel('Next')
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(this.currentPage === this.pages!.length - 1)
@@ -60,15 +60,15 @@ class V2PagedMenu {
         this.activeMessage = message;
         await this.updateMessage();
 
-        const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 600_000 });
+        const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 600_000, filter: (i) => i.customId.startsWith('pagination_') });
         this.collector = collector;
 
         collector.on('collect', async (interaction: Interaction) => {
             if (!interaction.isButton()) return;
 
-            if (interaction.customId === 'previous' && this.currentPage > 0) {
+            if (interaction.customId === 'pagination_previous' && this.currentPage > 0) {
                 this.currentPage--;
-            } else if (interaction.customId === 'next' && this.currentPage < this.pages!.length - 1) {
+            } else if (interaction.customId === 'pagination_next' && this.currentPage < this.pages!.length - 1) {
                 this.currentPage++;
             }
             this.onPageChange(this.currentPage);
@@ -97,7 +97,10 @@ class V2PagedMenu {
     }
 
     stop(): void {
-        this.collector.stop();
+        // i dont care if this causes a very slight fucking issue with having 500 collectors lying around i just dont give a fuck
+        if (this && this.collector) {
+            this.collector.stop();
+        }
     }
 }
 

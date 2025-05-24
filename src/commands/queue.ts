@@ -3,21 +3,27 @@ import { Command, CommandAccess, CommandInput, CommandInvoker, CommandOption, Co
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
-import { getQueue, QueueManager } from "../lib/music/queue";
+import { getQueue, QueueManager, QueueState } from "../lib/music/queue";
 import { CustomSound, getSound } from "../lib/custom_sound_manager";
 import { fetchMediaInfo } from "../lib/downloaders";
 import { embedVideoOrSound } from "../lib/music/embed";
-import { Container, TextDisplay } from "../lib/classes/components";
+import { Button, ButtonStyle, Container, Separator, TextDisplay, ActionRow } from "../lib/classes/components";
 import * as voice from "../lib/classes/voice";
 import { inspect } from "util";
 import { Video } from "../lib/music/media";
 import { fixFileName } from "../lib/attachment_manager";
+import PagedMenu from "../lib/classes/pagination_v2";
+import * as log from "../lib/log";
 
 function findItemIndexInQueue(queue: QueueManager, search: string): number | undefined {
-    // Index search
-    const index = parseInt(search);
-    if (!isNaN(index) && index >= 0 && index < queue.items.length) {
-        return index;
+    // URL search
+    const urlItem = queue.items.find((item) => {
+        if (item instanceof Video) {
+            return item.url.toLowerCase().includes(search.toLowerCase());
+        }
+    });
+    if (urlItem) {
+        return queue.items.indexOf(urlItem);
     }
     // Title search
     const item = queue.items.find((item) => {
@@ -30,14 +36,10 @@ function findItemIndexInQueue(queue: QueueManager, search: string): number | und
     if (item) {
         return queue.items.indexOf(item);
     }
-    // URL search
-    const urlItem = queue.items.find((item) => {
-        if (item instanceof Video) {
-            return item.url.toLowerCase().includes(search.toLowerCase());
-        }
-    });
-    if (urlItem) {
-        return queue.items.indexOf(urlItem);
+    // Index search
+    const index = parseInt(search);
+    if (!isNaN(index) && index >= 0 && index < queue.items.length) {
+        return index - 1; // -1 because the embed they will be reading from will be 1 indexed
     }
     // No match found
     return undefined;
@@ -126,30 +128,40 @@ const swap = new Command(
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: ["p/queue swap 1 2", "p/queue swap https://www.youtube.com/watch?v=-J0H5ah1G7A and https://www.youtube.com/watch?v=GxxHToC2qOg", "p/queue swap sound:my_sound.mp3 sound:my_other_sound.mp3"],
+        example_usage: [
+            "p/queue swap 1 2",
+            "p/queue swap https://www.youtube.com/watch?v=-J0H5ah1G7A and https://www.youtube.com/watch?v=GxxHToC2qOg",
+            "p/queue swap sound:my_sound.mp3 sound:my_other_sound.mp3"
+        ],
         argument_order: "<item1> <item2>",
         aliases: ["exchange"]
     },
-    async function getArguments({ invoker, guild_config, invoker_type }) { // this actually does need a custom getArguments function for once
-        const message = invoker as Message;
-        const args: Record<string, string> = {}
+    function getArguments({ invoker, command_name_used, guild_config }) {
+        invoker = invoker as CommandInvoker<InvokerType.Message>;
+        const args: Record<string, string | undefined> = {};
+        const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
+        let content = invoker.content.slice(commandLength)?.trim();
+
         // using "and" or "with"
-        const andSplit = message.content.split(/ and | with /);
+        let andSplit = content.split(/ and | with /);
         if (andSplit.length > 1) {
             args.item1 = andSplit[0].trim();
             args.item2 = andSplit[1].trim();
+            return args;
         }
         // using commas
-        const commaSplit = message.content.split(",");
-        if (commaSplit.length > 1 && !args.item1 && !args.item2) {
+        let commaSplit = content.split(",");
+        if (commaSplit.length > 1) {
             args.item1 = commaSplit[0].trim();
             args.item2 = commaSplit[1].trim();
+            return args;
         }
         // using spaces
-        const spaceSplit = message.content.split(" ");
-        if (spaceSplit.length > 2 && !args.item1 && !args.item2) {
+        let spaceSplit = content.split(" ");
+        if (spaceSplit.length > 1) {
             args.item1 = spaceSplit[0].trim();
             args.item2 = spaceSplit[1].trim();
+            return args;
         }
         return args;
     },
@@ -280,21 +292,26 @@ const skip = new Command(
     {
         name: 'skip',
         description: 'skips the current item in the queue',
-        long_description: 'skips the current item in the queue; can be a video, playlist, or custom sound',
+        long_description: 'skips the current item in the queue; can be a video, playlist, or custom sound. You can also use "to <item>" to skip directly to a specific item.',
         tags: [CommandTag.Voice, CommandTag.Music],
         pipable_to: [],
         options: [
             new CommandOption({
                 name: 'amount',
-                description: 'the amount of items to skip',
-                long_description: 'the amount of items to skip; defaults to 1',
-                type: CommandOptionType.Integer,
+                description: 'the amount of items to skip, or "to <item>" to skip to a specific item',
+                long_description: 'the amount of items to skip; defaults to 1. You can also use "to <item>" to skip directly to a specific item.',
+                type: CommandOptionType.String,
                 required: false
             })
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: ["p/queue skip", "p/queue skip 2"],
+        example_usage: [
+            "p/queue skip",
+            "p/queue skip 2",
+            "p/queue skip to 5",
+            "p/queue skip to sound:mysound"
+        ],
         argument_order: "<amount?>",
         aliases: ["next"]
     },
@@ -309,7 +326,45 @@ const skip = new Command(
             action.reply(invoker, { content: "queue is empty", ephemeral: guild_config.other.use_ephemeral_replies })
             return;
         }
-        const amount = parseInt(args.amount || "1");
+        let amountArg = args.amount || "1";
+        if (typeof amountArg === "string" && amountArg.trim().toLowerCase().startsWith("to")) {
+            // skip to a specific item
+            let itemStr = amountArg.replace("to ", "").trim();
+            if (!itemStr) {
+                action.reply(invoker, { content: "please specify an item to skip to", ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    error: true,
+                    message: "please specify an item to skip to",
+                });
+            }
+            const index = findItemIndexInQueue(queue, itemStr);
+            if (index === undefined) {
+                action.reply(invoker, { content: `could not find item \`${itemStr}\` in the queue`, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    error: true,
+                    message: `could not find item \`${itemStr}\` in the queue`,
+                });
+            }
+            // skip to index (index is 0-based, queue.currentIndex is 0-based)
+            const skipAmount = index - queue.currentIndex;
+            if (skipAmount === 0) { // skipping negative amounts is actually fine
+                action.reply(invoker, { content: `item \`${itemStr}\` the current item`, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    error: true,
+                    message: `item \`${itemStr}\` is the current item`,
+                });
+            }
+            if (skipAmount > 0) {
+                queue.next(skipAmount);
+            } else {
+                queue.previous(-skipAmount); // negative skipAmount because the function re-negates it
+            }
+            if (!(queue.channel === invoker.channel) && !(invoker_type === InvokerType.Interaction)) {
+                action.reply(invoker, { content: `skipped to \`${itemStr}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+            }
+            return;
+        }
+        const amount = parseInt(amountArg);
         if (isNaN(amount) || amount <= 0) {
             action.reply(invoker, { content: "please provide a valid amount to skip", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
@@ -325,22 +380,30 @@ const skip = new Command(
 const remove = new Command(
     {
         name: 'remove',
-        description: 'removes an item from the queue',
-        long_description: 'removes an item from the queue; can be a video, playlist, or custom sound',
+        description: 'removes an item or a range of items from the queue',
+        long_description: 'removes an item or a range of items from the queue; can be a video, playlist, or custom sound. You can specify a range using "to", "-", "through", or "between ... and ...". "between" will only remove items strictly between the two specified items.',
         tags: [CommandTag.Voice, CommandTag.Music],
         pipable_to: [],
         options: [
             new CommandOption({
                 name: 'item',
-                description: 'the item to remove from the queue',
-                long_description: 'the item to remove from the queue; can be a video, playlist, or custom sound (using file://soundname or sound:soundname)',
+                description: 'the item or range to remove from the queue',
+                long_description: 'the item or range to remove from the queue; can be a video, playlist, or custom sound (using file://soundname or sound:soundname), or a range like "1 to 10", "sound:my_sound.mp3 - 10", or "between 1 and 3".',
                 type: CommandOptionType.String,
                 required: true
             })
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: ["p/queue remove 1", "p/queue remove https://www.youtube.com/watch?v=ABS-mlep5rY", "p/queue remove sound:my_sound.mp3", ""],
+        example_usage: [
+            "p/queue remove 1",
+            "p/queue remove https://www.youtube.com/watch?v=ABS-mlep5rY",
+            "p/queue remove sound:my_sound.mp3",
+            "p/queue remove 1 to 5",
+            "p/queue remove Unexpectancy, Pt. 1 through It's Pizza Time!",
+            "p/queue remove sound:my_sound.mp3 - 10",
+            "p/queue remove between 1 and 3"
+        ],
         argument_order: "<item>",
         aliases: ["delete", "del", "rm"]
     },
@@ -363,6 +426,65 @@ const remove = new Command(
                 message: "please provide an item to remove from the queue",
             });
         }
+
+        // Check for "between ... and ..." syntax
+        let between = false;
+        let startStr: string | undefined, endStr: string | undefined;
+        let betweenMatch = item.match(/between\s+(.+?)\s+and\s+(.+)/i);
+        let rangeMatch = null;
+        if (betweenMatch) {
+            between = true;
+            startStr = betweenMatch[1].trim();
+            endStr = betweenMatch[2].trim();
+        } else {
+            // Check for range syntax: "A to B" or "A - B" or "A through B"
+            rangeMatch = item.match(/^(.+?)(?:\s*(?:to|through|-)\s*)(.+)$/i);
+            if (rangeMatch) {
+                startStr = rangeMatch[1].trim();
+                endStr = rangeMatch[2].trim();
+            }
+        }
+
+        if (between || rangeMatch) {
+            const startIdx = findItemIndexInQueue(queue, startStr!);
+            const endIdx = findItemIndexInQueue(queue, endStr!);
+
+            if (startIdx === undefined || endIdx === undefined) {
+                action.reply(invoker, { content: `could not find item(s) \`${startStr}\` or \`${endStr}\` in the queue, try using the index listed next to it using \`${guild_config.other.prefix}queue view\`.`, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    error: true,
+                    message: `could not find item(s) \`${startStr}\` or \`${endStr}\` in the queue, try using the index listed next to it using \`${guild_config.other.prefix}queue view\`.`,
+                });
+            }
+
+            let min = Math.min(startIdx, endIdx);
+            let max = Math.max(startIdx, endIdx);
+
+            if (between) {
+                min = min + 1;
+                max = max - 1;
+                if (min > max) {
+                    action.reply(invoker, { content: `no items found strictly between \`${startStr}\` and \`${endStr}\` in the queue.`, ephemeral: guild_config.other.use_ephemeral_replies });
+                    return new CommandResponse({
+                        error: true,
+                        message: `no items found strictly between \`${startStr}\` and \`${endStr}\` in the queue.`,
+                    });
+                }
+                queue.removeItem(min, max);
+                if (!(queue.channel === invoker.channel) && !(invoker_type === InvokerType.Interaction)) {
+                    action.reply(invoker, { content: `removed items strictly between \`${startStr}\` and \`${endStr}\` from the queue`, ephemeral: guild_config.other.use_ephemeral_replies });
+                }
+                return;
+            } else {
+                queue.removeItem(min, max);
+                if (!(queue.channel === invoker.channel) && !(invoker_type === InvokerType.Interaction)) {
+                    action.reply(invoker, { content: `removed items from \`${startStr}\` to \`${endStr}\` from the queue`, ephemeral: guild_config.other.use_ephemeral_replies });
+                }
+                return;
+            }
+        }
+
+        // Single item removal
         const index = findItemIndexInQueue(queue, item);
         if (index === undefined) {
             action.reply(invoker, { content: `could not find item \`${item}\` in the queue, try just using the index listed next to it using \`${guild_config.other.prefix}queue view\`.`, ephemeral: guild_config.other.use_ephemeral_replies });
@@ -372,7 +494,9 @@ const remove = new Command(
             });
         }
         queue.removeItem(index);
-        if (!(queue.channel === invoker.channel) && !(invoker_type === InvokerType.Interaction)) action.reply(invoker, { content: `removed \`${item}\` from the queue`, ephemeral: guild_config.other.use_ephemeral_replies })
+        if (!(queue.channel === invoker.channel) && !(invoker_type === InvokerType.Interaction)) {
+            action.reply(invoker, { content: `removed \`${item}\` from the queue`, ephemeral: guild_config.other.use_ephemeral_replies });
+        }
     }
 )
 
@@ -380,23 +504,27 @@ const play = new Command(
     {
         name: 'play',
         description: 'start the queue',
-        long_description: 'starts the queue. if given an index, it will start from that index.',
+        long_description: 'starts the queue. if given an index or item, it will start from that item.',
         tags: [CommandTag.Voice, CommandTag.Music],
         pipable_to: [],
-        example_usage: ["p/queue play", "p/queue play 0", "p/queue play at 1"],
-        argument_order: "<index?>",
+        example_usage: [
+            "p/queue play",
+            "p/queue play 1",
+            "p/queue play at sound:my_sound.mp3"
+        ],
+        argument_order: "<item?>",
         aliases: ["start", "begin"],
         options: [
             new CommandOption({
-                name: 'index',
-                description: 'the index to start the queue from',
-                long_description: 'the index to start the queue from; if not given, it will start from the beginning',
-                type: CommandOptionType.Integer,
+                name: 'item',
+                description: 'the item or index to start the queue from',
+                long_description: 'the item or index to start the queue from; can be a number, url, or custom sound name',
+                type: CommandOptionType.String,
                 required: false
             })
         ]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["index"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["item"]),
     async function execute ({ args, invoker, guild_config, invoker_type }) {
         if (!invoker.guild) {
             action.reply(invoker, { content: "this command can only be used in a guild", ephemeral: guild_config.other.use_ephemeral_replies });
@@ -433,18 +561,17 @@ const play = new Command(
         queue.voiceManager = voiceManager;
         queue.channel = voiceManager.channel;
 
-        const index = parseInt(args.index.toString().replace("at", "").trim());
-        if (!isNaN(index) && index >= 0 && index < queue.items.length) {
-            queue.currentIndex = index - 1; // -1 because the embed they will be reading from will be 1 indexed
-        } else if (args.index) {
-            const itemIndex = findItemIndexInQueue(queue, args.index);
+        let itemArg = args.item;
+        if (itemArg && typeof itemArg === "string") {
+            itemArg = itemArg.replace(/^at\s+/i, "").trim();
+            const itemIndex = findItemIndexInQueue(queue, itemArg);
             if (itemIndex !== undefined) {
-                queue.currentIndex = itemIndex - 1; // -1 because the embed they will be reading from will be 1 indexed
+                queue.currentIndex = itemIndex - 1; // -1 because the embed is 1-indexed
             } else {
-                action.reply(invoker, { content: `could not find item \`${args.index}\` in the queue`, ephemeral: guild_config.other.use_ephemeral_replies });
+                action.reply(invoker, { content: `could not find item \`${itemArg}\` in the queue`, ephemeral: guild_config.other.use_ephemeral_replies });
                 return new CommandResponse({
                     error: true,
-                    message: `could not find item \`${args.index}\` in the queue`,
+                    message: `could not find item \`${itemArg}\` in the queue`,
                 });
             }
         }
@@ -471,7 +598,11 @@ const add = new Command(
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: ["p/queue add https://www.youtube.com/watch?v=ABS-mlep5rY", "p/queue add sound:my_sound.mp3", ""],
+        example_usage: [
+            "p/queue add https://www.youtube.com/watch?v=ABS-mlep5rY",
+            "p/queue add sound:my_sound.mp3",
+            "p/queue add <attachment>"
+        ],
         argument_order: "<item>",
         aliases: ["queue"]
     },
@@ -671,6 +802,85 @@ const clear = new Command(
     }
 );
 
+let currentPageInPageManagers: Record<string, number> = {};
+
+const controlButtons = [
+    new Button({
+        custom_id: "queue_prev_song",
+        style: ButtonStyle.Secondary,
+        label: "⏮️",
+    }),
+    new Button({
+        custom_id: "queue_stop",
+        style: ButtonStyle.Secondary,
+        label: "⏹️",
+    }),
+    new Button({
+        custom_id: "queue_play",
+        style: ButtonStyle.Secondary,
+        label: "▶️",
+    }),
+    new Button({
+        custom_id: "queue_skip_song",
+        style: ButtonStyle.Secondary,
+        label: "⏭️",
+    }),
+];
+
+function embedQueue(queue: QueueManager, page?: number) {
+    let pages: (Container | ActionRow)[][] = [];
+    let currentPage: (ReturnType<typeof embedVideoOrSound> | Separator)[] = []
+    let itemsOnPage = 0;
+    const itemsPerPage = 3;
+
+    if (queue.items.length === 0) {
+        pages = [[new Container({
+            components: [
+                new TextDisplay({
+                    content: "queue is empty",
+                })
+            ]
+        })]]
+    } else {
+        queue.items.forEach((item, index) => {
+            const embed = embedVideoOrSound(item, (queue.state === QueueState.Playing && queue.currentIndex === index), index);
+            if (itemsOnPage >= itemsPerPage) {
+                pages.push([
+                    new Container({
+                        components: currentPage
+                    }),
+                    new ActionRow({
+                        components: controlButtons
+                    })
+                ]);
+                currentPage = [];
+                itemsOnPage = 0;
+            }
+            currentPage.push(embed);
+            if (index < queue.items.length - 1 && itemsOnPage < itemsPerPage - 1) currentPage.push(new Separator());
+            itemsOnPage++;
+        });
+        if (currentPage.length > 0) {
+            pages.push([
+                new Container({
+                    components: currentPage
+                }),
+                new ActionRow({
+                    components: controlButtons
+                })
+            ]);
+        }
+    }
+
+    log.debug(queue, pages)
+
+    const pageManager = new PagedMenu(pages);
+    if (typeof page === "number" && page >= 0 && page < pages.length) {
+        pageManager.currentPage = page;
+    }
+    return pageManager;
+}
+
 const viewCommandExecution = async function (input: Omit<CommandInput<{}, Record<string, any>, any, true, any extends InvokerType.Message ? Record<string, any> & {} : { [x: string]: undefined; }>, "enrich">) {
     const { invoker, args, guild_config } = input;
     if (!invoker.guild) {
@@ -678,14 +888,69 @@ const viewCommandExecution = async function (input: Omit<CommandInput<{}, Record
         return;
     }
     const queue = getQueue(invoker.guild);
-    if (queue.items.length === 0) {
-        action.reply(invoker, { content: "queue is empty", ephemeral: guild_config.other.use_ephemeral_replies })
-        return;
-    }
-    action.reply(invoker, {
-        content: `\`\`\`ansi\n${inspect(queue.items, { colors: true, depth: 3 })}\n\`\`\``,
-        ephemeral: guild_config.other.use_ephemeral_replies,
-    })
+    const guildId = invoker.guild.id;
+    const page = currentPageInPageManagers[guildId] ?? 0;
+    let pageManager = embedQueue(queue, page);
+
+    const sent = await action.reply(invoker, {
+        components: [...pageManager.pages[pageManager.currentPage ?? 0], pageManager.getActionRow()],
+        components_v2: true,
+    });
+    if (!sent) return;
+    pageManager.setActiveMessage(sent as Message<true>);
+    const collector = sent.createMessageComponentCollector({
+        filter: (i) => {
+            return i.customId.startsWith("queue_");
+        },
+        time: 30 * 60 * 1000,
+    });
+    collector.on("collect", async (i) => {
+        switch (i.customId) {
+            case "queue_prev_song":
+                queue.previous(1);
+                break;
+            case "queue_stop":
+                queue.stop();
+                break;
+            case "queue_play":
+                queue.play();
+                break;
+            case "queue_skip_song":
+                queue.next(1);
+                break;
+        }
+        await i.deferUpdate();
+    });
+
+    // Save current page on page change
+    pageManager.onPageChange = (newPage: number) => {
+        currentPageInPageManagers[guildId] = newPage;
+    };
+
+    // Always remove previous listeners before adding a new one to avoid duplicates
+    queue.emitter.removeAllListeners("refresh");
+    queue.emitter.on("refresh", async () => {
+        const refreshedPage = currentPageInPageManagers[guildId] ?? 0;
+        // Stop the old paged menu before creating a new one
+        pageManager.stop();
+        const refreshedPageManager = embedQueue(queue, refreshedPage);
+        if (pageManager.activeMessage) {
+            await action.edit(pageManager.activeMessage, {
+                components: [
+                    ...refreshedPageManager.pages[refreshedPageManager.currentPage ?? 0],
+                    refreshedPageManager.getActionRow()
+                ],
+                components_v2: true,
+            });
+            // Update page change handler
+            refreshedPageManager.setActiveMessage(pageManager.activeMessage as Message<true>);
+            refreshedPageManager.onPageChange = (newPage: number) => {
+                currentPageInPageManagers[guildId] = newPage;
+            };
+        }
+        // Update the reference to the new page manager
+        pageManager = refreshedPageManager;
+    });
 }
 
 const viewCommand = new Command(
