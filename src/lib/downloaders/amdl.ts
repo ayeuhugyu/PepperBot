@@ -120,11 +120,18 @@ export class AppleMusicDownloader extends DownloaderBase {
             try {
                 const data = json.data[0];
                 const videos: Video[] = data.relationships.tracks.data.map(trackToVideo);
+                let artworkUrl = data.attributes.artwork?.url?.replace("{w}x{h}", "512x512");
+                if (!artworkUrl) {
+                    const firstTrack = data.relationships.tracks.data[0];
+                    if (firstTrack) {
+                        artworkUrl = firstTrack.attributes.artwork?.url?.replace("{w}x{h}", "512x512");
+                    }
+                }
                 playlist = new Playlist(
                     data.attributes.url,
                     data.attributes.name,
                     videos,
-                    data.attributes.artwork.url.replace("{w}x{h}", "512x512"),
+                    artworkUrl,
                     undefined,
                     "artistName" in data.attributes ? data.attributes.artistName : data.attributes.creatorName,
                     "amdl",
