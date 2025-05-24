@@ -53,6 +53,10 @@ export class GuildVoiceManager {
         this.client = guild.client;
         VoiceManagers.set(guild.id, this);
 
+        this.player.on('debug', (message) => {
+            log.debug(`audio player debug: `, message);
+        });
+
         this.player.on('error', (error) => {
             log.error(`audio player error: `, error);
             if (this.channel) {

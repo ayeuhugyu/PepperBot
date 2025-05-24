@@ -9,9 +9,11 @@ import { CustomSound } from "../custom_sound_manager";
 import { Container, ContainerComponent, TextDisplay } from "../classes/components";
 import { embedVideoOrSound } from "./embed";
 import * as log from "../log";
+import fs from "fs";
 
 enum QueueState {
     Playing = "playing",
+    Waiting = "waiting",
     Downloading = "downloading",
     StartingPlayer = "starting_player",
     Idle = "idle",
@@ -82,10 +84,16 @@ export class QueueManager implements VoiceEventListener {
         queues.set(voiceManager.guild.id, this);
     }
 
-    onVoiceStop() {
+    async onVoiceStop() {
         log.debug("onVoiceStop called, state:", this.state);
         if (this.state === QueueState.Playing) {
-            this.next();
+            this.state = QueueState.Waiting; // this weird thing avoids rapidfire of next() calls
+            // there is probably a better way to do this but i dont fucking care anymore this issue is fucking awful and annoying to debug
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (this.state === QueueState.Waiting) {
+                this.state = QueueState.Idle;
+                this.next();
+            }
         }
     }
 
@@ -147,6 +155,11 @@ export class QueueManager implements VoiceEventListener {
             this.outputError("attempt to play a video while voice connection is not established");
             return;
         }
+        // Ensure player is stopped before playing new resource
+        if (this.voiceManager.player && typeof this.voiceManager.player.stop === 'function') {
+            log.debug("Stopping audio player before playing new resource");
+            this.voiceManager.player.stop();
+        }
         let downloadedVideo: DownloadedVideo
         if (!inputVideo.filePath && !(this.state === QueueState.Downloading)) {
             log.debug("Downloading video", inputVideo.title);
@@ -181,7 +194,6 @@ export class QueueManager implements VoiceEventListener {
             return;
         }
 
-        log.debug("Creating audio resource for video", video.filePath);
         const audioResource = createAudioResource(video.filePath)
         this.outputComponentsLog([textComponentify(`> playing \`${video.title}\`...`), wrapInContainer(embedVideoOrSound(video, true, this.currentIndex))]);
         this.voiceManager.play(audioResource);
@@ -198,7 +210,13 @@ export class QueueManager implements VoiceEventListener {
             this.outputError("attempt to play a custom sound while voice connection is not established");
             return;
         }
-        log.debug("Creating audio resource for custom sound", sound.path);
+        // Debug: check file path existence
+        try {
+            const fs = require('fs');
+            log.debug("Creating audio resource for custom sound", sound.path, "exists:", fs.existsSync(sound.path));
+        } catch (e) {
+            log.debug("fs.existsSync failed", e);
+        }
         const audioResource = createAudioResource(sound.path);
         this.outputComponentsLog([textComponentify(`> playing \`${sound.name}\`...`), wrapInContainer(embedVideoOrSound(sound, true, this.currentIndex))]);
         this.voiceManager.play(audioResource);
@@ -227,17 +245,19 @@ export class QueueManager implements VoiceEventListener {
         }
     }
 
-    private updateIndices(direction: number) {
+    private async updateIndices(direction: number) {
         log.debug("updateIndices called", "direction:", direction, "currentIndex before:", this.currentIndex, "items.length:", this.items.length);
         this.currentIndex += direction;
         if (this.currentIndex >= this.items.length) {
             this.currentIndex = 0;
-            this.outputLog("reached end of queue, looping back to start");
+            this.outputLog("reached end of queue");
+            return;
         } else if (this.currentIndex < 0) {
             this.currentIndex = this.items.length - 1;
-            this.outputLog("reached start of queue, looping back to end");
+            this.outputLog("reached start of queue");
+            return;
         }
-        log.debug("currentIndex after:", this.currentIndex);
+        log.debug("Current index after update:", this.currentIndex);
     }
 
     async next(amount: number = 1, isSkipping: boolean = false) {
