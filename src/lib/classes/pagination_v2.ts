@@ -8,6 +8,7 @@ class V2PagedMenu {
     currentPage: number;
     activeMessage: Message | null;
     ended: boolean = false;
+    collector: any;
     private id: string;
 
     constructor(pages: typeof this.pages) {
@@ -17,6 +18,11 @@ class V2PagedMenu {
         this.id = randomUUIDv7();
         log.debug(`initialized V2PagedMenu with ${pages.length} pages and id ${this.id}`);
     }
+
+    onPageChange(page: number): void {
+        log.debug(`page changed to ${page} for V2PagedMenu ${this.id}`);
+    } // this is here so that it can be overridden
+
 
     getActionRow(): ActionRowBuilder<ButtonBuilder> {
         log.debug(`fetched${this.ended ? " disabled" : ""} action row for V2PagedMenu ${this.id}`);
@@ -55,6 +61,7 @@ class V2PagedMenu {
         await this.updateMessage();
 
         const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 600_000 });
+        this.collector = collector;
 
         collector.on('collect', async (interaction: Interaction) => {
             if (!interaction.isButton()) return;
@@ -64,6 +71,7 @@ class V2PagedMenu {
             } else if (interaction.customId === 'next' && this.currentPage < this.pages!.length - 1) {
                 this.currentPage++;
             }
+            this.onPageChange(this.currentPage);
 
             await this.updateMessage();
             await interaction.deferUpdate();
@@ -86,6 +94,10 @@ class V2PagedMenu {
                 flags: (this.activeMessage.flags?.bitfield ?? 0) | MessageFlags.IsComponentsV2,
             });
         }
+    }
+
+    stop(): void {
+        this.collector.stop();
     }
 }
 
