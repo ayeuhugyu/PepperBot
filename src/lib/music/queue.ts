@@ -10,6 +10,7 @@ import { Container, ContainerComponent, TextDisplay } from "../classes/component
 import { embedVideoOrSound } from "./embed";
 import * as log from "../log";
 import fs from "fs";
+import EventEmitter from "events";
 
 enum QueueState {
     Playing = "playing",
@@ -67,6 +68,7 @@ export class QueueManager implements VoiceEventListener {
     silent: boolean = false;
     lastSentLog: Message<true> | undefined = undefined;
     guild: GuildVoiceManager["guild"];
+    emitter: EventEmitter = new EventEmitter();
 
     constructor(voiceManager: GuildVoiceManager) {
         log.debug("QueueManager constructor called", voiceManager.guild.id);
@@ -176,7 +178,7 @@ export class QueueManager implements VoiceEventListener {
             }
             this.lastSentLog = undefined;
             downloadedVideo = output;
-            this.items[this.currentIndex] = downloadedVideo;
+            this.items[this.currentIndex] = downloadedVideo as Video;
         } else if (!(this.state === QueueState.Downloading)) {
             log.debug("Video already downloaded or not downloading", inputVideo.title);
             downloadedVideo = inputVideo as DownloadedVideo;
@@ -198,6 +200,7 @@ export class QueueManager implements VoiceEventListener {
         this.outputComponentsLog([textComponentify(`> playing \`${video.title}\`...`), wrapInContainer(embedVideoOrSound(video, true, this.currentIndex))]);
         this.voiceManager.play(audioResource);
         this.state = QueueState.Playing;
+        this.emitter.emit("refresh");
     }
 
     async playCustomSound(sound: CustomSound) {
@@ -221,6 +224,7 @@ export class QueueManager implements VoiceEventListener {
         this.outputComponentsLog([textComponentify(`> playing \`${sound.name}\`...`), wrapInContainer(embedVideoOrSound(sound, true, this.currentIndex))]);
         this.voiceManager.play(audioResource);
         this.state = QueueState.Playing;
+        this.emitter.emit("refresh");
     }
 
     async play(index?: number) {
@@ -258,6 +262,7 @@ export class QueueManager implements VoiceEventListener {
             return;
         }
         log.debug("Current index after update:", this.currentIndex);
+        this.emitter.emit("refresh");
     }
 
     async next(amount: number = 1, isSkipping: boolean = false) {
@@ -283,7 +288,7 @@ export class QueueManager implements VoiceEventListener {
                 this.items.push(item as QueueItem);
             }
             const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${this.items.length - 1}`;
-            this.outputComponentsLog([textComponentify(`> added \`${title}\` to queue`), wrapInContainer(embedVideoOrSound(item, true, index ?? this.items.length - 1))]);
+            this.outputComponentsLog([textComponentify(`> added \`${title}\` to queue`), wrapInContainer(embedVideoOrSound(item, false, index ?? this.items.length - 1))]);
         } else if (item instanceof Playlist) {
             log.debug("Adding playlist to queue", item.title, "videos:", item.videos.length, "index:", index);
             const playlist = item as Playlist;
@@ -295,7 +300,7 @@ export class QueueManager implements VoiceEventListener {
             this.outputError("attempt to add an item with an invalid item type");
             return;
         }
-        log.debug("Queue after addItem:", this.items);
+        this.emitter.emit("refresh");
     }
 
     removeItem(index: number) {
@@ -308,7 +313,7 @@ export class QueueManager implements VoiceEventListener {
         this.items.splice(index, 1);
         const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${index}`;
         this.outputComponentsLog([textComponentify(`> removed \`${title}\` from queue`), wrapInContainer(embedVideoOrSound(item, true, index))]);
-        log.debug("Queue after removeItem:", this.items);
+        this.emitter.emit("refresh");
     }
 
     clear() {
@@ -319,6 +324,7 @@ export class QueueManager implements VoiceEventListener {
         this.state = QueueState.Idle;
         this.outputLog("queue cleared, removed " + itemCount + " items");
         log.debug("Queue after clear:", this.items);
+        this.emitter.emit("refresh");
     }
 
     stop() {
@@ -328,6 +334,7 @@ export class QueueManager implements VoiceEventListener {
         }
         this.state = QueueState.Idle;
         this.outputLog("queue stopped");
+        this.emitter.emit("refresh");
     }
 
     shuffle() {
@@ -336,6 +343,7 @@ export class QueueManager implements VoiceEventListener {
         this.currentIndex = 0;
         this.outputLog("queue shuffled");
         log.debug("items after shuffle:", this.items);
+        this.emitter.emit("refresh");
     }
 
     swap(indexA: number, indexB: number) {
@@ -355,6 +363,7 @@ export class QueueManager implements VoiceEventListener {
             wrapInContainer(embedVideoOrSound(this.items[indexB], true, indexB)),
         ]);
         log.debug("Queue after swap:", this.items);
+        this.emitter.emit("refresh");
     }
 
     silence() {

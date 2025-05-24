@@ -14,20 +14,20 @@ function toHHMMSS(secs: number) {
 }
 
 export function embedVideoOrSound(item: Video | CustomSound | Playlist, isCurrentIndex?: Boolean, index?: number): TextDisplay | Section {
-    const title = (item instanceof Video || item instanceof Playlist) ? item.title : item instanceof CustomSound ? item.name : "????";
-    const length = item instanceof Video ? item.duration : undefined;
-    const url = (item instanceof Video || item instanceof Playlist) ? item.url : undefined;
+    const title = 'title' in item ? item.title : 'name' in item ? item.name : "????";
+    const length = 'duration' in item ? item.duration : undefined;
+    const url = 'url' in item ? item.url : undefined;
     const readableLength = length ? toHHMMSS(length) : undefined;
     const textDisplay = new TextDisplay({
         content: `**${index != undefined ? `${index + 1}: ` : ""}${title}**` +
             (length ? `\nduration: ${readableLength}` : "") + (isCurrentIndex && length ? `; ending <t:${Math.floor(Date.now() / 1000 + length)}:R>` : "") +
-            ((item instanceof Video || item instanceof Playlist) ? `\nuploader: ${item.uploader}` : "") +
-            ((item instanceof Video || item instanceof Playlist) ? `\ndescription: ${item.description}` : "") +
+            ('uploader' in item ? `\nuploader: ${item.uploader}` : "") +
+            ('description' in item ? `\ndescription: ${item.description}` : "") +
             (url ? `\nurl: ${url}` : "") +
-            ((item instanceof Video || item instanceof Playlist) ? `\ndownloader used: ${item.downloader}` : "")
+            ('downloader' in item ? `\ndownloader used: ${item.downloader}` : "")
     });
-    let section
-    if (item instanceof Video || item instanceof Playlist) {
+    let section;
+    if ('thumbnail' in item) {
         section = new Section({
             accessory: new Thumbnail({
                 url: item.thumbnail || "https://example.com/",
