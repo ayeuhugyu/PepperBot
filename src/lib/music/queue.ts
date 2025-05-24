@@ -12,7 +12,7 @@ import * as log from "../log";
 import fs from "fs";
 import EventEmitter from "events";
 
-enum QueueState {
+export enum QueueState {
     Playing = "playing",
     Waiting = "waiting",
     Downloading = "downloading",
