@@ -995,13 +995,14 @@ export class Conversation {
     emitter: EventEmitter = new EventEmitter();
     id: string = randomUUIDv7() // random id for the conversation, may be used to find it later
 
-    on = this.emitter.on.bind(this  .emitter);
+    on = this.emitter.on.bind(this.emitter);
     off = this.emitter.off.bind(this.emitter);
     once = this.emitter.once.bind(this.emitter);
     emit = this.emitter.emit.bind(this.emitter);
     removeAllListeners = this.emitter.removeAllListeners.bind(this.emitter);
 
     toReasonableOutput(full: Boolean = false) {
+        log.debug(`[Conversation ${this.id}] toReasonableOutput called with full=${full}`);
         return {
             messages: this.messages.map((message) => {
                 const content = (message.content !== undefined) ? Array.isArray(message.content) ? message.content.map(part => {
@@ -1030,17 +1031,21 @@ export class Conversation {
     }
 
     setPrompt(prompt: Prompt) {
+        log.debug(`[Conversation ${this.id}] setPrompt called with prompt: ${prompt.name}`);
         this.api_parameters = new APIParameters(prompt.api_parameters);
         const currentPromptMessage = this.messages.find((message) => message.role === GPTRole.System);
         if (currentPromptMessage) {
+            log.debug(`[Conversation ${this.id}] Updating existing system prompt message`);
             currentPromptMessage.content = prompt.content;
         } else {
+            log.debug(`[Conversation ${this.id}] Adding new system prompt message`);
             this.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
         }
         this.api_parameters.model = models[prompt.api_parameters.model as GPTModelName];
     }
 
     toApiInput() {
+        log.debug(`[Conversation ${this.id}] toApiInput called for provider: ${this.api_parameters.model.provider}`);
         switch (this.api_parameters.model.provider) {
             case GPTProvider.OpenAI: {
                 return getApiInputforOpenAI(this);
@@ -1060,43 +1065,52 @@ export class Conversation {
     }
 
     addNonDiscordMessage(message: GPTMessage): GPTMessage {
+        log.debug(`[Conversation ${this.id}] addNonDiscordMessage called, role: ${message.role}, content: ${JSON.stringify(message.content)}`);
         this.messages.push(message);
         return message;
     }
 
     async addMessage(message: Message | GPTFormattedCommandInteraction, role: GPTRole = GPTRole.User): Promise<GPTMessage> {
+        log.debug(`[Conversation ${this.id}] addMessage called for user ${message.author.id}, role: ${role}, messageId: ${message.id}`);
         const newMessage = new GPTMessage();
         newMessage.discord_message = message;
         if (this.users.find((user) => user.id === message.author.id) === undefined) {
+            log.debug(`[Conversation ${this.id}] Adding user ${message.author.id} to conversation`);
             this.users.push(message.author);
         }
         newMessage.timestamp = message.createdTimestamp || Date.now();
         newMessage.message_id = message.id.toString();
         newMessage.content = await sanitizeMessage(message, this);
         if (!newMessage.content || newMessage.content.length === 0) {
+            log.debug(`[Conversation ${this.id}] No content found for message, adding default content`);
             newMessage.content = [new GPTContentPart({ type: GPTContentPartType.Text, text: "No content provided." })];
         }
         // newMessage.name = message.author.id;
         newMessage.role = role;
         this.messages.push(newMessage);
+        log.debug(`[Conversation ${this.id}] Message added. Total messages: ${this.messages.length}`);
         return newMessage;
     }
 
     async run() {
-        log.debug(`running conversation ${this.id} with ${this.messages.length} messages`);
+        log.debug(`[Conversation ${this.id}] run called with ${this.messages.length} messages`);
         try {
             //const apiInput = this.toApiInput();
             switch (this.api_parameters.model.provider) {
                 case GPTProvider.OpenAI: {
+                    log.debug(`[Conversation ${this.id}] Running for OpenAI`);
                     return await runForOpenAI(this, openai);
                 }
                 case GPTProvider.Gemini: {
+                    log.debug(`[Conversation ${this.id}] Gemini not implemented`);
                     return "Not yet implemented"
                 }
                 case GPTProvider.DeepSeek: {
+                    log.debug(`[Conversation ${this.id}] DeepSeek not implemented`);
                     return "Not yet implemented"
                 }
                 case GPTProvider.Grok: {
+                    log.debug(`[Conversation ${this.id}] Running for Grok`);
                     let whitelisted = true;
                     let notWhitelistedUsers: User[] = [];
                     if (this.api_parameters.model.whitelist) {
@@ -1120,7 +1134,7 @@ export class Conversation {
                 }
             }
         } catch (err: any) {
-            log.error(`internal error while executing GPT:`);
+            log.error(`[Conversation ${this.id}] internal error while executing GPT:`);
             log.error(err);
             this.emitter.emit(ConversationEvents.FatalError, `${err.message}`);
             return;
@@ -1128,6 +1142,7 @@ export class Conversation {
     }
 
     removeUser(user: User) {
+        log.debug(`[Conversation ${this.id}] removeUser called for user ${user.id}`);
         if (this.users.find((user2) => user2.id === user.id)) {
             log.info(`removing user ${user.id} from conversation ${this.id}`);
             this.users = this.users.filter((user2) => user2.id !== user.id);
@@ -1139,10 +1154,15 @@ export class Conversation {
     }
 
     static async create(message: Message | GPTFormattedCommandInteraction) {
+        log.debug(`[Conversation] static create called for user ${message.author.id}, messageId: ${message.id}`);
         const conversation = new Conversation();
         conversation.users.push(message.author);
         const prompt = await getPrompt(message.author.id)
-        if (prompt.content.length > 0 && prompt.content !== "Prompt undefined.") conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        log.debug(`[Conversation ${conversation.id}] Loaded prompt: ${prompt.name}`);
+        if (prompt.content.length > 0 && prompt.content !== "Prompt undefined.") {
+            log.debug(`[Conversation ${conversation.id}] Adding system prompt message`);
+            conversation.messages.unshift(new GPTMessage({ role: GPTRole.System, content: prompt.content }));
+        }
         const args = prompt.api_parameters
         const wantedModel = (prompt.api_parameters.model || "") as string;
         const modelName = GPTModelName[wantedModel as keyof typeof GPTModelName]
@@ -1151,6 +1171,7 @@ export class Conversation {
             || Object.keys(GPTModelName).find(key => key.startsWith(wantedModel))
             || Object.values(GPTModelName).find(value => typeof value === "string" && value.startsWith(wantedModel));
         const modelInfo = models[modelName];
+        log.debug(`[Conversation ${conversation.id}] Model resolved: ${modelName} (${modelInfo?.name})`);
         for (const key in args) {
             if (key === "model") {
                 (conversation.api_parameters as any)[key] = modelInfo || models[GPTModelName.gpt4omini];
@@ -1159,64 +1180,77 @@ export class Conversation {
             }
         }
         if (message instanceof Message && message.reference && message.reference.messageId) {
+            log.debug(`[Conversation ${conversation.id}] Message references another message: ${message.reference.messageId}`);
             Promise.resolve(message.channel.messages.fetch(message.reference.messageId)).then((msg) => {
                 if (msg) {
                     let role = GPTRole.User;
                     if (msg.author.id === msg.client.user?.id) role = GPTRole.Assistant
+                    log.debug(`[Conversation ${conversation.id}] Adding referenced message to conversation, role: ${role}`);
                     conversation.addMessage(msg, role);
                 } else {
-                    log.error(`error fetching referenced message: ${message?.reference?.messageId}`);
+                    log.error(`[Conversation ${conversation.id}] error fetching referenced message: ${message?.reference?.messageId}`);
                 }
             }).catch((err) => {
-                log.error(`error fetching referenced message: ${err}`);
+                log.error(`[Conversation ${conversation.id}] error fetching referenced message: ${err}`);
             });
         }
+        log.debug(`[Conversation ${conversation.id}] Conversation created`);
         return conversation;
     }
 }
 
 async function getPrompt(user: string): Promise<Prompt> { // userid
+    log.debug(`[getPrompt] called for user ${user}`);
     const userPromptName = userPrompts.get(user);
     userPrompts.delete(user);
     const prompt = await getDBPrompt(userPromptName, user);
     if (!prompt) {
+        log.debug(`[getPrompt] No prompt found for user ${user}, returning botPrompt`);
         return botPrompt;
     }
+    log.debug(`[getPrompt] Found prompt for user ${user}: ${prompt.name}`);
     return prompt;
 }
 
 function removeUserFromConversations(user: User) {
+    log.debug(`[removeUserFromConversations] called for user ${user.id}`);
     conversations.forEach((conv) => {
         conv.removeUser(user);
     });
 }
 
 export async function getConversation(message: Message | GPTFormattedCommandInteraction) {
+    log.debug(`[getConversation] called for user ${message.author.id}, messageId: ${message.id}`);
     // attempt to find the conversation by searching if the message is a reply to another message which is in a conversation
     let currentConversation = conversations.find((conv) => conv && conv.messages.find((msg) => (message instanceof Message) && (msg.message_id === message.reference?.messageId) && (msg.message_id !== undefined) && (message.id !== undefined)));
     if (currentConversation) {
+        log.debug(`[getConversation] Found conversation by message reference: ${currentConversation.id}`);
         removeUserFromConversations(message.author);
         // we dont have to readd the user to the conversation because it will be added when the message is processed, and that also will check if the user is already in the conversation
     }
     if (!currentConversation) { // if the conversation isn't found with the message search, try to find it via the users array
-        log.warn("conversation not found with message search, using user search")
+        log.warn("[getConversation] conversation not found with message search, using user search")
         currentConversation = conversations.find((conv) => conv.users.find((user) => user.id === message.author.id));
         if (!currentConversation) {
-            log.warn("conversation not found with user search")
+            log.warn("[getConversation] conversation not found with user search")
+        } else {
+            log.debug(`[getConversation] Found conversation by user: ${currentConversation.id}`);
         }
     }
     if ((message instanceof Message) && (message.mentions !== undefined) && message.mentions.has(message.client.user as User) && message.content?.includes(`<@${message.client.user?.id}>`)) { // if the message is a mention of the bot, clear currentConversation so that the next section will create a new conversation
-        log.info("starting new conversation due to mention")
+        log.info("[getConversation] starting new conversation due to mention")
         if (currentConversation) {
             removeUserFromConversations(message.author);
             currentConversation = undefined;
         } // if you include a ping, you're removed from the users list in the conversation. if you were the only user in it, the conversation is deleted because the removeUser function will delete it.
     }
     if (!currentConversation) {
-        log.info("did not find conversation, creating new conversation")
+        log.info("[getConversation] did not find conversation, creating new conversation")
         currentConversation = await Conversation.create(message);
         conversations.push(currentConversation);
+        log.debug(`[getConversation] New conversation created: ${currentConversation.id}`);
     }
+    log.debug(`[getConversation] Returning conversation: ${currentConversation.id}`);
     return currentConversation;
 }
 
