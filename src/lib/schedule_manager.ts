@@ -137,6 +137,7 @@ export function queueAllEvents(client: Client) {
     const events = getAllEvents();
     events.then((events) => {
         events.forEach((event) => {
+            log.debug(`Scheduling event ${event.id} for execution at ${event.time}`);
             scheduleEvent(client, event);
         });
     }).catch(log.error);
