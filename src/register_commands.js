@@ -19,7 +19,7 @@ export async function getCommands() {
         commands = commandsObject.default.commandsWithoutAliases.filter(
             (command) => !command.data.doNotDeploy
         ).map((command) => {
-            return command.data.toJSON();
+            return command.data.toJSON()
         });
     });
 }
