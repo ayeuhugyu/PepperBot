@@ -94,9 +94,12 @@ const stop = new Command(
             return;
         }
         const queue = getQueue(invoker.guild);
-        if (queue.items.length === 0) {
-            action.reply(invoker, { content: "queue is empty", ephemeral: guild_config.other.use_ephemeral_replies })
-            return;
+        if (queue.state === QueueState.Downloading) {
+            action.reply(invoker, { content: "queue is currently downloading, please wait until downloads finish before stopping the queue", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: "queue is currently downloading, please wait until downloads finish before stopping the queue",
+            });
         }
         queue.stop();
         if (!(queue.channel === invoker.channel) && !(invoker_type === InvokerType.Interaction)) action.reply(invoker, { content: "queue stopped", ephemeral: guild_config.other.use_ephemeral_replies })
@@ -275,6 +278,13 @@ const previous = new Command(
             action.reply(invoker, { content: "queue is empty", ephemeral: guild_config.other.use_ephemeral_replies })
             return;
         }
+        if (queue.state === QueueState.Downloading) {
+            action.reply(invoker, { content: "queue is currently downloading, please wait until downloads finish before going back", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: "queue is currently downloading, please wait until downloads finish before going back",
+            });
+        }
         const amount = parseInt(args.amount || "1");
         if (isNaN(amount) || amount <= 0) {
             action.reply(invoker, { content: "please provide a valid amount to go back", ephemeral: guild_config.other.use_ephemeral_replies });
@@ -325,6 +335,13 @@ const skip = new Command(
         if (queue.items.length === 0) {
             action.reply(invoker, { content: "queue is empty", ephemeral: guild_config.other.use_ephemeral_replies })
             return;
+        }
+        if (queue.state === QueueState.Downloading) {
+            action.reply(invoker, { content: "queue is currently downloading, please wait until downloads finish before skipping", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: "queue is currently downloading, please wait until downloads finish before skipping",
+            });
         }
         let amountArg = args.amount || "1";
         if (typeof amountArg === "string" && amountArg.trim().toLowerCase().startsWith("to")) {
@@ -438,7 +455,7 @@ const remove = new Command(
             endStr = betweenMatch[2].trim();
         } else {
             // Check for range syntax: "A to B" or "A - B" or "A through B"
-            rangeMatch = item.match(/^(.+?)(?:\s*(?:to|through|-)\s*)(.+)$/i);
+            rangeMatch = item.match(/^(.+?)(?:\s+(?:to|through|-)\s+)(.+)$/i);
             if (rangeMatch) {
                 startStr = rangeMatch[1].trim();
                 endStr = rangeMatch[2].trim();
@@ -907,15 +924,27 @@ const viewCommandExecution = async function (input: Omit<CommandInput<{}, Record
     collector.on("collect", async (i) => {
         switch (i.customId) {
             case "queue_prev_song":
+                if (queue.state === QueueState.Downloading) {
+                    await i.reply({ content: "queue is currently downloading, please wait until downloads finish before going back", ephemeral: true });
+                    return;
+                }
                 queue.previous(1);
                 break;
             case "queue_stop":
+                if (queue.state === QueueState.Downloading) {
+                    await i.reply({ content: "queue is currently downloading, please wait until downloads finish before stopping", ephemeral: true });
+                    return;
+                }
                 queue.stop();
                 break;
             case "queue_play":
                 queue.play();
                 break;
             case "queue_skip_song":
+                if (queue.state === QueueState.Downloading) {
+                    await i.reply({ content: "queue is currently downloading, please wait until downloads finish before skipping", ephemeral: true });
+                    return;
+                }
                 queue.next(1);
                 break;
         }

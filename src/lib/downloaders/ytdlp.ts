@@ -13,7 +13,7 @@ export class YtDlpDownloader extends DownloaderBase {
      */
     async getInfo(url: string, ctx: DownloadContext): Promise<Video | Playlist | null> {
         await ctx.log("fetching info using yt-dlp...");
-        const args = [ "-J", '--no-warnings', url ];
+        const args = [ "-J", '--no-warnings', '--flat-playlist', url ];
         const cookies = process.env.PATH_TO_COOKIES ? true : false;
         if (cookies) {
             args.push("--cookies", process.env.PATH_TO_COOKIES || "");
@@ -120,7 +120,7 @@ export class YtDlpDownloader extends DownloaderBase {
                     if (progress) {
                         const percent = parseFloat(progress[1]);
                         downloadLogCounter++;
-                        if (downloadLogCounter % 3 === 0 && percent > downloadProgressCount) {
+                        if ((downloadLogCounter % 5 === 0 && percent > downloadProgressCount) || percent === 100) {
                             downloadProgressCount = percent;
                             await ctx.editLatest(`downloading: ${percent}% of ${fileSize ? fileSize[1] : "unknown"} MiB`);
                         }

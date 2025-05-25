@@ -317,6 +317,16 @@ export class QueueManager implements VoiceEventListener {
             }
             const count = endIndex - index + 1;
             const removedItems = this.items.splice(index, count);
+
+            // Update currentIndex if needed
+            if (this.currentIndex >= index && this.currentIndex <= endIndex) {
+                // If currentIndex is within the removed range, set to index (or last item)
+                this.currentIndex = Math.min(index, this.items.length - 1);
+            } else if (this.currentIndex > endIndex) {
+                // If currentIndex is after the removed range, shift it left by count
+                this.currentIndex -= count;
+            }
+
             // Helper to format removed item titles with "and" for the last item
             function formatTitles(items: QueueItem[], startIndex: number) {
                 if (items.length === 1) {
@@ -356,6 +366,16 @@ export class QueueManager implements VoiceEventListener {
             // Remove a single item
             const item = this.items[index];
             this.items.splice(index, 1);
+
+            // Update currentIndex if needed
+            if (this.currentIndex === index) {
+                // If currentIndex was the removed item, set to same index (or last item)
+                this.currentIndex = Math.min(index, this.items.length - 1);
+            } else if (this.currentIndex > index) {
+                // If currentIndex is after the removed item, shift it left by 1
+                this.currentIndex -= 1;
+            }
+
             const title = (item instanceof CustomSound) ? item.name : (item as Video).title || `index ${index}`;
             this.outputComponentsLog([
                 textComponentify(`> removed ${title} from queue`),
