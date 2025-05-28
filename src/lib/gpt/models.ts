@@ -57,7 +57,7 @@ export class Model {
 }
 
 // #endregion
-// #region Models
+// #region Common Parameters
 
 const OpenAIParameters: ModelParameter[] = [
     {
@@ -111,6 +111,9 @@ const OpenAIParameters: ModelParameter[] = [
         default: 0,
     }
 ];
+
+// #endregion
+// #region Model Definitions
 
 export const Models: Record<ModelName, Model> = {
     'gpt-3.5-turbo': new Model(
