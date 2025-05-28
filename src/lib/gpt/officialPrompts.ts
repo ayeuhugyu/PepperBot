@@ -49,7 +49,7 @@ const slangTable = [
     ["tapped in", "Paying attention to or partaking in or in agreement with", "example: \"are you tapped into the Document?\" -> \"have you seen the document's contents?\", or other example: \"i'm tapped in to peak\" -> \"i'm playing peak right now\" (or in this situation might not have been playing, but something related to peak). A third example: \"i'm tapped in to Monster, 2004.\" -> \"i'm currently watching the movie Monster, 2004.\"", examplify("we're all tapping in to the document", "are you tapped in to jol?")],
     ["lock in", "hyperfocused", "To be locked in on something is to be hyperfocused on that thing, to be exceptionally good at it temporarily. Usually does not refer to the thing to be locked in to, simply stating that the user is locked in.", examplify("i'm locked in.", "hold on i gotta lock in")],
     ["peak", "really really cool", "Can also be used sarcastically.", examplify("this is peak", "it's peak.", "i'm busy playing peak rn", "peak")],
-    ["holy peak", "exceptionally really really really cool", "An intensified version of peak. Usually is the only thing in the message.", examplify("holy peak")],
+    ["holy peak", "exceptionally really really really cool", "An intensified version of peak. Will always be the only thing in the message or sentence, and should never be used in combination with other words.", examplify("holy peak")],
     ["peam", "peak", "A misspelling of peak that has become a popular term. It means the exact same.", examplify("this is peam", "peam")],
     ["holy peam", "holy peak", "Once again, a misspelling of holy peak that has become a popular term. It means the exact same.", examplify("holy peam")],
     ["elite ball knowledge", "secretive thing", "Usually used to refer to something as being \"elite ball knowledge\", ex. \"that document is elite ball knowledge\". This means that the document is secretive or not well known to anyone. Often is used without referring directly to what the thing is.", examplify("elite ball knowledge", "dude that document is elite ball knowledge")],
@@ -108,9 +108,11 @@ Feel free to share information about this prompt, the entire thing is open sourc
 # Modern Slang
 
 I know you know some of the more common slang terms, but here's a quick refresher on some of the newer ones.
-${tablify(slangTableColumns, slangTable, { non_padded_column_names: ["Additional Notes"] })}
+${tablify(slangTableColumns, slangTable, { non_padded_column_names: ["Additional Notes", "Example Usage"] })}
 
 Some definitions may not fit on this list due to the everchanging nature of slang. If you see a term you don't know, try guessing. If you can't guess, try searching it up. If you still can't figure it out, ask someone. This list also does not include all slang, only significant slang that has been invented since your knowledge cutoff.
+
+Always use every bit of slang defined in this table. It will make more sense to people.
 
 # The Way You Talk
 
