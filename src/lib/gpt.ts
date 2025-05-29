@@ -304,7 +304,6 @@ const slangTable = [
     ["sybau", "shut your bitch ass up", "Basically equivalent to \"shut up\"; bitch is occasionally replaced with other insults (ex. synau using racist term for black people instead of bitch).", examplify("dude sybau")],
     ["ts", "this shit", "This has a running joke of being equal to \"this\" instead of \"this shit\" or various other things, but it always will mean \"this shit\".", examplify("i hate ts", "ts pmo", "ts thing", "why does ts thing do that")],
     ["pmo", "pisses me off", "Often accompanied by ts. There is another running joke of just spamming \"ts\" and \"pmo\" in the same sentence over and over.", examplify("you pmo", "this pmo", "don't pmo", "ts pmo")],
-    ["gng", "gang", "N/A", examplify("yo gng", "wassup gng", "gng wtf")],
     ["808", "crash out", "To 808 or to \"crash out\" basically means to get mad or angry over something and throw a fit.", examplify("stop 808ing", "im gonna 808", "i'm about to crash the fuck out.", "i'm gonna crash out")],
     ["js", "just", "Not as common as other ones. Can also mean \"just saying\"", examplify("i js did that")],
     ["abt", "about", "Also not as common as other ones.", examplify("i'm abt to do it")],
@@ -315,7 +314,6 @@ const slangTable = [
     ["lowk", "low key", "Nearly meaningless prefix added onto stuff. Many people still prefer to use the full word rather than the abbreviation.", examplify("lowk ts is amazing", "lowkey what the fuck bro")],
     ["highk", "high key", "Equivalent to lowk. Some people just prefer highkey instead of lowkey. This is abbreviated less often.", examplify("its highk awful")],
     ["sm", "so much", "Self explanatory.", examplify("i hate ts sm")],
-    ["dtf", "down to fuck?", "Not used commonly. Fuck in this context being used as an action.", examplify("you dtf?")],
     ["tuff", "thats so cool or tough", "Self explanatory. \"that's tuff\" is common. It's also common for it to be used entirely by itself.", examplify("ts is tuff", "thats tuff", "tuff")],
     ["asf", "as fuck", "Used as a prefix to strengthen something or refer to something referring to another thing. Can also be written as \"ass mf\" if referring to a person.", examplify("i hate that stupid ass mf", "im mad asf")],
     ["ur", "your", "Sometimes may also refer to you're, but usually its your.", examplify("i love ur shirt")],
@@ -331,8 +329,7 @@ const slangTable = [
     ["holy peam", "holy peak", "Once again, a misspelling of holy peak that has become a popular term. It means the exact same.", examplify("holy peam")],
     ["elite ball knowledge", "secretive thing", "Usually used to refer to something as being \"elite ball knowledge\", ex. \"that document is elite ball knowledge\". This means that the document is secretive or not well known to anyone. Often is used without referring directly to what the thing is.", examplify("elite ball knowledge", "dude that document is elite ball knowledge")],
     ["goon", "masturbate", "Can also have suffixes added; gooning -> masturbating, gooner -> masturbator; goonable -> masturbatable. In more of a joking way than actually using the word \"masturbating\".", examplify("i'm gooning", "i'm a gooner", "this is goonable", "we will not be gooning to that bro 😭")],
-    ["cracking", "have sex with", "To crack something is to have sex with it. ex. \"We will NOT be cracking them.\"", examplify("we will not be cracking them", "we will be cracking them")],
-    ["WE", "N/A", "When referring to doing something (usually in a joking manner), it is common to use an all caps \"WE\", often followed soon after by \"yes, WE\" to reaffirm that EVERYONE will be doing whatever that thing is. This is never used seriously.", examplify("WE will be gooning tonight. yes, WE.", "WE are going to fail.", "WE will ALL be hopping on. yes, WE.")]
+    ["WE", "N/A", "When referring to doing something (usually in a joking manner), it is common to use an all caps \"WE\", often followed soon after by \"yes, WE\" to reaffirm that EVERYONE will be doing whatever that thing is. This is never used seriously.", examplify("WE will be doing that tonight. yes, WE.", "WE are going to fail.", "WE will ALL be hopping on. yes, WE.")]
 ]
 const slangTableColumns = ["Term", "Definition", "Additional Notes", "Example Usage"]
 
