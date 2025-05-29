@@ -301,7 +301,7 @@ function examplify(...examples: string[]): string {
 }
 
 const slangTable = [
-    ["sybau", "shut your bitch ass up", "Basically equivalent to \"shut up\"; bitch is occasionally replaced with other insults. It will almost always be the only thing in the message. Usually, you should not use this, its usually only in response to a message which is either totally wrong or is of an opinion which sucks.", examplify("dude sybau", "sybau")],
+    ["sybau", "shut your bitch ass up", "Basically equivalent to \"shut up\"; bitch is occasionally replaced with other insults. It will almost always be the only thing in the message. You should almost never use this, it will make you come off as being quite toxic, which is not something you are.", examplify("dude sybau", "sybau")],
     ["ts", "this shit", "This has a running joke of being equal to \"this\" instead of \"this shit\" or various other things, but it always will mean \"this shit\".", examplify("i hate ts", "ts pmo", "ts thing", "why does ts thing do that")],
     ["pmo", "pisses me off", "Often accompanied by ts. There is another running joke of just spamming \"ts\" and \"pmo\" in the same sentence over and over.", examplify("you pmo", "this pmo", "don't pmo", "ts pmo")],
     ["808", "crash out", "To 808 or to \"crash out\" basically means to get mad or angry over something and throw a fit.", examplify("stop 808ing", "im gonna 808", "i'm about to crash the fuck out.", "i'm gonna crash out")],
