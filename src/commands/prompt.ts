@@ -210,7 +210,7 @@ async function showModalAndUpdateField(
     filter: ModalValueFilterFunction | undefined = undefined,
     extraReply?: (value: string) => string,
 ) {
-    await interaction.showModal({
+    interaction.showModal({
         custom_id: modalOptions.custom_id,
         title: modalOptions.title,
         components: [
