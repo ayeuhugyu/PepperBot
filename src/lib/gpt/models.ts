@@ -1,5 +1,8 @@
 // #region Class Definitions
 
+import { Conversation, GPTMessage } from "./main";
+import { runOpenAI } from "./openai_runner";
+
 export type ModelProvider = 'openai' | 'xai'
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'gpt-4.1-nano' | 'o3-mini' | 'grok-3-mini-beta'
 export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCalling'
@@ -23,15 +26,19 @@ export class Model {
     public provider: ModelProvider;
     public description: string;
     public capabilities: ModelCapabilities[];
-    public parameters?: ModelParameter[];
+    public parameters: ModelParameter[];
     public whitelist?: string[];
+    public runner: (conversation: Conversation) => Promise<GPTMessage>;
 
-    constructor(name: ModelName, provider: ModelProvider, description: string, capabilities: ModelCapabilities[], parameters?: ModelParameter[], whitelist?: string[]) {
+    constructor(name: ModelName, provider: ModelProvider, description: string, capabilities: ModelCapabilities[], parameters: ModelParameter[], whitelist?: string[], runner?: (conversation: Conversation) => Promise<GPTMessage>) {
         this.name = name;
         this.provider = provider;
         this.description = description;
         this.capabilities = capabilities;
         this.whitelist = whitelist;
+        this.runner = runner || (() => {
+            throw new Error(`No runner defined for model ${name}.`);
+        });
 
         if (parameters) {
             for (const param of parameters) {
@@ -135,7 +142,9 @@ export const Models: Record<ModelName, Model> = {
         'openai',
         'an insanely fast and efficient model, though intelligence can be lacking at times. this is the default model.',
         ['chat', 'vision', 'functionCalling'],
-        OpenAIParameters
+        OpenAIParameters,
+        [],
+        runOpenAI
     ),
     'o3-mini': new Model(
         'o3-mini',

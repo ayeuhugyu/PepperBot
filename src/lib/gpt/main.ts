@@ -2,28 +2,415 @@ import { randomUUIDv7 } from "bun";
 import { Message, User } from "discord.js";
 import { Prompt } from "../prompt_manager";
 import { defaultPrompt } from "./officialPrompts";
+import { Models, Model } from "./models";
+import { client } from "../../bot";
+import * as log from "../log";
+import { incrementGPTModelUsage } from "../statistics";
+import { tools } from "./tools";
+import chalk from "chalk";
+import * as action from "../discord_action";
 
-// #region Message Classes
-export enum GPTMessageAttachmentType {
-    Content = 'content',
-    Url = 'url',
+export enum GPTAttachmentType {
+    Text = "text",
+    Image = "image",
+    Video = "video",
+    Audio = "audio",
+    Unknown = "unknown"
 }
 
-export class GPTMessage {
-    public type: string = 'Tool';
-    public content: string;
+function getAttachmentType({ filename, url }: { filename: string, url: string }): GPTAttachmentType {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    // TODO: finish
+    // unfinished functionality, will be expanded later
+        // first, detect by extension. if its not video or image or audio, then download it and test it for utf8 encoding to test for text
+    return GPTAttachmentType.Text;
+}
 
-    constructor(content: string) {
-        this.content = content;
+export class GPTAttachment<T extends GPTAttachmentType> {
+    type: T; // will be set in the constructor by a detection function
+    url?: string; // if the AI is uploading attachments (planned feature), it won't have a URL so it has to be able to be set later
+    filename: string; // must be defined in constructor
+    content: T extends GPTAttachmentType.Text ? string : never = undefined as never;
+
+    constructor(filename: string, url?: string) {
+        this.filename = filename;
+        this.url = url;
+        this.type = getAttachmentType({ filename, url: url || "" }) as T; // type assertion to ensure T is correct
+        if (this.type === GPTAttachmentType.Text) {
+            (this as GPTAttachment<GPTAttachmentType.Text>).content = "" as any; // placeholder for text content
+        } else {
+            this.content = undefined as never; // ensure content is not set for non-text attachments
+        }
     }
 }
 
-// #endregion
-// #region Conversation Classes
+export class ToolCall {
+    id: string = "unknown"; // unique ID for the tool call; will generally be the one used by openai, not this one.
+    name: string = "UnknownTool"; // name of the tool
+    parameters: Record<string, any> = {}; // parameters for the tool call, will be converted to the correct type later
+
+    constructor(args: Omit<ToolCall, "serialize">) {
+        this.id = args.id
+        this.name = args.name
+        this.parameters = args.parameters
+    }
+
+    serialize() {
+        // Visually rich, readable, and compact tool call serialization
+        const lines = [];
+        lines.push(
+            chalk.bgYellowBright.bold.black(" Tool Call ") +
+            chalk.gray(`  [${this.name}]  `) + chalk.gray(`#${this.id}`)
+        );
+        lines.push(chalk.gray(`  Parameters:`));
+        if (Object.keys(this.parameters).length > 0) {
+            lines.push(chalk.whiteBright(JSON.stringify(this.parameters, null, 2).split("\n").map(l => "  " + l).join("\n")));
+        } else {
+            lines.push(chalk.gray("  [no parameters]"));
+        }
+        return lines.join("\n");
+    }
+}
+
+export class GPTMessage {
+    content?: string = undefined;
+    attachments: GPTAttachment<any>[] = [];
+    role: "user" | "bot";
+    toolCalls?: ToolCall[];
+    author: User;
+    discordId?: string;
+    timestamp: Date = new Date();
+    serialize() {
+        // Visually rich, readable, and compact message serialization
+        const lines = [];
+        lines.push(
+            chalk.bgBlueBright.bold.black(` GPT Message `) +
+            chalk.gray(`  [${this.role.toUpperCase()}]  `) +
+            chalk.greenBright(this.author.username) + chalk.gray(` (${this.author.id})`)
+        );
+        lines.push(chalk.gray(`  ${this.timestamp.toLocaleString()}`));
+        lines.push("");
+        if (this.content) {
+            lines.push(chalk.bold("Content:") +
+                "\n" + chalk.whiteBright(this.content.split("\n").map(l => "  " + l).join("\n")));
+        }
+        if (this.attachments.length) {
+            lines.push(chalk.bold("Attachments:") +
+                "\n" + this.attachments.map(att =>
+                    chalk.cyan("  • ") + chalk.yellow(att.filename) + chalk.gray(` (${att.type})`)
+                ).join("\n"));
+        }
+        if (this.toolCalls?.length) {
+            lines.push(chalk.bold("Tool Calls:") +
+                "\n" + this.toolCalls.map(call =>
+                    chalk.cyan("  → ") + chalk.magentaBright(call.name) +
+                    chalk.gray(` [${call.id}]`) +
+                    (Object.keys(call.parameters).length
+                        ? chalk.gray(": ") + chalk.white(JSON.stringify(call.parameters))
+                        : "")
+                ).join("\n"));
+        }
+        lines.push("");
+        return lines.join("\n");
+    }
+
+    constructor(params: Omit<GPTMessage, "timestamp" | "attachments" | "author" | "serialize"> & Partial<Pick<GPTMessage, "attachments" | "author">>) {
+        this.content = params.content;
+        this.attachments = params.attachments || [];
+        this.role = params.role;
+        this.author = params.author || (client.user as User);
+        this.discordId = params.discordId;
+        this.toolCalls = params.toolCalls || [];
+    }
+}
+
+export class ToolCallResponse {
+    role: "tool" = "tool";
+    call: {
+        id: string;
+        name: string;
+        parameters: Record<string, any>;
+    } = {
+        id: "unknown", // unique ID for the tool call; will generally be the one used by openai, not this one.
+        name: "UnknownTool",
+        parameters: {}
+    }
+    response: {
+        data: any;
+        error: boolean;
+    } = {
+        data: "An unknown tool was called. This should never happen.",
+        error: true
+    };
+    date: Date = new Date(); // timestamp of the tool call response
+
+    serialize() {
+        // Visually rich, readable, and compact tool call response serialization
+        const lines = [];
+        lines.push(
+            chalk.bgMagentaBright.bold.black(" Tool Call Response ") +
+            chalk.gray(`  [${this.call.name}]  `) + chalk.gray(`#${this.call.id}`)
+        );
+        lines.push(chalk.gray(`  ${this.date.toLocaleString()}`));
+        lines.push("");
+        lines.push(chalk.bold("Parameters:") +
+            "\n" + chalk.whiteBright(JSON.stringify(this.call.parameters, null, 2).split("\n").map(l => "  " + l).join("\n")));
+        lines.push(chalk.bold("Response:") +
+            "\n" + chalk.whiteBright(JSON.stringify(this.response.data, null, 2).split("\n").map(l => "  " + l).join("\n")));
+        lines.push(
+            chalk.bold("Error:") +
+            " " + (this.response.error ? chalk.bgRed.white.bold(" TRUE ") : chalk.bgGreen.black.bold(" FALSE "))
+        );
+        lines.push("");
+        return lines.join("\n");
+    }
+
+    constructor(callId: string, toolName: string, parameters: Record<string, any>, data: any, error: boolean = false) {
+        this.call.id = callId;
+        this.call.name = toolName;
+        this.call.parameters = parameters;
+        this.response.data = data;
+        this.response.error = error;
+    }
+}
+
+export const conversations: Conversation[] = [];
 
 export class Conversation {
-    public id: string = randomUUIDv7();
-    public messages: (Message | GPTMessage)[] = [];
-    public users: User[] = [];
-    public prompt: Prompt = defaultPrompt;
+    id: string = randomUUIDv7(); // TODO: replace this with the same ID system as p/schedule
+    users: User[] = []; // do not include bot user
+    prompt: Prompt = defaultPrompt;
+    model: Model = Models["gpt-4.1-nano"] // default model, can be changed later
+    api_parameters: Partial<Record<keyof typeof this.model["parameters"], string>> = {}; // users can only input strings, they will be converted to the correct type later by the corrosponding function
+    messages: (GPTMessage | ToolCallResponse)[] = [];
+
+    private _onToolCallListener: ((calls: ToolCall[]) => void) | null = null;
+
+    constructor() {
+        conversations.push(this);
+        return this;
+    }
+
+    bindOnToolCall(fn: (calls: ToolCall[]) => void) {
+        log.debug(`Binding onToolCall listener for conversation ${this.id}.`);
+        this._onToolCallListener = fn;
+    }
+
+    unbindOnToolCall() {
+        log.debug(`Unbinding onToolCall listener for conversation ${this.id}.`);
+        this._onToolCallListener = null;
+    }
+
+    addMessage(message: GPTMessage, doNotAddUser: boolean = false) {
+        log.debug(`Adding message to conversation ${this.id}:`, message.serialize());
+        this.messages.push(message);
+
+        if (!doNotAddUser) this.addUser(message.author); // ensure the user is added to the conversation
+
+        return message;
+    }
+
+    addToolCallResponse(response: ToolCallResponse) {
+        log.debug(`Adding tool call response to conversation ${this.id}:`, response.serialize());
+        this.messages.push(response);
+        // do not add user, as this is a tool response
+        return response;
+    }
+
+    addDiscordMessage(message: Message) {
+        const gptMessage = new GPTMessage({
+            content: message.content,
+            attachments: message.attachments?.map(att => new GPTAttachment(att.name, att.url)),
+            role: "user",
+            author: message.author,
+            discordId: message.id
+        });
+        this.addMessage(gptMessage);
+        return gptMessage;
+    }
+
+    delete() {
+        const conversationIndex = conversations.findIndex(c => c.id === this.id);
+        if (conversationIndex !== -1) {
+            conversations.splice(conversationIndex, 1);
+        }
+    }
+
+    removeUser(user: User) {
+        const userIndex = this.users.findIndex(u => u.id === user.id);
+        if (userIndex !== -1) {
+            this.users.splice(userIndex, 1);
+        }
+        // if there are no users left, delete the conversation
+        if (this.users.length === 0) {
+            this.delete();
+        }
+    }
+
+    addUser(user: User) {
+        if (this.users.some(u => u.id === user.id)) {
+            return this; // user already in conversation
+        }
+        this.users.push(user);
+        return this;
+    }
+
+    async processToolCalls(message: GPTMessage) {
+        log.debug(`Processing tool calls for message in conversation ${this.id}:`, message.serialize());
+        if (!message.toolCalls || message.toolCalls.length === 0) {
+            log.debug(`No tool calls to process for message in conversation ${this.id}.`);
+            return;
+        }
+        // Call the single listener with the tool calls, if set
+        if (this._onToolCallListener) {
+            try { this._onToolCallListener(message.toolCalls); } catch (e) { log.warn('Error in onToolCall listener:', e); }
+        }
+        for (const call of message.toolCalls) {
+            const tool = Object.entries(tools).find(([key, t]) => t.data.name === call.name)?.[1];
+            if (!tool) {
+                log.warn(`Tool ${call.name} not found for conversation ${this.id}.`);
+                continue;
+            }
+            try {
+                const response = await tool.function(call.parameters);
+                const toolResponse = new ToolCallResponse(call.id, call.name, call.parameters, response);
+                this.addToolCallResponse(toolResponse); // do not add user, as this is a tool response
+            } catch (err) {
+                log.error(`Error running tool ${call.name} for conversation ${this.id}:`, err);
+                const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: err }, true);
+                this.addToolCallResponse(errorResponse); // do not add user, as this is a tool response
+            }
+        }
+    }
+
+    async run(): Promise<GPTMessage> {
+        log.debug(`Running model ${this.model.name} for conversation ${this.id} with prompt:`, this.prompt);
+        const start = performance.now();
+        let didError = false;
+        const res = await this.model.runner(this).catch(err => {
+            log.error(`Error running model ${this.model.name} for conversation ${this.id}:`, err);
+            didError = true;
+            return new GPTMessage({
+                content: `Error running model: ${err.message}`,
+                role: "bot",
+                author: client.user as User,
+            });
+        });
+        if (!didError) await incrementGPTModelUsage(this.model.name);
+        this.addMessage(res);
+        let didAnyToolCalls = false;
+        if (res.toolCalls && res.toolCalls.length > 0) {
+            const currentMessageLength = this.messages.length;
+            await this.processToolCalls(res);
+            if (this.messages.length > currentMessageLength) didAnyToolCalls = true;
+        }
+        const end = performance.now();
+        log.info(`GPT Message generated for conversation ${this.id} with model ${this.model.name} in ${(end - start).toFixed(3)}ms.`);
+        if (didAnyToolCalls) {
+            return await this.run(); // re-run the model to process the tool call responses that were added, but only if new messages were added
+        }
+        return res;
+    }
+    // TODO: finish
+    getTools() { // functionality for this is incomplete, will be expanded later
+        // i hope to make it so that with prompts you can disable specific tools or add custom tools which prompt the user for return values
+        return tools;
+    }
+
+    serialize() {
+        // Visually rich, readable, and compact conversation serialization
+        const lines = [];
+        lines.push(chalk.bgCyan.bold.black(` Conversation `) + chalk.gray(`  #${this.id}`));
+        lines.push("");
+        lines.push(chalk.bold("Users:") +
+            (this.users.length
+                ? "\n" + this.users.map(u =>
+                    "  " + chalk.greenBright(u.username) + chalk.gray(` (${u.id})`)
+                ).join("\n")
+                : " " + chalk.gray("[no users]"))
+        );
+        lines.push(chalk.bold("Prompt:") +
+            " " + chalk.yellow(`${this.prompt.author.username}/${this.prompt.name}`)
+        );
+        lines.push(chalk.bold("Model:") +
+            " " + chalk.cyan(this.model.name)
+        );
+        lines.push(chalk.bold("API Parameters:") +
+            (Object.entries(this.api_parameters).length
+                ? "\n" + Object.entries(this.api_parameters).map(([key, value]) =>
+                    "  " + chalk.cyan(key) + chalk.gray(": ") + chalk.whiteBright(value)
+                ).join("\n")
+                : " " + chalk.gray("[no API parameters]"))
+        );
+        lines.push("");
+        lines.push(chalk.bold("Messages:") +
+            (this.messages.length
+                ? "\n" + this.messages.map((m, i) =>
+                    chalk.gray("─".repeat(50)) +
+                    "\n\n" + m.serialize().split("\n").map(l => "  " + l).join("\n")
+                ).join("\n")
+                : " " + chalk.gray("[no messages]"))
+        );
+        lines.push("");
+        return lines.join("\n");
+    }
+}
+
+function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false): Conversation {
+    const currentConversation = conversations.find(c => c.users.some(u => u === user));
+    if (currentConversation && !alwaysCreateNew) {
+        return currentConversation
+    }
+    // alwaysCreateNew is always true from here on
+    currentConversation?.removeUser(user); // remove the user from the current conversation if it exists
+    const newConversation = new Conversation();
+    newConversation.addUser(user);
+    return newConversation;
+}
+
+function getConversationByMessageId(messageId: string): Conversation | undefined {
+    return conversations.find(c => c.messages.some(m => ('discordId' in m) && (m.discordId === messageId)));
+}
+
+export function getConversation(message: Message) {
+    // if the message directly mentions the bot, create a new conversation
+    let messageIdConversation = getConversationByMessageId(message.id);
+    if (message.content.includes(`<@${client.user?.id}>`) || message.content.includes(`<@!${client.user?.id}>`)) {
+        return ensureConversationByUserId(message.author, true);
+    } else if (messageIdConversation) {
+        return messageIdConversation;
+    } else {
+        return ensureConversationByUserId(message.author);
+    }
+}
+
+function messageifyToolCall(call: ToolCall): string {
+    return `-# [tool call]: ${call.name} (${call.id}) with parameters: ${JSON.stringify(call.parameters).replaceAll("\n", " ")}`;
+}
+
+export async function respond(message: Message) {
+    const conversation = getConversation(message);
+    conversation.addDiscordMessage(message);
+    log.info(`Responding to message in conversation ${conversation.id} from user ${message.author.username} (${message.author.id})`);
+    log.debug(`Conversation details:`, conversation.serialize());
+
+    let currentContent = "processing..."
+
+    const processingMessage = await action.reply(message, { content: "processing..." });
+
+    conversation.bindOnToolCall(async (calls: ToolCall[]) => {
+        currentContent += `\n${calls.map(messageifyToolCall).join("\n")}`;
+        action.edit(processingMessage, {
+            content: currentContent
+        })
+    });
+
+    try { // TODO: add attachment support
+        const response = await conversation.run();
+        log.info(`Response generated for conversation ${conversation.id}:`, response.serialize());
+        await message.reply(response.content || "No response content generated.");
+    } catch (error) {
+        log.error(`Error responding to message in conversation ${conversation.id}:`, error);
+        await message.reply("An error occurred while processing your request.");
+    }
 }

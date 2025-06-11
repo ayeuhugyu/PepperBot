@@ -1,13 +1,12 @@
 // #region Imports
 
-import { RunnableToolFunction } from "openai/lib/RunnableFunction";
 import * as mathjs from 'mathjs';
 import fs from 'fs';
 import path from 'path';
 import { execFile } from 'child_process';
 import * as log from "../log";
 import UserAgent from "user-agents";
-import cheerio from 'cheerio';
+import * as cheerio from "cheerio";
 import TurndownService from 'turndown';
 
 // #endregion
@@ -17,6 +16,7 @@ export interface ToolParameter {
     key: string;
     description: string;
     type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+    arraytype?: 'string' | 'number' | 'boolean' | 'object'; // if the type is an array, this is the type of the items in the array
     required?: boolean;
     default?: string | number | boolean | object | any[];
 }
@@ -29,7 +29,7 @@ export enum ToolType {
 export class ToolData {
     name: string;
     description: string;
-    parameters?: Record<string, ToolParameter>;
+    parameters: Record<string, ToolParameter>;
     type: ToolType;
     disabledDefault?: boolean = false;
 
@@ -38,12 +38,12 @@ export class ToolData {
         this.description = description;
         this.type = type;
 
-        this.parameters = parameters;
+        this.parameters = parameters || {};
         this.disabledDefault = disabledDefault;
     }
 }
 
-type ToolFunction = RunnableToolFunction<any>['function']['function']
+type ToolFunction = (args: any) => Promise<any> | any;
 
 export class Tool {
     public data: ToolData;
@@ -122,7 +122,7 @@ export const tools: Record<string, Tool> = {
             'picks a random item from a list of items. This should only ever be used when a user explicitly states to pick something at random. Do not use this for any other reason.',
             ToolType.Official,
             {
-                "items": { key: 'items', description: 'list of items to choose from', type: 'array', required: true }
+                "items": { key: 'items', description: 'list of items to choose from', type: 'array', arraytype: 'string', required: true }
             },
             true // disabled by default
         ),
