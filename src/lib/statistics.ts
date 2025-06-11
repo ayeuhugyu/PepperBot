@@ -1,10 +1,12 @@
 import { InvokerType } from "./classes/command_enums";
 import database from "./data_manager";
+import { Models } from "./gpt/models";
 
 enum StatisticsEntryType {
     COMMAND_USAGE = "COMMAND_USAGE",
     EXECUTION_TIME = "EXECUTION_TIME",
     GPT_RESPONSES = "GPT_RESPONSES",
+    GPT_MODEL_USAGE = "GPT_MODEL_USAGE",
     PIPED_COMMANDS = "PIPED_COMMANDS",
     INVOKER_TYPE = "INVOKER_TYPE"
 }
@@ -15,6 +17,7 @@ type StatisticEntryNameLookup = {
     [StatisticsEntryType.COMMAND_USAGE]: string;
     [StatisticsEntryType.EXECUTION_TIME]: string;
     [StatisticsEntryType.GPT_RESPONSES]: NotReal;
+    [StatisticsEntryType.GPT_MODEL_USAGE]: string;
     [StatisticsEntryType.PIPED_COMMANDS]: NotReal;
     [StatisticsEntryType.INVOKER_TYPE]: InvokerType;
 };
@@ -23,6 +26,7 @@ type StatisticEntryValueLookup = {
     [StatisticsEntryType.COMMAND_USAGE]: number;
     [StatisticsEntryType.EXECUTION_TIME]: NotReal;
     [StatisticsEntryType.GPT_RESPONSES]: number;
+    [StatisticsEntryType.GPT_MODEL_USAGE]: number;
     [StatisticsEntryType.PIPED_COMMANDS]: number;
     [StatisticsEntryType.INVOKER_TYPE]: number;
 };
@@ -40,6 +44,11 @@ export class Statistics {
     execution_times: Record<string, number[]> = {};
     command_usage: Record<string, number> = {};
     total_gpt_responses: number = 0;
+    // Import or define ModelName as the union of all model names
+    // import type { ModelName } from "./gpt/models";
+    gpt_model_usage: Record<keyof typeof Models, number> = Object.fromEntries(
+        Object.keys(Models).map((modelName) => [modelName, 0])
+    ) as Record<keyof typeof Models, number>;
     total_piped_commands: number = 0;
     invoker_type_usage: Record<InvokerType, number> = {
         interaction: 0,
@@ -56,6 +65,9 @@ export class Statistics {
                     break;
                 case StatisticsEntryType.GPT_RESPONSES:
                     this.total_gpt_responses = entry.value as number;
+                    break;
+                case StatisticsEntryType.GPT_MODEL_USAGE:
+                    this.gpt_model_usage[(entry as StatisticEntry<StatisticsEntryType.GPT_MODEL_USAGE>).name as keyof typeof Models] = entry.value as number;
                     break;
                 case StatisticsEntryType.PIPED_COMMANDS:
                     this.total_piped_commands = entry.value as number;
@@ -88,6 +100,13 @@ export class Statistics {
             name: "",
             value: this.total_gpt_responses
         });
+        for (const model in this.gpt_model_usage) {
+            data.push({
+                type: StatisticsEntryType.GPT_MODEL_USAGE,
+                name: model as keyof typeof Models,
+                value: this.gpt_model_usage[model as keyof typeof Models]
+            });
+        }
         data.push({
             type: StatisticsEntryType.PIPED_COMMANDS,
             name: "",
@@ -140,6 +159,13 @@ export async function incrementCommandUsage(command: string): Promise<void> {
 export async function incrementGPTResponses(): Promise<void> {
     const statistics = await getStatistics();
     statistics.total_gpt_responses++;
+    await statistics.write();
+}
+
+export async function incrementGPTModelUsage(modelName: keyof typeof Models): Promise<void> {
+    const statistics = await getStatistics();
+    if (!statistics.gpt_model_usage[modelName]) statistics.gpt_model_usage[modelName] = 0;
+    statistics.gpt_model_usage[modelName]++;
     await statistics.write();
 }
 

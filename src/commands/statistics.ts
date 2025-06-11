@@ -2,7 +2,7 @@ import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse 
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
-import { getStatistics } from "../lib/statistics";
+import { getStatistics, Statistics } from "../lib/statistics";
 import { createThemeEmbed, Theme } from "../lib/theme";
 
 const command = new Command(
@@ -29,6 +29,12 @@ Total GPT Responses: ${statistics.total_gpt_responses}
 Total Command Usage: ${totalCommandUsage}
 Total Piped Commands: ${statistics.total_piped_commands}
 
+GPT Model Usage:
+        `;
+        for (const model in statistics.gpt_model_usage) {
+            description += `    ${model}: ${statistics.gpt_model_usage[model as keyof Statistics["gpt_model_usage"]]}\n`;
+        }
+        description += `
 Command Usage:
         `;
         for (const command in statistics.command_usage) {
