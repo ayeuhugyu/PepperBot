@@ -3,7 +3,7 @@ import commands from "../lib/command_manager";
 import { fetchGuildConfig } from "../lib/guild_config_manager";
 import { Command, CommandInput, CommandInvoker, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { respond, GPTProcessor } from "../lib/gpt";
+import { respond } from "../lib/gpt/main";
 import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
@@ -31,13 +31,7 @@ async function gptHandler(message: Message<true>) {
     }
 
     log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
-
-    const processor = new GPTProcessor();
-    processor.repliedMessage = message;
-    processor.currentContent = "processing...";
-    processor.sentMessage = (await action.reply(message as Message<true>, { content: "processing...", ephemeral: true })) as Message<true>;
-
-    await respond(message, processor);
+    await respond(message);
 }
 
 async function commandHandler(message: Message<true>) {

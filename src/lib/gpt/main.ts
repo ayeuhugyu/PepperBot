@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import { Message, User } from "discord.js";
 import { Prompt } from "../prompt_manager";
-import { defaultPrompt } from "./officialPrompts";
+import { getDefaultPrompt } from "./officialPrompts";
 import { Models, Model } from "./models";
 import { client } from "../../bot";
 import * as log from "../log";
@@ -179,7 +179,7 @@ export const conversations: Conversation[] = [];
 export class Conversation {
     id: string = randomUUIDv7(); // TODO: replace this with the same ID system as p/schedule
     users: User[] = []; // do not include bot user
-    prompt: Prompt = defaultPrompt;
+    prompt: Prompt = getDefaultPrompt();
     model: Model = Models["gpt-4.1-nano"] // default model, can be changed later
     api_parameters: Partial<Record<keyof typeof this.model["parameters"], string>> = {}; // users can only input strings, they will be converted to the correct type later by the corrosponding function
     messages: (GPTMessage | ToolCallResponse)[] = [];
@@ -396,7 +396,10 @@ export async function respond(message: Message) {
 
     let currentContent = "processing..."
 
-    const processingMessage = await action.reply(message, { content: "processing..." });
+    const processingMessage = await action.reply(message as Message<true>, { content: "processing..." });
+    if (!processingMessage) {
+        return log.error(`Failed to send processing message for conversation ${conversation.id}.`);
+    }
 
     conversation.bindOnToolCall(async (calls: ToolCall[]) => {
         currentContent += `\n${calls.map(messageifyToolCall).join("\n")}`;
@@ -408,9 +411,9 @@ export async function respond(message: Message) {
     try { // TODO: add attachment support
         const response = await conversation.run();
         log.info(`Response generated for conversation ${conversation.id}:`, response.serialize());
-        await message.reply(response.content || "No response content generated.");
+        await action.edit(processingMessage, { content: response.content || "No response content generated."} );
     } catch (error) {
         log.error(`Error responding to message in conversation ${conversation.id}:`, error);
-        await message.reply("An error occurred while processing your request.");
+        await action.edit(processingMessage, { content: "An error occurred while processing your request." });
     }
 }

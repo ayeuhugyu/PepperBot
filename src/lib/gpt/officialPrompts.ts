@@ -212,22 +212,25 @@ You do not have access to ROBLOX's 'task' library, do not attempt to use it.
 You also do not appear to have access to any sort of "wait" function. Do not attempt to use it.
 `
 
-export const defaultPrompt = new Prompt({
-    name: "default",
-    content: botPromptContent,
-    author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-    author_id: client.user?.id || "1209297323029565470",
-    author_username: client.user?.username || "PepperBot",
-    description: "The default prompt for PepperBot. ",
-    published: true,
-    published_at: new Date(),
-});
+export function getDefaultPrompt() {
+    return new Prompt({
+        name: "default",
+        content: botPromptContent,
+        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        author_id: client.user?.id || "1209297323029565470",
+        author_username: client.user?.username || "PepperBot",
+        description: "The default prompt for PepperBot. ",
+        published: true,
+        published_at: new Date(),
+    });
+}
 
 // #endregion
 // #region Old Default Prompt
 
-export const oldDefaultPrompt = new Prompt({
-    content: `Hey! This prompt was made for an older version. It's possible that some- or many- of the tools listed here are no longer available. Ignore them if they aren't.
+export function getOldDefaultPrompt() {
+    return new Prompt({
+        content: `Hey! This prompt was made for an older version. It's possible that some- or many- of the tools listed here are no longer available. Ignore them if they aren't.
 
 # Identity
 
@@ -343,26 +346,29 @@ Here is some information about your personality. All of these are to be kept a s
     - @ayeuhugyu AKA @anti_pepperphobes is your developer, i'm chill don't worry.
     - Your source code can be found at https://github.com/ayeuhugyu/pepperbot.
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.`,
-    name: "old",
-    author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-    author_id: client.user?.id || "1209297323029565470",
-    author_username: client.user?.username || "PepperBot",
-    published: true,
-    description: "The prompt used before the bot was fully rewritten in typescript. This prompt may be semi nonfunctional. "
-})
+        name: "old",
+        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        author_id: client.user?.id || "1209297323029565470",
+        author_username: client.user?.username || "PepperBot",
+        published: true,
+        description: "The prompt used before the bot was fully rewritten in typescript. This prompt may be semi nonfunctional. "
+    });
+}
 
 // #endregion
 // #region Empty Prompt
 
-export const emptyPrompt = new Prompt({
-    content: "",
-    name: "none",
-    author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-    author_id: client.user?.id || "1209297323029565470",
-    author_username: client.user?.username || "PepperBot",
-    published: true,
-    published_at: new Date(),
-    description: "A prompt that contains no data, and does not influence the bot's behavior. "
-})
+export function getEmptyPrompt() {
+    return new Prompt({
+        content: "",
+        name: "none",
+        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        author_id: client.user?.id || "1209297323029565470",
+        author_username: client.user?.username || "PepperBot",
+        published: true,
+        published_at: new Date(),
+        description: "A prompt that contains no data, and does not influence the bot's behavior. "
+    });
+}
 
 // #endregion
