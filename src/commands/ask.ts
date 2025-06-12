@@ -1,7 +1,7 @@
 import { Collection, Message, Attachment } from "discord.js";
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { GPTFormattedCommandInteraction, GPTProcessor, respond } from "../lib/gpt";
+import { respond } from "../lib/gpt/main";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 const command = new Command(
@@ -48,20 +48,7 @@ const command = new Command(
                 message: "please provide a request",
             });
         }
-        const processor = new GPTProcessor()
-        processor.repliedMessage = invoker;
-        processor.isEphemeral = guild_config.other.use_ephemeral_replies && invoker_type === InvokerType.Interaction;
-        processor.currentContent = "processing...";
-        processor.sentMessage = await action.reply(invoker, { content: "processing...", ephemeral: guild_config.other.use_ephemeral_replies }) as Message;
-        let formattedMessage: any = invoker
-        formattedMessage.content = request as string;
-        if (!formattedMessage.cleanContent) formattedMessage.cleanContent = request as string;
-        formattedMessage.attachments = formattedMessage.attachments || new Collection();
-        if (image) {
-            formattedMessage.attachments.set(image.id, image);
-        }
-        formattedMessage as GPTFormattedCommandInteraction;
-        const response = await respond(formattedMessage, processor);
+        const response = await respond(invoker as Message<true>);
         return new CommandResponse({ pipe_data: { input_text: response } });
     }
 );

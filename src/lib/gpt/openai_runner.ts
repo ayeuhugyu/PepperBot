@@ -18,7 +18,7 @@ import {
 import { Model } from "./models";
 import { inspect } from "node:util";
 
-const openai_default = new OpenAI({
+export const openai_default = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 

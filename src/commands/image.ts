@@ -2,7 +2,7 @@ import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse 
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
-import { generateImage } from "../lib/gpt";
+import { generateImage } from "../lib/gpt/basic";
 import { Message } from "discord.js";
 import { randomUUIDv7 } from "bun";
 import fs from "fs";

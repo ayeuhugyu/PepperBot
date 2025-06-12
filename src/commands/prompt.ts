@@ -2,16 +2,47 @@ import { AutocompleteInteraction, ButtonInteraction, Interaction, Message, Messa
 import { Command, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";
-import { userPrompts, generatePrompt, GPTModelName, APIParameters, models, getConversation } from "../lib/gpt";
+import { generatePrompt } from "../lib/gpt/basic";
+import { userPrompts, getConversation } from "../lib/gpt/main";
+import { Models as models, Model } from "../lib/gpt/models";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { tablify } from "../lib/string_helpers";
 import { Button, ButtonStyle, Container, Section, Separator, TextDisplay, TextInput, TextInputStyle, ActionRow } from "../lib/classes/components";
 import { GuildConfig } from "../lib/guild_config_manager";
 import chalk from "chalk";
+import { DiscordAnsi as ansi } from "../lib/discord_ansi";
+
+function findModelByName(name: string): Model | undefined {
+    return Object.values(models).find(m =>
+        m.name.toLowerCase() === name.toLowerCase() ||
+        m.name.toLowerCase().replaceAll("-", "") === name.toLowerCase().replaceAll("-", "") ||
+        m.name.toLowerCase().startsWith(name.toLowerCase()) ||
+        m.name.toLowerCase().replaceAll("-", "").startsWith(name.toLowerCase().replaceAll("-", "")) ||
+        m.name.toLowerCase().includes(name.toLowerCase()) ||
+        m.name.toLowerCase().replaceAll("-", "").includes(name.toLowerCase().replaceAll("-", ""))
+    );
+}
+
+function serializeModel(model: Model): string {
+    return `${ansi.bold(ansi.green(model.name))} ${ansi.gray(`(${model.provider})`)}\n` +
+        `${ansi.gray(model.description)}\n` +
+        `${ansi.blue("capabilities: ")}${model.capabilities.join(', ')}` +
+        ((model.whitelist && model.whitelist.length > 0) ? `\n${ansi.blue("whitelist: ")}${model.whitelist.join(', ')}` : '');
+}
+
+function serializeModelParameters(parameters: Model['parameters']): string {
+    if (!parameters || parameters.length === 0) {
+        return ansi.gray("[no parameters]");
+    }
+    return parameters.map(param => {
+        const restrictions = param.restrictions ? ` ${JSON.stringify(param.restrictions)}` : '';
+        return `${ansi.gold(param.key)} ${ansi.gray(": " + param.type) + " / "}${param.description ? `: ${ansi.white(param.description)}` : ''}\n${ansi.gray(`restrictions: ${restrictions}`)}`;
+    }).join('\n');
+}
 
 async function getUserPrompt(user: User): Promise<Prompt> {
-    let prompt = await getPrompt(userPrompts.get(user.id) || "autosave", user.id)
+    let prompt = await getPrompt(userPrompts.get(user.id)?.name || "autosave", user.id)
     if (!prompt) {
         prompt = new Prompt({
             author_id: user.id,
@@ -26,7 +57,7 @@ async function getUserPrompt(user: User): Promise<Prompt> {
 }
 
 function savePrompt(prompt: Prompt, user: User) {
-    userPrompts.set(user.id, prompt.name);
+    userPrompts.set(user.id, prompt);
     writePrompt(prompt);
 }
 
@@ -152,9 +183,12 @@ function getModelButtons(prompt: Prompt, disabled: boolean = false) {
     return modelButtons;
 }
 
-const templateAPIParameters = new APIParameters();
-
 function getAPIParametersButtons(prompt: Prompt, disabled: boolean = false) {
+    const model = findModelByName(prompt.api_parameters.model.toString() || defaultModel);
+    const templateAPIParameters = model?.parameters?.reduce<Record<string, any>>((acc, param) => {
+        acc[param.key] = param.default || 0; // default to 0 if no default is provided
+        return acc;
+    }, { model: prompt.api_parameters.model }) || { model: prompt.api_parameters.model };
     const apiParameterButtons: ActionRow[] = []
     Object.keys(templateAPIParameters).filter((key) => key !== "model").forEach((key) => {
         const apiParameterButton = new Button({
@@ -417,7 +451,7 @@ const build = new Command(
                             action.reply(modelInteraction as unknown as FormattedCommandInteraction, { content: "this is not your prompt", ephemeral: true });
                             return;
                         }
-                        const model = modelInteraction.customId.split("_")[3] as GPTModelName;
+                        const model = modelInteraction.customId.split("_")[3];
                         prompt.api_parameters.model = model;
                         await savePrompt(prompt, invoker.author);
                         action.editReply(interaction as unknown as FormattedCommandInteraction, {
@@ -846,7 +880,7 @@ const name = new Command({
         prompt.name = args.content as string;
         prompt.created_at = new Date();
         await savePrompt(prompt, invoker.author);
-        userPrompts.set(invoker.author.id, prompt.name);
+        userPrompts.set(invoker.author.id, prompt);
         action.reply(invoker, { content: `prompt name set to \`${prompt.name}\`; now using/editing prompt \`${prompt.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -1086,7 +1120,7 @@ const clone = new Command({
             published: false,
         });
         await writePrompt(newPrompt);
-        userPrompts.set(invoker.author.id, newPrompt.name);
+        userPrompts.set(invoker.author.id, newPrompt);
         action.reply(invoker, { content: `cloned \`${args.content}\`; now using/editing prompt \`${promptname}\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
@@ -1148,7 +1182,7 @@ const use = new Command({
                 published: false,
             });
             await writePrompt(newPrompt);
-            userPrompts.set(invoker.author.id, newPrompt.name);
+            userPrompts.set(invoker.author.id, newPrompt);
             action.reply(invoker, { content: `now using/editing prompt \`${promptname}\``, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
@@ -1167,12 +1201,13 @@ const use = new Command({
                 conversation.setPrompt(prompt);
             }
         }
-        userPrompts.set(invoker.author.id, prompt.name);
+        userPrompts.set(invoker.author.id, prompt);
         action.reply(invoker, { content: "now using/editing prompt `" + prompt.name + "`", ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
 
+// --- GPT Model/Parameter Helpers (from conversation.ts) ---
 const modelcommand = new Command(
     {
         name: 'model',
@@ -1187,12 +1222,11 @@ const modelcommand = new Command(
                 long_description: 'the AI model to use for the prompt. ',
                 type: CommandOptionType.String,
                 required: true,
-                choices: Object.keys(GPTModelName).map(key => {
-                    // Filter out the numeric keys from the enum
+                choices: Object.keys(models).map(key => {
                     if (isNaN(Number(key))) {
                         return { name: key, value: key };
                     }
-                }).filter(choice => choice !== undefined) as { name: string, value: string }[] // Filter out undefined values
+                }).filter(choice => choice !== undefined) as { name: string, value: string }[]
             })
         ],
         access: CommandAccessTemplates.public,
@@ -1212,26 +1246,27 @@ const modelcommand = new Command(
                 message: "you must provide a model name or 'list'/'ls' to view available models.",
             });
         }
-
         if (args.model === "list" || args.model === "ls") {
-            const mappedModels = Object.entries(models).map(([key, value]) => {
-                const userIsNotWhitelisted = (value.whitelist && !value.whitelist.includes(invoker.author.id));
-                return `${userIsNotWhitelisted ? chalk.red(value.name) : chalk.green(value.name)}:
-  - ${chalk.blue("provider")}: ${value.provider}
-  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}${userIsNotWhitelisted ? `\n  - ${chalk.red("this model is whitelist only; you cannot use it.")}` : ""}`
-            });
+            const modelList = Object.values(models).map(model => serializeModel(model)).join('\n\n');
+            if (modelList.length === 0) {
+                await action.reply(invoker, {
+                    content: "no models available.",
+                    ephemeral: guild_config.useEphemeralReplies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: "no models available.",
+                });
+            }
             await action.reply(invoker, {
-                content: `available models: \`\`\`ansi\n${mappedModels.join("\n")}\`\`\``,
+                content: `available models:\n\u001b[0m\n${modelList}\n\u001b[0m`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                pipe_data: { input_text: modelList },
+            });
         }
-        const modelName = GPTModelName[args.model as keyof typeof GPTModelName]
-            || GPTModelName[args.model.toUpperCase() as keyof typeof GPTModelName]
-            || GPTModelName[args.model.toLowerCase() as keyof typeof GPTModelName]
-            || Object.keys(GPTModelName).find(key => key.startsWith(args.model))
-            || Object.values(GPTModelName).find(value => typeof value === "string" && value.startsWith(args.model));
-        const modelInfo = models[modelName];
+        let modelInfo: Model | undefined = findModelByName(args.model);
         if (!modelInfo) {
             await action.reply(invoker, {
                 content: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
@@ -1242,8 +1277,6 @@ const modelcommand = new Command(
                 message: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
             });
         }
-
-        // Check if the model is whitelisted and the user is not in the whitelist
         if (modelInfo.whitelist && !modelInfo.whitelist.includes(invoker.author.id)) {
             await action.reply(invoker, {
                 content: `model '${args.model}' is whitelist only. you cannot use it.`,
@@ -1254,12 +1287,18 @@ const modelcommand = new Command(
                 message: `model '${args.model}' is whitelist only. you cannot use it.`,
             });
         }
-
         const prompt = await getUserPrompt(invoker.author);
-        const apiParameters = new APIParameters(prompt.api_parameters);
-        // Update the model in the conversation
+        if (prompt.api_parameters.model === modelInfo.name) {
+            await action.reply(invoker, {
+                content: `model is already set to ${modelInfo.name}.`,
+                ephemeral: guild_config.useEphemeralReplies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `model is already set to ${modelInfo.name}.`,
+            });
+        }
         prompt.api_parameters.model = modelInfo.name;
-
         await savePrompt(prompt, invoker.author);
         await action.reply(invoker, {
             content: `set current model to ${modelInfo.name}`,
@@ -1268,22 +1307,21 @@ const modelcommand = new Command(
     }
 );
 
+// --- GPT Model/Parameter Helpers (from conversation.ts) ---
 const setparam = new Command(
     {
         name: 'setparam',
         description: 'allows you to change parameters for the prompt',
         long_description: 'allows you to change parameters for the prompt, notably things like temperature and top_p',
         tags: [CommandTag.AI],
-        example_usage: "p/prompt setparam temperature 1",
+        example_usage: ["p/prompt setparam temperature 1", "p/prompt setparam list", "p/prompt setparam list for grok-3-mini-beta"],
+        aliases: ["param"],
         options: [
             new CommandOption({
                 name: 'parameter',
                 description: 'the parameter to change',
                 type: CommandOptionType.String,
                 required: true,
-                choices: Object.keys(templateAPIParameters)
-                    .filter(key => key !== "model")
-                    .map(key => { return { name: key, value: key } })
             }),
             new CommandOption({
                 name: 'value',
@@ -1295,51 +1333,177 @@ const setparam = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.TwoStringFirstSpaceSecondWholeMessage, ["parameter", "value"]),
     async function execute ({ args, invoker, guild_config }) {
-        if (!args.parameter) {
-            action.reply(invoker, { content: "parameter is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "parameter is required",
-            });
-        }
-        if (!args.value) {
-            action.reply(invoker, { content: "value is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "value is required",
-            });
-        }
-        const parameter = args.parameter;
-        const value = args.value;
-        if (!templateAPIParameters.hasOwnProperty(parameter)) {
-            action.reply(invoker, { content: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``,
-            });
-        }
-        // constraints on values
-        const verifyResponse = verifyAPIParameter(parameter, value);
-        if (verifyResponse.error) {
-            action.reply(invoker, { content: `invalid value for parameter \`${parameter}\`: \`${value}\`. ${verifyResponse.message}`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: `invalid value for parameter \`${parameter}\`: \`${value}\`. ${verifyResponse.message}`,
-            });
-        }
         const prompt = await getUserPrompt(invoker.author);
-        type APIParameterKeys = Exclude<keyof APIParameters, "model">;
-        const defaultValue = templateAPIParameters[parameter as APIParameterKeys];
-        if (parseInt(value) == defaultValue) {
-            delete prompt.api_parameters[parameter as APIParameterKeys];
-        } else {
-            prompt.api_parameters[parameter as APIParameterKeys] = parseFloat(value);
+        let model: Model | undefined = findModelByName(String(prompt.api_parameters.model) || "gpt-4.1-nano");
+        if (args.parameter === "list" || args.parameter === "ls") {
+            if (args.value && args.value.toLowerCase().startsWith("for ")) {
+                const modelName = args.value.slice(4).trim();
+                model = findModelByName(modelName) || model;
+                if (!model) {
+                    await action.reply(invoker, {
+                        content: `model '${modelName}' does not exist. use ${guild_config.other.prefix}prompt model list to view available models.`,
+                        ephemeral: guild_config.other.use_ephemeral_replies,
+                    });
+                    return new CommandResponse({
+                        error: true,
+                        message: `model '${modelName}' does not exist. use ${guild_config.other.prefix}prompt model list to view available models.`,
+                    });
+                }
+            }
+            if (!model) {
+                await action.reply(invoker, {
+                    content: "no model found.",
+                    ephemeral: guild_config.other.use_ephemeral_replies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: "no model found.",
+                });
+            }
+            const parametersList = serializeModelParameters(model.parameters);
+            if (parametersList.length === 0) {
+                await action.reply(invoker, {
+                    content: "no parameters available for this model.",
+                    ephemeral: guild_config.other.use_ephemeral_replies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: "no parameters available for this model.",
+                });
+            }
+            await action.reply(invoker, {
+                content: `available parameters for \`${model.name}\`:\`\`\`ansi\n${parametersList}\n\`\`\``,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                pipe_data: { input_text: parametersList },
+            });
         }
-
-        await action.reply(invoker, { content: `set \`${parameter}\` to \`${value}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-
+        if (!args.parameter || !args.value) {
+            await action.reply(invoker, {
+                content: "you must provide a parameter and a value.",
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: "you must provide a parameter and a value.",
+            });
+        }
+        const paramInfo = model?.parameters.find(p => p.key.toLowerCase() === args.parameter.toLowerCase());
+        if (!paramInfo) {
+            await action.reply(invoker, {
+                content: `parameter '${args.parameter}' does not exist. available parameters are: ${model?.parameters.map(p => p.key).join(", ")}`,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `parameter '${args.parameter}' does not exist. available parameters are: ${model?.parameters.map(p => p.key).join(", ")}`,
+            });
+        }
+        let value: any;
+        switch (paramInfo.type) {
+            case 'number':
+                value = parseFloat(args.value);
+                if (isNaN(value)) {
+                    await action.reply(invoker, {
+                        content: `value for parameter '${args.parameter}' must be a number.`,
+                        ephemeral: guild_config.other.use_ephemeral_replies,
+                    });
+                    return new CommandResponse({
+                        error: true,
+                        message: `value for parameter '${args.parameter}' must be a number.`,
+                    });
+                }
+                if (paramInfo.restrictions) {
+                    if (typeof paramInfo.restrictions.min === 'number' && value < paramInfo.restrictions.min) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be at least ${paramInfo.restrictions.min}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be at least ${paramInfo.restrictions.min}.`,
+                        });
+                    }
+                    if (typeof paramInfo.restrictions.max === 'number' && value > paramInfo.restrictions.max) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be at most ${paramInfo.restrictions.max}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be at most ${paramInfo.restrictions.max}.`,
+                        });
+                    }
+                    if (Array.isArray(paramInfo.restrictions.enum) && !paramInfo.restrictions.enum.includes(value)) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                        });
+                    }
+                }
+                break;
+            case 'boolean':
+                value = args.value.toLowerCase() === 'true';
+                if (paramInfo.restrictions && Array.isArray(paramInfo.restrictions.enum)) {
+                    if (!paramInfo.restrictions.enum.includes(String(value))) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.map(String).join(", ")}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.map(String).join(", ")}.`,
+                        });
+                    }
+                }
+                break;
+            case 'string':
+                value = args.value;
+                if (paramInfo.restrictions) {
+                    if (Array.isArray(paramInfo.restrictions.enum) && !paramInfo.restrictions.enum.includes(value)) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                        });
+                    }
+                    if (paramInfo.restrictions.pattern && !(new RegExp(paramInfo.restrictions.pattern).test(value))) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' does not match the required pattern.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' does not match the required pattern.`,
+                        });
+                    }
+                }
+                break;
+            default:
+                await action.reply(invoker, {
+                    content: `parameter '${args.parameter}' is not supported.`,
+                    ephemeral: guild_config.other.use_ephemeral_replies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: `parameter '${args.parameter}' is not supported.`,
+                });
+        }
+        prompt.api_parameters[args.parameter] = value;
         await savePrompt(prompt, invoker.author);
-        return;
+        await action.reply(invoker, {
+            content: `set parameter '${args.parameter}' to ${value}.`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
+        });
+        return new CommandResponse({});
     }
 );
 

@@ -9,7 +9,7 @@ const msg = {
     content: "hey real quick just test some tool, ex. request_url on https://example.com",
 } as Message
 
-const conversation = getConversation(msg)
+const conversation = await getConversation(msg)
 conversation.addDiscordMessage(msg);
 
 conversation.bindOnToolCall((calls) => {

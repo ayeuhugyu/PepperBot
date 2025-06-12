@@ -1,5 +1,5 @@
 import { randomUUIDv7 } from "bun";
-import { Message, User } from "discord.js";
+import { Attachment, Collection, Message, User } from "discord.js";
 import { Prompt } from "../prompt_manager";
 import { getDefaultPrompt } from "./officialPrompts";
 import { Models, Model } from "./models";
@@ -10,6 +10,8 @@ import { tools, ToolType } from "./tools";
 import chalk from "chalk";
 import * as action from "../discord_action";
 import { DiscordAnsi } from "../discord_ansi";
+import { randomId } from "../id";
+import { FormattedCommandInteraction } from "../classes/command";
 
 export enum GPTAttachmentType {
     Text = "text",
@@ -19,12 +21,22 @@ export enum GPTAttachmentType {
     Unknown = "unknown"
 }
 
+export const userPrompts = new Map<string, Prompt>();
+
 function getAttachmentType({ filename, url }: { filename: string, url: string }): GPTAttachmentType {
     const ext = filename.split('.').pop()?.toLowerCase();
     // TODO: finish
     // unfinished functionality, will be expanded later
         // first, detect by extension. if its not video or image or audio, then download it and test it for utf8 encoding to test for text
     return GPTAttachmentType.Text;
+}
+
+// TODO: update everything to allow for GPTFormattedCommandInteraction
+
+export type GPTFormattedCommandInteraction = FormattedCommandInteraction & {
+    author: User;
+    content: string;
+    attachments: Collection<string, Attachment>;
 }
 
 export class GPTAttachment<T extends GPTAttachmentType> {
@@ -186,11 +198,11 @@ export class ToolCallResponse {
 export const conversations: Conversation[] = [];
 
 export class Conversation {
-    id: string = randomUUIDv7(); // TODO: replace this with the same ID system as p/schedule
+    id: string = randomId(); // TODO: replace this with the same ID system as p/schedule
     users: User[] = []; // do not include bot user
     prompt: Prompt = getDefaultPrompt();
     model: Model = Models["gpt-4.1-nano"] // default model, can be changed later
-    api_parameters: Partial<Record<keyof typeof this.model["parameters"], string>> = {}; // users can only input strings, they will be converted to the correct type later by the corrosponding function
+    api_parameters: Partial<Record<keyof typeof this.model["parameters"], string | number>> = {}; // users can only input strings, they will be converted to the correct type later by the corrosponding function
     messages: (GPTMessage | ToolCallResponse)[] = [];
 
     private _onToolCallListener: ((calls: ToolCall[]) => void) | null = null;
@@ -265,7 +277,7 @@ export class Conversation {
     }
 
     async processToolCalls(message: GPTMessage) {
-        log.debug(`Processing tool calls for message in conversation ${this.id}:`, message.serialize());
+        log.debug(`Processing tool calls for message in conversation ${this.id}:`, message.toolCalls?.map(tc => tc.serialize()).join("\n"));
         if (!message.toolCalls || message.toolCalls.length === 0) {
             log.debug(`No tool calls to process for message in conversation ${this.id}.`);
             return;
@@ -384,6 +396,14 @@ export class Conversation {
         lines.push("");
         return lines.join("\n");
     }
+
+    setPrompt(prompt: Prompt) {
+        log.debug(`[Conversation ${this.id}] setPrompt called with prompt: ${prompt.name}`);
+        this.prompt = prompt;
+        Object.entries(prompt.api_parameters || {}).forEach(([key, value]) => {
+            this.api_parameters[key as any] = value; // set the API parameters from the prompt
+        });
+    }
 }
 
 function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false): Conversation {
@@ -397,6 +417,10 @@ function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false
     currentConversation?.removeUser(user); // remove the user from the current conversation if it exists
     const newConversation = new Conversation();
     newConversation.addUser(user);
+    newConversation.setPrompt(userPrompts.get(user.id) || getDefaultPrompt());
+    if (userPrompts.get(user.id)) {
+        userPrompts.delete(user.id); // remove the user prompt if it exists, as it will be set on the conversation
+    }
     log.debug(`Created new conversation for user ${user.username} (${user.id}):`, newConversation.id);
     return newConversation;
 }
@@ -405,13 +429,24 @@ function getConversationByMessageId(messageId: string): Conversation | undefined
     return conversations.find(c => c.messages.some(m => ('discordId' in m) && (m.discordId === messageId)));
 }
 
-export function getConversation(message: Message) {
+export async function getConversation(message: Message) {
     log.debug(`Getting conversation for message ${message.id} from user ${message.author.username} (${message.author.id})`);
     // if the message directly mentions the bot, create a new conversation
-    let messageIdConversation = getConversationByMessageId(message.id);
+    let messageIdConversation = getConversationByMessageId(message.reference?.messageId || "");
     if (message.content.includes(`<@${client.user?.id}>`) || message.content.includes(`<@!${client.user?.id}>`)) {
         log.debug(`Message ${message.id} directly mentions the bot, creating a new conversation.`);
-        return ensureConversationByUserId(message.author, true);
+        const newConversation = ensureConversationByUserId(message.author, true);
+        let repliedMessage = null;
+        try {
+            repliedMessage = await message.channel.messages.fetch(message.reference?.messageId || "");
+        } catch (err) {
+            log.warn(`Failed to fetch replied message for message ${message.id}:`, err);
+        }
+        if (repliedMessage) {
+            newConversation.addDiscordMessage(repliedMessage);
+            log.debug(`Added replied message to new conversation ${newConversation.id}.`);
+        }
+        return newConversation;
     } else if (messageIdConversation) {
         log.debug(`Found existing conversation for message ${message.id}:`, messageIdConversation.id);
         return messageIdConversation;
@@ -426,7 +461,7 @@ function messageifyToolCall(call: ToolCall): string {
 }
 
 export async function respond(message: Message) {
-    const conversation = getConversation(message);
+    const conversation = await getConversation(message);
     conversation.addDiscordMessage(message);
     log.info(`Responding to message in conversation ${conversation.id} from user ${message.author.username} (${message.author.id})`);
 
@@ -448,8 +483,10 @@ export async function respond(message: Message) {
         const response = await conversation.run();
         log.debug(`Response generated for conversation ${conversation.id}:`, response.serialize());
         await action.edit(processingMessage, { content: response.content || "No response content generated."} );
-    } catch (error) {
+    } catch (error: any) {
         log.error(`Error responding to message in conversation ${conversation.id}:`, error);
-        await action.edit(processingMessage, { content: "An error occurred while processing your request." });
+        await action.edit(processingMessage, { content: "error occurred while generating gpt response; " + error.message || error.toString() });
     }
+
+    conversation.unbindOnToolCall();
 }

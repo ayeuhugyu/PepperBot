@@ -7,7 +7,17 @@ import { Model, Models as models } from "../lib/gpt/models";
 import { textToAttachment } from "../lib/attachment_manager";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { DiscordAnsi as ansi } from "../lib/discord_ansi";
-import { TextDisplay } from "../lib/classes/components";
+
+function findModelByName(name: string): Model | undefined {
+    return Object.values(models).find(m =>
+        m.name.toLowerCase() === name.toLowerCase() ||
+        m.name.toLowerCase().replaceAll("-", "") === name.toLowerCase().replaceAll("-", "") ||
+        m.name.toLowerCase().startsWith(name.toLowerCase()) ||
+        m.name.toLowerCase().replaceAll("-", "").startsWith(name.toLowerCase().replaceAll("-", "")) ||
+        m.name.toLowerCase().includes(name.toLowerCase()) ||
+        m.name.toLowerCase().replaceAll("-", "").includes(name.toLowerCase().replaceAll("-", ""))
+    );
+}
 
 function serializeModel(model: Model): string {
     return `${ansi.bold(ansi.green(model.name))} ${ansi.gray(`(${model.provider})`)}\n` +
@@ -22,9 +32,10 @@ function serializeModelParameters(parameters: Model['parameters']): string {
     }
     return parameters.map(param => {
         const restrictions = param.restrictions ? ` ${JSON.stringify(param.restrictions)}` : '';
-        return `${ansi.cyan("  • ")}${ansi.gold(param.key)} ${ansi.gray(": " + param.type) + " / "}${param.description ? `: ${ansi.white(param.description)}` : ''}\n   ${ansi.gray(`restrictions: ${restrictions}`)}`;
+        return `${ansi.gold(param.key)} ${ansi.gray(": " + param.type) + " / "}${param.description ? `: ${ansi.white(param.description)}` : ''}\n${ansi.gray(`restrictions: ${restrictions}`)}`;
     }).join('\n');
 }
+
 const modelcommand = new Command(
     {
         name: 'model',
@@ -86,19 +97,7 @@ const modelcommand = new Command(
             });
         }
         // Try to find the model by exact match, case-insensitive, or prefix match
-        let modelInfo: Model | undefined = models[args.model as keyof typeof models];
-        if (!modelInfo) {
-            // Try case-insensitive match
-            modelInfo = Object.values(models).find(
-            m => m.name.toLowerCase() === args.model.toLowerCase()
-            );
-        }
-        if (!modelInfo) {
-            // Try prefix match
-            modelInfo = Object.values(models).find(
-            m => m.name.toLowerCase().startsWith(args.model.toLowerCase())
-            );
-        }
+        let modelInfo: Model | undefined = findModelByName(args.model);
         if (!modelInfo) {
             await action.reply(invoker, {
                 content: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
@@ -150,7 +149,8 @@ const setparam = new Command(
         description: 'allows you to change parameters for the gpt conversation',
         long_description: 'allows you to change parameters for the gpt conversation, notably things like temperature and top_p',
         tags: [CommandTag.AI],
-        example_usage: "p/conversation setparam temperature 1",
+        example_usage: ["p/conversation setparam temperature 1", "p/conversation setparam list", "p/conversation setparam list for grok-3-mini-beta"],
+        aliases: ["param"],
         options: [
             new CommandOption({
                 name: 'parameter',
@@ -169,9 +169,178 @@ const setparam = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.TwoStringFirstSpaceSecondWholeMessage, ["parameter", "value"]),
     async function execute ({ args, invoker, guild_config }) {
-        action.reply(invoker, {
-            content: `im ngl i dont feel like making this rn`,
+        const conversation = await getConversation(invoker as Message);
+
+        let model: Model | undefined = conversation.model;
+        if (args.parameter === "list" || args.parameter === "ls") {
+            if (args.value && args.value.toLowerCase().startsWith("for ")) {
+                const modelName = args.value.slice(4).trim();
+                model = findModelByName(modelName);
+                if (!model) {
+                    action.reply(invoker, {
+                        content: `model '${modelName}' does not exist. use ${guild_config.other.prefix}conversation model list to view available models.`,
+                        ephemeral: guild_config.other.use_ephemeral_replies,
+                    });
+                    return new CommandResponse({
+                        error: true,
+                        message: `model '${modelName}' does not exist. use ${guild_config.other.prefix}conversation model list to view available models.`,
+                    });
+                }
+            }
+            const parametersList = serializeModelParameters(model ? model.parameters : conversation.model.parameters);
+            if (parametersList.length === 0) {
+                await action.reply(invoker, {
+                    content: "no parameters available for this model.",
+                    ephemeral: guild_config.other.use_ephemeral_replies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: "no parameters available for this model.",
+                });
+            }
+            await action.reply(invoker, {
+                content: `available parameters for \`${model.name}\`:\n\`\`\`ansi\n${parametersList}\`\`\``,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                pipe_data: { input_text: parametersList },
+            });
+        }
+
+        if (!args.parameter || !args.value) {
+            await action.reply(invoker, {
+                content: "you must provide a parameter and a value.",
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: "you must provide a parameter and a value.",
+            });
+        }
+
+        const paramInfo = conversation.model.parameters.find(p => p.key.toLowerCase() === args.parameter.toLowerCase());
+        // Check if the parameter exists in the conversation's API parameters
+        if (!paramInfo) {
+            await action.reply(invoker, {
+                content: `parameter '${args.parameter}' does not exist. available parameters are: ${conversation.model.parameters.map(p => p.key).join(", ")}`,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return new CommandResponse({
+                error: true,
+                message: `parameter '${args.parameter}' does not exist. available parameters are: ${conversation.model.parameters.map(p => p.key).join(", ")}`,
+            });
+        }
+
+        // Validate the value based on the parameter type
+        let value: any;
+        switch (paramInfo.type) {
+            case 'number':
+                value = parseFloat(args.value);
+                if (isNaN(value)) {
+                    await action.reply(invoker, {
+                        content: `value for parameter '${args.parameter}' must be a number.`,
+                        ephemeral: guild_config.other.use_ephemeral_replies,
+                    });
+                    return new CommandResponse({
+                        error: true,
+                        message: `value for parameter '${args.parameter}' must be a number.`,
+                    });
+                }
+                // Enforce min/max restrictions
+                if (paramInfo.restrictions) {
+                    if (typeof paramInfo.restrictions.min === 'number' && value < paramInfo.restrictions.min) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be at least ${paramInfo.restrictions.min}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be at least ${paramInfo.restrictions.min}.`,
+                        });
+                    }
+                    if (typeof paramInfo.restrictions.max === 'number' && value > paramInfo.restrictions.max) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be at most ${paramInfo.restrictions.max}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be at most ${paramInfo.restrictions.max}.`,
+                        });
+                    }
+                    if (Array.isArray(paramInfo.restrictions.enum) && !paramInfo.restrictions.enum.includes(value)) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                        });
+                    }
+                }
+                break;
+            case 'boolean':
+                value = args.value.toLowerCase() === 'true';
+                if (paramInfo.restrictions && Array.isArray(paramInfo.restrictions.enum)) {
+                    // Only allow values in enum (e.g. [true, false] or [false])
+                    if (!paramInfo.restrictions.enum.includes(String(value))) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.map(String).join(", ")}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.map(String).join(", ")}.`,
+                        });
+                    }
+                }
+                break;
+            case 'string':
+                value = args.value;
+                if (paramInfo.restrictions) {
+                    if (Array.isArray(paramInfo.restrictions.enum) && !paramInfo.restrictions.enum.includes(value)) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' must be one of: ${paramInfo.restrictions.enum.join(", ")}.`,
+                        });
+                    }
+                    if (paramInfo.restrictions.pattern && !(new RegExp(paramInfo.restrictions.pattern).test(value))) {
+                        await action.reply(invoker, {
+                            content: `value for parameter '${args.parameter}' does not match the required pattern.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies,
+                        });
+                        return new CommandResponse({
+                            error: true,
+                            message: `value for parameter '${args.parameter}' does not match the required pattern.`,
+                        });
+                    }
+                }
+                break;
+            default:
+                await action.reply(invoker, {
+                    content: `parameter '${args.parameter}' is not supported.`,
+                    ephemeral: guild_config.other.use_ephemeral_replies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: `parameter '${args.parameter}' is not supported.`,
+                });
+        }
+
+        // Set the parameter in the conversation
+        conversation.api_parameters[args.parameter] = value
+
+        await action.reply(invoker, {
+            content: `set parameter '${args.parameter}' to ${value}.`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
         });
+
+        return new CommandResponse({});
     }
 );
 
@@ -264,5 +433,7 @@ const command = new Command(
         });
     }
 );
+
+
 
 export default command;

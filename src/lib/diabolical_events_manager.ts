@@ -2,7 +2,7 @@ import { Message } from "discord.js";
 import { MessageInput } from "./discord_action";
 import { fetchGuildConfig } from "./guild_config_manager";
 import * as log from "./log";
-import { AIReaction } from "./gpt";
+import { AIReaction } from "./gpt/basic";
 import { readFileSync } from "fs";
 import * as action from "./discord_action";
 
