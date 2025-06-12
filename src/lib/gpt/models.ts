@@ -2,6 +2,8 @@
 
 import { Conversation, GPTMessage } from "./main";
 import { runOpenAI } from "./openai_runner";
+import * as chalk from "chalk";
+import { DiscordAnsi } from "../discord_ansi";
 
 export type ModelProvider = 'openai' | 'xai'
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'gpt-4.1-nano' | 'o3-mini' | 'grok-3-mini-beta'
@@ -60,6 +62,36 @@ export class Model {
         }
 
         this.parameters = parameters;
+    }
+
+    serialize(discordCompatible = false) {
+        const c = discordCompatible ? DiscordAnsi : chalk;
+        const lines = [];
+        lines.push(
+            (discordCompatible
+                ? c.bgGreen(c.bold(" Model ")) + c.gray(`  [${this.name}]  `) + c.gray(`[${this.provider}]`)
+                : chalk.bgGreenBright(chalk.bold(" Model ")) + chalk.gray(`  [${this.name}]  `) + chalk.gray(`[${this.provider}]`)
+            )
+        );
+        lines.push(c.bold("Description:") + " " + c.white(this.description));
+        lines.push(c.bold("Capabilities:") + " " + this.capabilities.map((cap) => c.cyan(cap)).join(", "));
+        if (this.parameters && this.parameters.length > 0) {
+            lines.push(c.bold("Parameters:") +
+                "\n" + this.parameters.map(param =>
+                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(param.key) : chalk.yellow(param.key)) + c.gray(` (${param.type})`) +
+                    (param.description ? c.gray(": ") + c.white(param.description) : "") +
+                    (param.default !== undefined ? c.gray(" [default: ") + c.white(JSON.stringify(param.default)) + c.gray("]") : "") +
+                    (param.restrictions ? c.gray(" [restrictions: ") + c.white(JSON.stringify(param.restrictions)) + c.gray("]") : "")
+                ).join("\n")
+            );
+        } else {
+            lines.push(c.bold("Parameters:") + " " + c.gray("[none]"));
+        }
+        if (this.whitelist && this.whitelist.length > 0) {
+            lines.push(c.bold("Whitelist:") + " " + this.whitelist.map(id => c.magenta(id)).join(", "));
+        }
+        lines.push("");
+        return lines.join("\n");
     }
 }
 
@@ -128,14 +160,18 @@ export const Models: Record<ModelName, Model> = {
         'openai',
         'a significantly older model, not recommended for use. this is here for historical purposes.',
         ['chat'],
-        OpenAIParameters
+        OpenAIParameters,
+        [],
+        runOpenAI
     ),
     'gpt-4o-mini': new Model(
         'gpt-4o-mini',
         'openai',
         'slightly more intelligant than 4.1-nano, but much, much slower. this is the model used before rewriting.',
         ['chat', 'vision'],
-        OpenAIParameters
+        OpenAIParameters,
+        [],
+        runOpenAI
     ),
     'gpt-4.1-nano': new Model(
         'gpt-4.1-nano',
@@ -148,10 +184,12 @@ export const Models: Record<ModelName, Model> = {
     ),
     'o3-mini': new Model(
         'o3-mini',
-        'xai',
+        'openai',
         'a small reasoning model, capable of handling more complex tasks than other models. this is MUCH slower than any other model, due to the reasoning requirements.',
         ['chat', 'vision', 'functionCalling'],
-        OpenAIParameters
+        OpenAIParameters,
+        [],
+        runOpenAI
     ),
     'grok-3-mini-beta': new Model(
         'grok-3-mini-beta',
@@ -162,3 +200,4 @@ export const Models: Record<ModelName, Model> = {
         ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065", "1162874217935675392"]
     ),
 };
+// #endregion

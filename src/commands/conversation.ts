@@ -2,13 +2,29 @@ import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, Coll
 import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { APIParameters, conversations, getConversation, GPTModelName, models } from "../lib/gpt";
+import { getConversation, conversations } from "../lib/gpt/main";
+import { Model, Models as models } from "../lib/gpt/models";
 import { textToAttachment } from "../lib/attachment_manager";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
-import chalk from "chalk";
+import { DiscordAnsi as ansi } from "../lib/discord_ansi";
+import { TextDisplay } from "../lib/classes/components";
 
-const templateAPIParameters = new APIParameters();
+function serializeModel(model: Model): string {
+    return `${ansi.bold(ansi.green(model.name))} ${ansi.gray(`(${model.provider})`)}\n` +
+        `${ansi.gray(model.description)}\n` +
+        `${ansi.blue("capabilities: ")}${model.capabilities.join(', ')}` +
+        ((model.whitelist && model.whitelist.length > 0) ? `\n${ansi.blue("whitelist: ")}${model.whitelist.join(', ')}` : '');
+}
 
+function serializeModelParameters(parameters: Model['parameters']): string {
+    if (!parameters || parameters.length === 0) {
+        return ansi.gray("[no parameters]");
+    }
+    return parameters.map(param => {
+        const restrictions = param.restrictions ? ` ${JSON.stringify(param.restrictions)}` : '';
+        return `${ansi.cyan("  • ")}${ansi.gold(param.key)} ${ansi.gray(": " + param.type) + " / "}${param.description ? `: ${ansi.white(param.description)}` : ''}\n   ${ansi.gray(`restrictions: ${restrictions}`)}`;
+    }).join('\n');
+}
 const modelcommand = new Command(
     {
         name: 'model',
@@ -23,7 +39,7 @@ const modelcommand = new Command(
                 long_description: 'the AI model to use for the conversation. ',
                 type: CommandOptionType.String,
                 required: true,
-                choices: Object.keys(GPTModelName).map(key => {
+                choices: Object.keys(models).map(key => {
                     // Filter out the numeric keys from the enum
                     if (isNaN(Number(key))) {
                         return { name: key, value: key };
@@ -50,24 +66,39 @@ const modelcommand = new Command(
         }
 
         if (args.model === "list" || args.model === "ls") {
-            const mappedModels = Object.entries(models).map(([key, value]) => {
-                const userIsNotWhitelisted = (value.whitelist && !value.whitelist.includes(invoker.author.id));
-                return `${userIsNotWhitelisted ? chalk.red(value.name) : chalk.green(value.name)}:
-  - ${chalk.blue("provider")}: ${value.provider}
-  - ${chalk.blue("capabilities")}: ${value.capabilities ? value.capabilities.join(", ") : "none"}${value.unsupported_arguments ? `\n  - ${chalk.blue("unsupported parameters")}: ${value.unsupported_arguments.map((val) => chalk.yellow(`"${val}"`)).join(", ")}` : ""}${userIsNotWhitelisted ? `\n  - ${chalk.red("this model is whitelist only; you cannot use it.")}` : ""}`
-            });
+            const modelList = Object.values(models).map(model => serializeModel(model)).join('\n\n');
+            if (modelList.length === 0) {
+                await action.reply(invoker, {
+                    content: "no models available.",
+                    ephemeral: guild_config.useEphemeralReplies,
+                });
+                return new CommandResponse({
+                    error: true,
+                    message: "no models available.",
+                });
+            }
             await action.reply(invoker, {
-                content: `available models: \`\`\`ansi\n${mappedModels.join("\n")}\`\`\``,
+                content: `available models:\n\`\`\`ansi\n${modelList}\`\`\``,
                 ephemeral: guild_config.useEphemeralReplies,
             });
-            return;
+            return new CommandResponse({
+                pipe_data: { input_text: modelList },
+            });
         }
-        const modelName = GPTModelName[args.model as keyof typeof GPTModelName]
-            || GPTModelName[args.model.toUpperCase() as keyof typeof GPTModelName]
-            || GPTModelName[args.model.toLowerCase() as keyof typeof GPTModelName]
-            || Object.keys(GPTModelName).find(key => key.startsWith(args.model))
-            || Object.values(GPTModelName).find(value => typeof value === "string" && value.startsWith(args.model));
-        const modelInfo = models[modelName];
+        // Try to find the model by exact match, case-insensitive, or prefix match
+        let modelInfo: Model | undefined = models[args.model as keyof typeof models];
+        if (!modelInfo) {
+            // Try case-insensitive match
+            modelInfo = Object.values(models).find(
+            m => m.name.toLowerCase() === args.model.toLowerCase()
+            );
+        }
+        if (!modelInfo) {
+            // Try prefix match
+            modelInfo = Object.values(models).find(
+            m => m.name.toLowerCase().startsWith(args.model.toLowerCase())
+            );
+        }
         if (!modelInfo) {
             await action.reply(invoker, {
                 content: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
@@ -93,7 +124,7 @@ const modelcommand = new Command(
 
         const conversation = await getConversation(invoker as Message);
         // Check if the model is already set to avoid unnecessary updates
-        if (conversation.api_parameters.model === modelInfo) {
+        if (conversation.model === modelInfo) {
             await action.reply(invoker, {
                 content: `model is already set to ${modelInfo.name}.`,
                 ephemeral: guild_config.useEphemeralReplies,
@@ -104,7 +135,7 @@ const modelcommand = new Command(
             });
         }
         // Update the model in the conversation
-        conversation.api_parameters.model = modelInfo;
+        conversation.model = modelInfo;
 
         await action.reply(invoker, {
             content: `set current model to ${modelInfo.name}`,
@@ -126,9 +157,7 @@ const setparam = new Command(
                 description: 'the parameter to change',
                 type: CommandOptionType.String,
                 required: true,
-                choices: Object.keys(templateAPIParameters)
-                    .filter(key => key !== "model")
-                    .map(key => { return { name: key, value: key } })
+
             }),
             new CommandOption({
                 name: 'value',
@@ -140,74 +169,9 @@ const setparam = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.TwoStringFirstSpaceSecondWholeMessage, ["parameter", "value"]),
     async function execute ({ args, invoker, guild_config }) {
-        if (!args.parameter) {
-            action.reply(invoker, { content: "parameter is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "parameter is required",
-            });
-        }
-        if (!args.value) {
-            action.reply(invoker, { content: "value is required", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "value is required",
-            });
-        }
-        const parameter = args.parameter;
-        const value = args.value;
-        if (!templateAPIParameters.hasOwnProperty(parameter)) {
-            action.reply(invoker, { content: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: `invalid parameter: \`${parameter}\`. must be one of the following: \`${Object.keys(templateAPIParameters).filter(key => key !== "model").join(", ")}\``,
-            });
-        }
-        // constraints on values
-        switch (parameter) {
-            case "temperature": {
-                if (value < 0 || value > 2) {
-                    action.reply(invoker, { content: "temperature must be between 0 and 2", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "top_p": {
-                if (value < 0 || value > 1) {
-                    action.reply(invoker, { content: "top_p must be between 0 and 1", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "presence_penalty": {
-                if (value < -2 || value > 2) {
-                    action.reply(invoker, { content: "presence_penalty must be between -2 and 2", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "frequency_penalty": {
-                if (value < -2 || value > 2) {
-                    action.reply(invoker, { content: "frequency_penalty must be between -2 and 2", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            case "max_tokens": {
-                if (value < 0 || value > 4096) {
-                    action.reply(invoker, { content: "max_tokens must be between 0 and 4096", ephemeral: guild_config.other.use_ephemeral_replies });
-                    return;
-                }
-                break;
-            }
-            default: break;
-        }
-        const conversation = await getConversation(invoker as Message);
-        type APIParameterKeys = Exclude<keyof APIParameters, "model">;
-        conversation.api_parameters[parameter as APIParameterKeys] = parseFloat(value);
-
-        await action.reply(invoker, { content: `set \`${parameter}\` to \`${value}\``, ephemeral: guild_config.other.use_ephemeral_replies });
-        return;
+        action.reply(invoker, {
+            content: `im ngl i dont feel like making this rn`,
+        });
     }
 );
 
@@ -239,16 +203,16 @@ const get = new Command(
         const all = allWhitelist.includes(invoker.author.id) && (typeof args.full === "string") && (args.full == "all")
         if (all) {
             const output = conversations.map((conv) => {
-                return conv.toReasonableOutput(full);
+                return conv.serialize(true);
             });
-            const file = textToAttachment(JSON.stringify(output, null, 2), "conversations.txt");
+            const file = textToAttachment(output.join("\n\n\n").trim(), "conversations.ansi");
             await action.reply(invoker, { content: "here's all conversations", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({ pipe_data: { input_text: JSON.stringify(output, null, 2) } });
+            return new CommandResponse({ pipe_data: { input_text: output } });
         }
-        const output = conversation.toReasonableOutput(full);
-        const file = textToAttachment(JSON.stringify(output, null, 2), "conversation.txt");
-        await action.reply(invoker, { content: "here's your conversation", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { input_text: JSON.stringify(output, null, 2) } });
+        const output = conversation.serialize(true);
+        const file = textToAttachment(output.trim(), "conversation.ansi");
+        await action.reply(invoker, { content: "here's your conversation; if the output looks weird try full screening the file (the \"view whole file\" button on the left)", files: [file], ephemeral: guild_config.other.use_ephemeral_replies });
+        return new CommandResponse({ pipe_data: { input_text: output } });
     }
 );
 

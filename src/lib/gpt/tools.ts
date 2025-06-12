@@ -8,6 +8,8 @@ import * as log from "../log";
 import UserAgent from "user-agents";
 import * as cheerio from "cheerio";
 import TurndownService from 'turndown';
+import chalk from 'chalk';
+import { DiscordAnsi } from "../discord_ansi";
 
 // #endregion
 // #region Tool Classes
@@ -52,6 +54,34 @@ export class Tool {
     constructor(data: ToolData, func: ToolFunction) {
         this.data = data;
         this.function = func;
+    }
+
+    serialize(discordCompatible = false) {
+        const c = discordCompatible ? DiscordAnsi : chalk;
+        const lines = [];
+        lines.push(
+            (discordCompatible
+                ? c.bgBlue(c.bold(" Tool ")) + c.gray(`  [${this.data.name}]  `) + c.gray(`[${this.data.type}]`)
+                : chalk.bgBlueBright.bold.black(" Tool ") + chalk.gray(`  [${this.data.name}]  `) + chalk.gray(`[${this.data.type}]`)
+            )
+        );
+        lines.push(c.bold("Description:") + " " + c.white(this.data.description));
+        if (this.data.parameters && Object.keys(this.data.parameters).length > 0) {
+            lines.push(c.bold("Parameters:") +
+                "\n" + Object.values(this.data.parameters).map(param =>
+                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(param.key) : chalk.yellow(param.key)) + c.gray(` (${param.type}` + (param.arraytype ? `:${param.arraytype}` : "") + ")") +
+                    (param.description ? c.gray(": ") + c.white(param.description) : "") +
+                    (param.default !== undefined ? c.gray(" [default: ") + c.white(JSON.stringify(param.default)) + c.gray("]") : "")
+                ).join("\n")
+            );
+        } else {
+            lines.push(c.bold("Parameters:") + " " + c.gray("[none]"));
+        }
+        if (this.data.disabledDefault) {
+            lines.push(c.red("Disabled by default"));
+        }
+        lines.push("");
+        return lines.join("\n");
     }
 }
 

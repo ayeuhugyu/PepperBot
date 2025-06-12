@@ -6,9 +6,10 @@ import { Models, Model } from "./models";
 import { client } from "../../bot";
 import * as log from "../log";
 import { incrementGPTModelUsage } from "../statistics";
-import { tools } from "./tools";
+import { tools, ToolType } from "./tools";
 import chalk from "chalk";
 import * as action from "../discord_action";
+import { DiscordAnsi } from "../discord_ansi";
 
 export enum GPTAttachmentType {
     Text = "text",
@@ -55,18 +56,21 @@ export class ToolCall {
         this.parameters = args.parameters
     }
 
-    serialize() {
+    serialize(discordCompatible = false) {
+        const c = discordCompatible ? DiscordAnsi : chalk;
         // Visually rich, readable, and compact tool call serialization
         const lines = [];
         lines.push(
-            chalk.bgYellowBright.bold.black(" Tool Call ") +
-            chalk.gray(`  [${this.name}]  `) + chalk.gray(`#${this.id}`)
+            (discordCompatible
+                ? DiscordAnsi.gold(DiscordAnsi.bold(" Tool Call ")) + c.gray(`  [${this.name}]  `) + c.gray(`#${this.id}`)
+                : chalk.bgYellowBright.bold.black(" Tool Call ") + chalk.gray(`  [${this.name}]  `) + chalk.gray(`#${this.id}`)
+            )
         );
-        lines.push(chalk.gray(`  Parameters:`));
+        lines.push(c.gray(`  Parameters:`));
         if (Object.keys(this.parameters).length > 0) {
-            lines.push(chalk.whiteBright(JSON.stringify(this.parameters, null, 2).split("\n").map(l => "  " + l).join("\n")));
+            lines.push(c.white(JSON.stringify(this.parameters, null, 2).split("\n").map(l => "  " + l).join("\n")));
         } else {
-            lines.push(chalk.gray("  [no parameters]"));
+            lines.push(c.gray("  [no parameters]"));
         }
         return lines.join("\n");
     }
@@ -80,33 +84,35 @@ export class GPTMessage {
     author: User;
     discordId?: string;
     timestamp: Date = new Date();
-    serialize() {
+    serialize(discordCompatible = false) {
+        const c = discordCompatible ? DiscordAnsi : chalk;
         // Visually rich, readable, and compact message serialization
         const lines = [];
         lines.push(
-            chalk.bgBlueBright.bold.black(` GPT Message `) +
-            chalk.gray(`  [${this.role.toUpperCase()}]  `) +
-            chalk.greenBright(this.author.username) + chalk.gray(` (${this.author.id})`)
+            (discordCompatible
+                ? c.bgBlue(c.bold(` GPT Message `)) + c.gray(`  [${this.role.toUpperCase()}]  `) + c.green(this.author.username) + c.gray(` (${this.author.id})`)
+                : chalk.bgBlueBright.bold.black(` GPT Message `) + chalk.gray(`  [${this.role.toUpperCase()}]  `) + chalk.greenBright(this.author.username) + chalk.gray(` (${this.author.id})`)
+            )
         );
-        lines.push(chalk.gray(`  ${this.timestamp.toLocaleString()}`));
+        lines.push(c.gray(`  ${this.timestamp.toLocaleString()}`));
         lines.push("");
         if (this.content) {
-            lines.push(chalk.bold("Content:") +
-                "\n" + chalk.whiteBright(this.content.split("\n").map(l => "  " + l).join("\n")));
+            lines.push(c.bold("Content:") +
+                "\n" + c.white(this.content.split("\n").map(l => "  " + l).join("\n")));
         }
         if (this.attachments.length) {
-            lines.push(chalk.bold("Attachments:") +
+            lines.push(c.bold("Attachments:") +
                 "\n" + this.attachments.map(att =>
-                    chalk.cyan("  • ") + chalk.yellow(att.filename) + chalk.gray(` (${att.type})`)
+                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(att.filename) : chalk.yellow(att.filename)) + c.gray(` (${att.type})`)
                 ).join("\n"));
         }
         if (this.toolCalls?.length) {
-            lines.push(chalk.bold("Tool Calls:") +
+            lines.push(c.bold("Tool Calls:") +
                 "\n" + this.toolCalls.map(call =>
-                    chalk.cyan("  → ") + chalk.magentaBright(call.name) +
-                    chalk.gray(` [${call.id}]`) +
+                    c.cyan("  → ") + c.magenta(call.name) +
+                    c.gray(` [${call.id}]`) +
                     (Object.keys(call.parameters).length
-                        ? chalk.gray(": ") + chalk.white(JSON.stringify(call.parameters))
+                        ? c.gray(": ") + c.white(JSON.stringify(call.parameters))
                         : "")
                 ).join("\n"));
         }
@@ -144,22 +150,25 @@ export class ToolCallResponse {
     };
     date: Date = new Date(); // timestamp of the tool call response
 
-    serialize() {
+    serialize(discordCompatible = false) {
+        const c = discordCompatible ? DiscordAnsi : chalk;
         // Visually rich, readable, and compact tool call response serialization
         const lines = [];
         lines.push(
-            chalk.bgMagentaBright.bold.black(" Tool Call Response ") +
-            chalk.gray(`  [${this.call.name}]  `) + chalk.gray(`#${this.call.id}`)
+            (discordCompatible
+                ? DiscordAnsi.gold(DiscordAnsi.bold(" Tool Call Response ")) + c.gray(`  [${this.call.name}]  `) + c.gray(`#${this.call.id}`)
+                : chalk.bgMagentaBright.bold.black(" Tool Call Response ") + chalk.gray(`  [${this.call.name}]  `) + chalk.gray(`#${this.call.id}`)
+            )
         );
-        lines.push(chalk.gray(`  ${this.date.toLocaleString()}`));
+        lines.push(c.gray(`  ${this.date.toLocaleString()}`));
         lines.push("");
-        lines.push(chalk.bold("Parameters:") +
-            "\n" + chalk.whiteBright(JSON.stringify(this.call.parameters, null, 2).split("\n").map(l => "  " + l).join("\n")));
-        lines.push(chalk.bold("Response:") +
-            "\n" + chalk.whiteBright(JSON.stringify(this.response.data, null, 2).split("\n").map(l => "  " + l).join("\n")));
+        lines.push(c.bold("Parameters:") +
+            "\n" + c.white(JSON.stringify(this.call.parameters, null, 2).split("\n").map(l => "  " + l).join("\n")));
+        lines.push(c.bold("Response:") +
+            "\n" + c.white(JSON.stringify(this.response.data, null, 2).split("\n").map(l => "  " + l).join("\n")));
         lines.push(
-            chalk.bold("Error:") +
-            " " + (this.response.error ? chalk.bgRed.white.bold(" TRUE ") : chalk.bgGreen.black.bold(" FALSE "))
+            c.bold("Error:") +
+            " " + (this.response.error ? c.red(" TRUE ") : c.green(" FALSE "))
         );
         lines.push("");
         return lines.join("\n");
@@ -265,26 +274,33 @@ export class Conversation {
         if (this._onToolCallListener) {
             try { this._onToolCallListener(message.toolCalls); } catch (e) { log.warn('Error in onToolCall listener:', e); }
         }
+        const tools = this.getTools();
         for (const call of message.toolCalls) {
             const tool = Object.entries(tools).find(([key, t]) => t.data.name === call.name)?.[1];
             if (!tool) {
                 log.warn(`Tool ${call.name} not found for conversation ${this.id}.`);
                 continue;
             }
+            if (tool.data.type !== ToolType.Official) {
+                const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: `Custom tool calls are not yet supported. Please inform the user of this.` }, true);
+                this.addToolCallResponse(errorResponse);
+                log.warn(`Attempt to call custom tool ${call.name} in conversation ${this.id}. This is not supported yet.`);
+                continue;
+            }
             try {
                 const response = await tool.function(call.parameters);
                 const toolResponse = new ToolCallResponse(call.id, call.name, call.parameters, response);
-                this.addToolCallResponse(toolResponse); // do not add user, as this is a tool response
+                this.addToolCallResponse(toolResponse);
             } catch (err) {
                 log.error(`Error running tool ${call.name} for conversation ${this.id}:`, err);
                 const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: err }, true);
-                this.addToolCallResponse(errorResponse); // do not add user, as this is a tool response
+                this.addToolCallResponse(errorResponse);
             }
         }
     }
 
     async run(): Promise<GPTMessage> {
-        log.debug(`Running model ${this.model.name} for conversation ${this.id} with prompt:`, this.prompt);
+        log.debug(`Running model ${this.model.name} for conversation ${this.id} with prompt:`, this.prompt.author.username + "/" + this.prompt.name);
         const start = performance.now();
         let didError = false;
         const res = await this.model.runner(this).catch(err => {
@@ -317,39 +333,53 @@ export class Conversation {
         return tools;
     }
 
-    serialize() {
+    filterParameters() {
+        const availableParameters = Object.keys(this.model.parameters);
+        const filteredParameters: Record<string, unknown> = {};
+        const entries = Object.entries(this.api_parameters || {});
+        const filteredEntries = entries.filter(([key, _]) => availableParameters.includes(key));
+        return Object.fromEntries(filteredEntries);
+    }
+
+    serialize(discordCompatible = false) {
+        const c = discordCompatible ? DiscordAnsi : chalk;
         // Visually rich, readable, and compact conversation serialization
         const lines = [];
-        lines.push(chalk.bgCyan.bold.black(` Conversation `) + chalk.gray(`  #${this.id}`));
+        lines.push(
+            (discordCompatible
+                ? c.cyan(c.bold(` Conversation `)) + c.gray(`  #${this.id}`)
+                : chalk.bgCyan.bold.black(` Conversation `) + chalk.gray(`  #${this.id}`)
+            )
+        );
         lines.push("");
-        lines.push(chalk.bold("Users:") +
+        lines.push(c.bold("Users:") +
             (this.users.length
                 ? "\n" + this.users.map(u =>
-                    "  " + chalk.greenBright(u.username) + chalk.gray(` (${u.id})`)
+                    "  " + c.green(u.username) + c.gray(` (${u.id})`)
                 ).join("\n")
-                : " " + chalk.gray("[no users]"))
+                : " " + c.gray("[no users]"))
         );
-        lines.push(chalk.bold("Prompt:") +
-            " " + chalk.yellow(`${this.prompt.author.username}/${this.prompt.name}`)
+        lines.push(c.bold("Prompt:") +
+            " " + (discordCompatible ? DiscordAnsi.gold(`${this.prompt.author.username}/${this.prompt.name}`) : chalk.yellow(`${this.prompt.author.username}/${this.prompt.name}`))
         );
-        lines.push(chalk.bold("Model:") +
-            " " + chalk.cyan(this.model.name)
+        lines.push(c.bold("Model:") +
+            " " + c.cyan(this.model.name)
         );
-        lines.push(chalk.bold("API Parameters:") +
+        lines.push(c.bold("API Parameters:") +
             (Object.entries(this.api_parameters).length
                 ? "\n" + Object.entries(this.api_parameters).map(([key, value]) =>
-                    "  " + chalk.cyan(key) + chalk.gray(": ") + chalk.whiteBright(value)
+                    "  " + c.cyan(key) + c.gray(": ") + c.white(value ? String(value) : "")
                 ).join("\n")
-                : " " + chalk.gray("[no API parameters]"))
+                : " " + c.gray("[no API parameters]"))
         );
         lines.push("");
-        lines.push(chalk.bold("Messages:") +
+        lines.push(c.bold("Messages:") +
             (this.messages.length
                 ? "\n" + this.messages.map((m, i) =>
-                    chalk.gray("─".repeat(50)) +
-                    "\n\n" + m.serialize().split("\n").map(l => "  " + l).join("\n")
+                    c.gray("─".repeat(50)) +
+                    "\n\n" + (typeof m.serialize === "function" ? m.serialize(discordCompatible).split("\n").map(l => "  " + l).join("\n") : "")
                 ).join("\n")
-                : " " + chalk.gray("[no messages]"))
+                : " " + c.gray("[no messages]"))
         );
         lines.push("");
         return lines.join("\n");
@@ -359,12 +389,15 @@ export class Conversation {
 function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false): Conversation {
     const currentConversation = conversations.find(c => c.users.some(u => u === user));
     if (currentConversation && !alwaysCreateNew) {
+        log.debug(`Found existing conversation for user ${user.username} (${user.id}):`, currentConversation.id);
         return currentConversation
     }
     // alwaysCreateNew is always true from here on
+    log.debug(`No existing conversation found for user ${user.username} (${user.id}) or alwaysCreateNew was true, creating a new one.`);
     currentConversation?.removeUser(user); // remove the user from the current conversation if it exists
     const newConversation = new Conversation();
     newConversation.addUser(user);
+    log.debug(`Created new conversation for user ${user.username} (${user.id}):`, newConversation.id);
     return newConversation;
 }
 
@@ -373,13 +406,17 @@ function getConversationByMessageId(messageId: string): Conversation | undefined
 }
 
 export function getConversation(message: Message) {
+    log.debug(`Getting conversation for message ${message.id} from user ${message.author.username} (${message.author.id})`);
     // if the message directly mentions the bot, create a new conversation
     let messageIdConversation = getConversationByMessageId(message.id);
     if (message.content.includes(`<@${client.user?.id}>`) || message.content.includes(`<@!${client.user?.id}>`)) {
+        log.debug(`Message ${message.id} directly mentions the bot, creating a new conversation.`);
         return ensureConversationByUserId(message.author, true);
     } else if (messageIdConversation) {
+        log.debug(`Found existing conversation for message ${message.id}:`, messageIdConversation.id);
         return messageIdConversation;
     } else {
+        log.debug(`Could not find existing conversation via message search, checking by user ID.`);
         return ensureConversationByUserId(message.author);
     }
 }
@@ -392,7 +429,6 @@ export async function respond(message: Message) {
     const conversation = getConversation(message);
     conversation.addDiscordMessage(message);
     log.info(`Responding to message in conversation ${conversation.id} from user ${message.author.username} (${message.author.id})`);
-    log.debug(`Conversation details:`, conversation.serialize());
 
     let currentContent = "processing..."
 
@@ -410,7 +446,7 @@ export async function respond(message: Message) {
 
     try { // TODO: add attachment support
         const response = await conversation.run();
-        log.info(`Response generated for conversation ${conversation.id}:`, response.serialize());
+        log.debug(`Response generated for conversation ${conversation.id}:`, response.serialize());
         await action.edit(processingMessage, { content: response.content || "No response content generated."} );
     } catch (error) {
         log.error(`Error responding to message in conversation ${conversation.id}:`, error);

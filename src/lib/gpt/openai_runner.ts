@@ -60,7 +60,9 @@ function formatUserMessage(msg: GPTMessage): ChatCompletionUserMessageParam {
     return {
         role: 'user',
         content: contentParts.length > 0 ? contentParts : '',
-        name: msg.author?.username,
+        // name: msg.author?.username,
+        // the way openai handles names is really stupid and if your username is just something that is like an actual thing the bot will think you're talking about that thing
+        // for some god forsaken fucking reason they probably just append it to the start of the message or some stupid bullshit
     };
 }
 
@@ -193,23 +195,19 @@ function getRequiredParameters(parameters: Record<string, ToolParameter>): strin
     return required;
 }
 
-function getModelParam(model: Model, key: string, fallback: unknown): unknown {
-    const param = Array.isArray(model.parameters) ? model.parameters.find((p: { key: string; default?: unknown }) => p.key === key) : undefined;
-    return param && param.default !== undefined ? param.default : fallback;
-}
-
 export async function runOpenAI(conversation: Conversation, openai: OpenAI = openai_default): Promise<GPTMessage> {
     const model: Model = conversation.model;
     const apiConversation: ChatCompletionMessageParam[] = formatConversation(conversation);
     const tools: ChatCompletionTool[] = Object.entries(conversation.getTools()).map(([_, tool]) => formatTool(tool));
+
+    const params = conversation.filterParameters();
 
     const response = await openai.chat.completions.create({
         model: model.name,
         messages: apiConversation,
         tools: tools,
         tool_choice: 'auto',
-        max_tokens: getModelParam(model, 'max_tokens', 1000) as number,
-        temperature: getModelParam(model, 'temperature', 0.7) as number,
+        ...params,
     });
     return new GPTMessage({
         content: response.choices[0]?.message?.content ?? "",
