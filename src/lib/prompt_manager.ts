@@ -1,5 +1,6 @@
 import database from "./data_manager";
 import officialPrompts from "../../constants/official_prompts.json" assert { type: "json" };
+import { FakeToolData } from "./gpt/tools"
 
 export interface PromptAuthor {
     id: string;
@@ -24,6 +25,7 @@ export interface dbPrompt {
     default: boolean;
 
     api_parameters: string; // JSON string
+    tools: string; // JSON string, an array of tool names or JSON objects
 }
 
 export class Prompt {
@@ -42,7 +44,14 @@ export class Prompt {
 
     api_parameters: Record<string, number | string> = {}; // JSON string
 
+    tools: (string | FakeToolData)[] = ["request_url", "search"]
+
     constructor(dbObject: Partial<dbPrompt>) {
+        const toolJSON = JSON.parse(dbObject.tools || "[]");
+        const tools: (string | Tool)[] = [
+            ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "string")) as string[],
+            ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "object" && tool !== null)) as FakeToolData[]
+        ];
         Object.assign(this, {
             name: dbObject.name || "Undefined",
             content: dbObject.content || "Prompt undefined.",
@@ -59,6 +68,7 @@ export class Prompt {
             nsfw: Boolean(dbObject.nsfw),
             default: Boolean(dbObject.default),
             api_parameters: JSON.parse(dbObject.api_parameters || "{}"),
+            tools: tools || ["request_url", "search"],
         });
     }
 }
@@ -128,6 +138,7 @@ export async function writePrompt(prompt: Prompt) {
                 nsfw: Number(prompt.nsfw),
                 default: Number(prompt.default),
                 api_parameters: JSON.stringify(prompt.api_parameters),
+                tools: JSON.stringify(prompt.tools || ["request_url", "search"]),
             });
     } else {
         result = await database("prompts")
@@ -145,6 +156,7 @@ export async function writePrompt(prompt: Prompt) {
                 nsfw: Number(prompt.nsfw),
                 default: Number(prompt.default),
                 api_parameters: JSON.stringify(prompt.api_parameters),
+                tools: JSON.stringify(prompt.tools || ["request_url", "search"]),
             });
     }
 

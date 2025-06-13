@@ -56,6 +56,19 @@ export class Tool {
         this.function = func;
     }
 
+    static fromFake(fakeData: FakeToolData): Tool {
+        const data = new ToolData(
+            fakeData.name,
+            fakeData.description,
+            ToolType.User,
+            fakeData.parameters,
+            false
+        );
+        return new Tool(data, async (args: any) => {
+            return `A fake tool was somehow executed. This should never happen. Tool name: ${data.name}, description: ${data.description}`;
+        });
+    }
+
     serialize(discordCompatible = false) {
         const c = discordCompatible ? DiscordAnsi : chalk;
         const lines = [];
@@ -85,6 +98,7 @@ export class Tool {
     }
 }
 
+export type FakeToolData = Omit<ToolData, 'type' | 'disabledDefault'>
 // #endregion
 // #region Tool Helpers
 
@@ -284,7 +298,7 @@ export const tools: Record<string, Tool> = {
             {
                 "query": { key: 'query', description: 'query to search for', type: 'string', required: true }
             },
-            true // disabled by default
+            false
         ),
         async ({ query }: { query: string }) => {
             const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${process.env.GOOGLE_API_KEY}&cx=${process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID}`;
