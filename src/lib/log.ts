@@ -62,7 +62,11 @@ function format(thing: unknown) {
 }
 
 function strtobl(str: string) {
-    return str.toLowerCase() === "true" || str === "1" || str === "yes" || str === "y";
+    const lowerSTr = str.toLowerCase();
+    return lowerSTr === "true" 
+        || lowerSTr === "1" 
+        || lowerSTr === "yes" || 
+        lowerSTr === "y";
 }
 
 function log(level: Level, ...message: unknown[]) {

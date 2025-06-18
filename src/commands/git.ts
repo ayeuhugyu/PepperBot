@@ -6,33 +6,35 @@ import { textToAttachment } from "../lib/attachment_manager";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 
-const git_log = new Command({
-    name: 'log',
-    description: 'returns the git log of the repo',
-    long_description: 'creates a graph of all commits to the github repository',
-    tags: [CommandTag.Info],
-    pipable_to: [CommandTag.TextPipable],
-    root_aliases: ['gitlog'],
-    example_usage: "p/git log",
+const git_log = new Command(
+    {
+        name: 'log',
+        description: 'returns the git log of the repo',
+        long_description: 'creates a graph of all commits to the github repository',
+        tags: [CommandTag.Info],
+        pipable_to: [CommandTag.TextPipable],
+        root_aliases: ['gitlog'],
+        example_usage: "p/git log",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ invoker, guild_config, will_be_piped }) {
-    const git = simpleGit();
-    const log = await git.log(['--graph', '--abbrev-commit', '--decorate', '--format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)"', '--all']);
-    const logString = log.all.map(entry => entry.hash).join('\n');
+        const git = simpleGit();
+        const log = await git.log(['--graph', '--abbrev-commit', '--decorate', '--format=format:"%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)"', '--all']);
+        const logString = log.all.map(entry => entry.hash).join('\n');
 
-    if (will_be_piped) {
-        action.reply(invoker, { content: "piped log of commits", ephemeral: guild_config.other.use_ephemeral_replies });
-        return new CommandResponse({ pipe_data: { input_text: logString } });
-    }
+        if (will_be_piped) {
+            action.reply(invoker, { content: "piped log of commits", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({ pipe_data: { input_text: logString } });
+        }
 
-    const attachment = await textToAttachment(logString, 'gitlog.txt');
-    await action.reply(invoker, { content: "here's a log of commits to the repo", files: [attachment], ephemeral: guild_config.other.use_ephemeral_replies });
-    return new CommandResponse({ pipe_data: { input_text: `here's a log of commits to the repo\n${logString}` } });
+        const attachment = await textToAttachment(logString, 'gitlog.txt');
+        await action.reply(invoker, { content: "here's a log of commits to the repo", files: [attachment], ephemeral: guild_config.other.use_ephemeral_replies });
+        return new CommandResponse({ pipe_data: { input_text: `here's a log of commits to the repo\n${logString}` } });
     }
 );
 
-const git_get = new Command({ // this is just so that its usable by slash commands
+const git_get = new Command(
+    { // this is just so that its usable by slash commands
         name: 'get',
         description: 'returns the github repo',
         long_description: 'sends the link for the public github repo for this bot. this only exists so that slash commands can use it',

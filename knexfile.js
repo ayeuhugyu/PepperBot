@@ -1,5 +1,3 @@
-// Update with your config settings.
-
 /**
  * @type import('knex').Knex.Config
  */

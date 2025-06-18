@@ -2,7 +2,7 @@ export class Video {
     constructor(
         public url: string,
         public title: string,
-        public duration: number, // seconds
+        public duration: number, // ms/1000
         public thumbnail?: string,
         public description?: string,
         public uploader?: string,

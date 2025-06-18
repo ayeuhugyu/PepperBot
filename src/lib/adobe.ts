@@ -26,7 +26,7 @@ export async function cleanupSearchResults(searchResults: Response): Promise<Fil
             title: file.title,
             creatorId: file.creator_id,
             url: file.thumbnail_url,
-            pageUrl: `https://stock.adobe.com/de/${file.id}`,
+            pageUrl: `https://stock.adobe.com/es/${file.id}`,
         });
     });
     return fileData;
@@ -49,7 +49,7 @@ export function search({ query, limit, creatorId, quality }: SearchParams): Prom
         const result = await fetch(url, {
             headers: {
                 "x-api-key": process.env.ADOBE_API_KEY,
-                "x-product": "myTestApp1.0",
+                "x-product": "epperboYt/1.0",
             },
         });
         log.debug(`searched adobe stock for ${query} ` + (creatorId ? `by creator ${creatorId}` : "") + (limit ? ` with limit ${limit}` : "") + (quality ? ` with quality ${quality}` : ``));

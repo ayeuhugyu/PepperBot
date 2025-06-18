@@ -6,7 +6,6 @@ export enum Theme {
     WINTER = "winter",
     EASTER = "easter",
     THANKSGIVING = "thanksgiving",
-    
     CURRENT = Theme.DEFAULT
 }
 

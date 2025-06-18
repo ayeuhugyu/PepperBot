@@ -3,6 +3,3 @@
 /resources
 /logs
 .env
-.DS_Store
-/testUtils
-/private

@@ -52,11 +52,11 @@
     background-color: var(--background-color);
     background-attachment: fixed;
     background-image:
-                    radial-gradient(circle, #004d4dac, rgba(0, 77, 77, 0) 70%), /* dark teal */
-                    radial-gradient(circle, #233c56, rgba(0, 31, 63, 0) 70%), /* navy blue */
-                    radial-gradient(circle, #5f02a1, rgba(75, 0, 130, 0) 70%), /* deep violet */
-                    radial-gradient(circle, #3c5a6e, rgba(54, 69, 79, 0) 70%), /* charcoal gray */
-                    radial-gradient(circle, #5f02a1, rgba(25, 25, 112, 0) 70%); /* midnight blue */
+        radial-gradient(circle, #004d4dac, rgba(0, 77, 77, 0) 70%), /* dark teal */
+        radial-gradient(circle, #233c56, rgba(0, 31, 63, 0) 70%), /* navy blue */
+        radial-gradient(circle, #5f02a1, rgba(75, 0, 130, 0) 70%), /* deep violet */
+        radial-gradient(circle, #3c5a6e, rgba(54, 69, 79, 0) 70%), /* charcoal gray */
+        radial-gradient(circle, #5f02a1, rgba(25, 25, 112, 0) 70%); /* midnight blue */
     background-size: 200% 200%;
     background-position: 10% 20%, 80% 30%, 50% 70%, 30% 50%, 70% 80%;
     animation: move-circles 120s ease-in-out infinite;

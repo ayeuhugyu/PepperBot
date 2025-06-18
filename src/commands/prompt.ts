@@ -1,4 +1,4 @@
-import { AutocompleteInteraction, ButtonInteraction, Interaction, Message, MessageComponentInteraction, MessageFlags, ModalSubmitInteraction, User } from "discord.js";
+import { AutocompleteInteraction, Interaction, Message, MessageComponentInteraction, MessageFlags, ModalSubmitInteraction, User } from "discord.js";
 import { Command, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getPrompt, getPromptByUsername, getPromptsByUsername, getUserPrompts, Prompt, removePrompt, writePrompt } from "../lib/prompt_manager";

@@ -34,7 +34,7 @@ export function downloadSound(url: string, filename: string) {
                 `resources/sounds/${fixedFileName}`
             );
             if (res.body) {
-                stream.Readable.from(res.body as any).pipe(ws); // todo: change this to not be any
+                stream.Readable.from(res.body as unknown as any).pipe(ws);
             } else {
                 reject(new Error("Response body is null"));
             }
