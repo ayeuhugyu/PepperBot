@@ -97,7 +97,6 @@ function formatAssistantMessage(msg: GPTMessage): ChatCompletionAssistantMessage
     return {
         role: 'assistant',
         content: contentParts.length > 0 ? contentParts : '',
-        name: msg.author?.username,
         tool_calls,
     };
 }
