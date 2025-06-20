@@ -4,6 +4,8 @@ import * as log from "../log"
 import fs from "fs/promises";
 import path from "path";
 import { createWriteStream } from "fs";
+import stream from "stream";
+import { finished } from "stream/promises";
 
 const urlRegex = /https?:\/\/music\.apple\.com\/\w+\/(?:album|playlist|song)\/.+?\/(?:\d+|pl\.[\w\-]+)(?:\?i=\d+)?/g // should match all of the links below
 const idGatheringRegex = {
@@ -186,8 +188,6 @@ export class AppleMusicDownloader extends DownloaderBase {
         const fileStream = createWriteStream(filePath);
 
         // Convert the web ReadableStream to a Node.js stream and pipe to file
-        const stream = require('stream');
-        const { finished } = require('stream/promises');
         return new Promise<DownloadedVideo | null>(async (resolve) => {
             try {
                 // Reconstruct the stream with the first chunk
