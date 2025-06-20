@@ -1,13 +1,7 @@
 # PepperBot
 
-![PepperBot Banner](./docs/doc.png)
-
-![Static Badge](https://img.shields.io/badge/71.2%25?style=flat&label=Uptime&labelColor=FFFF00%20)
-
-hello! this is the repo for my discord bot, [PepperBot](https://pepperbot.online/guide)
-
-this is a bot mostly focused on giving users full control over an AI chatbot, allowing people to change the prompts, change the temperature and top_p, change the model, etc.
-
+hello! this is the repo for my discord bot, [PepperBot](https://pepperbot.online/guide)\
+this is a bot mostly focused on giving users full control over an AI chatbot, allowing people to change the prompts, change the temperature and top_p, change the model, etc.\
 there's some other commands, but they will always remain secondary to the chatbot stuff.
 
 # How to Run

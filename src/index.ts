@@ -2,7 +2,7 @@
 import * as log from "./lib/log";
 import { ChildProcess, fork } from "child_process";
 
-let bot: ChildProcess | undefined = undefined;
+let bot: (ChildProcess | undefined) = undefined;
 
 function startBot() {
     if (bot) {

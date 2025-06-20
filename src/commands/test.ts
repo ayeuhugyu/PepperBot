@@ -2,6 +2,7 @@ import { Command, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { CommandTag } from "../lib/classes/command_enums";
 
+
 const command = new Command(
     {
         name: 'test',

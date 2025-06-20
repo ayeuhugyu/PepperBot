@@ -1,7 +1,7 @@
-import { Command } from "../lib/classes/command";
+import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
-import { CommandTag, InvokerType } from "../lib/classes/command_enums";
+import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 
 function strtobl(str: string) {
     return str.toLowerCase() === "true" || str === "1" || str === "yes" || str === "y";

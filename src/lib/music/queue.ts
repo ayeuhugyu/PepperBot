@@ -1,4 +1,4 @@
-import { Guild, Message, MessageFlags, VoiceBasedChannel } from "discord.js";
+import { AnyComponent, Guild, Message, MessageFlags, VoiceBasedChannel } from "discord.js";
 import { GuildVoiceManager, VoiceEventListener, VoiceManagerEvent, getVoiceManager } from "../classes/voice";
 import { Playlist, Video } from "./media";
 import { downloadMedia } from "../downloaders";
@@ -8,8 +8,8 @@ import { createAudioResource } from "@discordjs/voice";
 import { CustomSound } from "../custom_sound_manager";
 import { Container, ContainerComponent, TextDisplay } from "../classes/components";
 import { embedVideoOrSound } from "./embed";
-import fs from "fs";
 import * as log from "../log";
+import fs from "fs";
 import EventEmitter from "events";
 
 export enum QueueState {
@@ -28,7 +28,7 @@ function shuffleArray<T>(array: T[]): T[] {
         .map(({ item }) => item);
 }
 
-// only Video or CustomSound now
+// Only Video or CustomSound now
 type QueueItem = Video | CustomSound;
 
 let queues = new Map<string, QueueManager>();
@@ -215,6 +215,7 @@ export class QueueManager implements VoiceEventListener {
         }
         // Debug: check file path existence
         try {
+            const fs = require('fs');
             log.debug("Creating audio resource for custom sound", sound.path, "exists:", fs.existsSync(sound.path));
         } catch (e) {
             log.debug("fs.existsSync failed", e);

@@ -98,7 +98,6 @@ class V2PagedMenu {
 
     stop(): void {
         // i dont care if this causes a very slight fucking issue with having 500 collectors lying around i just dont give a fuck
-        // ^ fix your code pal
         if (this && this.collector) {
             this.collector.stop();
         }

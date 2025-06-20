@@ -22,15 +22,14 @@ async function commandHandler(interaction: ChatInputCommandInteraction) {
             case ApplicationCommandOptionType.Subcommand: { args[command.subcommand_argument] = option.name; stack.push(...option.options!); break }
             case ApplicationCommandOptionType.SubcommandGroup: { log.warn("subcommand groups unimplemented"); break }
             case ApplicationCommandOptionType.Attachment: { args[option.name] = option.attachment; break }
+            case ApplicationCommandOptionType.Boolean: { args[option.name] = option.value; break }
             case ApplicationCommandOptionType.Channel: { args[option.name] = option.channel; break }
+            case ApplicationCommandOptionType.Integer: { args[option.name] = option.value; break }
             case ApplicationCommandOptionType.Mentionable: { args[option.name] = option.role ?? option.user; break }
-            case ApplicationCommandOptionType.User: { args[option.name] = option.user; break }
+            case ApplicationCommandOptionType.Number: { args[option.name] = option.value; break }
             case ApplicationCommandOptionType.Role: { args[option.name] = option.role; break }
-            case ApplicationCommandOptionType.Integer:
-            case ApplicationCommandOptionType.Number:
-            case ApplicationCommandOptionType.Boolean:
-            case ApplicationCommandOptionType.String: 
-                { args[option.name] = option.value; break }
+            case ApplicationCommandOptionType.String: { args[option.name] = option.value; break }
+            case ApplicationCommandOptionType.User: { args[option.name] = option.user; break }
         }
     }
     log.debug(`parsed interaction arguments: ${Object.entries(args).map(([k, v]) => `${k}: ${v}`).join(", ")}`)

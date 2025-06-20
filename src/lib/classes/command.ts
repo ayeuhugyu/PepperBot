@@ -183,20 +183,20 @@ export class CommandAccess {
     blacklist: AccessList;
 
     constructor(
-        whitelist: Partial<AccessList> = { },
-        blacklist: Partial<AccessList> = { }
+        whitelist: Partial<AccessList> = { users: [], roles: [], channels: [], guilds: [] },
+        blacklist: Partial<AccessList> = { users: [], roles: [], channels: [], guilds: [] }
     ) {
         this.whitelist = {
-            users: [...(whitelist.users || [])],
-            roles: [...(whitelist.roles || [])],
-            channels: [...(whitelist.channels || [])],
-            guilds: [...(whitelist.guilds || ["1157825736044974103"])] // ayeuhugyu test server
+            users: whitelist.users || [],
+            roles: whitelist.roles || [],
+            channels: whitelist.channels || [],
+            guilds: whitelist.guilds || []
         };
         this.blacklist = {
-            users: [...(blacklist.users || [])],
-            roles: [...(blacklist.roles || [])],
-            channels: [...(blacklist.channels || [])],
-            guilds: [...(blacklist.guilds || [])]
+            users: blacklist.users || [],
+            roles: blacklist.roles || [],
+            channels: blacklist.channels || [],
+            guilds: blacklist.guilds || []
         };
     }
 
@@ -243,11 +243,12 @@ export class CommandOption<
     name!: K;
     type!: T;
     required: R = false as R;
-    description = "No description";
+    description = "no description";
     choices: T extends CommandOptionType.ChoicesUsable ? CommandOptionChoice[] : [] = [] as never;
     channel_types?: ChannelType[]
     private options?: CommandOption[];
 
+    /* ↑↑↑ discords shit ↓↓↓ my shit */
     deployed: boolean = true;
     long_description: string = "no description"
     long_requirements: string | undefined = undefined; // more detailed version of the "required" option, allows you to write stuff like "required if b is undefined"
@@ -339,7 +340,7 @@ export class Command<
     integration_types = [ ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall ];
     contexts = [ InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel ];
     nsfw = false
-
+    /* ↑↑↑ discords shit ↓↓↓ my shit */
     aliases: string[] = [];
     /**
      * Top-level aliases to create for subcommands.
@@ -525,6 +526,7 @@ export class Command<
                     input.message.content = input.message.content.replace(new RegExp(`\\s+${subArg}\\b`), "");
                     // this makes get arguments functions easily standardizable
                     // this will not affect subcommands executed with root aliases due to the space, this is intentional though
+                    // also if this fucking thing does what it has been doing and just not fucking working on some operating systems i will do terrible things
                     log.debug("replaced subcommand in message content: " + input.invoker.content);
                     input.enrich(subcommand.parse_arguments?.(input) ?? {})
                 }

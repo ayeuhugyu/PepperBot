@@ -10,8 +10,7 @@ import { CommandTag, CommandOptionType, SubcommandDeploymentApproach } from "../
 import { tablify } from "../lib/string_helpers";
 import { createAudioResource } from "@discordjs/voice";
 
-const list = new Command(
-    {
+const list = new Command({
         name: 'list',
         description: 'lists sounds',
         long_description: 'lists all the sounds available',
@@ -54,8 +53,7 @@ const list = new Command(
     }
 );
 
-const play = new Command(
-    {
+const play = new Command({
         name: 'play',
         description: 'plays a sound',
         long_description: 'plays the requested sound',
