@@ -5,12 +5,12 @@ import fs from "fs/promises";
 import path from "path";
 import { createWriteStream } from "fs";
 
-const urlRegex = /https?:\/\/music\.apple\.com\/\w+\/(?:album|playlist|song)\/?[.]*\/(?:\d+|pl\.[\w\-]+)(?:\?i=\d+)?/g // should match all of the links below
+const urlRegex = /https?:\/\/music\.apple\.com\/\w+\/(?:album|playlist|song)\/.+?\/(?:\d+|pl\.[\w\-]+)(?:\?i=\d+)?/g // should match all of the links below
 const idGatheringRegex = {
-    track: /https?:\/\/music\.apple\.com\/\w+\/(?:album)\/?[.]*\/(?:\d+)\?i=(\d+)/, // should match https://music.apple.com/us/album/new-noise-resolutionz/1765212414?i=1765212428
-    song: /https?:\/\/music\.apple\.com\/\w+\/(?:song)\/?[.]*\/(\d+)/,
-    album: /https?:\/\/music\.apple\.com\/\w+\/(?:album)\/?[.]*\/(\d+)/, // should match https://music.apple.com/us/album/pizza-tower-original-game-soundtrack-bonus-tracks/1765212414
-    playlist: /https?:\/\/music\.apple\.com\/\w+\/(?:playlist)\/?[.]*\/(pl\.[\w\-]+)/, // should match https://music.apple.com/us/playlist/fast-swing-like-songs/pl.u-zPyLmZYFZy503Nl
+    track: /https?:\/\/music\.apple\.com\/\w+\/(?:album)\/.+?\/(?:\d+)\?i=(\d+)/, // should match https://music.apple.com/us/album/new-noise-resolutionz/1765212414?i=1765212428
+    song: /https?:\/\/music\.apple\.com\/\w+\/(?:song)\/.+?\/(\d+)/,
+    album: /https?:\/\/music\.apple\.com\/\w+\/(?:album)\/.+?\/(\d+)/, // should match https://music.apple.com/us/album/pizza-tower-original-game-soundtrack-bonus-tracks/1765212414
+    playlist: /https?:\/\/music\.apple\.com\/\w+\/(?:playlist)\/.+?\/(pl\.[\w\-]+)/, // should match https://music.apple.com/us/playlist/fast-swing-like-songs/pl.u-zPyLmZYFZy503Nl
 }
 
 function getIdAndMediaType(url: string) {
