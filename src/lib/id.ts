@@ -11,7 +11,7 @@ export function randomId() { // there is an extremely small chance that this wil
     const noun = nouns[randomNounIndex];
 
     const now = Date.now().toString(16);
-    const id = `${adjective}-${noun}-${now.slice(now.length - 5)}`;
+    const id = `${adjective}-${noun}-${now.slice(now.length - 4)}`; // last 4 hex digits of the timestamp
 
     return id;
 }

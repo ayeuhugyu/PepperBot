@@ -215,7 +215,6 @@ export class QueueManager implements VoiceEventListener {
         }
         // Debug: check file path existence
         try {
-            const fs = require('fs');
             log.debug("Creating audio resource for custom sound", sound.path, "exists:", fs.existsSync(sound.path));
         } catch (e) {
             log.debug("fs.existsSync failed", e);
