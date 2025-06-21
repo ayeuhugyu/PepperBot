@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { Conversation, GPTMessage, ToolCall, ToolCallResponse } from "./main";
+import { Conversation, GPTAttachment, GPTMessage, ToolCall, ToolCallResponse } from "./main";
 import { JSONSchemaDefinition } from "openai/lib/jsonschema";
 import { RunnableToolFunction } from "openai/lib/RunnableFunction";
 import { JSONSchemaType } from "openai/lib/jsonschema";
@@ -37,6 +37,8 @@ function formatSystemMessage(prompt: string): ChatCompletionMessageParam {
     };
 }
 
+let openAIAllowedImageExtensions: string[] = ["jpg", "jpeg", "png", "gif", "webp"];
+
 function formatUserMessage(msg: GPTMessage): ChatCompletionUserMessageParam {
     const content: string = msg.content ?? '';
     const contentParts: ChatCompletionContentPart[] = [];
@@ -44,11 +46,16 @@ function formatUserMessage(msg: GPTMessage): ChatCompletionUserMessageParam {
         contentParts.push({ type: 'text', text: content });
     }
     if (msg.attachments && msg.attachments.length > 0) {
-        for (const att of msg.attachments as Attachment[]) {
+        for (const att of msg.attachments as GPTAttachment<any>[]) {
             if (att.type === 'text' && att.content) {
                 contentParts.push({ type: 'text', text: att.content });
             } else if (att.type === 'image' && att.url) {
-                contentParts.push({ type: 'image_url', image_url: { url: att.url } });
+                const ext = att.filename.split('.').pop()?.toLowerCase();
+                if (ext && openAIAllowedImageExtensions.includes(ext)) {
+                    contentParts.push({ type: 'image_url', image_url: { url: att.url } });
+                } else {
+                    contentParts.push({ type: 'text', text: `[User attached an image file with unsupported extension: .${ext || 'unknown'}]` });
+                }
             } else if (att.type === 'audio') {
                 // OpenAI expects base64+format for input_audio, not a URL. If not available, add a text part.
                 contentParts.push({ type: 'text', text: '[User attached an audio file that cannot be processed by the AI (audio input must be base64)]' });
@@ -57,6 +64,7 @@ function formatUserMessage(msg: GPTMessage): ChatCompletionUserMessageParam {
             }
         }
     }
+
     return {
         role: 'user',
         content: contentParts.length > 0 ? contentParts : '',

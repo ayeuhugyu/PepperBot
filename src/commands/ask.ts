@@ -40,7 +40,7 @@ const command = new Command(
     }, // No arguments template needed
     async function execute ({ args, invoker, guild_config, invoker_type, piped_data }) {
         const request = args.request || piped_data?.data?.input_text;
-        const image = (args.image as Attachment | undefined) || piped_data?.data?.image_url ? { id: "unknown", url: piped_data?.data?.image_url, name: "image.png" } : undefined; // this could have issues but i literally cant think of another way to do it
+        const image = (args.image as Attachment | undefined) || piped_data?.data?.image_url ? { id: args.image?.id, url: piped_data?.data?.image_url, name: args?.image?.name } : undefined; // this could have issues but i literally cant think of another way to do it
         if (!request && !image) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({

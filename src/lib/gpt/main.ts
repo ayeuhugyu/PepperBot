@@ -25,10 +25,60 @@ export const userPrompts = new Map<string, Prompt>();
 
 function getAttachmentType({ filename, url }: { filename: string, url: string }): GPTAttachmentType {
     const ext = filename.split('.').pop()?.toLowerCase();
-    // TODO: finish
-    // unfinished functionality, will be expanded later
-        // first, detect by extension. if its not video or image or audio, then download it and test it for utf8 encoding to test for text
-    return GPTAttachmentType.Text;
+
+    if (!ext) return GPTAttachmentType.Unknown;
+
+    // Common image extensions
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'apng', 'avif', 'ico'];
+    // Common video extensions
+    const videoExts = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv', 'm4v', '3gp', 'mpeg', 'mpg'];
+    // Common audio extensions
+    const audioExts = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus', 'wma', 'aiff', 'alac'];
+    // Common text extensions
+    const textExts = [
+        'txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml', 'ini', 'log', 'tsv', 'js', 'ts', 'py', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'html', 'css', 'scss', 'less', 'sh', 'bat', 'conf'
+    ];
+
+    if (imageExts.includes(ext)) return GPTAttachmentType.Image;
+    if (videoExts.includes(ext)) return GPTAttachmentType.Video;
+    if (audioExts.includes(ext)) return GPTAttachmentType.Audio;
+    if (textExts.includes(ext)) return GPTAttachmentType.Text;
+
+    // Try to guess from the URL's mimetype if possible (only if URL has a mimetype param)
+    try {
+        const urlObj = new URL(url);
+        const mime = urlObj.searchParams.get('mimetype') || urlObj.searchParams.get('content-type');
+        if (mime) {
+            if (mime.startsWith('image/')) return GPTAttachmentType.Image;
+            if (mime.startsWith('video/')) return GPTAttachmentType.Video;
+            if (mime.startsWith('audio/')) return GPTAttachmentType.Audio;
+            // Accept text/* and also common script and config types as text
+            if (
+                mime.startsWith('text/') ||
+                mime === 'application/json' ||
+                mime === 'application/xml' ||
+                mime === 'application/javascript' ||
+                mime === 'application/x-javascript' ||
+                mime === 'application/x-sh' ||
+                mime === 'application/x-python' ||
+                mime === 'application/x-shellscript' ||
+                mime === 'application/x-bash' ||
+                mime === 'application/x-csh' ||
+                mime === 'application/x-perl' ||
+                mime === 'application/x-php' ||
+                mime === 'application/x-ruby' ||
+                mime === 'application/x-yaml' ||
+                mime === 'application/x-toml' ||
+                mime === 'application/x-sql' ||
+                mime === 'application/x-typescript' ||
+                mime === 'application/x-markdown'
+            ) {
+                return GPTAttachmentType.Text;
+            }
+        }
+    } catch { /* ignore */ }
+
+    return GPTAttachmentType.Unknown;
 }
 
 // TODO: update everything to allow for GPTFormattedCommandInteraction
