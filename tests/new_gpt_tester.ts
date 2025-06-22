@@ -10,7 +10,7 @@ const msg = {
 } as Message
 
 const conversation = await getConversation(msg)
-conversation.addDiscordMessage(msg);
+await conversation.addDiscordMessage(msg);
 
 conversation.bindOnToolCall((calls) => {
     calls.forEach((call) => {

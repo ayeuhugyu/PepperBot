@@ -100,9 +100,36 @@ export class GPTAttachment<T extends GPTAttachmentType> {
         this.url = url;
         this.type = getAttachmentType({ filename, url: url || "" }) as T; // type assertion to ensure T is correct
         if (this.type === GPTAttachmentType.Text) {
-            (this as GPTAttachment<GPTAttachmentType.Text>).content = "" as any; // placeholder for text content
+            // Set a placeholder while content is being fetched
+            (this as GPTAttachment<GPTAttachmentType.Text>).content = "[Awaiting content status...]" as any;
         } else {
             this.content = undefined as never; // ensure content is not set for non-text attachments
+        }
+    }
+
+    async fetchContent() {
+        if (this.type === GPTAttachmentType.Text) {
+            if (this.url) {
+                try {
+                    const response = await fetch(this.url);
+                    if (response.ok) {
+                        const text = await response.text();
+                        (this as GPTAttachment<GPTAttachmentType.Text>).content = text as any;
+                    } else {
+                        const msg = "[Failed to fetch text content]";
+                        log.debug(`Failed to fetch text content from ${this.url}: ${response.status} ${response.statusText}`);
+                        (this as GPTAttachment<GPTAttachmentType.Text>).content = msg as any;
+                    }
+                } catch (err) {
+                    const msg = "[Error fetching text content]";
+                    log.debug(`Error fetching text content from ${this.url}:`, err);
+                    (this as GPTAttachment<GPTAttachmentType.Text>).content = msg as any;
+                }
+            } else {
+                const msg = "[No URL provided]";
+                log.debug(`No URL provided for text attachment: ${this.filename}`);
+                (this as GPTAttachment<GPTAttachmentType.Text>).content = msg as any;
+            }
         }
     }
 }
@@ -165,7 +192,7 @@ export class GPTMessage {
         if (this.attachments.length) {
             lines.push(c.bold("Attachments:") +
                 "\n" + this.attachments.map(att =>
-                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(att.filename) : chalk.yellow(att.filename)) + c.gray(` (${att.type})`)
+                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(att.filename) : chalk.yellow(att.filename)) + c.gray(` (${att.type}) ${att.url ? att.url : "[no URL]" }`) + att.content ? c.gray(`\n    Content: ${att.content}`) : ""
                 ).join("\n"));
         }
         if (this.toolCalls?.length) {
@@ -248,7 +275,7 @@ export class ToolCallResponse {
 export const conversations: Conversation[] = [];
 
 export class Conversation {
-    id: string = randomId(); // TODO: replace this with the same ID system as p/schedule
+    id: string = randomId();
     users: User[] = []; // do not include bot user
     prompt: Prompt = getDefaultPrompt();
     model: Model = Models["gpt-4.1-nano"] // default model, can be changed later
@@ -288,10 +315,14 @@ export class Conversation {
         return response;
     }
 
-    addDiscordMessage(message: Message) {
+    async addDiscordMessage(message: Message) {
+        const atts = message.attachments?.map(att => new GPTAttachment(att.name, att.url))
+        if (atts && atts.length > 0) {
+            await Promise.all(atts.map(att => att.fetchContent())); // fetch content for text attachments in parallel
+        }
         const gptMessage = new GPTMessage({
             content: message.content,
-            attachments: message.attachments?.map(att => new GPTAttachment(att.name, att.url)),
+            attachments: atts,
             role: "user",
             author: message.author,
             discordId: message.id
@@ -493,7 +524,7 @@ export async function getConversation(message: Message) {
             log.warn(`Failed to fetch replied message for message ${message.id}:`, err);
         }
         if (repliedMessage) {
-            newConversation.addDiscordMessage(repliedMessage);
+            await newConversation.addDiscordMessage(repliedMessage);
             log.debug(`Added replied message to new conversation ${newConversation.id}.`);
         }
         return newConversation;
@@ -512,7 +543,7 @@ function messageifyToolCall(call: ToolCall): string {
 
 export async function respond(message: Message) {
     const conversation = await getConversation(message);
-    conversation.addDiscordMessage(message);
+    await conversation.addDiscordMessage(message);
     log.info(`Responding to message in conversation ${conversation.id} from user ${message.author.username} (${message.author.id})`);
 
     let currentContent = "processing..."
@@ -529,7 +560,7 @@ export async function respond(message: Message) {
         })
     });
 
-    try { // TODO: add attachment support
+    try { // TODO: add attachment support (like the bot attaching stuff)
         const response = await conversation.run();
         log.debug(`Response generated for conversation ${conversation.id}:`, response.serialize());
         await action.edit(processingMessage, { content: response.content || "No response content generated."} );
