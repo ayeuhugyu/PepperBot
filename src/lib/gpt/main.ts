@@ -192,7 +192,7 @@ export class GPTMessage {
         if (this.attachments.length) {
             lines.push(c.bold("Attachments:") +
                 "\n" + this.attachments.map(att =>
-                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(att.filename) : chalk.yellow(att.filename)) + c.gray(` (${att.type}) ${att.url ? att.url : "[no URL]" }`) + att.content ? c.gray(`\n    Content: ${att.content}`) : ""
+                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(att.filename) : chalk.yellow(att.filename)) + c.gray(` (${att.type}) ${att.url ? att.url : "[no URL]" }`) + (att.content ? c.gray(`\n    Content: ${att.content}`) : "")
                 ).join("\n"));
         }
         if (this.toolCalls?.length) {
