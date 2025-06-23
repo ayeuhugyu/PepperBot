@@ -1,7 +1,7 @@
 import { Collection, Message, Attachment } from "discord.js";
 import { Command, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { respond } from "../lib/gpt/main";
+import { GPTFormattedCommandInteraction, respond } from "../lib/gpt/main";
 import { CommandTag, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 
 const command = new Command(
@@ -9,7 +9,7 @@ const command = new Command(
         name: 'ask',
         description: 'ask the ai something',
         long_description: 'ask the ai something',
-        tags: [CommandTag.AI, CommandTag.TextPipable, CommandTag.ImagePipable],
+        tags: [CommandTag.AI, CommandTag.TextPipable], // TODO: re-add image pipability
         pipable_to: [CommandTag.TextPipable],
         example_usage: "p/ask hi there",
         argument_order: "<request> [attach your image]",
@@ -40,7 +40,7 @@ const command = new Command(
     }, // No arguments template needed
     async function execute ({ args, invoker, guild_config, invoker_type, piped_data }) {
         const request = args.request || piped_data?.data?.input_text;
-        const image = (args.image as Attachment | undefined) || piped_data?.data?.image_url ? { id: args.image?.id, url: piped_data?.data?.image_url, name: args?.image?.name } : undefined; // this could have issues but i literally cant think of another way to do it
+        const image = args.image
         if (!request && !image) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
@@ -48,7 +48,18 @@ const command = new Command(
                 message: "please provide a request",
             });
         }
-        const response = await respond(invoker as Message<true>);
+        const attachments: Collection<string, Attachment> = new Collection();
+        if (image) {
+            attachments.set(image.id,  image);
+        }
+
+        const formattedInvoker: GPTFormattedCommandInteraction = Object.assign(invoker, {
+            author: invoker.author,
+            content: request,
+            attachments: attachments,
+        }) as unknown as GPTFormattedCommandInteraction;
+
+        const response = await respond(formattedInvoker as unknown as Message);
         return new CommandResponse({ pipe_data: { input_text: response } });
     }
 );
