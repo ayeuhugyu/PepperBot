@@ -1277,7 +1277,7 @@ const modelcommand = new Command(
                 message: `model '${args.model}' does not exist. use 'list' or 'ls' to view available models.`,
             });
         }
-        if (modelInfo.whitelist && !modelInfo.whitelist.includes(invoker.author.id)) {
+        if (modelInfo.whitelist && modelInfo.whitelist.length > 0 && !modelInfo.whitelist.includes(invoker.author.id)) {
             await action.reply(invoker, {
                 content: `model '${args.model}' is whitelist only. you cannot use it.`,
                 ephemeral: guild_config.useEphemeralReplies,

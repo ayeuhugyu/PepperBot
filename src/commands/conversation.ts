@@ -110,7 +110,7 @@ const modelcommand = new Command(
         }
 
         // Check if the model is whitelisted and the user is not in the whitelist
-        if (modelInfo.whitelist && !modelInfo.whitelist.includes(invoker.author.id)) {
+        if (modelInfo.whitelist && modelInfo.whitelist.length > 0 && !modelInfo.whitelist.includes(invoker.author.id)) {
             await action.reply(invoker, {
                 content: `model '${args.model}' is whitelist only. you cannot use it.`,
                 ephemeral: guild_config.useEphemeralReplies,
