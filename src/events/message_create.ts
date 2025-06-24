@@ -39,14 +39,16 @@ async function commandHandler(message: Message<true>) {
         return;
     };
     const config = await fetchGuildConfig(message.guild?.id);
+    // TODO: add more checks for config stuff, turns out i just straight up forgot to implement config.command.disable_all_commands and config.command.blacklisted_commands and all that. literally the only thing in there thats implemented is config.command.disable_command_piping
 
     const prefix = config.other.prefix;
     if (!message.content.startsWith(prefix) || message.author.bot) return;
     log.debug(`command handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id})`);
     const segments = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|').trim()) || [message.content];
+    // TODO: allow multiple commands executing using && as well as |
     log.debug(`split message into ${segments.length} segments: ${segments.map(s => `"${s}"`).join(", ")}`);
-    if (segments.length > 3) {
-        await action.reply(message, "piping limit of 3 exceeded");
+    if (segments.length > 3) { // TODO: put this limit in like config.command.max_piped_commands or something, though set a second limit on that one so that it can't be more than like 20 or something so we dont end up with a bug where someone pipes like 100 commands and it takes forever to process
+        await action.reply(message, `you can't pipe more than 3 commands at once, this is to prevent spam.`);
         return;
     }
 
@@ -71,14 +73,14 @@ async function commandHandler(message: Message<true>) {
         });
     }
     if (segments.length > 1 && config.command.disable_command_piping) {
-        action.reply(message, "command piping is disabled in this server");
+        action.reply(message, "command piping is disabled in this server, you'll need to run each command individually.");
         return;
     }
     let commandIndex = 0;
     for (const { command, provided_name } of queue) {
         if (!command) {
             log.info(`command ${provided_name} not found`);
-            await action.reply(message, `${prefix}${provided_name} doesn't exist :/`);
+            await action.reply(message, `${prefix}${provided_name} isn't a valid command, run \`${prefix}help\` to see a list of valid commands`);
             return;
         }
         message.content = segments[commandIndex]?.trim();
