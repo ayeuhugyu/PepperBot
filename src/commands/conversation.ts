@@ -1,8 +1,8 @@
 import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, Collection, GuildMember, Message, StageChannel, VoiceChannel } from "discord.js";
-import { Command, CommandAccess, CommandOption, CommandResponse } from "../lib/classes/command";
+import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { getConversation, conversations } from "../lib/gpt/main";
+import { getConversation, conversations, GPTFormattedCommandInteraction } from "../lib/gpt/main";
 import { Model, Models as models } from "../lib/gpt/models";
 import { textToAttachment } from "../lib/attachment_manager";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
@@ -64,7 +64,7 @@ const modelcommand = new Command(
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["model"]),
-    async function execute ({ invoker, args, guild_config }) {
+    async function execute ({ invoker, args, guild_config, invoker_type }) {
         if (!args.model) {
             await action.reply(invoker, {
                 content: "you must provide a model name or 'list'/'ls' to view available models.",
@@ -121,7 +121,16 @@ const modelcommand = new Command(
             });
         }
 
-        const conversation = await getConversation(invoker as Message);
+        let formattedInvoker: GPTFormattedCommandInteraction | CommandInvoker = invoker;
+        if (invoker_type === InvokerType.Interaction) {
+            formattedInvoker = Object.assign(invoker, {
+                author: invoker.author,
+                content: "",
+                attachments: new Collection(),
+            }) as unknown as GPTFormattedCommandInteraction;
+        }
+
+        const conversation = await getConversation(formattedInvoker as Message);
         // Check if the model is already set to avoid unnecessary updates
         if (conversation.model === modelInfo) {
             await action.reply(invoker, {
@@ -168,8 +177,17 @@ const setparam = new Command(
         ]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.TwoStringFirstSpaceSecondWholeMessage, ["parameter", "value"]),
-    async function execute ({ args, invoker, guild_config }) {
-        const conversation = await getConversation(invoker as Message);
+    async function execute ({ args, invoker, guild_config, invoker_type }) {
+        let formattedInvoker: GPTFormattedCommandInteraction | CommandInvoker = invoker;
+        if (invoker_type === InvokerType.Interaction) {
+            formattedInvoker = Object.assign(invoker, {
+                author: invoker.author,
+                content: "",
+                attachments: new Collection(),
+            }) as unknown as GPTFormattedCommandInteraction;
+        }
+
+        const conversation = await getConversation(formattedInvoker as Message);
 
         let model: Model | undefined = conversation.model;
         if (args.parameter === "list" || args.parameter === "ls") {
@@ -365,8 +383,17 @@ const get = new Command(
     },
     // Using SingleStringWholeMessage to capture extra text which if non-empty means "full" is true
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["full"]),
-    async function execute ({ invoker, args, guild_config }) {
-        const conversation = await getConversation(invoker as Message);
+    async function execute ({ invoker, args, guild_config, invoker_type }) {
+        let formattedInvoker: GPTFormattedCommandInteraction | CommandInvoker = invoker;
+        if (invoker_type === InvokerType.Interaction) {
+            formattedInvoker = Object.assign(invoker, {
+                author: invoker.author,
+                content: "",
+                attachments: new Collection(),
+            }) as unknown as GPTFormattedCommandInteraction;
+        }
+
+        const conversation = await getConversation(formattedInvoker as Message);
         // "full" is true if there's any extra text after the command
         const full = !!(args.full && ((typeof args.full === "string") ? args.full.trim().length : true));
         const all = allWhitelist.includes(invoker.author.id) && (typeof args.full === "string") && (args.full == "all")
@@ -395,8 +422,17 @@ const clear = new Command(
         pipable_to: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
-    async function execute ({ invoker, guild_config }) {
-        const conversation = await getConversation(invoker as Message);
+    async function execute ({ invoker, guild_config, invoker_type }) {
+        let formattedInvoker: GPTFormattedCommandInteraction | CommandInvoker = invoker;
+        if (invoker_type === InvokerType.Interaction) {
+            formattedInvoker = Object.assign(invoker, {
+                author: invoker.author,
+                content: "",
+                attachments: new Collection(),
+            }) as unknown as GPTFormattedCommandInteraction;
+        }
+
+        const conversation = await getConversation(formattedInvoker as Message);
         conversation.removeUser(invoker.author);
         action.reply(invoker, { content: "removed you from your current conversation", ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
