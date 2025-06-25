@@ -4,6 +4,7 @@ import { Conversation, GPTMessage } from "./main";
 import { runOpenAI } from "./openai_runner";
 import * as chalk from "chalk";
 import { DiscordAnsi } from "../discord_ansi";
+import { runGrok } from "./grok_runner";
 
 export type ModelProvider = 'openai' | 'xai'
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'gpt-4.1-nano' | 'o3-mini' | 'grok-3-mini-beta'
@@ -197,7 +198,8 @@ export const Models: Record<ModelName, Model> = {
         'a model with comparable intelligence to gpt-4o-mini, but with no censorship. this model is also EXTREMELY slow, and due to the lack of internal censorship training it is not available to all users.',
         ['chat', 'vision', 'functionCalling'],
         OpenAIParameters.filter((param) => !(['presence_penalty', 'frequency_penalty'].includes(param.key))),
-        ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065", "1162874217935675392"]
+        ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065", "1162874217935675392"],
+        runGrok
     ),
 };
 // #endregion
