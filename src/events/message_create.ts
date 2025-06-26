@@ -8,6 +8,7 @@ import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/comman
 import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
 import * as log from "../lib/log";
+import { getAlias } from "../lib/alias_manager";
 
 async function gptHandler(message: Message<true>) {
     // Only process if the bot is mentioned.
@@ -43,6 +44,17 @@ async function commandHandler(message: Message<true>) {
 
     const prefix = config.other.prefix;
     if (!message.content.startsWith(prefix) || message.author.bot) return;
+    let firstWord = message.content.trim().split(" ")[0];
+    if (firstWord.startsWith(prefix)) {
+        firstWord = firstWord.slice(prefix.length);
+    }
+    const alias = await getAlias(message.author.id, firstWord);
+    if (alias) {
+        log.debug(`found alias ${alias.alias} for command ${firstWord}, replacing with ${alias.value}`);
+        message.content = message.content.replace(firstWord, alias.value);
+    } else {
+        log.debug(`no alias found for command ${firstWord}`);
+    }
     log.debug(`command handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id})`);
     const segments = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|').trim()) || [message.content];
     // TODO: allow multiple commands executing using && as well as |
@@ -83,7 +95,14 @@ async function commandHandler(message: Message<true>) {
             await action.reply(message, `${prefix}${provided_name} isn't a valid command, run \`${prefix}help\` to see a list of valid commands`);
             return;
         }
-        message.content = segments[commandIndex]?.trim();
+        let content = segments[commandIndex]?.trim();
+        console.log(command.not_pipable)
+        const notPipable = command.not_pipable
+        if (notPipable) {
+            content = segments.slice(commandIndex).join(" | ").trim();
+            console.log(content);
+        }
+        message.content = content;
         if (!message.content.startsWith(prefix)) {
             message.content = `${prefix}${message.content.replaceAll("\\|", "|")}`;
         }
@@ -97,9 +116,9 @@ async function commandHandler(message: Message<true>) {
             command_entry_type: commandEntryType,
             alias_used: alias,
             previous_response,
-            will_be_piped: (segments.length > 1) && (commandIndex < segments.length - 1),
-            piping_to: queue[commandIndex + 1]?.command?.name,
-            next_pipe_message: segments[commandIndex + 1]?.trim()
+            will_be_piped: notPipable ? false : ((segments.length > 1) && (commandIndex < segments.length - 1)),
+            piping_to: notPipable ? undefined : queue[commandIndex + 1]?.command?.name,
+            next_pipe_message: notPipable ? undefined : (segments[commandIndex + 1]?.trim())
         }, commands);
 
         const response = await command.execute(input);
@@ -111,10 +130,13 @@ async function commandHandler(message: Message<true>) {
             return;
         }
         commandIndex++;
-        if (segments.length > 1) {
+        if ((segments.length > 1) && !(notPipable && !(commandIndex > 1))) {
             await incrementPipedCommands();
         }
-
+        if (notPipable) {
+            // do not continue piping if the command is not pipable
+            return;
+        }
     }
 }
 

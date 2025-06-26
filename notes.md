@@ -62,6 +62,7 @@ the biggest new base feature
 - new p/encode and p/decode allow you to encode and decode text via various algorithms. use `p/encode list` to get a list of all of the algorithms.
 - brought back p/sendlog because of the new piping related commands
 - new p/schedule allows you to schedule reminders and make pepperbot ping/dm you at a certain time to remind you of something. even if the bot goes offline temporarily, any events missed over the downtime will be caught up with.
+- new p/alias allows you to make up your own aliases for commands. the content is literally just replaced directly, so you can even provide arguments or alias piping to other commands.
 
 **gpt stuff:**
 

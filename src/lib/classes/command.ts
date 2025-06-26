@@ -361,6 +361,7 @@ export class Command<
     allow_external_guild = true; // should it be usable in guilds without administrator permission? (thats the only way to detect it)
     subcommands?: D;
     pipable_to: (string | CommandTag)[] = []; // array of command names | tags which output may be piped to; the check for it has been disabled for now so its purely visual.
+    not_pipable: boolean = false; // if true, this command cannot be piped with, and pipe characters will just be straight up ignored in its input. this is currently only used for p/alias.
     contributors: Contributor[] = [contributors.ayeuhugyu];
     subcommand_argument = "subcommand"
     validation_errors: ValidationCheck[] = []; // errors that occur during command validation, DO NOT ADD THINGS TO THIS!

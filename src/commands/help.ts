@@ -6,6 +6,7 @@ import { createThemeEmbed, Theme } from "../lib/theme";
 import { APIEmbedField, Message } from "discord.js";
 import PagedMenu from "../lib/classes/pagination";
 import { textToAttachment } from "../lib/attachment_manager";
+import { getAlias } from "../lib/alias_manager";
 
 const command = new Command(
     {
@@ -163,6 +164,14 @@ const command = new Command(
                             input_text: commandTree,
                         }
                     }
+                });
+            }
+            const alias = await getAlias(invoker.author.id, args.command.replace(guild_config.other.prefix, ""));
+            if (alias) {
+                action.reply(invoker, { content: `due to the nature of aliases, an exact command cannot be fetched from the alias ${alias.alias}, but you can try again using a command from the alias's value: \`${alias.value}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+                return new CommandResponse({
+                    error: true,
+                    message: `alias found for command: ${alias.alias}, but cannot fetch exact command`,
                 });
             }
             const command: Command | undefined = await commandManager.default.get(args.command.replace(guild_config.other.prefix, "").split(" ")[0]);
