@@ -427,10 +427,11 @@ export class Conversation {
     }
 
     filterParameters() {
-        const availableParameters = Object.keys(this.model.parameters);
-        const filteredParameters: Record<string, unknown> = {};
+        const availableParameters = this.model.parameters.map(p => p.key);
+        log.debug(`Filtering API parameters for conversation ${this.id}. Available parameters:`, availableParameters);
         const entries = Object.entries(this.api_parameters || {});
         const filteredEntries = entries.filter(([key, _]) => availableParameters.includes(key));
+        log.debug(`Filtered parameters:`, Object.fromEntries(filteredEntries));
         return Object.fromEntries(filteredEntries);
     }
 
