@@ -96,11 +96,9 @@ async function commandHandler(message: Message<true>) {
             return;
         }
         let content = segments[commandIndex]?.trim();
-        console.log(command.not_pipable)
         const notPipable = command.not_pipable
         if (notPipable) {
             content = segments.slice(commandIndex).join(" | ").trim();
-            console.log(content);
         }
         message.content = content;
         if (!message.content.startsWith(prefix)) {
