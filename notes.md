@@ -82,6 +82,7 @@ the biggest new base feature
   - date because it has been replaced with date_to_timestamp
   - get_update because it was stupid
   - get_deepwoken_build because i dont really deepwoken much more
+- you can now choose which tools are enabled in your prompt/conversation
 - p/prompt has been completely overhauled
   - prompts are now automatically saved instead of you having to do p/prompt save
   - prompts can now be published for viewing on the prompt browser
@@ -92,7 +93,7 @@ the biggest new base feature
   - saved prompts can now be deleted
 - gpt now has a completely new prompt
   - if you for some reason want to use the old prompt, you still can by running `p/prompt clone PepperBot/old` and then `p/prompt default old`
-- gpt conversations are now MUCH more customizable via the use of p/conversation setparam
+- gpt conversations are now MUCH more customizable via the use of p/conversation configure
 - gpt responses now use openai's seeding feature so they can be reproduced
 - AI can now see stickers
 - default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
