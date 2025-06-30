@@ -40,7 +40,10 @@ async function commandHandler(message: Message<true>) {
         return;
     };
     const config = await fetchGuildConfig(message.guild?.id);
-    // TODO: add more checks for config stuff, turns out i just straight up forgot to implement config.command.disable_all_commands and config.command.blacklisted_commands and all that. literally the only thing in there thats implemented is config.command.disable_command_piping
+
+    if (config.command.disable_all_commands) return;
+    if (config.command.blacklisted_channels.includes(message.channel.id)) return;
+    if (config.command.disabled_input_types.includes(InvokerType.Message)) return;
 
     const prefix = config.other.prefix;
     if (!message.content.startsWith(prefix) || message.author.bot) return;
@@ -93,6 +96,18 @@ async function commandHandler(message: Message<true>) {
         if (!command) {
             log.info(`command ${provided_name} not found`);
             await action.reply(message, `${prefix}${provided_name} isn't a valid command, run \`${prefix}help\` to see a list of valid commands`);
+            return;
+        }
+
+        // Check if command is blacklisted
+        if (config.command.blacklisted_commands.includes(command.name)) {
+            log.debug(`command ${command.name} is blacklisted in this guild`);
+            return;
+        }
+
+        // Check if command category is blacklisted
+        if (command.tags && command.tags.some(tag => config.command.blacklisted_categories.includes(tag))) {
+            log.debug(`command ${command.name} has blacklisted category in this guild`);
             return;
         }
         let content = segments[commandIndex]?.trim();
