@@ -316,6 +316,9 @@ function verifyAPIParameter(parameter: string, value: number): APIParamVerifyRes
             if (value < 0 || value > 4096) {
                 return { error: true, message: "max_tokens must be between 0 and 4096" };
             }
+            if (value % 1 !== 0) {
+                return { error: true, message: "max_tokens must be an integer, and cannot have a decimal place." };
+            }
             break;
         }
         default: break;
