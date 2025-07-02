@@ -10,13 +10,15 @@ export enum Level {
     Warn,
     Error,
     Fatal,
+    Access,
 };
 const levelPrefixes = {
     [Level.Debug]: "DEBUG",
     [Level.Info]: "INFO",
     [Level.Warn]: "WARN",
     [Level.Error]: "ERROR",
-    [Level.Fatal]: "FATAL"
+    [Level.Fatal]: "FATAL",
+    [Level.Access]: "ACCESS",
 };
 
 const levelColors = {
@@ -26,11 +28,13 @@ const levelColors = {
     [Level.Error]: chalk.redBright,
     [Level.Fatal]: (text: string) => {
         return chalk.bold(chalk.underline(chalk.red(text)));
-    }
+    },
+    [Level.Access]: chalk.greenBright,
 };
 
 const nonGlobalLevels = [
     Level.Debug,
+    Level.Access,
 ]
 
 function levelPrefix(level: Level): string {
@@ -61,7 +65,7 @@ function format(thing: unknown) {
     }
 }
 
-function strtobl(str: string) {
+function stringToBool(str: string) {
     return str.toLowerCase() === "true" || str === "1" || str === "yes" || str === "y";
 }
 
@@ -77,7 +81,7 @@ function log(level: Level, ...message: unknown[]) {
     const stdoutString = `${prefix}${formatted.split("\n").join("\n" + prefix)}\n`;
     const fileString = `${cleanPrefix}${formatted.split("\n").join("\n" + cleanPrefix)}\n`;
 
-    if (!nonGlobalLevels.includes(level) || strtobl(process.env.PRINT_NON_GLOBAL || "")) process.stdout.write(stdoutString);
+    if (!nonGlobalLevels.includes(level) || stringToBool(process.env.PRINT_NON_GLOBAL || "")) process.stdout.write(stdoutString);
     GlobalEvents.emit("log", fileString, level);
     // TODO: catch these?
     fs.appendFile(`./logs/${Level[level].toLowerCase()}.log`, fileString)
@@ -100,4 +104,7 @@ export function error(...message: unknown[]) {
 }
 export function fatal(...message: unknown[]) {
     log(Level.Fatal, ...message);
+}
+export function access(...message: unknown[]) {
+    log(Level.Access, ...message);
 }
