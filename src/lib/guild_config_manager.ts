@@ -8,7 +8,7 @@ class GuildCommandsConfig {
     "max_piped_commands": number = 3;
     "blacklisted_commands": string[] = [];
     "blacklisted_channels": string[] = [];
-    "blacklisted_categories": CommandTag[] = [];
+    "blacklisted_tags": CommandTag[] = [];
     "disabled_input_types": InvokerType[] = [];
     constructor(config: any) {
         Object.assign(this, { ...config });
