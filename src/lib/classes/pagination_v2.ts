@@ -1,7 +1,7 @@
 import { Message, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Interaction, InteractionResponse, JSONEncodable, APIActionRowComponent, ActionRowData, MessageActionRowComponent, MessageActionRowComponentData, MessageActionRowComponentBuilder, MessageFlags } from 'discord.js';
 import * as action from "../discord_action";
 import * as log from "../log";
-import { randomUUIDv7 } from 'bun';
+import { randomId } from '../id';
 
 class V2PagedMenu {
     pages: NonNullable<action.MessageInput['components']>[];
@@ -15,7 +15,7 @@ class V2PagedMenu {
         this.pages = pages;
         this.currentPage = 0;
         this.activeMessage = null;
-        this.id = randomUUIDv7();
+        this.id = randomId();
         log.debug(`initialized V2PagedMenu with ${pages.length} pages and id ${this.id}`);
     }
 

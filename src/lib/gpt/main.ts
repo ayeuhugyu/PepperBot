@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import { Attachment, Collection, Message, User } from "discord.js";
 import { Prompt } from "../prompt_manager";
 import { getDefaultPrompt } from "./officialPrompts";

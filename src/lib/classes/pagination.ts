@@ -1,6 +1,6 @@
 import { Message, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Interaction, InteractionResponse } from 'discord.js';
 import * as log from "../log"
-import { randomUUIDv7 } from 'bun';
+import { randomId } from '../id';
 
 class PagedMenu {
     embeds: EmbedBuilder[];
@@ -13,7 +13,7 @@ class PagedMenu {
         this.embeds = embeds;
         this.currentPage = 0;
         this.activeMessage = null;
-        this.id = randomUUIDv7();
+        this.id = randomId();
         log.debug(`initialized PagedMenu with ${embeds.length} embeds and id ${this.id}`);
     }
 
