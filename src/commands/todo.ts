@@ -246,18 +246,27 @@ const viewCommand = new Command(
     {
         name: 'view',
         description: 'view your todo list',
-        long_description: 'view the items in your todo list',
+        long_description: 'view the items in your todo list. Optionally specify a list name to switch to and view that list.',
         tags: [CommandTag.Utility],
         pipable_to: [CommandTag.TextPipable],
-        options: [],
+        options: [
+            new CommandOption({
+                name: "list",
+                description: "the name of the list to view (and switch to)",
+                type: CommandOptionType.String,
+                required: false,
+            })
+        ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: "p/todo view",
+        example_usage: "p/todo view My Stuff",
         aliases: []
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["list"]),
     async function execute ({ invoker, args, guild_config }) {
-        const todo = await ensureTodo(invoker.author.id, currentlyEditing.get(invoker.author.id) || "default");
+        const listName = args.list?.trim() || currentlyEditing.get(invoker.author.id) || "default";
+        currentlyEditing.set(invoker.author.id, listName);
+        const todo = await ensureTodo(invoker.author.id, listName);
         const pagedMenu = embedTodo(todo);
         const sent = await action.reply(invoker, { embeds: [pagedMenu.embeds[0]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(sent as Message<true>);
