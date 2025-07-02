@@ -62,8 +62,11 @@ async function commandHandler(message: Message<true>) {
     const segments = message.content.split(/(?<!\\)\|/).map(part => part.replace(/\\\|/g, '|').trim()) || [message.content];
     // TODO: allow multiple commands executing using && as well as |
     log.debug(`split message into ${segments.length} segments: ${segments.map(s => `"${s}"`).join(", ")}`);
-    if (segments.length > 3) { // TODO: put this limit in like config.command.max_piped_commands or something, though set a second limit on that one so that it can't be more than like 20 or something so we dont end up with a bug where someone pipes like 100 commands and it takes forever to process
-        await action.reply(message, `you can't pipe more than 3 commands at once, this is to prevent spam.`);
+
+    const max_piped_commands = Math.min(config.command.max_piped_commands, 15); // no more than 15 commands can be piped at once
+    if (segments.length > max_piped_commands) {
+        log.info(`returned early because too many piped commands: ${segments.length} > ${max_piped_commands}`);
+        await action.reply(message, `you can't pipe more than ${max_piped_commands} commands at once, this is to prevent spam.`);
         return;
     }
 

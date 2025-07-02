@@ -5,6 +5,7 @@ import * as log from "./log"
 class GuildCommandsConfig {
     "disable_all_commands": boolean = false;
     "disable_command_piping": boolean = false;
+    "max_piped_commands": number = 3;
     "blacklisted_commands": string[] = [];
     "blacklisted_channels": string[] = [];
     "blacklisted_categories": CommandTag[] = [];
