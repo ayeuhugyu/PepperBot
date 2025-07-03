@@ -197,11 +197,12 @@ async function executeCommand(
 
 // main command handler function
 async function commandHandler(message: Message<true>) {
-    log.debug(`command handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id})`);
     const config = await fetchGuildConfig(message.guild?.id);
     const prefix = config.other.prefix;
 
     if (!(await validateCommandExecution(message, config))) return;
+
+    log.debug(`command handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id})`);
 
     await resolveCommandAlias(message, prefix);
 
