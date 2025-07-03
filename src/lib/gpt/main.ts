@@ -349,9 +349,11 @@ export class Conversation {
     }
 
     addUser(user: User) {
-        if (this.users.some(u => u.id === user.id)) {
-            return this; // user already in conversation
-        }
+        if (client.user?.id && (user.id === client.user?.id)) return this; // do not add the bot user to the conversation
+        if (this.users.some(u => u.id === user.id)) return this; // user already in conversation; do not add duplicate
+        conversations.forEach(c => {
+            if (c.users.some(u => u.id === user.id)) c.removeUser(user); // remove user from other conversations so they can only be in one conversation at a time
+        })
         this.users.push(user);
         return this;
     }
