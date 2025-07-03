@@ -7,7 +7,6 @@ import process from "process";
 import shell from "shelljs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import * as util from "util";
-import * as gpt from "../lib/gpt";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 import * as queue from "../lib/music/queue";
 import database from "../lib/data_manager"
@@ -21,7 +20,6 @@ const modules = {
     process,
     shell,
     util,
-    gpt,
     queue,
     database,
     components,
