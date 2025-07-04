@@ -1566,7 +1566,7 @@ const set = new Command({
         let prompt = await getUserPrompt(invoker.author);
         prompt.content = content as string;
         await savePrompt(prompt, invoker.author);
-        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nrun \`${guild_config.other.prefix}prompt use ${prompt.name}\` to use it.${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nthe next time you start a new conversation by pinging the bot, it will be used. you can also run \`${guild_config.other.prefix}prompt use ${prompt.name}\` to use it in the current conversation.${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
