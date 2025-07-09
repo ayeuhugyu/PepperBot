@@ -104,7 +104,7 @@ function buildCommandQueue(segments: string[], prefix: string): QueuedCommand[] 
     const queue: QueuedCommand[] = [];
 
     for (const segment of segments) {
-        const first_word = segment.trim().split(" ")[0];
+        const first_word = segment.trim().split(" ")[0].replace("\n", "");
         const provided_name = first_word.startsWith(prefix)
             ? first_word?.slice(prefix.length)
             : first_word;
