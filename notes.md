@@ -92,12 +92,12 @@ the biggest new base feature
   - you can now set the default prompt to a custom one
   - saved prompts can now be deleted
 - gpt now has a completely new prompt
-  - if you for some reason want to use the old prompt, you still can by running `p/prompt clone PepperBot/old` and then `p/prompt default old`
+  - if you for some reason want to use the old prompt, you still can by running `d/prompt use PepperBot/old`.
 - gpt conversations are now MUCH more customizable via the use of p/conversation configure
 - gpt responses now use openai's seeding feature so they can be reproduced
 - AI can now see stickers
 - default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
-- GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. run `p/gpt model list` to see all the new data i store about them. here's an updated list of available models:
+- GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. here's an updated list of available models:
   - gpt-3.5-turbo (the oldest model i've ever used on pepperbot)
   - gpt-4o-mini (slightly more up to date openai model)
   - o3-mini (openai's cheapest reasoning model, still fairly good actually)

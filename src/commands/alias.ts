@@ -30,7 +30,7 @@ const create = new Command(
             "p/alias create greet echo Hello, world!",
             'p/alias create "latestgitlog" "git log | head"',
             'p/alias create helpgraph="help -t"',
-            'p/alias create "reason" gpt model o3-mini',
+            'p/alias create "reason" gpt edit {"model":"o3-mini"}',
         ],
         argument_order: "<alias> <value>",
     },
