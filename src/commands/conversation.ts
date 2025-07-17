@@ -266,7 +266,7 @@ const configurecommand = new Command(
         const collector = sent.createMessageComponentCollector();
 
         collector.on("collect", async (interaction) => {
-            ((interaction as unknown) as FormattedCommandInteraction).author = interaction.user;
+            ((interaction as unknown) as CommandInvoker).author = interaction.user;
             if (!conversation.users.includes(interaction.user)) {
                 await action.reply(interaction, {
                     content: "you are not part of this conversation, and cannot configure it.",
