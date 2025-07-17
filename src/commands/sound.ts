@@ -259,7 +259,7 @@ const command = new Command(
             list: [get, add, play, list],
         },
         options: [],
-        example_usage: "p/prompt set always respond with \"hi\"",
+        example_usage: "p/sound get hello.mp3",
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
