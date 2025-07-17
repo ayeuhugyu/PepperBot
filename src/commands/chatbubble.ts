@@ -12,7 +12,7 @@ const command = new Command(
     {
         name: 'chatbubble',
         description: 'creates a chatbubble out of the provided image or url',
-        long_description: 'creates a chatbubble out of the provided image or url. you can specify where the chatbubble should be placed.',
+        long_description: 'creates a chatbubble out of the provided image or url. \ncheck out the parameters below to see what exactly you can specify about the chatbubble.',
         tags: [CommandTag.Utility, CommandTag.ImagePipable],
         pipable_to: [],
         argument_order: "any",

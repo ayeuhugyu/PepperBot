@@ -68,8 +68,8 @@ const algorithms: Record<string, (text: string) => string> = {
 const command = new Command(
     {
         name: 'decode',
-        description: 'decodes a string with a given algorithm',
-        long_description: 'decodes a string with a given algorithm',
+        description: 'decodes a string using a given algorithm',
+        long_description: 'decodes a string using a given algorithm',
         tags: [CommandTag.Utility, CommandTag.TextPipable],
         pipable_to: [CommandTag.TextPipable],
         options: [

@@ -7,7 +7,7 @@ const command = new Command(
     {
         name: 'test',
         description: 'returns the time it takes for a message to be sent and recieved',
-        long_description: 'returns the time it takes for a message to be sent to discord\'s servers and then recieved back',
+        long_description: 'returns the time it takes for a message to be sent to discord\'s servers and then recieved back. \nthis will often be quite high since messages contain a lot of data. \nthis command is mostly for debugging purposes.',
         tags: [CommandTag.Debug],
         pipable_to: ['test'],
         example_usage: "p/test",

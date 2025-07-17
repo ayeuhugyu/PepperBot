@@ -9,7 +9,7 @@ const create = new Command(
     {
         name: "create",
         description: "create a new alias",
-        long_description: "create a new alias for a command or value. aliases are incredibly powerful, as the content in the message is quite literally just directly replaced, so you can alias several commands being piped together, or a command with arguments, or just a simple command name. note that alias names cannot contain spaces.",
+        long_description: "create a new alias for a command or value. \naliases are incredibly powerful, as the content in the message is directly replaced, so you can alias several commands being piped together, or a command with arguments, or just a simple command name. \nnote that alias names cannot contain spaces.",
         tags: [CommandTag.Utility],
         pipable_to: [],
         options: [
@@ -99,7 +99,7 @@ const del = new Command(
     {
         name: "delete",
         description: "delete an alias by name",
-        long_description: "delete one of your aliases by its name",
+        long_description: "delete one of your aliases by using its name",
         tags: [CommandTag.Utility],
         pipable_to: [],
         aliases: ["remove", "del", "rm"],
@@ -175,7 +175,7 @@ const aliasCommand = new Command(
     {
         name: "alias",
         description: "manage your command aliases",
-        long_description: "create and manage your command aliases",
+        long_description: "create and manage your command aliases\naliases are incredibly powerful, as the content in the message is directly replaced, so you can alias several commands being piped together, or a command with arguments, or just a simple command name.",
         tags: [CommandTag.Utility],
         pipable_to: [],
         subcommands: {

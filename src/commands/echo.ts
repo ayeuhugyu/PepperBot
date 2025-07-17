@@ -7,7 +7,7 @@ const command = new Command(
     {
         name: 'echo',
         description: 'echoes the text you send it',
-        long_description: 'echoes the text you send it. this command is meant to be used for piping.',
+        long_description: 'echoes the text you send it. \nthis command is meant to be used for piping text, which allows you to use things like grep to filter out your own text.',
         tags: [CommandTag.Utility, CommandTag.TextPipable],
         pipable_to: [CommandTag.TextPipable],
         options: [

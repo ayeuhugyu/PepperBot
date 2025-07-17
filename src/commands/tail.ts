@@ -7,7 +7,7 @@ const command = new Command(
     {
         name: 'tail',
         description: 'outputs the last few lines or bytes of the piped text',
-        long_description: 'outputs the last few lines or bytes of the piped text. this command is purely for piping to, and will not work on its own.',
+        long_description: 'outputs the last few lines or bytes of the piped text. \nthis command is purely for piping to, and will not work on its own.',
         tags: [CommandTag.Utility, CommandTag.TextPipable],
         options: [
             new CommandOption({

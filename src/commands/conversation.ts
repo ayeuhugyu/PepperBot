@@ -391,7 +391,7 @@ const get = new Command(
     {
         name: 'get',
         description: 'returns your gpt conversation',
-        long_description: 'returns your gpt conversation. Append any text after the command to receive the full conversation output.',
+        long_description: 'returns your gpt conversation. \nappend any text after the command to receive the raw conversation output.',
         tags: [CommandTag.Debug, CommandTag.AI],
         example_usage: "p/conversation get full",
         pipable_to: [CommandTag.TextPipable],
@@ -439,7 +439,7 @@ const clear = new Command(
     {
         name: 'clear',
         description: 'removes you from your current conversation',
-        long_description: 'removes your from your current conversation',
+        long_description: 'removes your from your current conversation, effectively clearing it and giving the bot dementia.',
         tags: [CommandTag.AI],
         example_usage: "p/conversation clear",
         pipable_to: []

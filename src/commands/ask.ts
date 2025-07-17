@@ -8,7 +8,7 @@ const command = new Command(
     {
         name: 'ask',
         description: 'ask the ai something',
-        long_description: 'ask the ai something',
+        long_description: 'ask the ai something.\nit is much easier and better to simply ping the bot rather than using this command, this is mostly for either use in aliases or as a slash command for other servers.',
         tags: [CommandTag.AI, CommandTag.TextPipable], // TODO: re-add image pipability
         pipable_to: [CommandTag.TextPipable],
         example_usage: "p/ask hi there",

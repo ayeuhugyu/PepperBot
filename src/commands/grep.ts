@@ -8,7 +8,7 @@ const command = new Command(
     {
         name: 'grep',
         description: 'searches for a string in the piped text',
-        long_description: 'searches for a string in the piped text. this command is purely for piping to, and will not work on its own.',
+        long_description: 'searches for a string in the piped text. \nthis command is purely for piping to, and will not work on its own.',
         tags: [CommandTag.Utility, CommandTag.TextPipable],
         options: [
             new CommandOption({
@@ -20,7 +20,7 @@ const command = new Command(
         ],
         input_types: [InvokerType.Message],
         pipable_to: [CommandTag.TextPipable],
-        example_usage: "p/git log | grep months",
+        example_usage: ["p/echo hello world | grep hello", "p/echo hello world | grep -c hello", "p/echo heeeeeelloooooooo world | grep /he+llo+/g"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["search"]),
     async function execute ({ invoker, piped_data, guild_config, args, will_be_piped }) {

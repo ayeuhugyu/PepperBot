@@ -11,7 +11,7 @@ const command = new Command(
     {
         name: 'cquery',
         description: 'queries adobe stock for christos georghiou images',
-        long_description: 'queries adobe stock for christos georghiou images',
+        long_description: 'queries adobe stock for christos georghiou images.\ni swear there\'s a reason for this command\'s existence',
         tags: [CommandTag.Utility],
         options: [
             new CommandOption({

@@ -35,7 +35,7 @@ const git_log = new Command({
 const git_get = new Command({ // this is just so that its usable by slash commands
         name: 'get',
         description: 'returns the github repo',
-        long_description: 'sends the link for the public github repo for this bot. this only exists so that slash commands can use it',
+        long_description: 'sends the link for the public github repo for this bot. this "get" command only exists so that slash commands can use it',
         tags: [CommandTag.Info],
         pipable_to: [],
         root_aliases: [],
@@ -53,7 +53,7 @@ const command = new Command(
     {
         name: 'git',
         description: 'returns the github repo for the bot',
-        long_description: 'returns the github repo for the bot',
+        long_description: 'sends the link for the public github repo for this bot.\ncan also be used to see commit history',
         tags: [CommandTag.Info],
         pipable_to: [],
         argument_order: "<subcommand>",

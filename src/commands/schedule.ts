@@ -68,7 +68,7 @@ const command = new Command(
     {
         name: 'schedule',
         description: 'allows you to schedule a message to be sent at a later time',
-        long_description: 'allows you to schedule reminders and other messages to be sent at a later time. you can set the time, channel, and message content. you can also edit the message content and time after creating the event.',
+        long_description: 'allows you to schedule reminders and other messages to be sent at a later time. \nyou can set the time, channel, and message content. \nyou can also edit the message content and time after creating the event.',
         tags: [CommandTag.Utility],
         pipable_to: [],
         options: [
