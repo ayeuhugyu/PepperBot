@@ -240,7 +240,7 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
             }),
             new Separator(),
             new TextDisplay({
-                content: `tags: ${command.tags.join(", ")}\npipable to: ${command.not_pipable ? "command is not pipable" : ((command.pipable_to.length > 0) ? command.pipable_to.join(", ") : "command is not pipable")}\ncomponents in this message: ${componentsCount}`
+                content: `tags: ${command.tags.join(", ")}\npipable to: ${command.not_pipable ? "N/A" : ((command.pipable_to.length > 0) ? command.pipable_to.join(", ") : "N/A")}\ncomponents in this message: ${componentsCount}`
             }),
         ]
     });
