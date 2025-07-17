@@ -130,7 +130,8 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
             new TextDisplay({
                 content: command.long_description
             }),
-        ]
+        ],
+        accent_color: 0x232323
     });
 
     componentsCount += 4
@@ -154,7 +155,7 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
         if (option.type === CommandOptionType.Subcommand) return
         const components = [
             new TextDisplay({
-                content: `### <${option.name}>: ${optionTypesTable[option.type]}${(option.required || option.long_requirements) ? `\n-# required option ${option.long_requirements ?? ""}` : ""}`
+                content: `### <${option.name}>${(option.required || option.long_requirements) ? `?` : ""}: ${optionTypesTable[option.type]}${(option.required || option.long_requirements) ? `\n-# required option ${option.long_requirements ?? ""}` : ""}`
             }),
             new Separator(),
             new TextDisplay({
@@ -240,7 +241,7 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
             }),
             new Separator(),
             new TextDisplay({
-                content: `tags: ${command.tags.join(", ")}\npipable to: ${command.not_pipable ? "N/A" : ((command.pipable_to.length > 0) ? command.pipable_to.join(", ") : "N/A")}\ncomponents in this message: ${componentsCount}`
+                content: `tags: ${command.tags.join(", ")}\npipable to: ${command.not_pipable ? "N/A" : ((command.pipable_to.length > 0) ? command.pipable_to.join(", ") : "N/A")}` //+ `\ncomponents in this message: ${componentsCount}`
             }),
         ]
     });
