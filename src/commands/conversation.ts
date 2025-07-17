@@ -224,7 +224,7 @@ const configurecommand = new Command(
                         const verifyResponse = verifyAPIParameter(key, value);
                         if (verifyResponse.error) {
                             await action.reply(invoker, {
-                                content: `Invalid value for ${key}: ${verifyResponse.message}`,
+                                content: `invalid value for ${key}: ${verifyResponse.message}`,
                                 ephemeral: guild_config.other.use_ephemeral_replies
                             });
                             return;
@@ -242,14 +242,14 @@ const configurecommand = new Command(
                     return;
                 } else {
                     await action.reply(invoker, {
-                        content: "No valid configuration parameters found in JSON.",
+                        content: "no valid configuration parameters found in JSON",
                         ephemeral: guild_config.other.use_ephemeral_replies
                     });
                     return;
                 }
             } catch (error) {
                 await action.reply(invoker, {
-                    content: `Invalid JSON format: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                    content: `invalid JSON format: ${error instanceof Error ? error.message : 'unknown error'}`,
                     ephemeral: guild_config.other.use_ephemeral_replies
                 });
                 return;
