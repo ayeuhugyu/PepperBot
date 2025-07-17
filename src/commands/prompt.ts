@@ -95,8 +95,17 @@ function toggleSection(label: string, value: boolean, custom_id: string, disable
 
 function buildSections(prompt: Prompt, guild_config: GuildConfig, disabled: boolean = false) {
     return [
-        new TextDisplay({
-            content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as number || 1) / 1000)}:F>` : ""}`,
+        new Section({
+            components: [
+                new TextDisplay({
+                    content: `editing prompt \`${prompt.name}\`\n-# created at: <t:${Math.floor(prompt.created_at as unknown as number / 1000)}:F>\n-# last updated at: <t:${Math.floor(prompt.updated_at as unknown as number / 1000)}:F>${prompt.published ? `\n-# published at: <t:${Math.floor((prompt.published_at as unknown as number || 1) / 1000)}:F>` : ""}`,
+                }),
+            ],
+            accessory: new Button({
+                label: "Create New Prompt",
+                custom_id: "edit_prompt_name2", // since editing the prompt name effectively creates a new prompt, this is just a second button for that so that people can find it easier
+                style: ButtonStyle.Primary
+            })
         }),
         new Separator(),
         sectionWithEdit("Name", prompt.name, "edit_prompt_name", disabled, "changing the name of the prompt will effectively create a new prompt."),
@@ -598,6 +607,7 @@ const build = new Command(
                     });
                 }
             };
+            if (interaction.customId === "edit_prompt_name2") interaction.customId = "edit_prompt_name"; // since editing the prompt name effectively creates a new prompt, this is just a second button for that so that people can find it easier
             if (handlers[interaction.customId]) {
                 await handlers[interaction.customId]();
             } else {
