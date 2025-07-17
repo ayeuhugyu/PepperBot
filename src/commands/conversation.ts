@@ -163,12 +163,19 @@ const configurecommand = new Command(
         description: 'provides a graphical interface to configure your gpt conversation',
         long_description: 'provides a graphical interface to configure your gpt conversation.',
         tags: [CommandTag.Utility, CommandTag.AI],
-        example_usage: "p/conversation configure",
+        example_usage: ["p/conversation configure", "p/conversation configure {\"model\":\"o3-mini\",\"temperature\":0.7}"],
         pipable_to: [],
-        options: [],
-        aliases: ["config", "build", "edit"]
+        options: [
+            new CommandOption({
+                name: "json",
+                description: "raw json to import with, for use in aliases.",
+                type: CommandOptionType.String,
+                required: false
+            })
+        ],
+        aliases: ["config", "build", "edit"],
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["json"]),
     async function execute ({ invoker, args, guild_config, invoker_type }) {
         let formattedInvoker: GPTFormattedCommandInteraction | CommandInvoker = invoker;
         if (invoker_type === InvokerType.Interaction) {
@@ -180,6 +187,74 @@ const configurecommand = new Command(
         }
 
         const conversation = await getConversation(formattedInvoker as Message);
+
+        // Handle JSON configuration if provided
+        if (args.json) {
+            try {
+                const config = JSON.parse(args.json);
+                let configApplied = false;
+
+                // Set model first if provided, since API parameters depend on it
+                if (config.model) {
+                    const model = findModelByName(config.model);
+                    if (!model) {
+                        await action.reply(invoker, {
+                            content: `model '${config.model}' does not exist.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies
+                        });
+                        return;
+                    }
+                    // Check whitelist if applicable
+                    if (model.whitelist && model.whitelist.length > 0 && !model.whitelist.includes(invoker.author.id)) {
+                        await action.reply(invoker, {
+                            content: `you do not have access to model '${model.name}'.`,
+                            ephemeral: guild_config.other.use_ephemeral_replies
+                        });
+                        return;
+                    }
+                    conversation.model = model;
+                    configApplied = true;
+                }
+
+                // Apply API parameters
+                for (const [key, value] of Object.entries(config)) {
+                    if (key === 'model') continue; // Already handled above
+
+                    if (typeof value === 'number') {
+                        const verifyResponse = verifyAPIParameter(key, value);
+                        if (verifyResponse.error) {
+                            await action.reply(invoker, {
+                                content: `Invalid value for ${key}: ${verifyResponse.message}`,
+                                ephemeral: guild_config.other.use_ephemeral_replies
+                            });
+                            return;
+                        }
+                        (conversation.api_parameters as any)[key] = value;
+                        configApplied = true;
+                    }
+                }
+
+                if (configApplied) {
+                    await action.reply(invoker, {
+                        content: `configuration applied; changed \`${Object.keys(conversation.api_parameters).join("\`, \`")}\``,
+                        ephemeral: guild_config.other.use_ephemeral_replies
+                    });
+                    return;
+                } else {
+                    await action.reply(invoker, {
+                        content: "No valid configuration parameters found in JSON.",
+                        ephemeral: guild_config.other.use_ephemeral_replies
+                    });
+                    return;
+                }
+            } catch (error) {
+                await action.reply(invoker, {
+                    content: `Invalid JSON format: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                    ephemeral: guild_config.other.use_ephemeral_replies
+                });
+                return;
+            }
+        }
 
         const sent = await action.reply(invoker, {
             components: [embedConversation(conversation)],
