@@ -268,7 +268,7 @@ const configurecommand = new Command(
         collector.on("collect", async (interaction) => {
             ((interaction as unknown) as CommandInvoker).author = interaction.user;
             if (!conversation.users.includes(interaction.user)) {
-                await action.reply(interaction, {
+                await action.reply(interaction as unknown as CommandInvoker, {
                     content: "you are not part of this conversation, and cannot configure it.",
                     ephemeral: true
                 });
@@ -276,7 +276,7 @@ const configurecommand = new Command(
             }
             if (interaction.customId === "configure_parameters") {
                 const apiParameterButtons = getAPIParametersButtons(conversation);
-                const reply = await action.reply(interaction, {
+                const reply = await action.reply(interaction as unknown as CommandInvoker, {
                     components: [
                         ...apiParameterButtons,
                     ],
@@ -292,7 +292,7 @@ const configurecommand = new Command(
 
                 apiparamCollector.on("collect", async (apiParameterInteraction) => {
                     const key = apiParameterInteraction.customId.split("edit_api_parameter_")[1];
-                    const value = conversation.api_parameters[key];
+                    const value = conversation.api_parameters[key as keyof Conversation["api_parameters"]];
                     await apiParameterInteraction.showModal({
                         custom_id: `api_parameter_modal`,
                         title: `API Parameter: ${key}`,
@@ -312,7 +312,7 @@ const configurecommand = new Command(
                         ],
                     });
                     const submittedAPIParameter = await apiParameterInteraction.awaitModalSubmit({ time: 20 * 60 * 1000 });
-                    submittedAPIParameter.author = submittedAPIParameter.user;
+                    (submittedAPIParameter as unknown as CommandInvoker).author = submittedAPIParameter.user;
 
                     const userValue = parseFloat(submittedAPIParameter.fields.getTextInputValue("api_parameter"));
 
@@ -322,8 +322,8 @@ const configurecommand = new Command(
                         return;
                     }
 
-                    conversation.api_parameters[key] = userValue;
-                    await action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: `API parameter \`${key}\` set to \`${conversation.api_parameters[key]}\``, ephemeral: true });
+                    conversation.api_parameters[key as keyof Conversation["api_parameters"]] = userValue;
+                    await action.reply(submittedAPIParameter as unknown as FormattedCommandInteraction, { content: `API parameter \`${key}\` set to \`${conversation.api_parameters[key as keyof Conversation["api_parameters"]]}\``, ephemeral: true });
                     await action.edit(sent, {
                         components: [embedConversation(conversation)],
                         components_v2: true,
@@ -343,7 +343,7 @@ const configurecommand = new Command(
                     const modelName = modelInteraction.customId.split("edit_model_")[1];
                     const model = findModelByName(modelName);
                     if (!model) { // this should never happen
-                        await action.reply(modelInteraction as unknown as FormattedCommandInteraction, {
+                        await action.reply(modelInteraction as unknown as CommandInvoker as unknown as FormattedCommandInteraction, {
                             content: `model '${modelName}' does not exist. something has gone terribly wrong.`,
                             ephemeral: true,
                         });
