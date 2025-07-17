@@ -568,12 +568,14 @@ export class Container {
     id?: number;
 
     components: ContainerComponent[];
-    accent_color?: string; // Must be a hex value
+    accent_color?: number; // Must be a hex value
     spoiler?: boolean;
 
     constructor(args: Omit<Container, 'type'>) {
         this.type = ComponentType.Container;
         this.components = args.components;
         this.id = args.id;
+        this.accent_color = args.accent_color;
+        this.spoiler = args.spoiler;
     }
 }
