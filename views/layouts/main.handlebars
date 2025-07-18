@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} // PepperBot</title>
 
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/{{stylesheet}}">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 
     <meta content="{{title}} // PepperBot" property="og:title" />
@@ -14,13 +15,6 @@
     <meta content="#ff0000" data-react-helmet="true" name="theme-color" />
 </head>
 <body class="{{title}}-page-body">
-    <div class="card sidebar-container flex column small-gap">
-        <a href="/" class="card hover-button no-padding no-margin sidebar-button flex row justify-center align-center">
-            <svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 -960 960 960" width="1.5em" fill="#e3e3e3">
-                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z"/>
-            </svg>
-        </a>
-    </div>
     <main class="{{title}}-page">{{{body}}}</main>
 </body>
 </html>

@@ -1,0 +1,27 @@
+.index-redirect {
+    width: min-content;
+}
+
+/* Center the column divider using CSS Grid */
+#index-page-redirects-columns-holder {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+    gap: 0;
+}
+
+.index-column-divider {
+    grid-column: 2;
+    justify-self: center;
+    margin: 0 0.5em;
+}
+
+#index-page-redirects-column1 {
+    grid-column: 1;
+    justify-self: end;
+}
+
+#index-page-redirects-column2 {
+    grid-column: 3;
+    justify-self: start;
+}

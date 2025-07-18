@@ -68,72 +68,15 @@ export function listen(client: Client) {
             const guilds = client.guilds.cache.size;
             const users = client.users.cache.size;
 
-            // Check if the user has visited before using a cookie
-            const hasVisited = req.cookies.hasVisited === "true";
-            const animateClass = hasVisited ? "" : "animate";
-
-            // Set a cookie to mark the user as having visited
-            if (!isDev) res.cookie("hasVisited", "true", { maxAge: 2 * 60 * 60 * 1000 }); // 2 hours expiration
-
-            const statistics = await getStatistics();
-            if (!statistics) {
-                // fallback to empty object if statistics fails to load
-                log.error("Failed to load statistics");
-            }
-            let executionTimesAverages: Record<string, number> = {};
-            Object.entries(statistics?.execution_times).forEach(([key, value]) => {
-                executionTimesAverages[key] = Math.round(value.reduce((sum, num) => sum + num, 0) / value.length);
-            });
-            executionTimesAverages = Object.fromEntries(
-                Object.entries(executionTimesAverages).sort(([, a], [, b]) => {
-                    // sort the execution times by average time (highest to lowest)
-                    return b - a;
-                })
-            );
-            let commandUsageSorted = Object.entries(statistics?.command_usage || {}).sort(([, a], [, b]) => {
-                // sort the command usage by count (highest to lowest)
-                return b - a;
-            });
-            const formattedStatistics = {
-                "execution times": Object.fromEntries(
-                    Object.entries(executionTimesAverages)
-                        .slice(0, 20) // limit to 10 entries
-                        .map(([command, time]) => {
-                            // format the execution times for display
-                            return [`p/${command}`, `${time}ms`];
-                        })
-                ),
-                "command usage": Object.fromEntries(
-                    commandUsageSorted
-                        .slice(0, 20) // limit to 10 entries
-                        .map(([command, count]) => {
-                            // format the command usage for display
-                            return [`p/${command}`, count];
-                        })
-                ),
-                "invoker type usage": Object.fromEntries(
-                    Object.entries(statistics?.invoker_type_usage || {}).map(([type, count]) => {
-                        // format the invoker type usage for display
-                        return [type, count];
-                    })
-                ),
-                "totals": {
-                    "gpt responses": statistics?.total_gpt_responses || 0, // total gpt responses
-                    "command usage": Object.values(statistics?.command_usage || {}).reduce((sum, count) => sum + count, 0),
-                    "piped commands": statistics?.total_piped_commands || 0 // total piped commands
-                },
-            };
-
             res.render("index", {
                 title: "landing",
                 description: "PepperBot",
                 path: "/",
+                stylesheet: "index.css",
                 guilds,
                 users,
-                animateClass,
                 guildsPlural: guilds !== 1 ? "s" : "",
                 usersPlural: users !== 1 ? "s" : "",
-                statistics: formattedStatistics,
             });
         } catch (err) {
             next(err);
@@ -174,102 +117,6 @@ export function listen(client: Client) {
         }
     });
 
-    // api endpoints (json)
-    // use these for client-side ui, etc
-    // try and do as much as possible server-side
-
-    // app.get("/api/status", (_req, res) => {
-    //     res.json({
-    //         guilds: client.guilds.cache.size,
-    //         users: client.users.cache.size
-    //     })
-    // })
-    function formatCommand(command: Command, selectedCommand: string, selectedSubcommand?: string): any {
-        const name = command.name;
-        const whitelistOnly = command.tags.includes(CommandTag.WhitelistOnly)
-        return {
-                whitelistOnly: whitelistOnly ? "command-whitelist-only" : "",
-                ...command,
-                usage: Array.isArray(command.example_usage) ? command.example_usage.map((value, index) => {
-                    return `EXAMPLE ${index + 1}: ${value}`;
-                }) : ["EXAMPLE: " + command.example_usage],
-                argOrder: command.options.filter((option) => option.type !== CommandOptionType.Subcommand).length === 0
-                    ? undefined
-                    : `p/${command.parent_command ? command.parent_command + " " : ""}${name} ` + (command.argument_order.length > 0
-                        ? command.argument_order
-                        : "<" + command.options.map((option) => option.name).join("> <") + ">"),
-                isPreSelected: (selectedCommand === name) || selectedCommand === (command.parent_command + " " + name),
-                arguments: (command.options.filter((option) => option.type !== CommandOptionType.Subcommand).length === 0) ? undefined : command.options.filter((option) => option.type !== CommandOptionType.Subcommand).map((option) => {
-                    return {
-                        argType: argTypeIndex[option.type],
-                        ...option,
-                    }
-                }),
-                meta: {
-                    integration_types: command.integration_types.map((type) => integrationTypesIndex[type]).join(", "),
-                    contexts: command.contexts.map((type) => contextsIndex[type]).join(", "),
-                    nsfw: new String(command.nsfw),
-                    aliases: (command.aliases.length > 0)
-                        ? (
-                            command.parent_command
-                                ? command.aliases.map(alias => `p/${command.parent_command} ${alias}`).join(", ")
-                                : command.aliases.map(alias => `p/${alias}`).join(", ")
-                        )
-                        : undefined,
-                    rootAliases: command.root_aliases.length > 0 ? command.root_aliases.map(alias => `p/${alias}`).join(", ") : undefined,
-                    parent: command.parent_command ? command.parent_command : undefined,
-                },
-                subcommands: (command.subcommands?.list.length || -1) > 0 ? command.subcommands?.list.map((subcommand) => {
-                    return {
-                        name: subcommand.name,
-                        parentName: subcommand.parent_command,
-                        tags: subcommand.tags,
-                        isPreSelected: selectedSubcommand === (subcommand.parent_command + " " + subcommand.name),
-                    }
-                }) : undefined,
-            }
-    }
-
-    app.get("/commands", (req, res, next) => {
-        let formattedCommands: any[] = [];
-        let formattedSubcommands: any[] = [];
-        const selectedCommand = req.query.command
-        const selectedSubcommand = req.query.command + " " + req.query.subcommand
-
-        commands.mappings.forEach((entry) => {
-            if (entry.type === CommandEntryType.Command) {
-                const command = entry.command as Command;
-
-                formattedCommands.push(formatCommand(command, selectedCommand as string, selectedSubcommand as string));
-                if (command.subcommands && command.subcommands.list.length > 0) {
-                    command.subcommands.list.forEach((subcommand) => {
-                        formattedSubcommands.push(formatCommand(subcommand, selectedSubcommand as string));
-                    });
-                }
-            }
-        });
-
-        // Sort so that whitelist-only commands appear towards the bottom
-        formattedCommands = formattedCommands.sort((a, b) => {
-            return Number(a.whitelistOnly !== "") - Number(b.whitelistOnly !== "");
-        });
-
-        return res.render("commands", {
-            title: "commands",
-            description: "a list of all commands and their usage",
-            path: "/commands" + (req.query.name ? `/${req.query.name}` : ""),
-            commands: formattedCommands.filter((entry) => entry !== null),
-            subcommands: formattedSubcommands.filter((entry) => entry !== null),
-        });
-    })
-
-    app.get("/commands/:name", (req, res, next) => {
-        res.redirect("/commands?command=" + req.params.name);
-    });
-    app.get("/commands/:name/:subcommand", (req, res, next) => {
-        res.redirect("/commands?command=" + req.params.name + "&subcommand=" + req.params.subcommand);
-    });
-
     app.use(express.static("public"));
 
     // errors
@@ -292,6 +139,7 @@ export function listen(client: Client) {
         res.status(status).render("error", {
             title: "error",
             description: `${status}: ${message}`,
+            stylesheet: "error.css",
             path: req.path,
             status: status,
             message: message

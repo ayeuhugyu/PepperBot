@@ -1,24 +1,18 @@
-<div class="landing-page-container flex row gap page-centered nowrap">
-    <div class="index-column-1 flex column gap">
-        <div class="card no-margin index-serving-info">
-            <h1>PepperBot</h1>
-            <p><i>serving {{users}} user{{usersPlural}} across {{guilds}} server{{guildsPlural}}</i></p>
+<div class="flex column page-centered some-padding small-gap centered" id="index-page-items">
+    <h1 class="card side-padding">PepperBot</h1>
+    <p class="card side-padding">serving {{users}} user{{usersPlural}} across {{guilds}} server{{guildsPlural}}</p>
+    <hr>
+    <div class="no-margin small-gap" id="index-page-redirects-columns-holder">
+        <div class="flex column small-gap no-margin align-right" id="index-page-redirects-column1">
+            <a class="card spinny-button side-padding pointer text-right index-redirect" href="/commands">/commands</a>
+            <a class="card spinny-button side-padding pointer text-right index-redirect" href="/statistics">/statistics</a>
+            <a class="card spinny-button side-padding pointer text-right index-redirect" href="/logs">/logs</a>
         </div>
-        <div class="card no-margin index-pages-list">
-
-        </div>
-    </div>
-    <div class="card no-margin index-statistics">
-        <h2>Statistics</h2>
-        <div class="statistics-columns">
-            {{#each statistics}}
-                <div class="statistics-column">
-                    <h3>{{@key}}</h3>
-                    {{#each this}}
-                        <p class="no-margin">{{@key}}: {{this}}</p>
-                    {{/each}}
-                </div>
-            {{/each}}
+        <div class="vl index-column-divider"></div>
+        <div class="flex column small-gap no-margin" id="index-page-redirects-column2">
+            <a class="card spinny-button side-padding pointer text-left spin-right index-redirect" href="/config">/config</a>
+            <a class="card spinny-button side-padding pointer text-left spin-right index-redirect" href="/prompts">/prompts</a>
+            <button class="card spinny-button side-padding pointer text-left spin-right index-redirect" href="/queue">/queue</button>
         </div>
     </div>
 </div>

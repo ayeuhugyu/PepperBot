@@ -1,0 +1,305 @@
+@font-face {
+    font-family: 'Cozette';
+    src: url('/CozetteBitmap.otb') format('opentype'),
+         url('/CozetteBitmap.otb') format('truetype'),
+         url('/CozetteBitmap.otb'),
+         url('/CozetteVector.ttf') format('truetype');
+    font-display: swap;
+}
+
+:root {
+    font-family: 'Cozette', monospace, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 1em;
+    line-height: 1.25;
+
+    /* Disable anti-aliasing for crisp pixel font rendering */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    font-smooth: never;
+    text-rendering: optimizeSpeed;
+
+    --background-color: rgb(28, 28, 28);
+    --background-color-transparent: rgba(28, 28, 28, 0.15);
+
+    --border-color: #a3a3a3;
+    --border-color-bright: #ffffff;
+
+    background: #1A1A1A url('/bg.png'); /* shamelessly stealing this image from https://atomicmaya.me/ */
+    color: #eeeeee;
+    backdrop-filter: blur(10px);
+}
+
+/* crt scanlines animation */
+:root::before {
+    content: '';
+    position: fixed;
+    top: -12px;
+    left: 0;
+    width: 100%;
+    height: calc(100% + 24px);
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0, 0, 0, 0.15) 3px,
+        rgba(0, 0, 0, 0.15) 6px
+    );
+    pointer-events: none;
+    z-index: -1;
+    animation: scanlines 2s linear infinite;
+}
+
+@keyframes scanlines {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(12px);
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+main {
+    min-height: calc(100vh - 2em);
+    height: 100%;
+    width: 100%;
+    padding: 1em;
+}
+
+p {
+    margin-top: .8em;
+    margin-bottom: .8em;
+}
+h1, h2, h3, h4, h5 {
+    margin-top: 0;
+    margin-bottom: .2em;
+}
+i {
+    color: #888888;
+}
+a {
+    color: #8095ff;
+    text-decoration: none;
+}
+
+li {
+    list-style-type: none;
+}
+
+hr {
+    border: none;
+    background: repeating-linear-gradient(
+        to right,
+        var(--border-color-bright),
+        var(--border-color-bright) 8px,
+        transparent 4px,
+        transparent 12px
+    );
+    height: 1px;
+    margin-top: 0;
+    margin-bottom: 0;
+    width: 100%;
+    background-size: 16px 1px;
+    animation: hr-dash-scroll 4s linear infinite;
+}
+.vl {
+    border: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        var(--border-color-bright),
+        var(--border-color-bright) 8px,
+        transparent 4px,
+        transparent 12px
+    );
+    width: 1px;
+    margin-left: 0;
+    margin-right: 0;
+    min-height: 100%; /* idfk why this works */
+    height: inherit;
+    background-size: 1px 16px;
+    animation: vl-dash-scroll 4s linear infinite;
+}
+
+@keyframes vl-dash-scroll {
+    0% {
+        background-position-y: 0;
+    }
+    100% {
+        background-position-y: 16px;
+    }
+}
+
+@keyframes hr-dash-scroll {
+    0% {
+        background-position-x: 0;
+    }
+    100% {
+        background-position-x: 16px;
+    }
+}
+
+/* commonly used classes */
+
+.card {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    padding: 0.25em;
+    border-radius: 7.5px;
+    margin: 0;
+}
+
+.spinny-button {
+    transition: all 0.3s ease;
+    position: relative;
+    color: #eeeeee;
+    font: inherit;
+}
+
+.spinny-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.spinny-button:hover::before {
+    content: '-';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    animation: terminal-spinner 0.8s linear infinite;
+    /* Default position - left side */
+    left: -1em;
+}
+
+.spinny-button.spin-right:hover::before {
+    left: auto;
+    right: -1em;
+}
+
+.spinny-button.spin-left:hover::before {
+    left: -1em;
+}
+
+@keyframes terminal-spinner {
+    0% { content: '-'; }
+    25% { content: '\\'; }
+    50% { content: '|'; }
+    75% { content: '/'; }
+    100% { content: '-'; }
+}
+
+/* generic stuff */
+
+.page-centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+.top-margin {
+    margin-top: 0.5em;
+}
+
+.no-padding {
+    padding: 0;
+}
+
+.little-padding {
+    padding: 0.2em;
+}
+
+.some-padding {
+    padding: 0.5em;
+}
+
+.side-padding {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.column {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.nowrap {
+    flex-wrap: nowrap;
+}
+
+.gap {
+    gap: 1em;
+}
+.small-gap {
+    gap: 0.5em;
+}
+
+.centered {
+    justify-content: center;
+    align-items: center;
+}
+.justify-center {
+    justify-content: center;
+}
+.align-center {
+    align-items: center;
+}
+
+.justify-right {
+    justify-content: flex-end;
+}
+.align-right {
+    align-items: flex-end;
+}
+
+.justify-left {
+    justify-content: flex-start;
+}
+.align-left {
+    align-items: flex-start;
+}
+
+.darkened-text {
+    color: var(--text-color-dark);
+}
+
+.border-bottom {
+    border-bottom: var(--border-color) 0.1em solid;
+}
+
+.transparent-background {
+    background-color: var(--background-color-transparent);
+}
+
+.no-background {
+    background-color: transparent;
+}
+
+.text-right {
+    text-align: right;
+}
+.text-left {
+    text-align: left;
+}

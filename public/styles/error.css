@@ -1,0 +1,19 @@
+/* shamelessly stolen from forgejo/gitea, thanks! */
+.error-code {
+    color: transparent;
+    background: repeating-linear-gradient(45deg, #f38ba8, #f38ba8 10px, #eeeeee 10px, #eeeeee 20px);
+    background-clip: text;
+    padding-left: 0.35em;
+}
+.error {
+    text-align: center;
+    padding-right: 0.35em;
+}
+.error-page {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+}
