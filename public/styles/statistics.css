@@ -1,6 +1,5 @@
 #statistics-page {
     max-width: 800px;
-    width: max-content;
 }
 
 #statistics-header {
@@ -31,11 +30,13 @@
 #overview-stats {
     justify-content: center;
     flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 #overview-stats .card {
     min-width: 120px;
     text-align: center;
+    flex: 0 1 auto;
 }
 
 #stats-columns {
@@ -88,7 +89,77 @@
 }
 
 #command-usage, #model-usage, #execution-times, #invoker-usage {
-    max-height: 300px;
+    max-height: 200px;
+}
+
+.stats-container {
+    margin-top: 0.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-container.scrollable {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.stats-container.scrollable::-webkit-scrollbar {
+    width: 2px;
+}
+
+.stats-container.scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.stats-container.scrollable::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 1px;
+}
+
+.stats-container.scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.stats-container.scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.stats-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-name {
+    flex: 1;
+    text-align: left;
+}
+
+.stat-value {
+    flex-shrink: 0;
+    text-align: right;
+    margin-left: 1rem;
+}
+
+#command-usage, #execution-times {
+    overflow-y: auto;
+}
+
+#model-usage, #invoker-usage {
+    overflow-y: visible;
+}
+
+.scrollable {
+    max-height: 200px;
     overflow-y: auto;
 }
 

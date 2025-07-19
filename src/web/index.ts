@@ -127,12 +127,13 @@ export function listen(client: Client) {
             const guilds = client.guilds.cache.size;
             const users = client.users.cache.size;
 
-            // Calculate average execution times
-            const avgExecutionTimes: Record<string, string> = {};
+            // Calculate average execution timess
+            let avgExecutionTimes: Record<string, string> = {};
             for (const command in statistics.execution_times) {
                 const times = statistics.execution_times[command];
                 avgExecutionTimes["p/" + command] = (times.reduce((a, b) => a + b, 0) / times.length).toFixed(0);
             }
+            const sortedAvgExecutionTimes = Object.fromEntries(Object.entries(avgExecutionTimes).sort(([,a], [,b]) => Number(b) - Number(a)));
 
             // Sort commands by usage
             const sortedCommandUsage = Object.entries(statistics.command_usage)
@@ -155,7 +156,7 @@ export function listen(client: Client) {
                 totalGptResponses: Object.values(statistics.gpt_model_usage).reduce((a, b) => a + b, 0),
                 totalPipedCommands: statistics.total_piped_commands,
                 commandUsage: sortedCommandUsage,
-                avgExecutionTimes,
+                avgExecutionTimes: sortedAvgExecutionTimes,
                 modelUsage: sortedModelUsage,
                 invokerUsage: [
                     { type: "Slash Commands", count: statistics.invoker_type_usage.interaction },

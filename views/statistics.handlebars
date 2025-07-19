@@ -5,7 +5,7 @@
         <div class="spacer"></div>
     </div>
 
-    <div class="flex row small-gap nowrap" id="overview-stats">
+    <div class="flex row wrap small-gap centered" id="overview-stats">
         <div class="card some-padding">
             <h3 class="no-margin">Total Commands</h3>
             <p class="no-margin darkened-text">{{totalCommands}}</p>
@@ -29,26 +29,30 @@
     <div class="no-margin small-gap" id="stats-columns">
         <div class="flex column small-gap" id="left-column">
             <div class="card some-padding">
-                <h2 class="no-margin">Command Usage</h2>
-                <div class="small-gap flex column" id="command-usage">
-                    {{#each commandUsage}}
-                    <div class="flex row nowrap space-between">
-                        <span>{{this.[0]}}</span>
-                        <span class="darkened-text">{{this.[1]}}</span>
+                <h2 class="no-margin">Invoker Types</h2>
+                <div class="stats-container" id="invoker-usage">
+                    <div class="stats-content">
+                        {{#each invokerUsage}}
+                        <div class="stat-row">
+                            <div class="stat-name">{{this.type}}</div>
+                            <div class="stat-value">{{this.count}}</div>
+                        </div>
+                        {{/each}}
                     </div>
-                    {{/each}}
                 </div>
             </div>
 
-            <div class="card some-padding">
-                <h2 class="no-margin">Invoker Types</h2>
-                <div class="small-gap flex column" id="invoker-usage">
-                    {{#each invokerUsage}}
-                    <div class="flex row nowrap space-between">
-                        <span>{{this.type}}</span>
-                        <span class="darkened-text">{{this.count}}</span>
+            <div class="card some-padding" id="command-usage-container">
+                <h2 class="no-margin">Command Usage</h2>
+                <div class="stats-container scrollable" id="command-usage">
+                    <div class="stats-content">
+                        {{#each commandUsage}}
+                        <div class="stat-row">
+                            <div class="stat-name">{{this.[0]}}</div>
+                            <div class="stat-value">{{this.[1]}}</div>
+                        </div>
+                        {{/each}}
                     </div>
-                    {{/each}}
                 </div>
             </div>
         </div>
@@ -58,29 +62,36 @@
         <div class="flex column small-gap" id="right-column">
             <div class="card some-padding">
                 <h2 class="no-margin">Model Usage</h2>
-                <div class="small-gap flex column" id="model-usage">
-                    {{#if modelUsage}}
-                    {{#each modelUsage}}
-                    <div class="flex row nowrap space-between">
-                        <span>{{this.[0]}}</span>
-                        <span class="darkened-text">{{this.[1]}}</span>
+                <div class="stats-container" id="model-usage">
+                    <div class="stats-content">
+                        {{#if modelUsage}}
+                        {{#each modelUsage}}
+                        <div class="stat-row">
+                            <div class="stat-name">{{this.[0]}}</div>
+                            <div class="stat-value">{{this.[1]}}</div>
+                        </div>
+                        {{/each}}
+                        {{else}}
+                        <div class="stat-row">
+                            <div class="stat-name darkened-text">No AI models used yet</div>
+                            <div class="stat-value"></div>
+                        </div>
+                        {{/if}}
                     </div>
-                    {{/each}}
-                    {{else}}
-                    <p class="darkened-text no-margin">No AI models used yet</p>
-                    {{/if}}
                 </div>
             </div>
 
-            <div class="card some-padding">
+            <div class="card some-padding" id="execution-times-container">
                 <h2 class="no-margin">Avg Execution Times</h2>
-                <div class="small-gap flex column" id="execution-times">
-                    {{#each avgExecutionTimes}}
-                    <div class="flex row nowrap space-between">
-                        <span>{{@key}}</span>
-                        <span class="darkened-text">{{this}}ms</span>
+                <div class="stats-container scrollable" id="execution-times">
+                    <div class="stats-content">
+                        {{#each avgExecutionTimes}}
+                        <div class="stat-row">
+                            <div class="stat-name">{{@key}}</div>
+                            <div class="stat-value">{{this}}ms</div>
+                        </div>
+                        {{/each}}
                     </div>
-                    {{/each}}
                 </div>
             </div>
         </div>
