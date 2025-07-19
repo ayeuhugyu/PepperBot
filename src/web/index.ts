@@ -69,6 +69,15 @@ export function listen(client: Client) {
 
     app.use(cookieParser());
 
+    // Access logging middleware
+    app.use((req, res, next) => {
+        const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        const page = req.path;
+
+        log.access(`${ip} - ${page}`);
+        next();
+    });
+
     // lander
 
     app.get("/", async (req, res, next) => {
