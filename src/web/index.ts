@@ -4,15 +4,14 @@ import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
 import { getRefreshToken, getToken, getUser, oauth2Url, updateCookies } from "./oauth2";
 import { getStatistics } from "../lib/statistics";
-import { ApplicationIntegrationType, Client, InteractionContextType, Options } from "discord.js";
 import commands from "../lib/command_manager";
-import { CommandEntryType, CommandOptionType, CommandTag } from "../lib/classes/command_enums";
-import { Command } from "../lib/classes/command";
+import { CommandEntryType } from "../lib/classes/command_enums";
 import { CommandAccessTemplates } from "../lib/templates";
 import * as fs from "fs";
 import { APIUser } from 'discord-api-types/v10';
 import { createServer } from 'http';
 import { initializeWebSocket } from "./websocket";
+import { Client } from "discord.js";
 
 const port = 53134
 const isDev = process.env.IS_DEV === "True";
@@ -29,31 +28,6 @@ class HttpException extends Error {
         this.status = status;
         this.message = message;
     }
-}
-
-const argTypeIndex: Record<CommandOptionType, string> = {
-    [CommandOptionType.Subcommand]: "subcommand",
-    [CommandOptionType.SubcommandGroup]: "subcommand_group",
-    [CommandOptionType.String]: "string",
-    [CommandOptionType.Integer]: "integer",
-    [CommandOptionType.Boolean]: "boolean",
-    [CommandOptionType.User]: "user",
-    [CommandOptionType.Channel]: "channel",
-    [CommandOptionType.Role]: "role",
-    [CommandOptionType.Mentionable]: "mentionable",
-    [CommandOptionType.Number]: "number",
-    [CommandOptionType.Attachment]: "attachment",
-};
-
-const integrationTypesIndex: Record<ApplicationIntegrationType, string> = {
-    [ApplicationIntegrationType.GuildInstall]: "guild install",
-    [ApplicationIntegrationType.UserInstall]: "user install"
-}
-
-const contextsIndex: Record<InteractionContextType, string> = {
-    [InteractionContextType.Guild]: "Guild",
-    [InteractionContextType.BotDM]: "Bot DM",
-    [InteractionContextType.PrivateChannel]: "Private Channel"
 }
 
 export function listen(client: Client) {
@@ -267,6 +241,45 @@ export function listen(client: Client) {
                     { type: "Slash Commands", count: statistics.invoker_type_usage.interaction },
                     { type: "Text Commands", count: statistics.invoker_type_usage.message }
                 ]
+            });
+        } catch (err) {
+            next(err);
+        }
+    });
+
+    // commands page
+
+    app.get("/commands", async (req, res, next) => {
+        try {
+            // Get all unique commands from the manager
+            const commandEntries = Array.from(commands.mappings.values());
+            const uniqueCommands = [];
+
+            // Filter to only get primary commands (not aliases) and store unique commands
+            for (const entry of commandEntries) {
+                if (entry.type === CommandEntryType.Command && !entry.command.is_sub_command) {
+                    uniqueCommands.push({
+                        name: entry.command.name,
+                        description: entry.command.description,
+                        long_description: entry.command.long_description,
+                        hasSubcommands: entry.command.subcommands?.list && entry.command.subcommands.list.length > 0,
+                        subcommandCount: entry.command.subcommands?.list?.length || 0,
+                        isPublic: !Object.values(entry.command.access.whitelist).some(list => list.length > 0),
+                        tags: entry.command.tags.map(tag => tag.replace('#', ''))
+                    });
+                }
+            }
+
+            // Sort commands alphabetically
+            uniqueCommands.sort((a, b) => a.name.localeCompare(b.name));
+
+            res.render("commands", {
+                title: "commands",
+                description: "PepperBot Commands",
+                path: "/commands",
+                stylesheet: "commands.css",
+                commands: uniqueCommands,
+                totalCommands: uniqueCommands.length
             });
         } catch (err) {
             next(err);

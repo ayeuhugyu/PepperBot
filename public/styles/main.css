@@ -173,6 +173,19 @@ button:hover {
     margin: 0;
 }
 
+.button {
+    transition: all 0.3s ease;
+    position: relative;
+    color: #eeeeee;
+    font: inherit;
+    cursor: pointer;
+}
+
+.button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
 .toggle-button.active {
     background-color: var(--background-color-bright);
     transform: scale(1.05);

@@ -1,0 +1,31 @@
+<div class="flex column centered some-padding small-gap" id="commands-container">
+    <div id="commands-header" class="no-margin">
+        <a href="/" class="card spinny-button side-padding pointer" id="back-button">← back</a>
+        <h1 class="card side-padding commands-title">Commands</h1>
+        <div class="card side-padding">{{totalCommands}} commands</div>
+    </div>
+    <div class="commands-content">
+        <hr>
+        <div class="commands-simple-grid top-margin">
+            {{#each commands}}
+            <a href="/commands/{{name}}" class="command-simple-card button {{#unless isPublic}}restricted{{/unless}}">
+                <div class="command-simple-header">
+                    <h3 class="command-simple-name">p/{{name}}</h3>
+                    <div class="command-simple-badges">
+                        {{#each tags}}
+                            <span class="badge tag">{{this}}</span>
+                        {{/each}}
+                        {{#if hasSubcommands}}
+                            <span class="badge subcommands">{{subcommandCount}} sub</span>
+                        {{/if}}
+                        {{#unless isPublic}}
+                            <span class="badge restricted-badge">restricted</span>
+                        {{/unless}}
+                    </div>
+                </div>
+                <p class="command-simple-description">{{description}}</p>
+            </a>
+            {{/each}}
+        </div>
+    </div>
+</div>
