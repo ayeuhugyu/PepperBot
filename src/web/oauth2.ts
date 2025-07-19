@@ -76,6 +76,9 @@ const userCache = new Map<string, CachedUser>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export async function getUser(token: string): Promise<APIUser | OAuth2Error | undefined> {
+    if (!token) {
+        return;
+    }
     try {
         // check if user is in cache and not expired
         const cached = userCache.get(token);
