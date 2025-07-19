@@ -1,0 +1,88 @@
+<div class="flex column page-centered centered some-padding small-gap" id="statistics-page">
+    <div id="statistics-header">
+        <a href="/" class="card spinny-button side-padding pointer">← back</a>
+        <h1 class="card side-padding statistics-title">Statistics</h1>
+        <div class="spacer"></div>
+    </div>
+
+    <div class="flex row small-gap nowrap" id="overview-stats">
+        <div class="card some-padding">
+            <h3 class="no-margin">Total Commands</h3>
+            <p class="no-margin darkened-text">{{totalCommands}}</p>
+        </div>
+        <div class="card some-padding">
+            <h3 class="no-margin">GPT Responses</h3>
+            <p class="no-margin darkened-text">{{totalGptResponses}}</p>
+        </div>
+        <div class="card some-padding">
+            <h3 class="no-margin">Piped Commands</h3>
+            <p class="no-margin darkened-text">{{totalPipedCommands}}</p>
+        </div>
+        <div class="card some-padding">
+            <h3 class="no-margin">Servers</h3>
+            <p class="no-margin darkened-text">{{guilds}}</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="no-margin small-gap" id="stats-columns">
+        <div class="flex column small-gap" id="left-column">
+            <div class="card some-padding">
+                <h2 class="no-margin">Command Usage</h2>
+                <div class="small-gap flex column" id="command-usage">
+                    {{#each commandUsage}}
+                    <div class="flex row nowrap space-between">
+                        <span>{{this.[0]}}</span>
+                        <span class="darkened-text">{{this.[1]}}</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+            <div class="card some-padding">
+                <h2 class="no-margin">Invoker Types</h2>
+                <div class="small-gap flex column" id="invoker-usage">
+                    {{#each invokerUsage}}
+                    <div class="flex row nowrap space-between">
+                        <span>{{this.type}}</span>
+                        <span class="darkened-text">{{this.count}}</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+
+        <div class="vl stats-column-divider"></div>
+
+        <div class="flex column small-gap" id="right-column">
+            <div class="card some-padding">
+                <h2 class="no-margin">Model Usage</h2>
+                <div class="small-gap flex column" id="model-usage">
+                    {{#if modelUsage}}
+                    {{#each modelUsage}}
+                    <div class="flex row nowrap space-between">
+                        <span>{{this.[0]}}</span>
+                        <span class="darkened-text">{{this.[1]}}</span>
+                    </div>
+                    {{/each}}
+                    {{else}}
+                    <p class="darkened-text no-margin">No AI models used yet</p>
+                    {{/if}}
+                </div>
+            </div>
+
+            <div class="card some-padding">
+                <h2 class="no-margin">Avg Execution Times</h2>
+                <div class="small-gap flex column" id="execution-times">
+                    {{#each avgExecutionTimes}}
+                    <div class="flex row nowrap space-between">
+                        <span>{{@key}}</span>
+                        <span class="darkened-text">{{this}}ms</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -297,6 +297,40 @@ hr {
     background-color: transparent;
 }
 
+/* Custom scrollbar styles for statistics and other pages */
+.scrollable::-webkit-scrollbar,
+#command-usage::-webkit-scrollbar,
+#model-usage::-webkit-scrollbar,
+#execution-times::-webkit-scrollbar,
+#invoker-usage::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable::-webkit-scrollbar-track,
+#command-usage::-webkit-scrollbar-track,
+#model-usage::-webkit-scrollbar-track,
+#execution-times::-webkit-scrollbar-track,
+#invoker-usage::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+.scrollable::-webkit-scrollbar-thumb,
+#command-usage::-webkit-scrollbar-thumb,
+#model-usage::-webkit-scrollbar-thumb,
+#execution-times::-webkit-scrollbar-thumb,
+#invoker-usage::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover,
+#command-usage::-webkit-scrollbar-thumb:hover,
+#model-usage::-webkit-scrollbar-thumb:hover,
+#execution-times::-webkit-scrollbar-thumb:hover,
+#invoker-usage::-webkit-scrollbar-thumb:hover {
+    background: var(--border-color-bright);
+}
+
 .text-right {
     text-align: right;
 }

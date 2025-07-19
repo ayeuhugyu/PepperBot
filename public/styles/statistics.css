@@ -1,0 +1,97 @@
+#statistics-page {
+    max-width: 800px;
+    width: max-content;
+}
+
+#statistics-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0;
+}
+
+#statistics-header .spinny-button {
+    grid-column: 1;
+    justify-self: start;
+}
+
+.statistics-title {
+    grid-column: 2;
+    justify-self: center;
+    text-align: center;
+    margin: 0;
+}
+
+.spacer {
+    grid-column: 3;
+    /* this will be invisible it just balances the grid */
+}
+
+#overview-stats {
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#overview-stats .card {
+    min-width: 120px;
+    text-align: center;
+}
+
+#stats-columns {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+    gap: 0;
+}
+
+.stats-column-divider {
+    grid-column: 2;
+    justify-self: center;
+    margin: 0 0.5em;
+}
+
+#left-column {
+    grid-column: 1;
+    justify-self: end;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#right-column {
+    grid-column: 3;
+    justify-self: start;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#left-column .card:last-child,
+#right-column .card:last-child {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#left-column .card:last-child #invoker-usage,
+#right-column .card:last-child #execution-times {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+#command-usage, #model-usage, #execution-times, #invoker-usage {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#execution-times, #invoker-usage {
+    flex-grow: 1;
+}
