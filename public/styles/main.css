@@ -186,6 +186,20 @@ hr {
     left: -1em;
 }
 
+.spinny-button.spin-below:hover::before {
+    top: auto;
+    bottom: -1.5em;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.spinny-button.spin-above:hover::before {
+    top: auto;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 @keyframes terminal-spinner {
     0% { content: '-'; }
     25% { content: '\\'; }

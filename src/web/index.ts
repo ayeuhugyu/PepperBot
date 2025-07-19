@@ -83,6 +83,16 @@ export function listen(client: Client) {
         }
     });
 
+    // invite redirect
+
+    app.get("/invite", async (req, res, next) => {
+        try {
+            res.redirect("https://discord.com/oauth2/authorize?client_id=1209297323029565470");
+        } catch (err) {
+            next(err);
+        }
+    });
+
     // oauth2 auth
 
     app.get("/auth", async (req, res, next) => {
