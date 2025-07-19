@@ -33,6 +33,7 @@
     let isLiveMode = false;
     let currentLine = 0;
     let isLoading = false;
+    let hasReachedEnd = false;
     let ws = null;
 
     function addLog(text) {
@@ -85,6 +86,7 @@
     // Load logs from API
     async function loadLogs(level = currentLog, line = currentLine, append = false) {
         if (isLoading) return; // Prevent multiple simultaneous requests
+        if (append && hasReachedEnd) return; // Stop if we've reached the end of the log file
 
         try {
             isLoading = true;
@@ -92,6 +94,7 @@
             if (!append) {
                 showStatus("loading logs...");
                 currentLine = 0; // Reset line counter for new level
+                hasReachedEnd = false; // Reset end flag for new level
             }
 
             const response = await fetch(`/api/logs/${level}/${line}`);
@@ -104,6 +107,13 @@
 
             if (data.type === "success") {
                 if (!append) clearStatus();
+
+                // Check if we've reached the end of the log file
+                if (data.data.length === 0) {
+                    hasReachedEnd = true;
+                    console.log("Reached end of log file");
+                    return;
+                }
 
                 // Store scroll position if appending (for top loading)
                 const logsContent = document.getElementById("logs-content");
@@ -173,14 +183,21 @@
         const logsContent = document.getElementById("logs-content");
         if (!logsContent) return;
 
-        logsContent.addEventListener('scroll', () => {
-            // Check if scrolled to top (with small tolerance)
-            const isScrolledToTop = logsContent.scrollTop <= 5;
+        let lastScrollTop = logsContent.scrollTop;
 
-            if (isScrolledToTop && !isLoading && !logsContent.classList.contains('displaying-status')) {
+        logsContent.addEventListener('scroll', () => {
+            const currentScrollTop = logsContent.scrollTop;
+
+            // Only check if we're scrolling vertically and reached the top
+            const isScrolledToTop = currentScrollTop <= 5;
+            const isVerticalScroll = Math.abs(currentScrollTop - lastScrollTop) > 0;
+
+            if (isScrolledToTop && isVerticalScroll && !isLoading && !logsContent.classList.contains('displaying-status') && !hasReachedEnd) {
                 console.log("Reached top, loading more logs...");
                 loadLogs(currentLog, currentLine, true); // append = true
             }
+
+            lastScrollTop = currentScrollTop;
         });
     }
 
