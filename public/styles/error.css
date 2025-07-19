@@ -5,6 +5,32 @@
     background-clip: text;
     padding-left: 0.35em;
 }
+
+#error-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0;
+}
+
+#error-header .spinny-button {
+    grid-column: 1;
+    justify-self: start;
+}
+
+.error-title {
+    grid-column: 2;
+    justify-self: center;
+    text-align: center;
+    margin: 0;
+}
+
+#error-header .spacer {
+    grid-column: 3;
+    /* this will be invisible it just balances the grid */
+}
+
 .error {
     text-align: center;
     padding-right: 0.35em;

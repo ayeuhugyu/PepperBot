@@ -1,5 +1,9 @@
 <div class="error-items flex column small-gap centered">
-    <h2 class="error-code card side-padding no-margin">{{status}}</h2>
+    <div id="error-header">
+        <a href="/" class="card spinny-button side-padding pointer">← to /</a>
+        <h2 class="error-code card side-padding no-margin error-title">{{status}}</h2>
+        <div class="spacer"></div>
+    </div>
     <a class="card spinny-button error" href="{{path}}">error accessing <b>{{path}}</b>: {{message}}</a>
     <p class="no-margin"><i>click to reload</i></p>
 </div>
