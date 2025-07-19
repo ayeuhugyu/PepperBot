@@ -1,0 +1,355 @@
+<div class="flex column page-centered centered some-padding small-gap" id="logs-page">
+    <div id="logs-header">
+        <a href="/" class="card spinny-button side-padding pointer">← back</a>
+        <h1 class="card side-padding logs-title">Logs</h1>
+        <div class="spacer"></div>
+    </div>
+
+    <div class="flex row wrap small-gap centered" id="log-controls">
+        <button class="card log-level-button toggle-button active global log-colored" data-level="global">Global</button>
+        <button class="card log-level-button toggle-button info log-colored" data-level="info">Info</button>
+        <button class="card log-level-button toggle-button warn log-colored" data-level="warn">Warn</button>
+        <button class="card log-level-button toggle-button error log-colored" data-level="error">Error</button>
+        <button class="card log-level-button toggle-button fatal log-colored" data-level="fatal">Fatal</button>
+        <button class="card log-level-button toggle-button protected debug log-colored" data-level="debug">Debug</button>
+        <button class="card log-level-button toggle-button protected access log-colored" data-level="access">Access</button>
+        <button class="card live-toggle" id="live-toggle">Live Mode: OFF</button>
+    </div>
+    <hr>
+    <div class="card">
+        <div id="logs-content" class="logs-content" style="display: none;">
+        </div>
+        <noscript>
+            <div class="logs-content displaying-status">
+                <span class="status">javascript is required to use the log viewer; please enable javascript in your browser to view logs.</span>
+            </div>
+        </noscript>
+    </div>
+</div>
+
+<script>
+    const logRegex = /([\d\- ]+[\d:.]+) ( *[A-Z]+) (.+)/;
+    let currentLog = "global";
+    let isLiveMode = false;
+    let currentLine = 0;
+    let isLoading = false;
+    let ws = null;
+
+    function addLog(text) {
+        console.log(`adding log ${text}`)
+        const match = logRegex.exec(text);
+        if (!match) return;
+
+        const [, timestamp, level, content] = match;
+        const levelName = level.trim().toLowerCase();
+
+        const logElement = document.createElement("div");
+        logElement.className = "log";
+        logElement.innerHTML = `
+            <span class="timestamp">${timestamp}</span>
+            <span class="level ${levelName} log-colored">${level}</span>
+            <span class="content">${content}</span>
+        `;
+        document.getElementById("logs-content")?.appendChild(logElement);
+    }
+
+    // Status message helpers
+    function showStatus(message) {
+        const logsContent = document.getElementById("logs-content");
+        if (!logsContent) return;
+
+        // Clear existing content
+        logsContent.innerHTML = "";
+
+        // Add displaying-status class
+        logsContent.classList.add("displaying-status");
+
+        // Create and add status element
+        const statusElement = document.createElement("span");
+        statusElement.className = "status";
+        statusElement.textContent = message;
+        logsContent.appendChild(statusElement);
+    }
+
+    function clearStatus() {
+        const logsContent = document.getElementById("logs-content");
+        if (!logsContent) return;
+
+        // Remove displaying-status class
+        logsContent.classList.remove("displaying-status");
+
+        // Clear content
+        logsContent.innerHTML = "";
+    }
+
+    // Load logs from API
+    async function loadLogs(level = currentLog, line = currentLine, append = false) {
+        if (isLoading) return; // Prevent multiple simultaneous requests
+
+        try {
+            isLoading = true;
+
+            if (!append) {
+                showStatus("loading logs...");
+                currentLine = 0; // Reset line counter for new level
+            }
+
+            const response = await fetch(`/api/logs/${level}/${line}`);
+            const data = await response.json();
+
+            if (data.type === "error") {
+                if (!append) showStatus(data.message);
+                return;
+            }
+
+            if (data.type === "success") {
+                if (!append) clearStatus();
+
+                // Store scroll position if appending (for top loading)
+                const logsContent = document.getElementById("logs-content");
+                let oldScrollHeight = 0;
+                if (append && logsContent) {
+                    oldScrollHeight = logsContent.scrollHeight;
+                }
+
+                // Add each log line (prepend for top loading when append=true)
+                if (append) {
+                    // Prepend logs at the top
+                    data.data.reverse().forEach(logLine => {
+                        if (logLine.trim()) {
+                            const match = logRegex.exec(logLine);
+                            if (!match) return;
+
+                            const [, timestamp, level, content] = match;
+                            const levelName = level.trim().toLowerCase();
+
+                            const logElement = document.createElement("div");
+                            logElement.className = "log";
+                            logElement.innerHTML = `
+                                <span class="timestamp">${timestamp}</span>
+                                <span class="level ${levelName} log-colored">${level}</span>
+                                <span class="content">${content}</span>
+                            `;
+                            logsContent?.insertBefore(logElement, logsContent.firstChild);
+                        }
+                    });
+
+                    // Maintain scroll position after prepending
+                    if (logsContent) {
+                        const newScrollHeight = logsContent.scrollHeight;
+                        logsContent.scrollTop = newScrollHeight - oldScrollHeight;
+                    }
+                } else {
+                    // Normal append for initial load
+                    data.data.reverse().forEach(logLine => {
+                        if (logLine.trim()) {
+                            addLog(logLine);
+                        }
+                    });
+
+                    // Scroll to bottom for initial load
+                    if (logsContent) {
+                        setTimeout(() => {
+                            logsContent.scrollTop = logsContent.scrollHeight;
+                        }, 50);
+                    }
+                }
+
+                // Update line counter for pagination
+                currentLine += data.total;
+
+                console.log(`Loaded ${data.data.length} logs for level: ${level} (starting at line ${line})`);
+            }
+        } catch (error) {
+            console.error("error loading logs:", error);
+            if (!append) showStatus("failed to load logs, please try again.");
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // Initialize scroll listener for pagination
+    function initializeScrollPagination() {
+        const logsContent = document.getElementById("logs-content");
+        if (!logsContent) return;
+
+        logsContent.addEventListener('scroll', () => {
+            // Check if scrolled to top (with small tolerance)
+            const isScrolledToTop = logsContent.scrollTop <= 5;
+
+            if (isScrolledToTop && !isLoading && !logsContent.classList.contains('displaying-status')) {
+                console.log("Reached top, loading more logs...");
+                loadLogs(currentLog, currentLine, true); // append = true
+            }
+        });
+    }
+
+    // Live mode functionality with WebSockets
+    function initWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.close();
+        }
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+        ws.onopen = () => {
+            console.log('WebSocket connected');
+            if (isLiveMode) {
+                subscribeToLogs();
+            }
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'subscribed') {
+                    console.log(`Subscribed to ${data.level} logs (whitelisted: ${data.isWhitelisted})`);
+                } else if (data.type === 'newLog') {
+                    if (isLiveMode) {
+                        handleNewWebSocketLog(data.data);
+                    }
+                }
+            } catch (error) {
+                console.error('WebSocket message parsing error:', error);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket disconnected');
+            // Attempt to reconnect after 3 seconds
+            if (isLiveMode) {
+                setTimeout(() => {
+                    initWebSocket();
+                }, 3000);
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+    }
+
+    function subscribeToLogs() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            // Get cookies for authentication
+            const cookies = {};
+            document.cookie.split(';').forEach(cookie => {
+                const [name, value] = cookie.trim().split('=');
+                cookies[name] = value;
+            });
+
+            ws.send(JSON.stringify({
+                type: 'subscribe',
+                level: currentLog,
+                cookies: cookies
+            }));
+        }
+    }
+
+    function handleNewWebSocketLog(logData) {
+        const logsContent = document.getElementById("logs-content");
+        const isScrolledToBottom = logsContent &&
+            logsContent.scrollTop + logsContent.clientHeight >= logsContent.scrollHeight - 50;
+
+        // Add new log to the bottom
+        if (logData.trim()) {
+            addLog(logData);
+        }
+
+        // Auto-scroll to bottom if user was already at bottom
+        if (isScrolledToBottom && logsContent) {
+            setTimeout(() => {
+                logsContent.scrollTop = logsContent.scrollHeight;
+            }, 10);
+        }
+    }
+
+    function startLiveMode() {
+        console.log("Live mode started");
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            initWebSocket();
+        } else {
+            subscribeToLogs();
+        }
+    }
+
+    function stopLiveMode() {
+        console.log("Live mode stopped");
+        // Send unsubscribe message to server
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'unsubscribe'
+            }));
+        }
+    }
+
+    // Button Manager
+    function initializeButtonManager() {
+        // Log level buttons
+        document.querySelectorAll('.log-level-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const clickedButton = e.target;
+                const newLevel = clickedButton.dataset.level;
+
+                // Remove active class from all log level buttons
+                document.querySelectorAll('.log-level-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Add active class to clicked button
+                clickedButton.classList.add('active');
+
+                // Update current log level
+                currentLog = newLevel;
+                currentLine = 0; // Reset pagination for new level
+                console.log(`Log level changed to: ${currentLog}`);
+
+                // Load logs for the new level
+                loadLogs(currentLog);
+
+                // Restart live mode subscription if active
+                if (isLiveMode) {
+                    setTimeout(() => subscribeToLogs(), 1000); // Give time for logs to load
+                }
+            });
+        });
+
+        // Live mode toggle button
+        const liveToggleButton = document.getElementById('live-toggle');
+        if (liveToggleButton) {
+            liveToggleButton.addEventListener('click', () => {
+                // Toggle live mode state
+                isLiveMode = !isLiveMode;
+
+                // Update button text and styling
+                liveToggleButton.textContent = `Live Mode: ${isLiveMode ? 'ON' : 'OFF'}`;
+                liveToggleButton.classList.toggle('active', isLiveMode);
+
+                console.log(`Live mode toggled: ${isLiveMode ? 'ON' : 'OFF'}`);
+
+                // Handle live mode toggle
+                if (isLiveMode) {
+                    startLiveMode();
+                } else {
+                    stopLiveMode();
+                }
+            });
+        }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        // Show logs content when JavaScript is enabled
+        const logsContent = document.getElementById('logs-content');
+        if (logsContent) {
+            logsContent.style.display = '';
+        }
+
+        initializeButtonManager();
+        initializeScrollPagination();
+        initWebSocket(); // Initialize WebSocket connection
+        loadLogs(); // Load initial logs
+    });
+</script>

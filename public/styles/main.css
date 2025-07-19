@@ -20,9 +20,14 @@
 
     --background-color: rgb(28, 28, 28);
     --background-color-transparent: rgba(28, 28, 28, 0.15);
+    --background-color-bright: rgb(48, 48, 48);
+    --background-color-dark: rgb(18, 18, 18);
 
     --border-color: #a3a3a3;
     --border-color-bright: #ffffff;
+
+    --dark-text-color: #8a8a8a;
+    --inverted-text-color: #1A1A1A;
 
     background: #1A1A1A url('/bg.png'); /* shamelessly stealing this image from https://atomicmaya.me/ */
     color: #eeeeee;
@@ -145,6 +150,19 @@ hr {
     }
 }
 
+button {
+    transition: all 0.3s ease;
+    position: relative;
+    color: #eeeeee;
+    font: inherit;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
 /* commonly used classes */
 
 .card {
@@ -153,6 +171,12 @@ hr {
     padding: 0.25em;
     border-radius: 7.5px;
     margin: 0;
+}
+
+.toggle-button.active {
+    background-color: var(--background-color-bright);
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .spinny-button {

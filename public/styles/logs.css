@@ -1,0 +1,96 @@
+#logs-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0;
+}
+
+.global.log-colored { color: #FFFFFF; }
+.info.log-colored { color: #1ac11a; }
+.warn.log-colored { color: #dfc623; }
+.error.log-colored { color: #d67b51; }
+.fatal.log-colored { color: #ff0000; }
+.debug.log-colored { color: #acdee4; }
+.access.log-colored { color: #ccffcc; }
+
+.protected { border-color: #c7ac00 }
+
+#live-toggle.active {
+    background-color: #7bd87b !important;
+    color: var(--inverted-text-color)
+}
+
+.logs-content {
+    background-color: var(--background-color-dark);
+    border-radius: 7.5px;
+    padding: 0.5em;
+    margin: 0.25em;
+    max-width: 50vw;
+    width: 50vw;
+    max-height: 60vh;
+    height: 60vh;
+    overflow: scroll;
+}
+.logs-content::-webkit-scrollbar {
+    width: 2px;
+}
+.logs-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.logs-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 1px;
+}
+.logs-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+.logs-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.logs-content > * {
+    font-size: 0.875em;
+}
+
+.displaying-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.status {
+    color: var(--dark-text-color);
+}
+
+.log {
+    display: flex;
+    align-items: center;
+}
+.log:hover {
+    background-color: var(--background-color);
+}
+.log > .timestamp {
+    color: var(--dark-text-color)
+}
+.log > * {
+    margin-right: 0.5em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+    .logs-content {
+        max-width: 70vw;
+        width: 70vw;
+    }
+}
+
+@media (max-width: 900px) {
+    .logs-content {
+        max-width: 80vw;
+        width: 80vw;
+    }
+}

@@ -2,18 +2,23 @@ import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
-import { getRefreshToken, getToken, oauth2Url, updateCookies } from "./oauth2";
+import { getRefreshToken, getToken, getUser, oauth2Url, updateCookies } from "./oauth2";
 import { getStatistics } from "../lib/statistics";
 import { ApplicationIntegrationType, Client, InteractionContextType, Options } from "discord.js";
 import commands from "../lib/command_manager";
 import { CommandEntryType, CommandOptionType, CommandTag } from "../lib/classes/command_enums";
 import { Command } from "../lib/classes/command";
 import { CommandAccessTemplates } from "../lib/templates";
+import * as fs from "fs";
+import { APIUser } from 'discord-api-types/v10';
+import { createServer } from 'http';
+import { initializeWebSocket } from "./websocket";
 
 const port = 53134
 const isDev = process.env.IS_DEV === "True";
 
 class HttpException extends Error {
+    private type: string = "error"; // this is just so api responses using this are more managable
     public status?: number;
     // message is not nullable, it is already in the Error class
     // yayy :heart:
@@ -53,7 +58,10 @@ const contextsIndex: Record<InteractionContextType, string> = {
 
 export function listen(client: Client) {
     const app = express();
+    const server = createServer(app);
     const hbs = create();
+
+    initializeWebSocket(server);
 
     app.engine("handlebars", hbs.engine);
     app.set("view engine", "handlebars");
@@ -128,6 +136,71 @@ export function listen(client: Client) {
     });
 
     app.use(express.static("public"));
+
+    // logs page
+
+    app.get("/logs", async (req, res, next) => {
+        try {
+            res.render("logs", {
+                title: "logs",
+                description: "PepperBot Logs",
+                path: "/logs",
+                stylesheet: "logs.css"
+            });
+        } catch (err) {
+            next(err);
+        }
+    });
+
+    // logs api endpoints
+
+    const whitelistOnlyLevels = ['debug', 'access'];
+    const whitelist = CommandAccessTemplates.dev_only.whitelist.users;
+    const linesCount = 100;
+    app.get("/api/logs/:level/:line?", async (req, res, next) => {
+        try {
+            const level = req.params.level.toLowerCase().trim().replaceAll(/[^[a-z]]*/g, ''); // avoids issues with users navigating around by putting in ../ and shit
+            const levels = fs.readdirSync('./logs').map(file => file.replace('.log', ''));
+            if (!levels.includes(level)) {
+                res.json(new HttpException(404, "log level " + level + " not found"));
+                return;
+            }
+            const user = await getUser(req.cookies.LIBERAL_LIES).catch(() => undefined);
+            let whitelisted = false;
+            if (user && typeof user === "object" && "id" in user && whitelist.includes(user.id ?? "not included :/")) {
+                whitelisted = true;
+            }
+            if (!whitelisted && whitelistOnlyLevels.includes(level)) {
+                res.json(new HttpException(403, "user is not whitelisted for " + level));
+                return;
+            }
+
+            const atLine = Number(req.params.line ?? 0);
+            if (isNaN(atLine)) {
+                res.json(new HttpException(400, "invalid line number: " + req.params.line));
+                return;
+            }
+
+            const logFile = `./logs/${level}.log`;
+            if (!fs.existsSync(logFile)) {
+                res.json(new HttpException(404, "log file not found"));
+                return;
+            }
+
+            const fullFile = fs.readFileSync(logFile, "utf-8");
+            const lines = fullFile.split("\n").reverse().slice(atLine, atLine + linesCount);
+            res.json({
+                type: "success",
+                data: lines,
+                at: atLine,
+                level: level,
+                total: linesCount
+            });
+            return;
+        } catch (err) {
+            next(err);
+        }
+    });
 
     // statistics page
 
@@ -241,5 +314,5 @@ export function listen(client: Client) {
         });
     })
 
-    app.listen(port, () => log.info(`web interface started on port ${port}`));
+    server.listen(port, () => log.info(`web interface started on port ${port}`));
 }
