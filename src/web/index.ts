@@ -150,11 +150,24 @@ export function listen(client: Client) {
 
     app.get("/logs", async (req, res, next) => {
         try {
+            let username = "authenticated: N/A";
+
+            // Try to get authenticated user
+            if (req.cookies.LIBERAL_LIES) {
+                try {
+                    const user = await getUser(req.cookies.LIBERAL_LIES);
+                    if (user && typeof user === "object" && "username" in user) {
+                        username = "authenticated: " + user.username as string;
+                    }
+                } catch (error) {}
+            }
+
             res.render("logs", {
                 title: "logs",
                 description: "PepperBot Logs",
                 path: "/logs",
-                stylesheet: "logs.css"
+                stylesheet: "logs.css",
+                username: username
             });
         } catch (err) {
             next(err);
