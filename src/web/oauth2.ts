@@ -66,13 +66,49 @@ interface OAuth2Error {
     code: number
 }
 
+// user cache to reduce Discord API calls
+interface CachedUser {
+    user: APIUser | OAuth2Error;
+    timestamp: number;
+}
+
+const userCache = new Map<string, CachedUser>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 export async function getUser(token: string): Promise<APIUser | OAuth2Error | undefined> {
     try {
-        return await fetch(discordApi + Routes.user('@me'), {
+        // check if user is in cache and not expired
+        const cached = userCache.get(token);
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+            log.debug(`Returning cached user for token ${token.substring(0, 8)}...`);
+            return cached.user;
+        }
+
+        // fetch from Discord API
+        log.debug(`Fetching user from Discord API for token ${token.substring(0, 8)}...`);
+        const user = await fetch(discordApi + Routes.user('@me'), {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         }).then(res => res.json() as Promise<APIUser>);
+
+        // cache the result
+        userCache.set(token, {
+            user,
+            timestamp: Date.now()
+        });
+
+        // clean up old cache entries periodically (keep cache size reasonable)
+        if (userCache.size > 100) {
+            const now = Date.now();
+            for (const [cacheToken, cached] of userCache.entries()) {
+                if (now - cached.timestamp > CACHE_DURATION) {
+                    userCache.delete(cacheToken);
+                }
+            }
+        }
+
+        return user;
     } catch (err) {
         log.error(err);
         return;
