@@ -250,7 +250,7 @@
 
     function subscribeToLogs() {
         if (ws && ws.readyState === WebSocket.OPEN) {
-            // Get cookies for authentication
+            // get cookies for authentication
             const cookies = {};
             document.cookie.split(';').forEach(cookie => {
                 const [name, value] = cookie.trim().split('=');
@@ -270,9 +270,14 @@
         const isScrolledToBottom = logsContent &&
             logsContent.scrollTop + logsContent.clientHeight >= logsContent.scrollHeight - 50;
 
-        // Add new log to the bottom
+        // Split multi-line logs and add each line separately
         if (logData.trim()) {
-            addLog(logData);
+            const logLines = logData.split('\n');
+            logLines.forEach(logLine => {
+                if (logLine.trim()) {
+                    addLog(logLine);
+                }
+            });
         }
 
         // Auto-scroll to bottom if user was already at bottom
