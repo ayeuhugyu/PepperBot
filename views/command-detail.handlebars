@@ -1,0 +1,118 @@
+<div class="flex column centered small-gap" id="command-details-page">
+    <div id="command-header">
+        <a href="/{{#if command.isSubcommand}}commands/{{command.parentCommand}}{{else}}commands{{/if}}" class="card spinny-button side-padding pointer">← back</a>
+        <h1 class="card side-padding">p/{{command.fullName}}</h1>
+        <div class="spacer"></div>
+    </div>
+    <div class="command-data-container">
+        <pre class="card side-padding description">{{command.long_description}}</pre>
+        <hr class="top-margin">
+        <div class="usage card side-padding flex column top-margin">
+            <h3>Example usage:</h3>
+            <div class="example-usage-container code-background">
+                {{#each command.example_usage}}
+                    <span class="example-usage">{{this}}</span><br>
+                {{/each}}
+            </div>
+            {{#if command.argument_order}}
+                <h3 class="top-margin">Argument order:</h3>
+                <span class="argument-order code-background">p/{{command.fullName}} {{command.argument_order}}</span>
+            {{/if}}
+            {{#if command.displayAliases}}
+                <h3 class="top-margin">Aliases:</h3>
+                <div class="aliases-container code-background">
+                    {{#each command.aliases}}
+                        <span class="alias">p/{{this}}</span><br>
+                    {{/each}}
+                </div>
+            {{/if}}
+            {{#if command.displayRootAliases}}
+                <h3 class="top-margin">Root Aliases:</h3>
+                <div class="root-aliases-container code-background">
+                    {{#each command.root_aliases}}
+                        <span class="root-alias">p/{{this}}</span><br>
+                    {{/each}}
+                </div>
+            {{/if}}
+        </div>
+        {{#if command.showOptions}}
+            <hr class="top-margin">
+            <div class="options flex column">
+                <div class="options-grid options-count-{{command.optionsCount}}">
+                    {{#each command.options}}
+                        <div class="option-item card flex column some-padding side-padding">
+                            <h3 class="option-header">{{this.name}}<span class="option-type">{{this.type}}</span></h3>
+                            {{#if this.displayRequired}}
+                                <span class="required-badge">required option {{this.long_requirements}}</span>
+                            {{/if}}
+                            <pre class="description no-margin">{{this.long_description}}</pre>
+                            {{#if this.displayChoices}}
+                                <h4>Choices:</h4>
+                                <div class="choices-container code-background side-padding">
+                                    {{#each this.choices}}
+                                        <span class="choice">{{this.name}}</span><br>
+                                    {{/each}}
+                                </div>
+                            {{/if}}
+                        </div>
+                    {{/each}}
+                </div>
+            </div>
+        {{/if}}
+        {{#if command.showSubcommands}}
+            <hr class="top-margin">
+            <div class="subcommands flex column">
+                <div class="subcommands-grid subcommands-count-{{command.subcommandsCount}}">
+                    {{#each command.subcommands}}
+                        <a href="/commands/{{parentCommand}}/{{name}}" class="subcommand-simple-card button {{#unless isPublic}}restricted{{/unless}}">
+                            <div class="subcommand-simple-header">
+                                <h3 class="subcommand-simple-name">p/{{parentCommand}} {{name}}</h3>
+                                <div class="subcommand-simple-badges">
+                                    {{#each tags}}
+                                        <span class="badge tag">{{this}}</span>
+                                    {{/each}}
+                                    {{#unless isPublic}}
+                                        <span class="badge restricted-badge">restricted</span>
+                                    {{/unless}}
+                                </div>
+                            </div>
+                            <p class="subcommand-simple-description">{{description}}</p>
+                        </a>
+                    {{/each}}
+                </div>
+            </div>
+        {{/if}}
+        {{#if command.isPipable}}
+            <hr class="top-margin">
+            <div class="pipability card side-padding flex column top-margin">
+                <h3>Pipability:</h3>
+                <div class="pipable-list code-background no-margin">
+                    {{#each command.pipableCommands}}
+                        <pre class="pipable-tag-content no-margin">{{this}}</pre>
+                    {{/each}}
+                </div>
+            </div>
+        {{/if}}
+        <hr class="top-margin">
+        <div class="additional-info card side-padding flex column top-margin">
+            <h3>Additional Information:</h3>
+            <div class="info-grid">
+                <div><strong>Public:</strong> {{#if command.isPublic}}Yes{{else}}No{{/if}}</div>
+                <div><strong>NSFW:</strong> {{#if command.nsfw}}Yes{{else}}No{{/if}}</div>
+                <div><strong>External Guilds:</strong> {{#if command.allow_external_guild}}Allowed{{else}}Not Allowed{{/if}}</div>
+                {{#if command.input_types.length}}
+                    <div><strong>Input Types:</strong> {{#each command.input_types}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+                {{/if}}
+                {{#if command.contributors.length}}
+                    <div><strong>Contributors:</strong> {{#each command.contributors}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+                {{/if}}
+                {{#if command.tags.length}}
+                    <div><strong>Tags:</strong> {{#each command.tags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+                {{/if}}
+                {{#if command.root_aliases.length}}
+                    <div><strong>Root Aliases:</strong> {{#each command.root_aliases}}p/{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
