@@ -13,6 +13,8 @@ import { createLogsRoutes } from "./pages/logs";
 import { createStatisticsRoutes } from "./pages/statistics";
 import { createCommandsRoutes } from "./pages/commands";
 import { createConfigRoutes } from "./pages/config";
+import { createPromptsRoutes } from "./pages/prompts";
+import { createQueueRoutes } from "./pages/queue";
 
 const port = 53134
 const isDev = process.env.IS_DEV === "True";
@@ -89,6 +91,8 @@ export function listen(client: Client) {
     app.use('/', createStatisticsRoutes(client));
     app.use('/', createCommandsRoutes());
     app.use('/', createConfigRoutes(client));
+    app.use('/', createPromptsRoutes(client));
+    app.use('/', createQueueRoutes(client));
 
     // Error handlers
     app.use((req, _res, next) => {
