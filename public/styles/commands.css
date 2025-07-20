@@ -69,7 +69,6 @@
 .command-simple-name {
     margin: 0;
     color: var(--accent-color);
-    font-family: 'Courier New', monospace;
     font-size: 0.9em;
 }
 
