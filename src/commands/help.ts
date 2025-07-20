@@ -58,7 +58,7 @@ function createCommandTree(invoker: CommandInvoker, commandManager: CommandManag
             }),
             new Separator(),
             new TextDisplay({
-                content: `run ${guild_config.other.prefix}help <command> to see more details about a specific command.\nalternatively, visit the website for a more graphical representation. [link will be here]` // TODO: replace with guide page link when done
+                content: `run ${guild_config.other.prefix}help <command> to see more details about a specific command.\nalternatively, visit the website for a more graphical representation. https://pepperbot.online/commands`
             })
         ]
     });

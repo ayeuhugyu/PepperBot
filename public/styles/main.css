@@ -1,9 +1,6 @@
 @font-face {
     font-family: 'Cozette';
-    src: url('/CozetteBitmap.otb') format('opentype'),
-         url('/CozetteBitmap.otb') format('truetype'),
-         url('/CozetteBitmap.otb'),
-         url('/CozetteVector.ttf') format('truetype');
+    src: url('/CozetteVector.ttf') format('truetype');
     font-display: swap;
 }
 
