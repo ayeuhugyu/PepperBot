@@ -1,6 +1,6 @@
 import * as log from '../lib/log';
 import { Response } from 'express';
-import { RESTPostOAuth2AccessTokenResult, Routes } from 'discord.js';
+import { APIGuild, RESTPostOAuth2AccessTokenResult, Routes } from 'discord.js';
 import { APIUser } from 'discord-api-types/v10';
 
 const discordApi = "https://discord.com/api/v10";
@@ -73,7 +73,7 @@ interface CachedUser {
 }
 
 const userCache = new Map<string, CachedUser>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 export async function getUser(token: string): Promise<APIUser | OAuth2Error | undefined> {
     if (!token) {
@@ -112,6 +112,57 @@ export async function getUser(token: string): Promise<APIUser | OAuth2Error | un
         }
 
         return user;
+    } catch (err) {
+        log.error(err);
+        return;
+    }
+}
+
+// guilds cache to reduce Discord API calls
+interface CachedGuilds {
+    guilds: APIGuild[] | OAuth2Error;
+    timestamp: number;
+}
+
+const guildsCache = new Map<string, CachedGuilds>();
+
+export async function fetchGuilds(token: string): Promise<APIGuild[] | OAuth2Error | undefined> {
+    if (!token) {
+        return;
+    }
+    try {
+        // check if guilds are in cache and not expired
+        const cached = guildsCache.get(token);
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+            log.debug(`Returning cached guilds for token ${token.substring(0, 8)}...`);
+            return cached.guilds;
+        }
+
+        // fetch from Discord API
+        log.debug(`Fetching guilds from Discord API for token ${token.substring(0, 8)}...`);
+        const guilds = await fetch(discordApi + Routes.userGuilds(), {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(res => res.json() as Promise<APIGuild[]>);
+
+        // cache the result
+        guildsCache.set(token, {
+            guilds,
+            timestamp: Date.now()
+        });
+
+        // clean up old cache entries periodically
+        if (guildsCache.size > 100) {
+            const now = Date.now();
+            for (const [cacheToken, cached] of guildsCache.entries()) {
+                if (now - cached.timestamp > CACHE_DURATION) {
+                    guildsCache.delete(cacheToken);
+                }
+            }
+        }
+
+        return guilds;
     } catch (err) {
         log.error(err);
         return;

@@ -1,0 +1,53 @@
+<div class="flex column centered some-padding small-gap" id="config-container">
+    <div id="config-header" class="no-margin">
+        <a href="/" class="card spinny-button side-padding pointer" id="back-button">← back</a>
+        <h1 class="card side-padding config-title">Configuration</h1>
+        {{#if guilds.length}}
+        <div class="card side-padding">{{guilds.length}} guilds</div>
+        {{else}}
+        <div class="card side-padding">No guilds</div>
+        {{/if}}
+    </div>
+    <div class="config-content">
+        <hr>
+        {{#unless guilds.length}}
+        <div class="card" style="padding: 1.5em; max-width: 600px; text-align: center; margin-top: 1em;">
+            {{#if error}}
+                <h2>Error</h2>
+                <p class="darkened-text">{{error}}</p>
+            {{else}}
+                <h2>No Guilds Available</h2>
+                <p class="darkened-text">You don't have the "Manage Server" permission in any guilds, or an error occurred loading your guilds.</p>
+                <p class="darkened-text">Make sure you have the "Manage Server" permission in a server where you want to configure PepperBot.</p>
+            {{/if}}
+
+            <a href="/auth" class="card button" style="margin-top: 1em; display: inline-block; padding: 0.5em 1em;">Refresh Permissions</a>
+        </div>
+        {{else}}
+        <div class="config-simple-grid top-margin">
+            {{#each guilds}}
+            <a href="/config/{{this.id}}" class="config-simple-card button">
+                <div class="config-simple-header">
+                    <div class="config-simple-icon">
+                        {{#if this.icon}}
+                            <img src="https://cdn.discordapp.com/icons/{{this.id}}/{{this.icon}}.png?size=64" alt="{{this.name}} icon">
+                        {{else}}
+                            <div class="guild-icon-placeholder">{{substring this.name 0 2}}</div>
+                        {{/if}}
+                    </div>
+                    <div class="config-simple-badges">
+                        {{#if this.owner}}
+                            <span class="badge owner-badge">Owner</span>
+                        {{else}}
+                            <span class="badge manage-badge">Manager</span>
+                        {{/if}}
+                    </div>
+                </div>
+                <h3 class="config-simple-name">{{this.name}}</h3>
+                <p class="config-simple-description">Configure PepperBot settings for this server</p>
+            </a>
+            {{/each}}
+        </div>
+        {{/unless}}
+    </div>
+</div>

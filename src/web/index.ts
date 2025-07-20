@@ -2,20 +2,71 @@ import express, { NextFunction, Request, Response } from "express";
 import { create } from "express-handlebars";
 import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
-import { getRefreshToken, getToken, getUser, oauth2Url, updateCookies } from "./oauth2";
+import { getRefreshToken, getToken, getUser, oauth2Url, updateCookies, fetchGuilds } from "./oauth2";
 import { getStatistics } from "../lib/statistics";
 import commands from "../lib/command_manager";
-import { CommandEntryType } from "../lib/classes/command_enums";
+import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { CommandAccessTemplates } from "../lib/templates";
 import * as fs from "fs";
 import { APIUser } from 'discord-api-types/v10';
 import { createServer } from 'http';
 import { initializeWebSocket } from "./websocket";
-import { Client } from "discord.js";
+import { ChannelType, Client } from "discord.js";
 import { CommandOptionType } from "../lib/classes/command_enums";
+import { configSchema, fetchGuildConfig } from "../lib/guild_config_manager";
 
 const port = 53134
 const isDev = process.env.IS_DEV === "True";
+
+// Helper functions for config routes
+async function checkAuthAndGetUser(req: any): Promise<{ user: any; error?: string }> {
+    if (!req.cookies.LIBERAL_LIES) {
+        return { user: null, error: "no_auth" };
+    }
+
+    const user = await getUser(req.cookies.LIBERAL_LIES);
+    if (!user || typeof user !== "object" || !("id" in user)) {
+        return { user: null, error: "invalid_user" };
+    }
+
+    return { user };
+}
+
+async function checkGuildPermissions(token: string, guildId: string): Promise<{ guild: any; error?: string }> {
+    const guilds = await fetchGuilds(token);
+
+    if (!guilds || !Array.isArray(guilds)) {
+        return { guild: null, error: "fetch_failed" };
+    }
+
+    const targetGuild = guilds.find((guild: any) => guild.id === guildId);
+    if (!targetGuild) {
+        return { guild: null, error: "not_found" };
+    }
+
+    // Check MANAGE_GUILD permission (0x20)
+    const permissions = BigInt(targetGuild.permissions || '0');
+    const hasManageGuild = (permissions & BigInt(0x20)) === BigInt(0x20);
+    if (!targetGuild.owner && !hasManageGuild) {
+        return { guild: null, error: "no_permission" };
+    }
+
+    return { guild: targetGuild };
+}
+
+async function getManageableGuilds(token: string): Promise<any[]> {
+    const guilds = await fetchGuilds(token);
+
+    if (!guilds || !Array.isArray(guilds)) {
+        return [];
+    }
+
+    return guilds.filter((guild: any) => {
+        const permissions = BigInt(guild.permissions || '0');
+        const hasManageGuild = (permissions & BigInt(0x20)) === BigInt(0x20);
+        return guild.owner || hasManageGuild;
+    });
+}
 
 // Helper function to convert option types to readable names
 function getOptionTypeName(type: any): string {
@@ -52,7 +103,31 @@ class HttpException extends Error {
 export function listen(client: Client) {
     const app = express();
     const server = createServer(app);
-    const hbs = create();
+    const hbs = create({
+        helpers: {
+            join: function(array: string[], separator: string) {
+                return Array.isArray(array) ? array.join(separator) : '';
+            },
+            substring: function(str: string, start: number, end?: number) {
+                return str ? str.substring(start, end) : '';
+            },
+            eq: function(a: any, b: any) {
+                return a === b;
+            },
+            or: function(a: any, b: any) {
+                return a || b;
+            },
+            and: function(a: any, b: any) {
+                return a && b;
+            },
+            lookup: function(obj: any, key: string) {
+                return obj && obj[key];
+            },
+            json: function(obj: any) {
+                return JSON.stringify(obj);
+            }
+        }
+    });
 
     initializeWebSocket(server);
 
@@ -61,6 +136,8 @@ export function listen(client: Client) {
     app.set("views", "./views");
 
     app.use(cookieParser());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(express.json());
 
     // Access logging middleware
     app.use((req, res, next) => {
@@ -487,6 +564,300 @@ export function listen(client: Client) {
             });
         } catch (err) {
             next(err);
+        }
+    });
+
+    // Config routes
+
+    // Config routes
+
+    // Guild list page
+    app.get("/config", async (req, res, next) => {
+        try {
+            if (!req.cookies.LIBERAL_LIES) {
+                res.redirect('/auth');
+                return;
+            }
+
+            const user = await getUser(req.cookies.LIBERAL_LIES);
+            if (!user || typeof user !== "object" || !("id" in user)) {
+                res.redirect('/auth');
+                return;
+            }
+
+            const guilds = await fetchGuilds(req.cookies.LIBERAL_LIES);
+            const manageableGuilds = Array.isArray(guilds) ? guilds.filter((guild: any) => {
+                const permissions = BigInt(guild.permissions || '0');
+                const hasManageGuild = (permissions & BigInt(0x20)) === BigInt(0x20);
+                return guild.owner || hasManageGuild;
+            }) : [];
+
+            res.render("config", {
+                title: "configuration",
+                description: "Select Guild - PepperBot Configuration",
+                path: req.path,
+                stylesheet: "config.css",
+                user: user,
+                guilds: manageableGuilds,
+                error: !Array.isArray(guilds) ? "Failed to load guilds" : undefined
+            });
+        } catch (err) {
+            next(err);
+        }
+    });
+
+    // Guild config page
+    app.get("/config/:guild", async (req, res, next) => {
+        try {
+            if (!req.cookies.LIBERAL_LIES) {
+                res.redirect('/auth');
+                return;
+            }
+
+            const user = await getUser(req.cookies.LIBERAL_LIES);
+            if (!user || typeof user !== "object" || !("id" in user)) {
+                res.redirect('/auth');
+                return;
+            }
+
+            const guilds = await fetchGuilds(req.cookies.LIBERAL_LIES);
+            if (!Array.isArray(guilds)) {
+                next(new HttpException(403, "unable to verify permissions"));
+                return;
+            }
+
+            const targetGuild = guilds.find((guild: any) => guild.id === req.params.guild);
+            if (!targetGuild) {
+                next(new HttpException(404, "guild not found or you don't have access"));
+                return;
+            }
+
+            const permissions = BigInt(targetGuild.permissions || '0');
+            const hasManageGuild = (permissions & BigInt(0x20)) === BigInt(0x20);
+            if (!targetGuild.owner && !hasManageGuild) {
+                next(new HttpException(403, "insufficient permissions"));
+                return;
+            }
+
+            const guildConfig = await fetchGuildConfig(req.params.guild);
+            let guild = client.guilds.cache.get(req.params.guild);
+            if (!guild) {
+                guild = await client.guilds.fetch(req.params.guild).catch(() => undefined);
+            }
+            if (!guild) {
+                next(new HttpException(404, "guild not found"));
+                return;
+            }
+            // Fetch all channels and roles
+            const channels = (await guild.channels.fetch()).filter(channel => {
+                // Only include channels the user can view (VIEW_CHANNEL permission)
+                try {
+                    return channel && channel.permissionsFor(user.id)?.has('ViewChannel');
+                } catch {
+                    return false;
+                }
+            });
+
+            const member = await guild.members.fetch(user.id).catch(() => undefined);
+            const roles = (await guild.roles.fetch()).filter(role => {
+                // Only include roles below the user's highest role and not @everyone
+                if (!member) return false;
+                if (role.id === guild.id) return false; // skip @everyone
+                return member.roles.highest.comparePositionTo(role) > 0;
+            });
+            const schema = Object.entries(configSchema).map(([sectionKey, section]) => {
+                return {
+                    title: section.title,
+                    key: sectionKey,
+                    description: section.description,
+                    properties: Object.entries(section.properties).map(([key, property]) => {
+                        const data = {
+                            title: property.title,
+                            key: key,
+                            description: property.description,
+                            default: property.default,
+                            current: guildConfig[sectionKey][key],
+                            type: property.type,
+                            channelType: property.channelType ? property.channelType : undefined
+                        }
+                        if (data.type === "commandTag") {
+                            (data as any).tags = Object.values(CommandTag)
+                        }
+                        if (data.type === "invokerType") {
+                            (data as any).invokerTypes = Object.values(InvokerType)
+                        }
+                        if (data.type === "command") {
+                            (data as any).commands = Object.values(commands.mappings.filter(c => c.type === CommandEntryType.Command).map(c => c.command.name))
+                        }
+                        if (data.type === "channel") {
+                            let channelType: string | ChannelType[] = data.channelType ?? "any";
+                            const availableChannels = (channelType === "any") ? channels : channels.filter(c => ((channelType as ChannelType[]).includes(c!.type)));
+                            const channelNames = Array.from(availableChannels.values()).map(c => c?.name);
+                            if (channelNames.length == 0) {
+                                (data as any).displayNoChannels = true;
+                            }
+                            (data as any).channels = channelNames;
+                        }
+                        if (data.type === "role") {
+                            const roleNames = Array.from(roles.map(role => role.name));
+                            (data as any).roles = roleNames;
+                        }
+
+                        return data;
+                    })
+                }
+            });
+
+            res.render("config-detail", {
+                title: "configuration",
+                description: `${targetGuild.name} - PepperBot Configuration`,
+                path: req.path,
+                stylesheet: "config-detail.css",
+                user: user,
+                guild: {
+                    id: targetGuild.id,
+                    name: targetGuild.name,
+                    icon: targetGuild.icon
+                },
+                config: schema,
+                rawSchema: JSON.stringify(schema, null, 2),
+                saved: req.query.saved === 'true',
+                error: req.query.error
+            });
+        } catch (err) {
+            next(err);
+        }
+    });
+
+    // Configuration validation function
+    function validateConfigData(configData: any): { valid: boolean; errors: string[] } {
+        const errors: string[] = [];
+
+        // Check if configData has the expected structure
+        if (!configData || typeof configData !== 'object') {
+            errors.push('Invalid configuration data structure');
+            return { valid: false, errors };
+        }
+
+        // Validate prefix (must not be empty)
+        if (configData.other && configData.other.prefix !== undefined) {
+            const prefix = configData.other.prefix;
+            if (typeof prefix !== 'string' || prefix.trim().length === 0) {
+                errors.push('Prefix cannot be empty');
+            }
+        }
+
+        // Validate max piped commands (must be > 0 and < 10)
+        if (configData.command && configData.command.max_piped_commands !== undefined) {
+            const maxPiped = configData.command.max_piped_commands;
+            if (typeof maxPiped !== 'number' || maxPiped <= 0) {
+                errors.push('Max piped commands must be greater than 0');
+            }
+            if (typeof maxPiped === 'number' && maxPiped >= 10) {
+                errors.push('Max piped commands must be less than 10');
+            }
+        }
+
+        // Validate boolean fields
+        const booleanFields = [
+            { category: 'command', field: 'disable_all_commands' },
+            { category: 'command', field: 'disable_command_piping' },
+            { category: 'AI', field: 'disable_responses' },
+            { category: 'other', field: 'use_ephemeral_replies' },
+            { category: 'other', field: 'untitled_clip_anger' }
+        ];
+
+        booleanFields.forEach(({ category, field }) => {
+            if (configData[category] && configData[category][field] !== undefined) {
+                if (typeof configData[category][field] !== 'boolean') {
+                    errors.push(`${category}.${field} must be a boolean value`);
+                }
+            }
+        });
+
+        // Validate array fields
+        const arrayFields = [
+            { category: 'command', field: 'blacklisted_commands' },
+            { category: 'command', field: 'blacklisted_channels' },
+            { category: 'command', field: 'blacklisted_tags' },
+            { category: 'command', field: 'disabled_input_types' },
+            { category: 'AI', field: 'blacklisted_channels' },
+            { category: 'other', field: 'auto_crosspost_channels' }
+        ];
+
+        arrayFields.forEach(({ category, field }) => {
+            if (configData[category] && configData[category][field] !== undefined) {
+                if (!Array.isArray(configData[category][field])) {
+                    errors.push(`${category}.${field} must be an array`);
+                }
+            }
+        });
+
+        return {
+            valid: errors.length === 0,
+            errors
+        };
+    }
+
+    // API endpoint to save guild configuration
+    app.post("/api/config/:guild", async (req, res, next) => {
+        try {
+            if (!req.cookies.LIBERAL_LIES) {
+                res.status(401).json({ error: "unauthorized" });
+                return;
+            }
+
+            const guilds = await fetchGuilds(req.cookies.LIBERAL_LIES);
+            if (!Array.isArray(guilds)) {
+                res.status(403).json({ error: "unable to verify permissions" });
+                return;
+            }
+
+            const targetGuild = guilds.find((guild: any) => guild.id === req.params.guild);
+            if (!targetGuild) {
+                res.status(404).json({ error: "guild not found" });
+                return;
+            }
+
+            const permissions = BigInt(targetGuild.permissions || '0');
+            const hasManageGuild = (permissions & BigInt(0x20)) === BigInt(0x20);
+            if (!targetGuild.owner && !hasManageGuild) {
+                res.status(403).json({ error: "Insufficient permissions" });
+                return;
+            }
+
+            const guildConfig = await fetchGuildConfig(req.params.guild);
+            const configData = req.body;
+
+            // Validate configuration data
+            const validation = validateConfigData(configData);
+            if (!validation.valid) {
+                res.status(400).json({
+                    error: "validation failed",
+                    details: validation.errors
+                });
+                return;
+            }
+
+            // Update guild configuration with new data
+            for (const category in configData) {
+                if (category === "guild") continue; // Skip guild field
+
+                if (guildConfig[category] && typeof guildConfig[category] === "object") {
+                    for (const key in configData[category]) {
+                        guildConfig[category][key] = configData[category][key];
+                    }
+                }
+            }
+
+            // Save the updated configuration
+            await guildConfig.write();
+
+            log.info(`Configuration updated for guild ${req.params.guild}`);
+            res.json({ success: true, message: "Configuration saved successfully" });
+        } catch (error) {
+            log.error("Error saving guild config:", error);
+            res.status(500).json({ error: "internal server error" });
         }
     });
 

@@ -1,0 +1,421 @@
+<div id="config-header">
+    <a href="/config" class="card spinny-button side-padding pointer">← back</a>
+    <h1 class="card side-padding config-title">Configuration</h1>
+    <div class="spacer"></div>
+</div>
+<div class="guild-details card some-padding top-margin flex row centered small-gap side-padding">
+    <img src="https://cdn.discordapp.com/icons/{{guild.id}}/{{guild.icon}}.png?size=64" alt="{{guild.name}} icon" class="guild-icon">
+    <div class="guild-details-text flex column side-padding">
+        <h2>{{guild.name}}</h2>
+        <span>{{guild.id}}</span>
+    </div>
+</div>
+<div class="config-sections flex column small-gap">
+    <hr class="top-margin">
+    {{#each config}}
+        <div class="config-section card some-padding small-gap flex column" id="{{this.key}}">
+            <h3 class="config-section-title">{{this.title}}</h3>
+            <span class="config-section-description">{{this.description}}</span>
+            <div class="config-section-properties small-gap flex column">
+                {{#each this.properties}}
+                    {{#if (or (eq this.type "boolean") (eq this.type "number"))}}
+                        <div class="config-property flex row card centered space-between side-padding some-padding" id="{{this.key}}" data-type="{{this.type}}" data-section="{{../key}}">
+                            <div class="config-property-label flex column">
+                                <h4 class="config-property-title">{{this.title}}</h4>
+                                <span class="config-property-description">{{this.description}}</span>
+                            </div>
+                            {{#if (eq this.type "boolean")}}
+                                <button class="trueorfalse side-padding card spinny-button{{#if this.current}} true{{/if}}" data-property="{{this.key}}" data-section="{{../key}}">{{#if this.current}}true{{else}}false{{/if}}</button>
+                            {{else if (eq this.type "number")}}
+                                <input type="number" class="side-padding card spinny-button" value="{{this.current}}" placeholder="{{this.default}}" data-property="{{this.key}}" data-section="{{../key}}">
+                            {{/if}}
+                        </div>
+                    {{else}}
+                        <div class="config-property card flex column side-padding some-padding" id="{{this.key}}" data-type="{{this.type}}" data-section="{{../key}}">
+                            <h4 class="config-property-title">{{this.title}}</h4>
+                            <span class="config-property-description">{{this.description}}</span>
+                            {{#if (eq this.type "string")}}
+                                <input class="card some-padding side-padding" type="text" value="{{this.current}}" placeholder="{{this.default}}" data-property="{{this.key}}" data-section="{{../key}}">
+                            {{else if (eq this.type "invokerType")}}
+                                <div class="invoker-types-container flex row small-gap">
+                                    {{#each this.invokerTypes}}
+                                        <button  class="side-padding card button inputType true" data-value="{{this}}" data-property="{{../key}}" data-section="{{../../key}}">{{this}}</button>
+                                    {{/each}}
+                                </div>
+                            {{else}}
+                                <div class="available-items-grid">
+                                    {{#if (eq this.type "commandTag")}}
+                                        {{#each this.tags}}
+                                            <button class="card some-padding side-padding selection-item" data-value="{{this}}" data-property="{{../key}}" data-section="{{../../key}}">{{this}}</button>
+                                        {{/each}}
+                                    {{else if (eq this.type "command")}}
+                                        {{#each this.commands}}
+                                            <button class="card some-padding side-padding selection-item" data-value="{{this}}" data-property="{{../key}}" data-section="{{../../key}}">p/{{this}}</button>
+                                        {{/each}}
+                                    {{else if (eq this.type "channel")}}
+                                        {{#each this.channels}}
+                                            <button class="card some-padding side-padding selection-item" data-value="{{this}}" data-property="{{../key}}" data-section="{{../../key}}">#{{this}}</button>
+                                        {{/each}}
+                                    {{else if (eq this.type "role")}}
+                                        {{#each this.roles}}
+                                            <button class="card some-padding side-padding selection-item" data-value="{{this}}" data-property="{{../key}}" data-section="{{../../key}}">@{{this}}</button>
+                                        {{/each}}
+                                    {{/if}}
+                                </div>
+                            {{/if}}
+                        </div>
+                    {{/if}}
+                {{/each}}
+            </div>
+        </div>
+        {{#unless @last}}
+            <hr>
+        {{/unless}}
+    {{/each}}
+</div>
+<div class="config-actions top-margin">
+    <button id="save-config" class="card button spinny-button spin-left">Save Configuration</button>
+</div>
+
+<pre id="raw-schema">{{rawSchema}}</pre> <!-- this is invisible and is just used so that the javascript can get the schema, i know its fucked up -->
+
+<script>
+    const trueOrFalses = document.querySelectorAll('.trueorfalse');
+    trueOrFalses.forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('true');
+            item.textContent = item.classList.contains('true') ? 'true' : 'false';
+        });
+    });
+
+    const inputTypes = document.querySelectorAll('.inputType');
+    inputTypes.forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('true');
+        });
+    });
+
+    const selectionItems = document.querySelectorAll('.selection-item');
+    selectionItems.forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('active');
+        });
+    });
+
+    const rawSchemaText = document.getElementById('raw-schema');
+    const schema = JSON.parse(rawSchemaText.textContent);
+
+    console.log(schema);
+
+    // Load the schema to set initial selection states
+    loadSchema(schema);    function loadSchema(schema) {
+        console.log('=== LOADING SCHEMA ===');
+        console.log('Schema:', schema);
+
+        schema.forEach((section, sectionIndex) => {
+            console.log(`\n--- Section ${sectionIndex}: ${section.key} ---`);
+            console.log('Section properties:', section.properties);
+
+            section.properties.forEach((property, propertyIndex) => {
+                console.log(`\n  Property ${propertyIndex}: ${property.key} (${property.type})`);
+                console.log('  Property data:', property);
+
+                const propertyElement = document.getElementById(property.key);
+                console.log('  Property element:', propertyElement);
+
+                if (!propertyElement) {
+                    console.log('  ❌ Property element not found!');
+                    return;
+                }
+
+                console.log('  ✅ Property element found');
+
+                // Handle all property types
+                switch (property.type) {
+                    case 'boolean':
+                        console.log('  🔵 Handling boolean');
+                        const boolButton = propertyElement.querySelector('.trueorfalse');
+                        console.log('  Boolean button:', boolButton);
+
+                        if (boolButton) {
+                            const currentValue = property.current !== undefined ? property.current : false;
+                            console.log('  Current boolean value:', currentValue);
+
+                            if (currentValue) {
+                                boolButton.classList.add('true');
+                                boolButton.textContent = 'true';
+                                console.log('  ✅ Set boolean to true');
+                            } else {
+                                boolButton.classList.remove('true');
+                                boolButton.textContent = 'false';
+                                console.log('  ✅ Set boolean to false');
+                            }
+                        } else {
+                            console.log('  ❌ Boolean button not found');
+                        }
+                        break;
+
+                    case 'number':
+                        console.log('  🔢 Handling number');
+                        const numberInput = propertyElement.querySelector('input[type="number"]');
+                        console.log('  Number input:', numberInput);
+
+                        if (numberInput) {
+                            const value = property.current !== undefined ? property.current : (property.default || 0);
+                            numberInput.value = value;
+                            console.log('  ✅ Set number value to:', value);
+                        } else {
+                            console.log('  ❌ Number input not found');
+                        }
+                        break;
+
+                    case 'string':
+                        console.log('  📝 Handling string');
+                        const stringInput = propertyElement.querySelector('input[type="text"]');
+                        console.log('  String input:', stringInput);
+
+                        if (stringInput) {
+                            const value = property.current !== undefined ? property.current : (property.default || '');
+                            stringInput.value = value;
+                            console.log('  ✅ Set string value to:', value);
+                        } else {
+                            console.log('  ❌ String input not found');
+                        }
+                        break;
+
+                    case 'invokerType':
+                        console.log('  🎯 Handling invokerType');
+                        const invokerButtons = propertyElement.querySelectorAll('button[data-value]');
+                        console.log('  Invoker buttons found:', invokerButtons.length);
+                        console.log('  Invoker buttons:', invokerButtons);
+
+                        // Clear all states first
+                        invokerButtons.forEach((btn, idx) => {
+                            console.log(`    Clearing button ${idx}:`, btn);
+                            btn.classList.remove('true');
+                        });
+
+                        // For invoker types (blacklist), all buttons start true, remove true for blacklisted items
+                        invokerButtons.forEach((btn, idx) => {
+                            console.log(`    Setting button ${idx} to true:`, btn);
+                            btn.classList.add('true');
+                        });
+
+                        const currentDisabled = property.current || [];
+                        console.log('  Current disabled items:', currentDisabled);
+
+                        if (Array.isArray(currentDisabled)) {
+                            currentDisabled.forEach(disabledValue => {
+                                console.log(`    Looking for disabled value "${disabledValue}"`);
+                                const matchingButton = Array.from(invokerButtons).find(btn =>
+                                    btn.dataset.value === disabledValue
+                                );
+                                console.log(`    Matching button for "${disabledValue}":`, matchingButton);
+
+                                if (matchingButton) {
+                                    matchingButton.classList.remove('true');
+                                    console.log(`    ✅ Disabled "${disabledValue}"`);
+                                } else {
+                                    console.log(`    ❌ No button found for disabled value "${disabledValue}"`);
+                                }
+                            });
+                        }
+                        break;
+
+                    case 'commandTag':
+                    case 'command':
+                    case 'channel':
+                    case 'role':
+                        console.log(`  🎛️ Handling ${property.type}`);
+                        const selectionButtons = propertyElement.querySelectorAll('button[data-value]');
+                        console.log(`  Selection buttons found: ${selectionButtons.length}`);
+                        console.log('  Selection buttons:', selectionButtons);
+                        console.log('  Property current value:', property.current);
+
+                        // Clear all active states first
+                        selectionButtons.forEach((btn, idx) => {
+                            console.log(`    Clearing active from button ${idx}:`, btn, `data-value: "${btn.dataset.value}"`);
+                            btn.classList.remove('active');
+                        });
+
+                        // For other types (whitelist), set active for selected items
+                        const currentSelected = property.current || [];
+                        console.log(`  Current selected items for ${property.type}:`, currentSelected);
+
+                        if (Array.isArray(currentSelected)) {
+                            currentSelected.forEach((selectedValue, idx) => {
+                                console.log(`    Processing selected value ${idx}: "${selectedValue}"`);
+                                const matchingButton = Array.from(selectionButtons).find(btn => {
+                                    const btnValue = btn.dataset.value;
+                                    console.log(`      Comparing "${selectedValue}" with button data-value "${btnValue}"`);
+                                    return btnValue === selectedValue;
+                                });
+                                console.log(`    Matching button for "${selectedValue}":`, matchingButton);
+
+                                if (matchingButton) {
+                                    matchingButton.classList.add('active');
+                                    console.log(`    ✅ Added active class to button for "${selectedValue}"`);
+                                } else {
+                                    console.log(`    ❌ No button found for selected value "${selectedValue}"`);
+                                    console.log(`    Available button values:`, Array.from(selectionButtons).map(btn => btn.dataset.value));
+                                }
+                            });
+                        } else {
+                            console.log(`  ❌ Current selected is not an array:`, currentSelected);
+                        }
+                        break;
+
+                    default:
+                        console.log(`  ❓ Unknown property type: ${property.type}`);
+                        break;
+                }
+            });
+        });
+        console.log('=== SCHEMA LOADING COMPLETE ===\n');
+    }
+
+    function gatherCurrentConfig() {
+        const config = {
+            command: {},
+            AI: {},
+            other: {}
+        };
+
+        // Get all config properties
+        const properties = document.querySelectorAll('.config-property');
+
+        properties.forEach(property => {
+            const section = property.getAttribute('data-section');
+            const propertyKey = property.id;
+            const propertyType = property.getAttribute('data-type');
+
+            let value;
+
+            switch (propertyType) {
+                case 'boolean':
+                    const boolButton = property.querySelector('.trueorfalse');
+                    value = boolButton ? boolButton.classList.contains('true') : false;
+                    break;
+
+                case 'number':
+                    const numberInput = property.querySelector('input[type="number"]');
+                    value = numberInput ? parseInt(numberInput.value) || 0 : 0;
+                    break;
+
+                case 'string':
+                    const stringInput = property.querySelector('input[type="text"]');
+                    value = stringInput ? stringInput.value : '';
+                    break;
+
+                case 'invokerType':
+                    // For invoker types (blacklist), collect items that are NOT true (disabled ones)
+                    const invokerButtons = property.querySelectorAll('.inputType');
+                    value = Array.from(invokerButtons)
+                        .filter(btn => !btn.classList.contains('true'))
+                        .map(btn => btn.getAttribute('data-value'));
+                    break;
+
+                case 'commandTag':
+                case 'command':
+                case 'channel':
+                case 'role':
+                    // For these types (whitelist), collect items that are active (selected ones)
+                    const selectionButtons = property.querySelectorAll('.selection-item');
+                    value = Array.from(selectionButtons)
+                        .filter(btn => btn.classList.contains('active'))
+                        .map(btn => btn.getAttribute('data-value'));
+                    break;
+
+                default:
+                    value = null;
+            }
+
+            // Assign to the correct category
+            if (config[section] !== undefined) {
+                config[section][propertyKey] = value;
+            }
+        });
+
+        return config;
+    }
+
+    // Save configuration button functionality
+    document.getElementById('save-config').addEventListener('click', () => {
+        saveConfiguration();
+    });
+
+    function saveConfiguration() {
+        console.log('Saving configuration...');
+
+        // Get current configuration
+        const config = gatherCurrentConfig();
+        console.log('Current config:', config);
+
+        // Validate configuration
+        const validation = validateConfig(config);
+        if (!validation.valid) {
+            alert(`Configuration validation failed:\n${validation.errors.join('\n')}`);
+            return;
+        }
+
+        // Add guild ID to the config
+        const guildId = document.querySelector('.guild-details span').textContent;
+        const configToSave = {
+            ...config,
+            guild: guildId
+        };
+
+        console.log('Saving config:', configToSave);
+
+        // Send to server
+        fetch(`/api/config/${guildId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(configToSave)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Configuration saved successfully:', data);
+            alert('Configuration saved successfully!');
+        })
+        .catch(error => {
+            console.error('Error saving configuration:', error);
+            alert(`Failed to save configuration: ${error.message}`);
+        });
+    }
+
+    function validateConfig(config) {
+        const errors = [];
+
+        // Validate prefix (must not be empty)
+        if (config.other && config.other.prefix !== undefined) {
+            const prefix = config.other.prefix.trim();
+            if (!prefix || prefix.length === 0) {
+                errors.push('Prefix cannot be empty');
+            }
+        }
+
+        // Validate max piped commands (must be > 0 and < 10)
+        if (config.command && config.command.max_piped_commands !== undefined) {
+            const maxPiped = config.command.max_piped_commands;
+            if (maxPiped <= 0) {
+                errors.push('Max piped commands must be greater than 0');
+            }
+            if (maxPiped >= 10) {
+                errors.push('Max piped commands must be less than 10');
+            }
+        }
+
+        return {
+            valid: errors.length === 0,
+            errors: errors
+        };
+    }
+</script>

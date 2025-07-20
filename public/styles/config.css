@@ -1,0 +1,156 @@
+#config-page {
+    top: 2.5em;
+}
+
+/* Config listing page styles */
+#config-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5em;
+}
+
+#back-button {
+    grid-column: 1;
+    width: min-content;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    justify-self: end;
+}
+
+.config-title {
+    grid-column: 2;
+    text-align: center;
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.config-content {
+    width: 100%;
+    max-width: 1000px;
+}
+
+/* Simple 3-column grid for guilds */
+.config-simple-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75em;
+    width: 100%;
+}
+
+.config-simple-card {
+    background-color: var(--background-color-dark);
+    border-radius: 6px;
+    padding: 0.75em;
+    border: 1px solid var(--border-color);
+    color: inherit;
+    display: block;
+}
+
+.config-simple-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.4em;
+    flex-wrap: wrap;
+    gap: 0.3em;
+}
+
+.config-simple-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.config-simple-icon img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.guild-icon-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--background-color-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 0.8em;
+}
+
+.config-simple-badges {
+    display: flex;
+    gap: 0.2em;
+    flex-wrap: wrap;
+}
+
+.config-simple-name {
+    margin: 0;
+    color: var(--accent-color);
+    font-size: 0.9em;
+}
+
+.config-simple-description {
+    margin: 0.3em 0 0 0;
+    color: var(--text-color);
+    line-height: 1.3;
+    font-size: 0.85em;
+}
+
+.badge {
+    padding: 0.1em 0.3em;
+    border-radius: 8px;
+    font-size: 0.65em;
+    font-weight: bold;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.badge.owner-badge {
+    background-color: #5865f2;
+    color: white;
+}
+
+.badge.manage-badge {
+    background-color: #57f287;
+    color: #000;
+}
+
+/* Responsive design */
+@media (max-width: 1000px) {
+    .config-simple-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #config-header {
+        grid-template-columns: auto 1fr auto;
+        gap: 0.75em;
+    }
+
+    .config-title {
+        text-align: left;
+    }
+
+    .config-content {
+        max-width: 95%;
+    }
+}
+
+@media (max-width: 600px) {
+    .config-simple-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5em;
+    }
+
+    .config-simple-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .config-simple-badges {
+        align-self: flex-start;
+    }
+}
