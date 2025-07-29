@@ -2,13 +2,22 @@
 
 import { Conversation, GPTMessage } from "./main";
 import { runOpenAI } from "./openai_runner";
+import { runOllama } from "./ollama_runner";
 import * as chalk from "chalk";
 import { DiscordAnsi } from "../discord_ansi";
 import { runGrok } from "./grok_runner";
 
-export type ModelProvider = 'openai' | 'xai'
-export type ModelName = 'gpt-3.5-turbo' | 'gpt-4o-mini' | 'gpt-4.1-nano' | 'o3-mini' | 'grok-3-mini-beta'
-export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCalling'
+export type ModelProvider = 'openai' | 'xai' | 'ollama'
+export type ModelName =
+  | 'gpt-3.5-turbo'
+  | 'gpt-4o-mini'
+  | 'gpt-4.1-nano'
+  | 'o3-mini'
+  | 'grok-3-mini-beta'
+  | 'deepseek-r1'
+  | 'gemma3'
+  | 'llama3.2';
+export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCalling' | 'reasoning';
 
 export interface ModelParameter {
     key: string;
@@ -156,6 +165,7 @@ const OpenAIParameters: ModelParameter[] = [
 // #region Model Definitions
 
 export const Models: Record<ModelName, Model> = {
+    // OPENAI MODELS
     'gpt-3.5-turbo': new Model(
         'gpt-3.5-turbo',
         'openai',
@@ -192,6 +202,7 @@ export const Models: Record<ModelName, Model> = {
         [],
         runOpenAI
     ),
+    // grok
     'grok-3-mini-beta': new Model(
         'grok-3-mini-beta',
         'xai',
@@ -200,6 +211,71 @@ export const Models: Record<ModelName, Model> = {
         OpenAIParameters.filter((param) => !(['presence_penalty', 'frequency_penalty'].includes(param.key))),
         ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065", "1162874217935675392"],
         runGrok
+    ),
+    // OLLAMA MODELS
+    'deepseek-r1': new Model(
+        'deepseek-r1',
+        'ollama',
+        'An extremely powerful reasoning model. This model is also extremely slow due to the reasoning requirements.',
+        ['chat', "reasoning"],
+        [
+            {
+                key: 'temperature',
+                description: 'Controls randomness in the output. Lower values make output more deterministic.',
+                type: 'number',
+                restrictions: { min: 0, max: 2 },
+                default: 0.6,
+            },
+            {
+                key: 'top_p',
+                description: 'Controls diversity via nucleus sampling. Lower values make output more focused.',
+                type: 'number',
+                restrictions: { min: 0, max: 1 },
+                default: 0.95,
+            },
+        ],
+        [],
+        runOllama
+    ),
+    'gemma3': new Model(
+        'gemma3',
+        'ollama',
+        'Gemma3, a model designed to over elaborate the hell out of everything. ',
+        ['chat', 'reasoning'],
+        [
+            {
+                key: 'temperature',
+                description: 'Controls randomness in the output. Lower values make output more deterministic.',
+                type: 'number',
+                restrictions: { min: 0, max: 2 },
+                default: 1,
+            },
+            {
+                key: 'top_p',
+                description: 'Controls diversity via nucleus sampling. Lower values make output more focused.',
+                type: 'number',
+                restrictions: { min: 0, max: 1 },
+                default: 0.95,
+            },
+            {
+                key: 'top_k',
+                description: 'Controls how many of the most likely next tokens are considered at each generation step',
+                type: 'number',
+                restrictions: { min: 0, max: 1024 },
+                default: 64,
+            },
+        ],
+        [],
+        runOllama
+    ),
+    'llama3.2': new Model(
+        'llama3.2',
+        'ollama',
+        'llama3.2, a general purpose model.',
+        ['chat', 'functionCalling'],
+        [],
+        [],
+        runOllama
     ),
 };
 // #endregion
