@@ -15,8 +15,7 @@ export type ModelName =
   | 'o3-mini'
   | 'grok-3-mini-beta'
   | 'deepseek-r1'
-  | 'gemma3'
-  | 'llama3.2';
+  | 'closex/neuraldaredevil-8b-abliterated'
 export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCalling' | 'reasoning';
 
 export interface ModelParameter {
@@ -237,43 +236,34 @@ export const Models: Record<ModelName, Model> = {
         [],
         runOllama
     ),
-    'gemma3': new Model(
-        'gemma3',
+    'closex/neuraldaredevil-8b-abliterated': new Model(
+        'closex/neuraldaredevil-8b-abliterated',
         'ollama',
-        'Gemma3, a model designed to over elaborate the hell out of everything. ',
-        ['chat', 'reasoning'],
+        'a model designed for casual chat applications',
+        ['chat'],
         [
+            {
+                key: 'num_ctx',
+                description: 'The number of context tokens to use for the model.',
+                type: 'number',
+                restrictions: { min: 1, max: 16384 },
+                default: 8192,
+            },
             {
                 key: 'temperature',
                 description: 'Controls randomness in the output. Lower values make output more deterministic.',
                 type: 'number',
                 restrictions: { min: 0, max: 2 },
-                default: 1,
+                default: 0.7,
             },
             {
-                key: 'top_p',
-                description: 'Controls diversity via nucleus sampling. Lower values make output more focused.',
+                key: 'num_keep',
+                description: 'The number of tokens to keep in the context.',
                 type: 'number',
-                restrictions: { min: 0, max: 1 },
-                default: 0.95,
-            },
-            {
-                key: 'top_k',
-                description: 'Controls how many of the most likely next tokens are considered at each generation step',
-                type: 'number',
-                restrictions: { min: 0, max: 1024 },
-                default: 64,
+                restrictions: { min: 1, max: 2048 },
+                default: 24,
             },
         ],
-        [],
-        runOllama
-    ),
-    'llama3.2': new Model(
-        'llama3.2',
-        'ollama',
-        'llama3.2, a general purpose model.',
-        ['chat', 'functionCalling'],
-        [],
         [],
         runOllama
     ),

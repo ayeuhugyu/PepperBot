@@ -5,6 +5,7 @@ import ollama, { ChatRequest, ChatResponse } from "ollama";
 import { Tool as OllamaTool, Message as OllamaMessage, ToolCall as OllamaToolCall } from "ollama";
 import path from "path";
 import fs from "fs";
+import * as log from "../log";
 import { fixFileName } from "../attachment_manager";
 
 function getRequiredParameters(parameters: Record<string, ToolParameter>): string[] {
@@ -127,25 +128,45 @@ export async function runOllama(conversation: Conversation): Promise<GPTMessage>
     const params = conversation.filterParameters();
     const tools: OllamaTool[] = Object.entries(conversation.getTools()).map(([_, tool]) => formatTool(tool));
 
+    // create a temporary model name using the conversation's id
+    const tempModelName = `conv-temp-${conversation.id}-${model.name}`.replace(/[^a-zA-Z0-9_\-]/g, "_");
+
     try {
-        let response: ChatResponse | undefined
+        // check if the model already exists
+        const existingModels = await ollama.list();
+        const modelExists = existingModels.models.some((m: { name: string }) => m.name === tempModelName);
+
+        // copy the base model to a temporary model for this conversation if it doesn't exist
+        if (!modelExists) {
+            log.info(`creating ollama temporary model ${tempModelName} from ${model.name}`);
+            await ollama.create({
+                model: tempModelName,
+                from: model.name,
+                system: conversation.prompt?.content || "",
+            });
+        }
+
+        let response: ChatResponse | undefined;
         if (model.capabilities.includes('functionCalling')) {
             response = await ollama.chat({
-                model: model.name,
+                model: tempModelName,
                 messages,
                 tools,
+                keep_alive: "10m",
                 ...params,
             });
         } else {
             response = await ollama.chat({
-                model: model.name,
+                model: tempModelName,
                 messages,
+                keep_alive: "10m",
                 ...params,
             });
         }
+
         // Parse tool calls if present
         const toolCalls = response.message?.tool_calls?.map((tc: OllamaToolCall) => new ToolCall({
-            id: "llama_tool_call_id",
+            id: "llama_tool_call_id", // ollama does not provide a unique ID for tool calls
             name: tc.function.name,
             parameters: tc.function.arguments,
         })) || [];
@@ -156,7 +177,6 @@ export async function runOllama(conversation: Conversation): Promise<GPTMessage>
             attachments: [],
         });
     } catch (err: any) {
-        // If the Ollama server is not running, return a fake GPTMessage
         if (err?.message?.includes('ECONNREFUSED') || err?.message?.includes('Failed to fetch') || err?.code === 'ECONNREFUSED') {
             return new GPTMessage({
                 content: 'ollama server is not running',
@@ -165,7 +185,18 @@ export async function runOllama(conversation: Conversation): Promise<GPTMessage>
                 attachments: [],
             });
         }
-        // Otherwise, rethrow
         throw err;
+    }
+}
+
+const existingModels = await ollama.list();
+const tempModels = existingModels.models.filter((m: { name: string }) => m.name.startsWith(`conv-temp-`));
+// Clean up temporary models
+for (const model of tempModels) {
+    try {
+        await ollama.delete({ model: model.name });
+        log.info(`deleted ollama temporary model ${model.name}`);
+    } catch (err) {
+        console.error(`Failed to delete temporary model ${model.name}:`, err);
     }
 }
