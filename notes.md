@@ -47,6 +47,8 @@ lets start off with the bad stuff so you'll forget about it by the time you fini
 - p/equipment (both of these are just too hard to maintain, deepwoken updates too often for me to give a shit (especially since i dont even play the game anymore))
 - p/force (two reasons: it's TOS questionable and i lowkey just didn't wanna bother remaking it; i might readd it later if theres enough demand for it)
 
+$SPLIT_EMBED$
+
 the biggest new base feature
 **command piping:**
 
@@ -54,6 +56,8 @@ the biggest new base feature
 - new command p/grep which functions nearly identically to grep on linux, added exclusively for the purpose of piping to it
   there's too many commands that are pipable to eachother to really list, so just find out yourself by looking at the guide page.
 - also new p/tail and p/head which function again the same as head and tail on linux.
+
+$SPLIT$
 
 **new commands:**
 -# excluding previously mentioned commands
@@ -63,6 +67,8 @@ the biggest new base feature
 - brought back p/sendlog because of the new piping related commands
 - new p/schedule allows you to schedule reminders and make pepperbot ping/dm you at a certain time to remind you of something. even if the bot goes offline temporarily, any events missed over the downtime will be caught up with.
 - new p/alias allows you to make up your own aliases for commands. the content is literally just replaced directly, so you can even provide arguments or alias piping to other commands.
+
+$SPLIT_EMBED$
 
 **gpt stuff:**
 
@@ -97,12 +103,17 @@ the biggest new base feature
 - gpt responses now use openai's seeding feature so they can be reproduced
 - AI can now see stickers
 - default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
-- GPT models have been completely overhauled, which means that in the future there could be support for models from manufacturers other than openai. here's an updated list of available models:
+- GPT models have been completely overhauled, which means that in the future there is now support for models from manufacturers other than openai, including grok and llama models. here's an updated list of available models:
   - gpt-3.5-turbo (the oldest model i've ever used on pepperbot)
   - gpt-4o-mini (slightly more up to date openai model)
   - o3-mini (openai's cheapest reasoning model, still fairly good actually)
   - gpt-4.1-nano (the new default, is ABSURDLY fast)
   - grok-3-mini-beta (something from a provider other than openai)
+  - deepseek-r1 (reasoning model, uses llama. note that it takes context very weirdly)
+  - closex/neuraldaredevil-8b-abliterated (weird model i found, somewhat good at being casual)
+- you can run `p/gpt edit` and configure the model and start clicking around on them to get a better idea of what each of them does.
+
+$SPLIT_EMBED$
 
 **other actual content:**
 
