@@ -60,7 +60,7 @@ the biggest new base feature
 $SPLIT$
 
 **new commands:**
--# excluding previously mentioned commands
+-# excluding previously mentioned commands and commands which have been entirely redone
 
 - new p/random phrase allows you to generate phrases based off parts of speech (ex. p/random phrase noun adjective adverb verb noun)
 - new p/encode and p/decode allow you to encode and decode text via various algorithms. use `p/encode list` to get a list of all of the algorithms.
@@ -97,12 +97,13 @@ $SPLIT_EMBED$
   - prompts now have an nsfw property (to be used by the prompt browser)
   - you can now set the default prompt to a custom one
   - saved prompts can now be deleted
+- use `p/prompt edit` to try out all this new stuff
 - gpt now has a completely new prompt
   - if you for some reason want to use the old prompt, you still can by running `d/prompt use PepperBot/old`.
-- gpt conversations are now MUCH more customizable via the use of p/conversation configure
+- gpt conversations are now MUCH more customizable via the use of `p/conversation configure`
 - gpt responses now use openai's seeding feature so they can be reproduced
 - AI can now see stickers
-- default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb instructions)
+- default model is now gpt-4.1-nano instead of gpt-4o-mini. it's significantly cheaper and better at following instructions (which unfortunately means its also better at following openai's dumb internal instructions)
 - GPT models have been completely overhauled, which means that in the future there is now support for models from manufacturers other than openai, including grok and llama models. here's an updated list of available models:
   - gpt-3.5-turbo (the oldest model i've ever used on pepperbot)
   - gpt-4o-mini (slightly more up to date openai model)
@@ -111,7 +112,7 @@ $SPLIT_EMBED$
   - grok-3-mini-beta (something from a provider other than openai)
   - deepseek-r1 (reasoning model, uses llama. note that it takes context very weirdly)
   - closex/neuraldaredevil-8b-abliterated (weird model i found, somewhat good at being casual)
-- you can run `p/gpt edit` and configure the model and start clicking around on them to get a better idea of what each of them does.
+- you can run `p/conversation configure` and configure the model and start clicking around on them to get a better idea of what each of them does.
 
 $SPLIT_EMBED$
 
@@ -136,7 +137,5 @@ $SPLIT_EMBED$
 - adding playlists to p/queue no longer uses googles shitty api that only returns 50 responses at most, now your ENTIRE playlist will be added every time. also supports playlists from websites other than youtube (probably)
 - p/queue and p/playurl embed greatly improved with the advent of dicord's new components v2 system
 - p/help has been greatly improved
-  - subcommands are now in paged menus
-  - all options are displayed in one embed
-  - uses the new tutorial values
 - p/gpt has been renamed to p/conversation
+- i've made a new update system that allows me to easily create these sorts of embeds with just text and nothing else
