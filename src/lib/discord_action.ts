@@ -105,6 +105,19 @@ export function reply<T extends CommandInvoker>(invoker: T, content: Partial<Mes
 export type SendableChannel = TextChannel | DMChannel | PartialDMChannel | NewsChannel | StageChannel | PublicThreadChannel<boolean> | PrivateThreadChannel | VoiceChannel
 
 export function send(channel: SendableChannel, content: Partial<MessageInput> | string): Promise<Message | void>  {
+    if (typeof content === "object" && 'ephemeral' in content) {
+        if (content.ephemeral === true) {
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral
+        }
+        delete content.ephemeral
+    }
+    if (typeof content === "object" && 'components_v2' in content) {
+        if (content.components_v2) {
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.IsComponentsV2 // weird hack idfc that its not always interactionreplyoptions
+            delete content.components_v2
+        }
+    }
+    
     const reply = fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions
     log.debug(`sending message to ${channel.id} with`, reply);
     return channel.send(reply)
