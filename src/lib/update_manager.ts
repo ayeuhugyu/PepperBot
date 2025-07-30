@@ -6,6 +6,7 @@ export interface dbUpdate {
     message_id: string;
     time: Date;
     major: boolean;
+    usesOldSystem?: boolean;
 }
 
 export class Update {
@@ -14,13 +15,15 @@ export class Update {
     timestamp: Date = new Date();
     message_id: string = "0";
     major: boolean = false;
+    usesOldSystem: boolean = false; // migration will make everything before this true
     constructor(dbObject: Partial<dbUpdate>) {
         Object.assign(this, {
             id: dbObject.update || 0,
             timestamp: new Date(dbObject.time || 0),
             text: dbObject.text || "Update undefined.",
             message_id: dbObject.message_id || "0",
-            major: Boolean(dbObject.major)
+            major: Boolean(dbObject.major),
+            usesOldSystem: Boolean(dbObject.usesOldSystem)
         });
     }
 }
@@ -45,13 +48,27 @@ export async function createUpdate(text: string, message_id: string): Promise<Up
 }
 
 export async function writeUpdate(update: Update): Promise<void> {
-    return await database("updates").insert({
-        update: update.id,
-        text: update.text,
-        message_id: update.message_id,
-        time: update.timestamp,
-        major: Number(update.major)
-    });
+    const exists = await database("updates").where({ update: update.id }).first();
+    if (exists) {
+        await database("updates")
+            .where({ update: update.id })
+            .update({
+                text: update.text,
+                message_id: update.message_id,
+                time: update.timestamp,
+                major: Number(update.major),
+                usesOldSystem: Number(update.usesOldSystem)
+            });
+    } else {
+        await database("updates").insert({
+            update: update.id,
+            text: update.text,
+            message_id: update.message_id,
+            time: update.timestamp,
+            major: Number(update.major),
+            usesOldSystem: Number(update.usesOldSystem)
+        });
+    }
 }
 
 export async function getCurrentUpdateNumber() {
