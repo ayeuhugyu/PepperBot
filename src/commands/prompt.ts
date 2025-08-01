@@ -12,6 +12,7 @@ import { Button, ButtonStyle, Container, Section, Separator, TextDisplay, TextIn
 import { GuildConfig } from "../lib/guild_config_manager";
 import chalk from "chalk";
 import { DiscordAnsi as ansi } from "../lib/discord_ansi";
+import { FakeToolData, tools } from "../lib/gpt/tools";
 
 function findModelByName(name: string): Model | undefined {
     return Object.values(models).find(m =>
@@ -108,8 +109,6 @@ function buildSections(prompt: Prompt, guild_config: GuildConfig, disabled: bool
             })
         }),
         new Separator(),
-        sectionWithEdit("Name", prompt.name, "edit_prompt_name", disabled, "changing the name of the prompt will effectively create a new prompt."),
-        new Separator(),
         sectionWithEdit("Description", prompt.description, "edit_prompt_description", disabled),
         new Separator(),
         sectionWithEdit("Prompt", prompt.content, "edit_prompt_content", disabled),
@@ -131,6 +130,13 @@ function buildSections(prompt: Prompt, guild_config: GuildConfig, disabled: bool
                 .map(([key, value]) => `**${key}**: ${value}`)
                 .join("\n"),
             "edit_prompt_api_parameters",
+            disabled
+        ),
+        new Separator(),
+        sectionWithEdit(
+            "Tools",
+            "enabled / disabled tools and custom tools you have created for this prompt. tools are meant for advanced users and will confuse most people.",
+            "edit_prompt_tools",
             disabled
         ),
         new Separator(),
@@ -165,7 +171,68 @@ function getBuilderActionRow(disabled: boolean = false, prompt: Prompt) {
     })
 }
 
+function buildToolEditor(prompt: Prompt): (TextDisplay | ActionRow)[] {
+    const formattedToolData: {
+        enabled: string[],
+        disabled: string[],
+        custom: FakeToolData[]
+    } = {
+        enabled: [],
+        disabled: [],
+        custom: []
+    }
+    const allTools = Object.values(tools).map(tool => tool.data.name);
+    prompt.tools.forEach((tool) => {
+        if (typeof tool === "string") {
+            formattedToolData.enabled.push(tool);
+        } else {
+            formattedToolData.custom.push(tool);
+        }
+    });
+    const disabledTools = allTools.filter(tool => !formattedToolData.enabled.includes(tool));
+    formattedToolData.disabled = disabledTools;
+    return [
+        new TextDisplay({
+            content: `**Tools**\ntools that you have set to enabled / disabled for this prompt. you can also add or remove custom tools here.\n\`\`\`json\n${JSON.stringify(formattedToolData, null, 2)}\n\`\`\``
+        }),
+        new ActionRow({
+            components: [
+                new Button({
+                    style: ButtonStyle.Success,
+                    label: "Edit Built-in Tools",
+                    custom_id: "edit_prompt_tools_builtin",
+                }),
+                new Button({
+                    style: ButtonStyle.Success,
+                    label: "Edit Custom Tools",
+                    custom_id: "edit_prompt_tools_custom",
+                })
+            ]
+        })
+    ];
+}
+
 const defaultModel = "gpt-4.1-nano"
+
+function getBuiltInToolsButtons(prompt: Prompt, disabled: boolean = false) {
+    const toolButtons: ActionRow[] = [];
+    Object.values(tools).forEach((tool) => {
+        const isEnabled = prompt.tools.includes(tool.data.name);
+        const toolButton = new Button({
+            style: isEnabled ? ButtonStyle.Danger : ButtonStyle.Success,
+            label: tool.data.name,
+            custom_id: `edit_prompt_tool_${tool.data.name}`,
+            disabled: disabled
+        });
+        if (toolButtons.length === 0 || toolButtons[toolButtons.length - 1].components.length >= 5) {
+            const row = new ActionRow({ components: [toolButton] });
+            toolButtons.push(row);
+        } else {
+            toolButtons[toolButtons.length - 1].components.push(toolButton);
+        }
+    });
+    return toolButtons;
+}
 
 function getModelButtons(prompt: Prompt, disabled: boolean = false) {
     const modelButtons: ActionRow[] = []
@@ -180,7 +247,7 @@ function getModelButtons(prompt: Prompt, disabled: boolean = false) {
                 : ButtonStyle.Secondary,
             label: model.name,
             custom_id: `edit_prompt_model_${model.name}`,
-            disabled: isCurrent || (model.whitelist && !model.whitelist.includes(prompt.author.id)) || disabled
+            disabled: isCurrent || (model.whitelist && (model.whitelist?.length > 0) && !model.whitelist.includes(prompt.author.id)) || disabled
         });
         if (modelButtons.length === 0 || modelButtons[modelButtons.length - 1].components.length >= 5) {
             const row = new ActionRow({ components: [modelButton] });
@@ -359,7 +426,7 @@ const build = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, args, guild_config }) {
-        let prompt;
+        let prompt: Prompt | undefined;
         if (args.name) {
             prompt = await getPrompt(args.name as string, invoker.author.id);
             if (!prompt) {
@@ -373,6 +440,7 @@ const build = new Command(
         if (!prompt) {
             prompt = await getUserPrompt(invoker.author);
         }
+        if (!prompt) return; // this will never happen but typescript thinks it might
         const sent = await action.reply(invoker, {
             components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)],
             ephemeral: guild_config.other.use_ephemeral_replies,
@@ -510,7 +578,7 @@ const build = new Command(
                                             style: TextInputStyle.Short,
                                             placeholder: `Enter the value of the API parameter`,
                                             required: true,
-                                            value: value
+                                            value: String(value)
                                         })
                                     ]
                                 }) as any
@@ -532,8 +600,61 @@ const build = new Command(
                         action.edit(sent, { components: [embedPrompt(prompt, guild_config), getBuilderActionRow(false, prompt)] });
                     });
                 },
+                "edit_prompt_tools": async () => {
+                    const toolEditor = buildToolEditor(prompt);
+                    const response = await action.reply(interaction as unknown as FormattedCommandInteraction, { components: [new Container({ components: toolEditor })], ephemeral: true, fetchReply: true, components_v2: true });
+                    if (!response) return;
+                    const whichToEditCollector = response.createMessageComponentCollector({ time: 30 * 60 * 1000 });
+                    whichToEditCollector.on("collect", async (whichToEditInteraction) => {
+                        if (whichToEditInteraction.user.id !== invoker.author.id) {
+                            action.reply(whichToEditInteraction as unknown as FormattedCommandInteraction, { content: "this is not your prompt", ephemeral: true });
+                            return;
+                        }
+                        (whichToEditInteraction as unknown as FormattedCommandInteraction).author = whichToEditInteraction.user;
+                        if (whichToEditInteraction.customId === "edit_prompt_tools_builtin") {
+                            const builtInToolsButtons = getBuiltInToolsButtons(prompt);
+                            const builtInToolsResponse = await action.reply(whichToEditInteraction as unknown as FormattedCommandInteraction, {
+                                components: [new TextDisplay({ content: `toggle built in tools below: `}), ...builtInToolsButtons],
+                                components_v2: true,
+                                ephemeral: true,
+                                fetchReply: true,
+                            });
+                            if (!builtInToolsResponse) return;
+                            const builtInToolsCollector = builtInToolsResponse.createMessageComponentCollector({ time: 30 * 60 * 1000 });
+                            builtInToolsCollector.on("collect", async (builtInToolInteraction) => {
+                                if (builtInToolInteraction.user.id !== invoker.author.id) {
+                                    action.reply(builtInToolInteraction as unknown as FormattedCommandInteraction, { content: "this is not your prompt", ephemeral: true });
+                                    return;
+                                }
+                                (builtInToolInteraction as unknown as FormattedCommandInteraction).author = builtInToolInteraction.user;
+                                const toolName = builtInToolInteraction.customId.slice("edit_prompt_tool_".length);
+                                if (!tools[toolName]) {
+                                    action.reply(builtInToolInteraction as unknown as FormattedCommandInteraction, { content: `unknown tool \`${toolName}\``, ephemeral: true });
+                                    return;
+                                }
+                                if (prompt.tools.includes(toolName)) {
+                                    prompt.tools = prompt.tools.filter(t => t !== toolName);
+                                } else {
+                                    prompt.tools.push(toolName);
+                                }
+                                await savePrompt(prompt, invoker.author);
+                                action.editReply(whichToEditInteraction as unknown as FormattedCommandInteraction, {
+                                    components: [new TextDisplay({ content: `toggle built in tools below: `}), ...getBuiltInToolsButtons(prompt)],
+                                    components_v2: true,
+                                });
+                                action.editReply(interaction as unknown as FormattedCommandInteraction, {
+                                    components: [new Container({ components: buildToolEditor(prompt) })],
+                                    components_v2: true,
+                                });
+                                builtInToolInteraction.deferUpdate();
+                            });
+                        } else if (whichToEditInteraction.customId === "edit_prompt_tools_custom") {
+                            // unfinished
+                        }
+                    });
+                },
                 "edit_prompt_set_active": async () => {
-                    userPrompts.set(invoker.author.id, prompt.name);
+                    userPrompts.set(invoker.author.id, prompt);
                     if (invoker instanceof Message) {
                         const conversation = await getConversation(invoker);
                         if (conversation) {

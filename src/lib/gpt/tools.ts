@@ -47,6 +47,14 @@ export class ToolData {
 
 type ToolFunction = (args: any) => Promise<any> | any;
 
+export class FakeTool {
+    public data: FakeToolData & { type: ToolType.User };
+
+    constructor(data: FakeToolData) {
+        this.data = { ...data, type: ToolType.User };
+    }
+}
+
 export class Tool {
     public data: ToolData;
     public function: ToolFunction;

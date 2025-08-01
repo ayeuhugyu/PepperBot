@@ -145,6 +145,19 @@ export function deleteMessage(message: Message): Promise<OmitPartialGroupDMChann
 
 export function editReply(commandInteraction: FormattedCommandInteraction, content: Partial<MessageInput> | string): Promise<Message | void> {
     const reply = fixMessage(content) as string | MessagePayload | MessageEditOptions
+        if (typeof content === "object" && 'ephemeral' in content) {
+        if (content.ephemeral === true) {
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.Ephemeral
+        }
+        delete content.ephemeral
+    }
+    if (typeof content === "object" && 'components_v2' in content) {
+        if (content.components_v2) {
+            (content as InteractionReplyOptions).flags = (Number((content as InteractionReplyOptions).flags) ?? 0) | MessageFlags.IsComponentsV2 // weird hack idfc that its not always interactionreplyoptions
+            delete content.components_v2
+        }
+    }
+    
     log.debug(`editing reply to ${commandInteraction.user.username} (${commandInteraction.user.id}) with`, reply);
     return commandInteraction.editReply(reply)
         .catch((err) => {

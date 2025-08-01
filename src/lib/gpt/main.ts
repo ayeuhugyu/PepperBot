@@ -5,7 +5,7 @@ import { Models, Model } from "./models";
 import { client } from "../../bot";
 import * as log from "../log";
 import { incrementGPTModelUsage } from "../statistics";
-import { tools, ToolType } from "./tools";
+import { FakeTool, Tool, tools, ToolType } from "./tools";
 import chalk from "chalk";
 import * as action from "../discord_action";
 import { DiscordAnsi } from "../discord_ansi";
@@ -375,20 +375,21 @@ export class Conversation {
                 log.warn(`Tool ${call.name} not found for conversation ${this.id}.`);
                 continue;
             }
-            if (tool.data.type !== ToolType.Official) {
-                const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: `Custom tool calls are not yet supported. Please inform the user of this.` }, true);
+            if (tool instanceof FakeTool) {
+                const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: `custom tool calls are not yet supported. please inform the user of this.` }, true);
                 this.addToolCallResponse(errorResponse);
-                log.warn(`Attempt to call custom tool ${call.name} in conversation ${this.id}. This is not supported yet.`);
+                log.warn(`attempt to call custom tool ${call.name} in conversation ${this.id}`);
                 continue;
-            }
-            try {
-                const response = await tool.function(call.parameters);
-                const toolResponse = new ToolCallResponse(call.id, call.name, call.parameters, response);
-                this.addToolCallResponse(toolResponse);
-            } catch (err) {
-                log.error(`Error running tool ${call.name} for conversation ${this.id}:`, err);
-                const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: err }, true);
-                this.addToolCallResponse(errorResponse);
+            } else {
+                try {
+                    const response = await tool.function(call.parameters);
+                    const toolResponse = new ToolCallResponse(call.id, call.name, call.parameters, response);
+                    this.addToolCallResponse(toolResponse);
+                } catch (err) {
+                    log.error(`Error running tool ${call.name} for conversation ${this.id}:`, err);
+                    const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: err }, true);
+                    this.addToolCallResponse(errorResponse);
+                }
             }
         }
     }
@@ -424,7 +425,16 @@ export class Conversation {
     // TODO: finish
     getTools() { // functionality for this is incomplete, will be expanded later
         // i hope to make it so that with prompts you can disable specific tools or add custom tools which prompt the user for return values
-        return tools;
+        const enabledBuiltInToolNames = this.prompt.tools.filter(tool => typeof tool === "string" && tools[tool]);
+        const customTools = this.prompt.tools.filter(tool => typeof tool !== "string");
+        const enabledBuiltInTools = Object.fromEntries(Object.entries(tools).filter(([name, tool]) => enabledBuiltInToolNames.includes(name)));
+
+        const formattedCustomTools = customTools.map(tool => {
+            return new FakeTool(tool);
+        });
+
+        const allTools = { ...enabledBuiltInTools, ...Object.fromEntries(formattedCustomTools.map(tool => [tool.data.name, tool])) };
+        return allTools;
     }
 
     filterParameters() {
