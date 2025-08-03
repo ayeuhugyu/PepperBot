@@ -21,9 +21,6 @@ these aren't required for the bot to run, but some features won't work without t
 
 depending on your system, you might be able to install them by using `bun extras:install`, but this won't work for everyone. if it doesn't work, use the manual installations below.
 
-- for the queue and playurl commands:
-    - install `yt-dlp` from https://github.com/yt-dlp/yt-dlp/releases/latest
-    - add it to your PATH, however that is done on your device.
 - for the evaluate_luau GPT tool:
     - install `lune` from https://github.com/lune-org/lune/releases/latest
     - add it to your PATH, however that is done on your device.
