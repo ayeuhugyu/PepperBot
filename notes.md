@@ -35,8 +35,7 @@ lets start off with the bad stuff so you'll forget about it by the time you fini
 - p/blacklist
 - p/pepperannouncement
 - p/setversion
-- p/update (it's functionality has been replaced with a web thing)
-  - and its subsidiaries...
+- p/update's subsidiaries (not the command itself, they have been replaced with a whole new update system thingy)
   - p/subupdate
   - p/patch
 - p/corrupt (it was so ass)
@@ -46,6 +45,8 @@ lets start off with the bad stuff so you'll forget about it by the time you fini
 - p/random buildidea
 - p/equipment (both of these are just too hard to maintain, deepwoken updates too often for me to give a shit (especially since i dont even play the game anymore))
 - p/force (two reasons: it's TOS questionable and i lowkey just didn't wanna bother remaking it; i might readd it later if theres enough demand for it)
+- p/playurl
+- p/queue (again, two reasons: music commands which use ytdlp and shit are TOS questionable, and it just doesn't feel very *pepperbot-ey.* i'm trying to make this bot more unique, which involves getting rid of stuff like this that is just either done better by other bots or is super ultra common)
 
 $SPLIT_EMBED$
 

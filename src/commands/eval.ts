@@ -8,7 +8,6 @@ import shell from "shelljs";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import * as util from "util";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
-import * as queue from "../lib/music/queue";
 import database from "../lib/data_manager"
 import * as components from "../lib/classes/components";
 
@@ -20,7 +19,6 @@ const modules = {
     process,
     shell,
     util,
-    queue,
     database,
     components,
 } // this is some weird hacky thing to make bun not omit the modules due to them being unused
