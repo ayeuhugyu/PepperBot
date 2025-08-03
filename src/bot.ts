@@ -27,7 +27,19 @@ const eventFiles = fs
 for (const file of eventFiles) {
     (async () => {
         const event = await import(`./events/${file}`);
-        client.on(event.default.name, event.default.execute);
+        
+        // Spawn-like behavior - wrap the event execution to run independently
+        client.on(event.default.name, (...args: any[]) => {
+            // Don't await - let it run in parallel like task.spawn
+            setImmediate(() => {
+                try {
+                    event.default.execute(...args);
+                } catch (error) {
+                    log.error(`Error in event ${event.default.name}:`, error);
+                }
+            });
+        });
+        
         log.info("registered event " + event.default.name);
     })();
 }
