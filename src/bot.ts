@@ -27,10 +27,8 @@ const eventFiles = fs
 for (const file of eventFiles) {
     (async () => {
         const event = await import(`./events/${file}`);
-        
-        // Spawn-like behavior - wrap the event execution to run independently
+
         client.on(event.default.name, (...args: any[]) => {
-            // Don't await - let it run in parallel like task.spawn
             setImmediate(() => {
                 try {
                     event.default.execute(...args);
@@ -39,7 +37,7 @@ for (const file of eventFiles) {
                 }
             });
         });
-        
+
         log.info("registered event " + event.default.name);
     })();
 }
