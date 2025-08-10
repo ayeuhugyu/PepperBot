@@ -506,7 +506,7 @@ function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false
         return currentConversation
     }
     // alwaysCreateNew is always true from here on
-    log.debug(`No existing conversation found for user ${user.username} (${user.id}) or alwaysCreateNew was true, creating a new one.`);
+    log.debug(`no existing conversation found for user ${user.username} (${user.id}) or alwaysCreateNew was true, creating a new one.`);
     currentConversation?.removeUser(user); // remove the user from the current conversation if it exists
     const newConversation = new Conversation();
     newConversation.addUser(user);
@@ -514,7 +514,7 @@ function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false
     if (userPrompts.get(user.id)) {
         userPrompts.delete(user.id); // remove the user prompt if it exists, as it will be set on the conversation
     }
-    log.debug(`Created new conversation for user ${user.username} (${user.id}):`, newConversation.id);
+    log.debug(`created new conversation for user ${user.username} (${user.id}):`, newConversation.id);
     return newConversation;
 }
 
@@ -525,9 +525,9 @@ function getConversationByMessageId(messageId: string): Conversation | undefined
         log.debug(`Checking conversation ${c.id} for messageId: ${messageId}`);
         for (const m of c.messages) {
             if ('discordId' in m && m.discordId !== undefined) {
-                log.debug(`Checking message with discordId: ${m.discordId}`);
+                log.debug(`checking message with discordId: ${m.discordId}`);
                 if (m.discordId === messageId) {
-                    log.debug(`Match found in conversation ${c.id} for messageId: ${messageId}`);
+                    log.debug(`match found in conversation ${c.id} for messageId: ${messageId}`);
                     found = c;
                     break;
                 }
@@ -536,37 +536,37 @@ function getConversationByMessageId(messageId: string): Conversation | undefined
         if (found) break;
     }
     if (found) {
-        log.debug(`Found conversation ${found.id} for messageId: ${messageId}`);
+        log.debug(`found conversation ${found.id} for messageId: ${messageId}`);
     } else {
-        log.debug(`No conversation found for messageId: ${messageId}`);
+        log.debug(`no conversation found for messageId: ${messageId}`);
     }
     return found;
 }
 
 export async function getConversation(message: Message) {
-    log.debug(`Getting conversation for message ${message.id} from user ${message.author.username} (${message.author.id})`);
+    log.debug(`getting conversation for message ${message.id} from user ${message.author.username} (${message.author.id})`);
     // if the message directly mentions the bot, create a new conversation
     let messageIdConversation = getConversationByMessageId(message.reference?.messageId || "");
-    log.debug(`Result of getConversationByMessageId for message.reference?.messageId (${message.reference?.messageId}):`, messageIdConversation ? `Found conversation ${messageIdConversation.id}` : "No conversation found");
+    log.debug(`result of getConversationByMessageId for message.reference?.messageId (${message.reference?.messageId}):`, messageIdConversation ? `Found conversation ${messageIdConversation.id}` : "No conversation found");
     if (message.content.includes(`<@${client.user?.id}>`) || message.content.includes(`<@!${client.user?.id}>`)) {
-        log.debug(`Message ${message.id} directly mentions the bot, creating a new conversation.`);
+        log.debug(`message ${message.id} directly mentions the bot, creating a new conversation.`);
         const newConversation = ensureConversationByUserId(message.author, true);
         let repliedMessage = null;
         try {
             repliedMessage = await message.channel.messages.fetch(message.reference?.messageId || "");
         } catch (err) {
-            log.warn(`Failed to fetch replied message for message ${message.id}:`, err);
+            log.warn(`failed to fetch replied message for message ${message.id}:`, err);
         }
         if (repliedMessage) {
             await newConversation.addDiscordMessage(repliedMessage);
-            log.debug(`Added replied message to new conversation ${newConversation.id}.`);
+            log.debug(`added replied message to new conversation ${newConversation.id}.`);
         }
         return newConversation;
     } else if (messageIdConversation) {
-        log.debug(`Found existing conversation for message ${message.id}:`, messageIdConversation.id);
+        log.debug(`found existing conversation for message ${message.id}:`, messageIdConversation.id);
         return messageIdConversation;
     } else {
-        log.debug(`Could not find existing conversation via message search, checking by user ID.`);
+        log.debug(`could not find existing conversation via message search, checking by user ID.`);
         return ensureConversationByUserId(message.author);
     }
 }
@@ -578,13 +578,13 @@ function messageifyToolCall(call: ToolCall): string {
 export async function respond(message: Message) {
     const conversation = await getConversation(message);
     await conversation.addDiscordMessage(message);
-    log.info(`Responding to message in conversation ${conversation.id} from user ${message.author.username} (${message.author.id})`);
+    log.info(`responding to message in conversation ${conversation.id} from user ${message.author.id}`);
 
     let currentContent = "processing..."
 
     const processingMessage = await action.reply(message as Message<true>, { content: "processing..." });
     if (!processingMessage) {
-        return log.error(`Failed to send processing message for conversation ${conversation.id}.`);
+        return log.error(`failed to send processing message for conversation ${conversation.id}.`);
     }
 
     conversation.bindOnToolCall(async (calls: ToolCall[]) => {
@@ -596,23 +596,23 @@ export async function respond(message: Message) {
 
     try { // TODO: add attachment support (like the bot attaching stuff)
         const response = await conversation.run();
-        log.debug(`Response generated for conversation ${conversation.id}:`, response.serialize());
+        log.debug(`response generated for conversation ${conversation.id}:`, response.serialize());
         await action.edit(processingMessage, { content: response.content || "No response content generated."} );
     } catch (error: any) {
-        log.error(`Error responding to message in conversation ${conversation.id}:`, error);
+        log.error(`error responding to message in conversation ${conversation.id}:`, error);
         await action.edit(processingMessage, { content: "error occurred while generating gpt response; " + error.message || error.toString() });
     }
 
     const sentId = processingMessage.id;
-    log.info(`Response sent for conversation ${conversation.id} with message ID ${sentId}.`);
+    log.info(`response sent for conversation ${conversation.id} with message ID ${sentId}.`);
     const latestAssistantMessage = conversation.messages
         .filter(m => m instanceof GPTMessage && m.role === "bot")
         .slice(-1)[0] as GPTMessage | undefined;
     if (latestAssistantMessage) {
         latestAssistantMessage.discordId = sentId; // set the discord ID of the latest assistant
-        log.debug(`Set discordId for latest assistant message in conversation ${conversation.id}:`, sentId);
+        log.debug(`set discordId for latest assistant message in conversation ${conversation.id}:`, sentId);
     } else {
-        log.warn(`No latest assistant message found in conversation ${conversation.id} to set discordId.`);
+        log.warn(`no latest assistant message found in conversation ${conversation.id} to set discordId.`);
     }
 
     conversation.unbindOnToolCall();
