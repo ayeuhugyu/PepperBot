@@ -110,7 +110,10 @@ export function createCommandsRoutes(): Router {
             let pipableCommands: any[] = [];
 
             if (isPipable) {
-                const allCommands = Array.from(commands.mappings.values());
+                const allBaseCommands = Array.from(commands.mappings.values().filter(entry => entry.type === CommandEntryType.Command)).map(entry => entry.command);
+                const allSubCommands = allBaseCommands.map(command => command.subcommands?.list || []).flat().filter(Boolean);
+                const allCommands = [...allBaseCommands, ...allSubCommands];
+
                 const pipableItems: string[] = [];
 
                 for (const pipableTarget of targetCommand.pipable_to || []) {
@@ -118,11 +121,10 @@ export function createCommandsRoutes(): Router {
                         // It's a tag - find all commands with this tag
                         const tag = pipableTarget;
                         const commandsWithTag = allCommands
-                            .filter(entry => entry.type === CommandEntryType.Command && !entry.command.is_sub_command)
-                            .filter(entry => entry.command.tags.some(cmdTag => cmdTag === tag))
-                            .map(entry => ({
-                                name: entry.command.name,
-                                description: entry.command.description
+                            .filter(command => command.tags.some(cmdTag => cmdTag === tag))
+                            .map(command => ({
+                                name: (command.parent_command ? command.parent_command + " " : "") + command.name,
+                                description: command.description
                             }));
 
                         if (commandsWithTag.length > 0) {
