@@ -124,14 +124,13 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
     const titleEmbed = new Container({
         components: [
             new TextDisplay({
-                content: `# ${commandPrefix}${command.name}${userHasAccess ? "" : "\n-# you do not have permission to use this command"}${(aliases.length > 0) ? "\naliases: " + aliases.join(", ") : ""}`
+                content: `# ${commandPrefix}${command.name}${userHasAccess ? "" : "\n-# you do not have permission to use this command"}${(aliases.length > 0) ? "\naliases: " + aliases.join(", ") : ""}\n-# view online at ${(process.env.IS_DEV?.toLowerCase() === "true") ? "http://localhost:53134" : "https://pepperbot.online"}/commands/${command.parent_command ? command.parent_command + "/" : ""}${command.name}`
             }),
             new Separator(),
             new TextDisplay({
                 content: command.long_description
             }),
         ],
-        accent_color: 0x232323
     });
 
     componentsCount += 4
