@@ -3,8 +3,7 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import fs from "fs";
-import { createThemeEmbed, Theme } from "../lib/theme";
-import { data } from "cheerio/dist/commonjs/api/attributes";
+import { Container, MediaGallery, Separator, TextDisplay, Thumbnail } from "../lib/classes/components";
 
 const partsOfSpeechToArray: Record<string, Array<string>> = {};
 
@@ -120,12 +119,25 @@ const peppercommand = new Command(
         const maxRan = pepperfiles.length;
         const randomnum = Math.floor(Math.random() * maxRan);
         const file = pepperfiles[randomnum];
-        const embed = createThemeEmbed(Theme.CURRENT)
-        embed.setImage(`attachment://${file}`);
-        embed.setTitle("🌶🌶🌶 RANDOM PEPPER!!!!!!!! 🌶🌶🌶");
+        const embed = new Container({
+            components: [
+                new TextDisplay({
+                    content: `## 🌶🌶🌶 RANDOM PEPPER!!!!!!!! 🌶🌶🌶`
+                }),
+                new Separator(),
+                new MediaGallery({
+                    media: [
+                        new Thumbnail({
+                            url: `attachment://${file}`,
+                        })
+                    ]
+                })
+            ]
+        })
 
         action.reply(invoker, {
-            embeds: [embed],
+            components: [embed],
+            components_v2: true,
             files: [`constants/media/the_peppers/${file}`],
             ephemeral: guild_config.useEphemeralReplies,
         });
