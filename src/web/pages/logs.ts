@@ -53,7 +53,7 @@ export function createLogsRoutes(): Router {
                 whitelisted = true;
             }
             if (!whitelisted && whitelistOnlyLevels.includes(level)) {
-                res.json({ error: "user is not whitelisted for " + level, status: 403 });
+                res.json({ error: "user is not whitelisted for " + level + "\nwhitelist-only logs exist to protect user privacy, as they might contain important debug data such as command arguments", status: 403 });
                 return;
             }
 

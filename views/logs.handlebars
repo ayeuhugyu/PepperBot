@@ -99,9 +99,10 @@
 
             const response = await fetch(`/api/logs/${level}/${line}`);
             const data = await response.json();
+            console.log(data)
 
-            if (data.type === "error") {
-                if (!append) showStatus(data.message);
+            if (data.error) {
+                if (!append) showStatus(data.error);
                 return;
             }
 
