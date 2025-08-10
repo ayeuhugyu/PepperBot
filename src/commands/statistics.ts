@@ -3,7 +3,6 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 import { getStatistics, Statistics } from "../lib/statistics";
-import { createThemeEmbed, Theme } from "../lib/theme";
 import { Container, Separator, TextDisplay } from "../lib/classes/components";
 
 const command = new Command(
