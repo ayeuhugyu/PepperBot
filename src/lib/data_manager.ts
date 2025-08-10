@@ -172,7 +172,30 @@ const database = knex({
 log.info("opened database connection");
 
 export default database;
-export const tables = ["prompts", "todos", "configs", "sounds", "updates", "statistics"];
+async function getTables(): Promise<string[]> {
+    try {
+        const result = await database.raw("SELECT name FROM sqlite_master WHERE type='table'");
+
+        let tableData;
+        if (Array.isArray(result)) {
+            tableData = result;
+        } else if (result && Array.isArray(result[0])) {
+            tableData = result[0];
+        } else if (result && result.rows) {
+            tableData = result.rows;
+        } else {
+            log.error("unexpected result format:", result);
+            return [];
+        }
+
+        return tableData?.map((row: any) => row.name).filter(Boolean) ?? [];
+    } catch (error) {
+        log.error("error getting tables:", error);
+        return [];
+    }
+}
+
+export const tables = await getTables();
 
 ['SIGINT', 'SIGTERM', 'SIGQUIT', 'EXIT'].forEach(signal => {
     process.on(signal, () => {

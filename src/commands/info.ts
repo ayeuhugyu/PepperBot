@@ -3,13 +3,13 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import { getCurrentUpdateNumber } from "../lib/update_manager";
-import { createThemeEmbed, Theme } from "../lib/theme";
 import database, { tables } from "../lib/data_manager";
 import prettyBytes from "pretty-bytes";
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import si from 'systeminformation';
+import { Container, Separator, TextDisplay } from "../lib/classes/components";
 
 const getDirectorySize = (directory: string): number => {
     const files = fs.readdirSync(directory);
@@ -54,17 +54,24 @@ const storageinfo = new Command(
 
         const totalStorageSize = totalSize + cacheSize + resourcesSize + logsSize;
 
-        const embed = createThemeEmbed(Theme.CURRENT)
-            .setTitle("storage information")
-            .setDescription(
-                `**total**: ${prettyBytes(totalStorageSize)}\n\n` +
-                `**database**: ${prettyBytes(totalSize)}\n` +
-                `**cache**: ${prettyBytes(cacheSize)}\n` +
-                `**resources**: ${prettyBytes(resourcesSize)}\n` +
-                `**logs**: ${prettyBytes(logsSize)}\n`
-            );
+        const embed = new Container({
+            components: [
+                new TextDisplay({
+                    content: `## storage information`
+                }),
+                new Separator(),
+                new TextDisplay({
+                    content:
+                            `**total**: ${prettyBytes(totalStorageSize)}\n\n` +
+                            `**database**: ${prettyBytes(totalSize)}\n` +
+                            `**cache**: ${prettyBytes(cacheSize)}\n` +
+                            `**resources**: ${prettyBytes(resourcesSize)}\n` +
+                            `**logs**: ${prettyBytes(logsSize)}\n`
+                })
+            ]
+        })
 
-        action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { components: [embed], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
@@ -91,7 +98,11 @@ const dbinfo = new Command(
         let totalEntries = 0;
         let description = ``;
 
+        const excludedTables = ["sqlite_sequence", "knex_migrations", "knex_migrations_lock"];
+
         for (const table of tables) {
+            if (excludedTables.includes(table)) continue;
+
             const countResult = await database(table).count({ count: '*' });
             totalEntries += Number(countResult[0]?.count ?? 0);
             description += `**${table} entries**: ${countResult[0].count}\n`;
@@ -99,11 +110,19 @@ const dbinfo = new Command(
 
         description = `**total size**: ${prettyBytes(totalSize)}\n**total entries**: ${totalEntries}\n\n` + description;
 
-        const embed = createThemeEmbed(Theme.CURRENT)
-            .setTitle("database information")
-            .setDescription(description)
+        const embed = new Container({
+            components: [
+                new TextDisplay({
+                    content: `## database information`
+                }),
+                new Separator(),
+                new TextDisplay({
+                    content: description
+                })
+            ]
+        });
 
-        action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { components: [embed], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
@@ -124,31 +143,38 @@ const performanceinfo = new Command(
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, guild_config }) {
         const memoryUsage = process.memoryUsage();
-        const totalMemory = os.totalmem();
-        const freeMemory = os.freemem();
-        const usedMemory = totalMemory - freeMemory;
-
         const cpuLoad = await si.currentLoad();
-        const gpuData = await si.graphics();
+        const ping = invoker.client.ws.ping;
 
-        const embed = createThemeEmbed(Theme.CURRENT)
-            .setTitle("performance information")
-            .setDescription(
-                `**RAM usage**: ${prettyBytes(memoryUsage.rss)} (RSS)\n` +
-                `**Total system memory**: ${prettyBytes(totalMemory)}\n` +
-                `**Used system memory**: ${prettyBytes(usedMemory)}\n\n` +
-                `**CPU load**: ${cpuLoad.currentLoad.toFixed(2)}%\n` +
-                `**CPU cores**: ${os.cpus().length}\n\n` +
-                (gpuData.controllers.length > 0
-                    ? gpuData.controllers.map((gpu, index) =>
-                        `**GPU ${index + 1}**: ${gpu.model}\n` +
-                        `**GPU load**: ${gpu.utilizationGpu || 0}%\n` +
-                        `**GPU memory usage**: ${prettyBytes(gpu.memoryUsed || 0)} / ${prettyBytes(gpu.memoryTotal || 0)}\n`
-                    ).join("\n")
-                    : "**GPU**: No GPU detected\n")
-            );
+            // Convert uptime to human readable format
+            const uptimeSeconds = Math.floor(process.uptime());
+            const days = Math.floor(uptimeSeconds / (24 * 3600));
+            const hours = Math.floor((uptimeSeconds % (24 * 3600)) / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            const seconds = uptimeSeconds % 60;
+            let uptimeString = '';
+            if (days > 0) uptimeString += `${days}d `;
+            if (hours > 0 || days > 0) uptimeString += `${hours}h `;
+            if (minutes > 0 || hours > 0 || days > 0) uptimeString += `${minutes}m `;
+            uptimeString += `${seconds}s`;
 
-        action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+            const embed = new Container({
+                components: [
+                    new TextDisplay({
+                        content: `## performance information`
+                    }),
+                    new Separator(),
+                    new TextDisplay({
+                        content:
+                            `**memory usage**: ${prettyBytes(memoryUsage.rss)} (RSS)\n` +
+                            `**CPU load**: ${cpuLoad.currentLoad.toFixed(2)}%\n` +
+                            `**socket ping**: ${(ping < 0) ? '???' : ping}ms\n` +
+                            `**uptime**: ${uptimeString.trim()}`
+                    })
+                ]
+            });
+
+        action.reply(invoker, { components: [embed], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
@@ -168,19 +194,26 @@ const botinfo = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, guild_config }) {
-        const guilds = await invoker.client.shard?.fetchClientValues("guilds.cache.size");
-        const users = await invoker.client.shard?.fetchClientValues("users.cache.size");
+        const guilds = await invoker.client.guilds.cache.size;
+        const users = await invoker.client.users.cache.size;
         const version = await getCurrentUpdateNumber();
-        const embed = createThemeEmbed(Theme.CURRENT)
-            .setTitle("bot information")
-            .setDescription(
-                `**version**: ${version}\n` +
-                `**shard count**: ${invoker.client.shard?.count}\n` +
-                `**shard id**: ${invoker.client.shard?.ids[0]}\n` +
-                `**total guilds**: ${(guilds as number[])?.reduce((prev: number, val: number) => prev + val, 0)}\n` +
-                `**total unique users**: ${(users as number[])?.reduce((prev: number, val: number) => prev + val, 0)}`
-            )
-        action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+
+        const embed = new Container({
+            components: [
+                new TextDisplay({
+                    content: `## bot information`
+                }),
+                new Separator(),
+                new TextDisplay({
+                    content:
+                        `**version**: ${version}\n` +
+                        `**total guilds**: ${guilds}\n` +
+                        `**total unique users**: ${users}`
+                })
+            ]
+        });
+
+        action.reply(invoker, { components: [embed], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
