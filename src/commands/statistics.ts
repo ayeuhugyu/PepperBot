@@ -4,6 +4,7 @@ import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates 
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 import { getStatistics, Statistics } from "../lib/statistics";
 import { createThemeEmbed, Theme } from "../lib/theme";
+import { Container, Separator, TextDisplay } from "../lib/classes/components";
 
 const command = new Command(
     {
@@ -21,36 +22,55 @@ const command = new Command(
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, args, guild_config }) {
         const statistics = await getStatistics();
-        const embed = createThemeEmbed(Theme.CURRENT);
-        embed.setTitle('Statistics');
         let totalCommandUsage = Object.values(statistics.command_usage).reduce((acc, value) => acc + value, 0);
         let description = `
+-# view online at ${(process.env.IS_DEV?.toLowerCase() === "true") ? "http://localhost:53134" : "https://pepperbot.online"}/statistics
 Total GPT Responses: ${statistics.total_gpt_responses}
 Total Command Usage: ${totalCommandUsage}
 Total Piped Commands: ${statistics.total_piped_commands}
 
-GPT Model Usage:
-        `;
+GPT Model Usage:\n`;
         for (const model in statistics.gpt_model_usage) {
+            if (statistics.gpt_model_usage[model as keyof Statistics["gpt_model_usage"]] === 0) continue;
             description += `    ${model}: ${statistics.gpt_model_usage[model as keyof Statistics["gpt_model_usage"]]}\n`;
         }
+        // Top 5 Command Usage
         description += `
-Command Usage:
-        `;
-        for (const command in statistics.command_usage) {
-            description += `    ${command}: ${statistics.command_usage[command]}\n`;
+Command Usage:\n`;
+        const topCommandUsage = Object.entries(statistics.command_usage)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        for (const [command, count] of topCommandUsage) {
+            description += `    ${command}: ${count}\n`;
         }
+
+        // Top 5 Average Execution Times
         description += `
-Average Execution Times:
-        `;
-        for (const command in statistics.execution_times) {
-            const times = statistics.execution_times[command];
-            const average = times.reduce((acc, value) => acc + value, 0) / times.length;
+Average Execution Times:\n`;
+        const avgExecutionTimes = Object.entries(statistics.execution_times)
+            .map(([command, times]) => {
+            const avg = times.length ? times.reduce((acc, v) => acc + v, 0) / times.length : 0;
+            return [command, avg] as [string, number];
+            })
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        for (const [command, average] of avgExecutionTimes) {
             description += `    ${command}: ${average.toFixed(2)}ms\n`;
         }
-        embed.setDescription(description);
 
-        action.reply(invoker, { embeds: [embed], ephemeral: guild_config.other.use_ephemeral_replies });
+        const embed = new Container({
+            components: [
+                new TextDisplay({
+                    content: `## Statistics`,
+                }),
+                new Separator(),
+                new TextDisplay({
+                    content: description,
+                }),
+            ]
+        })
+
+        action.reply(invoker, { components: [embed], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
