@@ -3,9 +3,9 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../lib/classes/command_enums";
 import { search } from "../lib/adobe";
-import { createThemeEmbed, Theme } from "../lib/theme";
-import PagedMenu from "../lib/classes/pagination";
+import PagedMenu from "../lib/classes/pagination_v2";
 import { Message } from "discord.js";
+import { Container, MediaGallery, Separator, TextDisplay, Thumbnail } from "../lib/classes/components";
 
 const command = new Command(
     {
@@ -70,11 +70,22 @@ const command = new Command(
             });
         }
         const embeds = searchResults.map((result, index) => {
-            const embed = createThemeEmbed(Theme.CURRENT);
-            embed.setTitle(`${index + 1} - ${result.title}`);
-            embed.setURL(result.pageUrl);
-            embed.setImage(result.url);
-            return embed;
+            const embed = new Container({
+                components: [
+                    new TextDisplay({
+                        content: `## [${index + 1} - ${result.title}](<${result.pageUrl}>)`
+                    }),
+                    new Separator(),
+                    new MediaGallery({
+                        media: [
+                            new Thumbnail({
+                                url: result.url,
+                            })
+                        ]
+                    })
+                ]
+            })
+            return [embed];
         });
 
         if (!embeds[n]) {
@@ -91,8 +102,9 @@ const command = new Command(
             embeds.unshift(nthEmbed);
         }
         const pagedMenu = new PagedMenu(embeds);
-        const sent = await action.reply(invoker, { embeds: [embeds[n - 1]], components: [pagedMenu.getActionRow()] });
-        await pagedMenu.setActiveMessage(sent as Message<true>);
+        const sent = await action.reply(invoker, { components: [...embeds[n - 1], pagedMenu.getActionRow()], components_v2: true });
+        if (!sent) return;
+        await pagedMenu.setActiveMessage(sent as Message);
         return new CommandResponse({ pipe_data: { image_url: searchResults[n - 1].url }});
     }
 );
