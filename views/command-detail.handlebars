@@ -109,9 +109,6 @@
                 {{#if command.tags.length}}
                     <div><strong>Tags:</strong> {{#each command.tags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
                 {{/if}}
-                {{#if command.root_aliases.length}}
-                    <div><strong>Root Aliases:</strong> {{#each command.root_aliases}}p/{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
-                {{/if}}
             </div>
         </div>
     </div>
