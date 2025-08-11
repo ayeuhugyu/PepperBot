@@ -26,6 +26,7 @@ const command = new Command(
                 user_id: "440163494529073152"
             }
         ],
+        requiredPermissions: ["AttachFiles"],
         options: [
             new CommandOption({
                 name: 'image',

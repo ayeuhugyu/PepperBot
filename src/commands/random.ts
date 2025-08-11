@@ -112,7 +112,8 @@ const peppercommand = new Command(
         input_types: [InvokerType.Message, InvokerType.Interaction],
         example_usage: "p/random pepper",
         aliases: [],
-        root_aliases: ["pepper"]
+        root_aliases: ["pepper"],
+        requiredPermissions: ["AttachFiles"]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, args, guild_config }) {

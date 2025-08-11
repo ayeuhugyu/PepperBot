@@ -6,6 +6,7 @@ import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType 
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { textToAttachment } from "../lib/attachment_manager";
 import { inspect } from "util";
+import { re } from "mathjs";
 
 
 const leave = new Command(
@@ -17,6 +18,7 @@ const leave = new Command(
         example_usage: "p/vc leave",
         root_aliases: ["leavevc", "lvc", "fuckoff"],
         allow_external_guild: false,
+        requiredPermissions: ["Connect", "Speak"],
     },
     async function getArguments () {
         return undefined;
@@ -126,7 +128,8 @@ const join = new Command(
                 type: CommandOptionType.Channel,
                 required: false,
             })
-        ]
+        ],
+        requiredPermissions: ["Connect", "Speak"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["channel"]),
     async function execute({ invoker, args, guild_config }) {
@@ -207,7 +210,11 @@ const join = new Command(
             action.reply(invoker, {
                 content: managerResponse.message,
                 ephemeral: guild_config.other.use_ephemeral_replies
-            })
+            });
+            return new CommandResponse({
+                error: true,
+                message: managerResponse.message
+            });
         }
         action.reply(invoker, {
             content: `joined voice channel <#${channel.id}>`

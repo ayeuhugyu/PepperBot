@@ -71,6 +71,7 @@ const play = new Command({
         ],
         example_usage: "p/sound play foo.mp3",
         argument_order: "<content>",
+        requiredPermissions: ["Connect", "Speak"]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ invoker, guild_config, args }) {
@@ -210,6 +211,7 @@ const get = new Command({
         ],
         example_usage: "p/sound get foo.mp3",
         argument_order: "<content>",
+        requiredPermissions: ["AttachFiles"]
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ invoker, guild_config, args }) {
@@ -260,7 +262,7 @@ const command = new Command(
         },
         options: [],
         example_usage: "p/sound get hello.mp3",
-        aliases: []
+        aliases: [],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ invoker, guild_config, args }) {

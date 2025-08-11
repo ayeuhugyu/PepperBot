@@ -33,7 +33,8 @@ const command = new Command(
         example_usage: ["p/cquery cat", "p/cquery cat n=2"],
         argument_order: "query n",
         aliases: ["christosquery", "csearch", "christossearch", "cq", "cs"],
-        pipable_to: [CommandTag.ImagePipable]
+        pipable_to: [CommandTag.ImagePipable],
+        requiredPermissions: ["AttachFiles"]
     },
     function getArguments({ invoker, command_name_used, guild_config }) {
         invoker = invoker as CommandInvoker<InvokerType.Message>;

@@ -36,7 +36,8 @@ const command = new Command(
                     { name: "info.log", value: "info.log" },
                 ]
             })
-        ]
+        ],
+        requiredPermissions: ["AttachFiles"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["log"]),
     async function execute ({ args, invoker, piped_data, will_be_piped, guild_config }) {

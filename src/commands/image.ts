@@ -24,7 +24,8 @@ const image = new Command(
                 required: true,
             }),
         ],
-        pipable_to: [CommandTag.ImagePipable]
+        pipable_to: [CommandTag.ImagePipable],
+        requiredPermissions: ["AttachFiles"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["prompt"]),
     async function execute ({ invoker, args, piped_data, will_be_piped, guild_config }) {

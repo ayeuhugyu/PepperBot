@@ -14,6 +14,7 @@ const git_log = new Command({
     pipable_to: [CommandTag.TextPipable],
     root_aliases: ['gitlog'],
     example_usage: "p/git log",
+    requiredPermissions: ["AttachFiles"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ invoker, guild_config, will_be_piped }) {

@@ -1,6 +1,6 @@
 import * as log from "../log";
 import type { GuildConfig } from "../guild_config_manager";
-import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits, User, Attachment, Awaitable, Utils } from "discord.js";
+import { ApplicationCommandType, ApplicationCommandOptionType, PermissionsBitField, ApplicationIntegrationType, InteractionContextType, ChannelType, Message, CommandInteraction, Collection, GuildMemberRoleManager, Role, PermissionFlagsBits, User, Attachment, Awaitable, Utils, GuildChannelResolvable } from "discord.js";
 import * as contributors from "../../../constants/contributors.json";
 import * as action from "../discord_action";
 import * as statistics from "../statistics";
@@ -339,6 +339,7 @@ export class Command<
     default_member_permissions?: PermissionsBitField;
     integration_types = [ ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall ];
     contexts = [ InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel ];
+    requiredPermissions: (keyof (typeof PermissionFlagsBits))[] = []; // SendMessages and ViewChannel are always checked
     nsfw = false
     /* ↑↑↑ discords shit ↓↓↓ my shit */
     aliases: string[] = [];
@@ -494,10 +495,10 @@ export class Command<
             if (!bot_in_guild) log.debug(`bot is not admin in guild ${invoker.guild?.name} ${invoker.guild?.id}`);
             if (!this.allow_external_guild && !bot_in_guild) {
                 log.info("external guilds are not enabled for command " + this.name);
-                action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "oh noes! i lack them permissions!", ephemeral: true });
+                action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "this command can't be used in external guilds", ephemeral: true });
                 return new CommandResponse({
                     error: true,
-                    message: "oh noes! i lack them permissions!",
+                    message: "this command can't be used in external guilds",
                 })
             }
 
@@ -565,6 +566,61 @@ export class Command<
 
             let response
             log.debug("executing command, input: ", inspect(input, { depth: 1, colors: true, compact: true }));
+            let usedCommand = usedSubcommand || this;
+            // check permissions for the command
+            const foundPermissions: string[] = [];
+            const missingPermissions: string[] = [];
+            const channel = invoker.channel;
+            const defaultExternalPermissions = new PermissionsBitField(PermissionFlagsBits.SendMessages | PermissionFlagsBits.ViewChannel | PermissionFlagsBits.AttachFiles); // these are the default permissions used when using slash commands in external guilds
+            if (channel) {
+                const permissions = invoker.guild?.members?.me?.permissionsIn(channel as GuildChannelResolvable) || invoker.guild?.members.me?.permissions || defaultExternalPermissions;
+                log.debug("checking permissions for command " + usedCommand.name + " in channel " + channel.id + " with permissions: " + permissions.toArray().join(", "));
+                log.debug("permissions to check: SendMessages, ViewChannel, " + usedCommand.requiredPermissions.join(", "));
+                // If the bot has Administrator, skip permission checks
+                if (permissions.has(PermissionFlagsBits.Administrator)) {
+                    foundPermissions.push("+ Administrator (all permissions granted)");
+                } else {
+                    if (!permissions.has(PermissionFlagsBits.SendMessages)) {
+                        missingPermissions.push("- SendMessages");
+                    } else {
+                        foundPermissions.push("+ SendMessages");
+                    }
+                    // if the current channel is a thread channel, we also need to check SendMessagesInThreads
+                    if (channel.type === ChannelType.PublicThread || channel.type === ChannelType.PrivateThread) {
+                        if (!permissions.has(PermissionFlagsBits.SendMessagesInThreads)) {
+                            missingPermissions.push("- SendMessagesInThreads");
+                        } else {
+                            foundPermissions.push("+ SendMessagesInThreads");
+                        }
+                    }
+                    if (!permissions.has(PermissionFlagsBits.ViewChannel)) {
+                        missingPermissions.push("- ViewChannel");
+                    } else {
+                        foundPermissions.push("+ ViewChannel");
+                    }
+                    if (usedCommand.requiredPermissions) {
+                        for (const permission of usedCommand.requiredPermissions) {
+                            if (!permissions.has(PermissionFlagsBits[permission])) {
+                                missingPermissions.push(`- ${permission}`);
+                            } else {
+                                foundPermissions.push(`+ ${permission}`);
+                            }
+                        }
+                    }
+                }
+            } else {
+                log.warn("invoker channel is undefined, skipping channel permission checks");
+            }
+
+            if (missingPermissions.length > 0) {
+                log.warn(`missing permissions for command ${this.name} in channel ${channel?.id}: ` + missingPermissions.join(", "));
+                const missingPermissionsMessage = `bot lacks permissions required to execute this command:\n\`\`\`diff\n${foundPermissions.join("\n")}\n${missingPermissions.join("\n")}\n\`\`\``;
+                action.reply(invoker, { content: missingPermissionsMessage, ephemeral: true });
+                return new CommandResponse({
+                    error: true,
+                    message: missingPermissionsMessage,
+                });
+            }
             if (usedSubcommand) {
                 response = await usedSubcommand.execute_internal(input);
                 log.info("executed subcommand p/" + this.name + " " + usedSubcommand.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
