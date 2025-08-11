@@ -12,7 +12,7 @@ const command = new Command(
     {
         name: 'chatbubble',
         description: 'creates a chatbubble out of the provided image or url',
-        long_description: 'creates a chatbubble out of the provided image or url. \ncheck out the parameters below to see what exactly you can specify about the chatbubble.',
+        long_description: 'creates a chatbubble out of the provided image or url. \ncheck out the parameters below to see what exactly you can specify about the chatbubble.\nnote that you can also add "discord" to the message\nto use some default properties that are useful for turning discord messages into chatbubbles.',
         tags: [CommandTag.Utility, CommandTag.ImagePipable],
         pipable_to: [],
         argument_order: "any",
@@ -125,6 +125,12 @@ const command = new Command(
             args.debug = "true";
         }
 
+        const discordMatch = text.includes("discord");
+        if (discordMatch) {
+            args.border = "white";
+            args.x = "2/3";
+        }
+
         args.image = invoker.attachments.first()?.url;
         return args;
     },
@@ -188,7 +194,7 @@ const command = new Command(
         const tailShift = (xPos <= (1/3) || xPos >= (2/3)) ? Math.round(xPos) : xPos;
 
         const overlayFlipped = gravity === "south";
-        let debugSvg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`
+        let debugSvg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">`
 
         const debugUtils = {
             point: (x: number, y: number, color: string, label: string): string =>
@@ -272,7 +278,11 @@ const command = new Command(
             return cubicPath;
         }
         function createSvg(width: number, height: number, xPos: number, yPos: number, tailShift: number, tailWidth: number, overlayFlipped: boolean, color: string, isBorder: boolean): string {
-            const pathAttributes = isBorder ? `fill="none" stroke="${color}" stroke-width="5"` : `fill="${color}"`;
+            let strokeWidth = 3;
+            if (height < 300) {
+                strokeWidth = 2; // slightly thicker for small images to reduce aliasing
+            }
+            const pathAttributes = isBorder ? `fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round" shape-rendering="geometricPrecision"` : `fill="${color}"`;
 
             const P0 = [0, overlayFlipped ? height : 0];
             const P1 = [width / 2, height * (overlayFlipped ? (1 - yPos * tailCurveDepth) : yPos * tailCurveDepth)];
@@ -288,7 +298,6 @@ const command = new Command(
             const a = (mathP0[1] - 2 * mathP1[1] + mathP2[1]) / (width * width);
             const b = (2 * mathP1[1] - 2 * mathP0[1]) / width;
             const c = mathP0[1];
-            const curveEquation = `y = ${a.toFixed(6)}x² + ${b.toFixed(6)}x + ${c.toFixed(6)}`;
 
             // debug each of the bubble path's points
             debugSvg += debugUtils.point(0, overlayFlipped ? height : 0, "red", "BL");
@@ -310,12 +319,6 @@ const command = new Command(
             ${overlayFlipped ? height : 0}
             " stroke="lightgrey" stroke-width="1" fill="none" stroke-dasharray="8,8"/>`;
 
-            const polygon = `
-            <polygon points="
-            ${width * tailShift - tailWidth}, ${overlayFlipped ? height : 0}
-            ${width * tailShift + tailWidth}, ${overlayFlipped ? height : 0}
-            ${width * xPos}, ${height * (overlayFlipped ? (1 - yPos) : (yPos))}
-            " ${pathAttributes}/>`;
             // debug each of the tail polygon's points
             const TailLeftPoint = [width * tailShift - tailWidth, overlayFlipped ? height : 0];
             debugSvg += debugUtils.point(TailLeftPoint[0], TailLeftPoint[1], "yellow", "TL");
@@ -333,12 +336,10 @@ const command = new Command(
             // left line equation: y = mx + b (in mathematical coordinates)
             const leftSlope = (mathTailEndPoint[1] - mathTailLeftPoint[1]) / (mathTailEndPoint[0] - mathTailLeftPoint[0]);
             const leftIntercept = mathTailLeftPoint[1] - leftSlope * mathTailLeftPoint[0];
-            const leftEquation = `y = ${leftSlope.toFixed(6)}x + ${leftIntercept.toFixed(6)}`;
 
             // right line equation: y = mx + b (in mathematical coordinates)
             const rightSlope = (mathTailEndPoint[1] - mathTailRightPoint[1]) / (mathTailEndPoint[0] - mathTailRightPoint[0]);
             const rightIntercept = mathTailRightPoint[1] - rightSlope * mathTailRightPoint[0];
-            const rightEquation = `y = ${rightSlope.toFixed(6)}x + ${rightIntercept.toFixed(6)}`;
             debugSvg += debugUtils.line(TailLeftPoint[0], TailLeftPoint[1], TailEndPoint[0], TailEndPoint[1], "blue", "L");
             debugSvg += debugUtils.line(TailRightPoint[0], TailRightPoint[1], TailEndPoint[0], TailEndPoint[1], "red", "R");
 
@@ -431,17 +432,17 @@ const command = new Command(
 
                 // add lines from intersections (or line endpoints) to tail end
                 if (leftIntersectionSvg) {
-                    borderExtensions += `\n<line x1="${leftIntersectionSvg[0]}" y1="${leftIntersectionSvg[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                    borderExtensions += `\n<line x1="${leftIntersectionSvg[0]}" y1="${leftIntersectionSvg[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" ${pathAttributes}/>`;
                 } else {
                     // use left tail line endpoint if no intersection
-                    borderExtensions += `\n<line x1="${TailLeftPoint[0]}" y1="${TailLeftPoint[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                    borderExtensions += `\n<line x1="${TailLeftPoint[0]}" y1="${TailLeftPoint[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" ${pathAttributes}/>`;
                 }
 
                 if (rightIntersectionSvg) {
-                    borderExtensions += `\n<line x1="${rightIntersectionSvg[0]}" y1="${rightIntersectionSvg[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                    borderExtensions += `\n<line x1="${rightIntersectionSvg[0]}" y1="${rightIntersectionSvg[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" ${pathAttributes}/>`;
                 } else {
                     // use right tail line endpoint if no intersection
-                    borderExtensions += `\n<line x1="${TailRightPoint[0]}" y1="${TailRightPoint[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                    borderExtensions += `\n<line x1="${TailRightPoint[0]}" y1="${TailRightPoint[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" ${pathAttributes}/>`;
                 }
             } else {
                 // if not a border:
@@ -462,9 +463,9 @@ const command = new Command(
                 }
             }
 
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">\n` +
-                   `${isBorder ? borderExtensions : backgroundPath}\n` +
-                   `</svg>`;
+            return  `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">\n` +
+                    `${isBorder ? borderExtensions : backgroundPath}\n` +
+                    `</svg>`;
         }
 
         let overlayBuffer: Buffer | undefined;
@@ -473,30 +474,46 @@ const command = new Command(
 
         if (backgroundColor !== "transparent") {
             const overlaySvg = createSvg(width, height, xPos, yPos, tailShift, tailWidth, overlayFlipped, backgroundColor, false);
-            overlayBuffer = await sharp(Buffer.from(overlaySvg))
-            .png()
+            overlayBuffer = await sharp(Buffer.from(overlaySvg), {
+                density: 300,  // Higher DPI for better quality
+                limitInputPixels: false
+            })
+            .resize(width, height, { fit: 'fill' })  // Ensure exact dimensions match
+            .png({ quality: 100, compressionLevel: 0 })
             .toBuffer();
         }
 
         if (borderColor !== "transparent") {
             const borderSvg = createSvg(width, height, xPos, yPos, tailShift, tailWidth, overlayFlipped, borderColor, true);
-            borderBuffer = await sharp(Buffer.from(borderSvg))
-            .png()
+            borderBuffer = await sharp(Buffer.from(borderSvg), {
+                density: 300,  // Higher DPI for better quality
+                limitInputPixels: false
+            })
+            .resize(width, height, { fit: 'fill' })  // Ensure exact dimensions match
+            .png({ quality: 100, compressionLevel: 0 })
             .toBuffer();
         }
 
         if (backgroundColor === "transparent") {
             const overlaySvg = createSvg(width, height, xPos, yPos, tailShift, tailWidth, overlayFlipped, "white", false);
-            backgroundCutSvg = await sharp(Buffer.from(overlaySvg))
-            .png()
+            backgroundCutSvg = await sharp(Buffer.from(overlaySvg), {
+                density: 300,  // Higher DPI for better quality
+                limitInputPixels: false
+            })
+            .resize(width, height, { fit: 'fill' })  // Ensure exact dimensions match
+            .png({ quality: 100, compressionLevel: 0 })
             .toBuffer();
         }
 
         debugSvg += `\n</svg>`;
 
-        const debugOverlaySvg = await sharp(Buffer.from(debugSvg))
-            .png()
-            .toBuffer();
+        const debugOverlaySvg = await sharp(Buffer.from(debugSvg), {
+            density: 300,  // Higher DPI for better quality
+            limitInputPixels: false
+        })
+        .resize(width, height, { fit: 'fill' })  // Ensure exact dimensions match
+        .png({ quality: 100, compressionLevel: 0 })
+        .toBuffer();
 
         const composites: sharp.OverlayOptions[] = [];
         if (backgroundCutSvg) {
