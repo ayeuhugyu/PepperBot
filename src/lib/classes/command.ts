@@ -490,9 +490,9 @@ export class Command<
             }
             // todo: add context checks for bot dm and private channel
 
-            const bot_is_admin = invoker.guild?.members.me?.permissions.has(PermissionFlagsBits.Administrator) || false;
-            if (!bot_is_admin) log.debug(`bot is not admin in guild ${invoker.guild?.name} ${invoker.guild?.id}`);
-            if (!this.allow_external_guild && !bot_is_admin) {
+            const bot_in_guild = invoker.guild?.members.me?.roles.cache.some(role => role.managed) || false;
+            if (!bot_in_guild) log.debug(`bot is not admin in guild ${invoker.guild?.name} ${invoker.guild?.id}`);
+            if (!this.allow_external_guild && !bot_in_guild) {
                 log.info("external guilds are not enabled for command " + this.name);
                 action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "oh noes! i lack them permissions!", ephemeral: true });
                 return new CommandResponse({
