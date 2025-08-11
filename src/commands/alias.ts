@@ -33,6 +33,7 @@ const create = new Command(
             'p/alias create "reason" gpt edit {"model":"o3-mini"}',
         ],
         argument_order: "<alias> <value>",
+        aliases: ["add", "new", "createalias"],
     },
     function getArguments({ invoker, args, guild_config, command_name_used }) {
         // Remove the command prefix and subcommand
@@ -191,7 +192,7 @@ const aliasCommand = new Command(
     async function execute({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use \`${guild_config.other.prefix}help conversation\` for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use \`${guild_config.other.prefix}help alias\` for a list of subcommands`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
