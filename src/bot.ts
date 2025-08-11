@@ -1,7 +1,6 @@
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import { config } from 'dotenv';
 import * as log from './lib/log';
-import { Theme, getThemeEmoji } from './lib/theme';
 import fs from "fs";
 import { listen } from './web/index';
 import { queueAllEvents } from './lib/schedule_manager';
@@ -50,7 +49,7 @@ client.once('ready', async () => {
     const channel = await client.channels.fetch("1312566483569741896").catch(() => {});
     if (channel) {
         if (channel.isSendable()) {
-            channel.send(`it's pepper time ${getThemeEmoji(Theme.CURRENT)}`);
+            channel.send(`it's pepper time 🌶️`);
         }
     }
 });
