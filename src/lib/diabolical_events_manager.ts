@@ -121,6 +121,11 @@ export async function getEvent(message: Message) {
 }
 
 export function threadEvent(message: Message) {
+    // ensure bot has permissions to create threads
+    if (!message.guild?.members.me?.permissions.has("CreatePublicThreads")) {
+        log.warn(`could not complete diabolical thread event due to lack of permissions in #${message.channel?.id})`);
+        return;
+    }
     if (message.startThread) {
         if (message.channel && (message.channel.type === 0 || message.channel.type === 5)) {
             message.startThread({
@@ -129,6 +134,9 @@ export function threadEvent(message: Message) {
                     reason: "It's quite diabolical.",
                 }).then((thread) => {
                     action.send(thread, "You've just been threaded! 🧵");
+                }).catch((err) => {
+                    log.error(`failed to start thread on message ${message.id} in channel ${message.channel.id}`);
+                    log.error(err);
                 });
         } else {
             log.warn("could not start thread on message due to channel type");
@@ -138,12 +146,23 @@ export function threadEvent(message: Message) {
 }
 
 export async function replyEvent(message: Message) {
+    // ensure bot has permissions to send messages
+    if (!message.guild?.members.me?.permissions.has("SendMessages")) {
+        log.warn(`could not complete diabolical reply event due to lack of permissions in #${message.channel?.id})`);
+        return;
+    }
     const event = ReplyEvents[Math.floor(Math.random() * ReplyEvents.length)];
     const replyMessage = event.message;
     if (typeof replyMessage === "string") {
-        await action.reply(message as Message<true>, replyMessage);
+        await action.reply(message as Message<true>, replyMessage).catch((err) => {
+            log.error(`failed to reply to message ${message.id} in channel ${message.channel.id}`);
+            log.error(err);
+        });
     } else {
-        await action.reply(message as Message<true>, replyMessage);
+        await action.reply(message as Message<true>, replyMessage).catch((err) => {
+            log.error(`failed to reply to message ${message.id} in channel ${message.channel.id}`);
+            log.error(err);
+        });
     }
 }
 
@@ -154,6 +173,10 @@ export function getRandomEmoji(): string {
 }
 
 export async function reactionEvent(message: Message) {
+    if (!message.guild?.members.me?.permissions.has("AddReactions")) {
+        log.warn(`could not complete diabolical reaction event due to lack of permissions in #${message.channel?.id})`);
+        return;
+    }
     const messageContent = message.cleanContent;
     let AIEmoji = await AIReaction(messageContent);
     if (!AIEmoji) {
