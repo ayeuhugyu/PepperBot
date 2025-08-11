@@ -15,6 +15,11 @@ async function gptHandler(message: Message<true>) {
     if (!message.mentions || !message.mentions.has(message.client.user?.id)) {
         return;
     }
+    // verify bot has permissions to send messages
+    if (!message.guild?.members.me?.permissions.has("SendMessages")) {
+        log.warn(`could not complete gpt handler due to lack of permissions in #${message.channel?.id})`);
+        return;
+    }
 
     const gconfig = await fetchGuildConfig(message.guild?.id);
     const prefix = gconfig.other.prefix;
