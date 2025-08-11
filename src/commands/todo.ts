@@ -3,9 +3,9 @@ import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import { Todo, getTodo, listTodos } from "../lib/classes/todo_manager";
-import PagedMenu from "../lib/classes/pagination";
+import PagedMenu from "../lib/classes/pagination_v2";
 import { Collection, EmbedBuilder, Message } from "discord.js";
-import { createThemeEmbed, Theme } from "../lib/theme";
+import { Container, Separator, TextDisplay } from "../lib/classes/components";
 
 let currentlyEditing: Collection<string, string> = new Collection();
 
@@ -203,18 +203,25 @@ async function ensureTodo(user: string, name: string): Promise<Todo> {
 }
 
 function embedTodo(todo: Todo): PagedMenu {
-    const embeds: EmbedBuilder[] = [];
+    const embeds: Container[][] = [];
     const itemsPerPage = 15;
     const pages = Math.ceil(todo.items.length / itemsPerPage);
 
     if (todo.items.length === 0) {
-        const embed = createThemeEmbed(Theme.CURRENT);
-        embed.setDescription("there are no items in your todo list");
-        embed.setTitle(`${todo.name}`);
-        embeds.push(embed);
+        const embed = new Container({
+            components: [
+                new TextDisplay({
+                    content: `## ${todo.name}`,
+                }),
+                new Separator(),
+                new TextDisplay({
+                    content: "there are no items in your todo list",
+                }),
+            ]
+        });
+        embeds.push([embed]);
     } else {
         for (let i = 0; i < pages; i++) {
-            const embed = createThemeEmbed(Theme.CURRENT);
             const start = i * itemsPerPage;
             const end = start + itemsPerPage;
             const items = todo.items.slice(start, end);
@@ -224,10 +231,19 @@ function embedTodo(todo: Todo): PagedMenu {
                 description += `${index + 1 + i * itemsPerPage}: ${item.text} ${item.completed ? "(✅)" : ""}\n`;
             });
 
-            embed.setDescription(description);
-            embed.setTitle(`${todo.name} (page ${i + 1}/${pages})`);
+            const embed = new Container({
+                components: [
+                    new TextDisplay({
+                        content: `## ${todo.name} (page ${i + 1}/${pages})`
+                    }),
+                    new Separator(),
+                    new TextDisplay({
+                        content: description,
+                    }),
+                ]
+            });
 
-            embeds.push(embed);
+            embeds.push([embed]);
         }
     }
 
@@ -268,7 +284,7 @@ const viewCommand = new Command(
         currentlyEditing.set(invoker.author.id, listName);
         const todo = await ensureTodo(invoker.author.id, listName);
         const pagedMenu = embedTodo(todo);
-        const sent = await action.reply(invoker, { embeds: [pagedMenu.embeds[0]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
+        const sent = await action.reply(invoker, { components: [...pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(sent as Message<true>);
         return new CommandResponse({ pipe_data: { input_text: todoToText(todo) } })
     }
@@ -310,7 +326,7 @@ const command = new Command(
         }
         const todo = await ensureTodo(invoker.author.id, currentlyEditing.get(invoker.author.id) || "default");
         const pagedMenu = embedTodo(todo);
-        const sent = await action.reply(invoker, { embeds: [pagedMenu.embeds[0]], components: [pagedMenu.getActionRow()], ephemeral: guild_config.other.use_ephemeral_replies });
+        const sent = await action.reply(invoker, { components: [...pagedMenu.pages[0], pagedMenu.getActionRow()], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
         pagedMenu.setActiveMessage(sent as Message<true>);
         return new CommandResponse({ pipe_data: { input_text: todoToText(todo) } })
     }
