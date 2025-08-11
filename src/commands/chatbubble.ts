@@ -179,6 +179,8 @@ const command = new Command(
             });
         }
 
+        const processingMessage = await action.reply(invoker, { content: "processing...\n-# this can take a while for large images", ephemeral: guild_config.other.use_ephemeral_replies });
+
         const borderColor = args.border || "transparent";
         const backgroundColor = args.background || "transparent";
 
@@ -556,7 +558,7 @@ const command = new Command(
             .toFormat("gif")
             .toBuffer();
 
-        action.reply(invoker, {
+        action.edit(processingMessage as Message, {
             content: `here's your chat bubble\n x=\`${args.x || xPos}\`, y=\`${args.y || yPos}\`, gravity=\`${gravity}\`, border=\`${borderColor}\`, background=\`${backgroundColor}\``,
             files: [new AttachmentBuilder(outputBuffer, { name: "bubble.gif" })]
         })
