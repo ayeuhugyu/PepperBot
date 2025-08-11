@@ -121,8 +121,8 @@ export async function getEvent(message: Message) {
 }
 
 export function threadEvent(message: Message) {
-    // ensure bot has permissions to create threads
-    if (!message.guild?.members.me?.permissions.has("CreatePublicThreads")) {
+    // ensure bot has permissions to create threads and send messages and send messages in threads
+    if (!message.guild?.members.me?.permissions.has("CreatePublicThreads") || !message.guild?.members.me?.permissions.has("SendMessages") || !message.guild?.members.me?.permissions.has("SendMessagesInThreads")) {
         log.warn(`could not complete diabolical thread event due to lack of permissions in #${message.channel?.id})`);
         return;
     }
@@ -146,8 +146,8 @@ export function threadEvent(message: Message) {
 }
 
 export async function replyEvent(message: Message) {
-    // ensure bot has permissions to send messages
-    if (!message.guild?.members.me?.permissions.has("SendMessages")) {
+    // ensure bot has permissions to send messages and attach files
+    if (!message.guild?.members.me?.permissions.has("SendMessages") || !message.guild?.members.me?.permissions.has("AttachFiles")) {
         log.warn(`could not complete diabolical reply event due to lack of permissions in #${message.channel?.id})`);
         return;
     }
