@@ -120,6 +120,11 @@ const command = new Command(
             args.background = backgroundMatch[2];
         }
 
+        const debugMatch = text.includes("debug");
+        if (debugMatch) {
+            args.debug = "true";
+        }
+
         args.image = invoker.attachments.first()?.url;
         return args;
     },
@@ -155,16 +160,12 @@ const command = new Command(
             });
         }
 
-        if (args.gravity && !["south", "north"].includes(args.gravity)) {
-            await action.reply(invoker, { content: "invalid gravity; must be \"south\" or \"north\", not " + args.gravity, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "invalid gravity; must be \"south\" or \"north\", not " + args.gravity
-            });
-        }
+        const debug = args.debug === "true";
 
         const gravity: Gravity = (args.gravity as Gravity) || "north";
-        if (!(args.url || args.image || piped_data?.data?.image_url)) {
+        const imageUrl = args.url || args.image || piped_data?.data?.image_url;
+
+        if (!imageUrl) {
             await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
                 error: true,
@@ -175,33 +176,10 @@ const command = new Command(
         const borderColor = args.border || "transparent";
         const backgroundColor = args.background || "transparent";
 
-        const imageUrl = args.url || args.image || piped_data?.data?.image_url;
-
-        if (!imageUrl) {
-            await action.reply(invoker, { content: "i cant make the air into a chatbubble, gimme an image", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "i cant make the air into a chatbubble, gimme an image"
-            });
-        } // this is just to satisfy typescript i think it should be impossible to get here
-
         const inputImageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer());
         const inputImage = await sharp(inputImageBuffer, { animated: true });
 
-        let metadata: sharp.Metadata;
-        try {
-            metadata = await sharp(inputImageBuffer).metadata();
-        } catch (err) {
-            log.error(err);
-            await action.reply(invoker, { content: "uh oh! invalid image?", ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({
-                error: true,
-                message: "uh oh! invalid image?"
-            });
-        }
-
-        // i don't think it's possible for this to be null/undefined
-        // i am ignoring it for now 😊
+        const metadata = await sharp(inputImageBuffer).metadata();
         const width = metadata.width as number;
         const height = metadata.height as number;
 
@@ -210,31 +188,283 @@ const command = new Command(
         const tailShift = (xPos <= (1/3) || xPos >= (2/3)) ? Math.round(xPos) : xPos;
 
         const overlayFlipped = gravity === "south";
+        let debugSvg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`
+
+        const debugUtils = {
+            point: (x: number, y: number, color: string, label: string): string =>
+                `\n<circle cx="${x}" cy="${y}" r="2.5" fill="${color}"><title>${label}</title></circle><text x="${x + 8}" y="${y + 4}" fill="${color}" font-size="10" font-family="Arial, sans-serif">${label}</text>`,
+            line: (x1: number, y1: number, x2: number, y2: number, color: string, label: string): string =>
+                `\n<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1" stroke-linecap="round" stroke-dasharray="8,8"><title>${label}</title></line><text x="${(x1 + x2) / 2 + 8}" y="${(y1 + y2) / 2 + 4}" fill="${color}" font-size="10" font-family="Arial, sans-serif">${label}</text>`
+        };
+        function createCubicBezierFromIntersection(intersectionX: number, intersectionSvg: [number, number], endX: number, endSvg: [number, number], P0: [number, number], P1: [number, number], P2: [number, number], strokeColor: string, labelPrefix: string, addToBorder: boolean = false): string {
+            // calculate t values for both intersection and end points on the original curve
+            const tIntersection = intersectionX / width; // t value at intersection
+            const tEnd = endX / width; // t value at end point
+
+            // determine if this is a left curve (going from intersection to left edge)
+            const isLeftCurve = endX < intersectionX;
+
+            // calculate tangents at both points from the original quadratic curve
+            // derivative of quadratic bezier: P'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
+            const tangentAtIntersection = [
+                2 * (1 - tIntersection) * (P1[0] - P0[0]) + 2 * tIntersection * (P2[0] - P1[0]),
+                2 * (1 - tIntersection) * (P1[1] - P0[1]) + 2 * tIntersection * (P2[1] - P1[1])
+            ];
+
+            const tangentAtEnd = [
+                2 * (1 - tEnd) * (P1[0] - P0[0]) + 2 * tEnd * (P2[0] - P1[0]),
+                2 * (1 - tEnd) * (P1[1] - P0[1]) + 2 * tEnd * (P2[1] - P1[1])
+            ];
+
+            // create control points for the new cubic curve
+            const newP0 = intersectionSvg;
+            const newP3 = endSvg;
+
+            // calculate control distances based on the curve segment length
+            const segmentLength = Math.sqrt(Math.pow(newP3[0] - newP0[0], 2) + Math.pow(newP3[1] - newP0[1], 2));
+            const controlDistance = segmentLength / 3;
+
+            // normalize tangent vectors
+            const tangentStartLength = Math.sqrt(tangentAtIntersection[0] * tangentAtIntersection[0] + tangentAtIntersection[1] * tangentAtIntersection[1]);
+            const tangentEndLength = Math.sqrt(tangentAtEnd[0] * tangentAtEnd[0] + tangentAtEnd[1] * tangentAtEnd[1]);
+
+            let newP1: [number, number];
+            let newP2: [number, number];
+
+            if (isLeftCurve) {
+                // for left curves, we need to reverse the tangent direction at the intersection
+                // because we're going backwards along the curve
+                newP1 = [
+                    newP0[0] - (tangentAtIntersection[0] / tangentStartLength) * controlDistance,
+                    newP0[1] - (tangentAtIntersection[1] / tangentStartLength) * controlDistance
+                ];
+
+                newP2 = [
+                    newP3[0] + (tangentAtEnd[0] / tangentEndLength) * controlDistance,
+                    newP3[1] + (tangentAtEnd[1] / tangentEndLength) * controlDistance
+                ];
+            } else {
+                // for right curves, use the original logic
+                newP1 = [
+                    newP0[0] + (tangentAtIntersection[0] / tangentStartLength) * controlDistance,
+                    newP0[1] + (tangentAtIntersection[1] / tangentStartLength) * controlDistance
+                ];
+
+                newP2 = [
+                    newP3[0] - (tangentAtEnd[0] / tangentEndLength) * controlDistance,
+                    newP3[1] - (tangentAtEnd[1] / tangentEndLength) * controlDistance
+                ];
+            }
+
+            // create the cubic bezier path
+            const cubicPath = `M ${newP0[0]},${newP0[1]} C ${newP1[0]},${newP1[1]} ${newP2[0]},${newP2[1]} ${newP3[0]},${newP3[1]}`;
+
+            if (!addToBorder) {
+                debugSvg += `\n<path d="${cubicPath}" stroke="${strokeColor}" stroke-width="3" fill="none" stroke-dasharray="6,6" stroke-linecap="round"/>`;
+
+                // debug the control points
+                debugSvg += debugUtils.point(newP0[0], newP0[1], strokeColor, `${labelPrefix}0`);
+                debugSvg += debugUtils.point(newP1[0], newP1[1], strokeColor, `${labelPrefix}1`);
+                debugSvg += debugUtils.point(newP2[0], newP2[1], strokeColor, `${labelPrefix}2`);
+                debugSvg += debugUtils.point(newP3[0], newP3[1], strokeColor, `${labelPrefix}3`);
+            }
+
+            return cubicPath;
+        }
         function createSvg(width: number, height: number, xPos: number, yPos: number, tailShift: number, tailWidth: number, overlayFlipped: boolean, color: string, isBorder: boolean): string {
             const pathAttributes = isBorder ? `fill="none" stroke="${color}" stroke-width="5"` : `fill="${color}"`;
-            const polygonAttributes = isBorder ? `fill="none" stroke="${color}" stroke-width="5"` : `fill="${color}"`;
 
-            const path = `
-            <path d="
+            const P0 = [0, overlayFlipped ? height : 0];
+            const P1 = [width / 2, height * (overlayFlipped ? (1 - yPos * tailCurveDepth) : yPos * tailCurveDepth)];
+            const P2 = [width, overlayFlipped ? height : 0];
+
+            // convert to standard quadratic form: y = ax² + bx + c (in mathematical coordinates)
+            // flip Y coordinates to match standard mathematical coordinate system (Y=0 at bottom)
+            const mathP0 = [P0[0], height - P0[1]];
+            const mathP1 = [P1[0], height - P1[1]];
+            const mathP2 = [P2[0], height - P2[1]];
+
+            // we need to parameterize x from 0 to width, so t = x/width
+            const a = (mathP0[1] - 2 * mathP1[1] + mathP2[1]) / (width * width);
+            const b = (2 * mathP1[1] - 2 * mathP0[1]) / width;
+            const c = mathP0[1];
+            const curveEquation = `y = ${a.toFixed(6)}x² + ${b.toFixed(6)}x + ${c.toFixed(6)}`;
+
+            // debug each of the bubble path's points
+            debugSvg += debugUtils.point(0, overlayFlipped ? height : 0, "red", "BL");
+            debugSvg += debugUtils.point(width / 2, height * (overlayFlipped ? (1 - yPos * tailCurveDepth) : yPos * tailCurveDepth), "cyan", "CP");
+            debugSvg += debugUtils.point(width, overlayFlipped ? height : 0, "green", "BR");
+
+            // calculate and debug the midpoint of the Bézier curve (t = 0.5)
+            // P(0.5) = 0.25*P₀ + 0.5*P₁ + 0.25*P₂
+            const midpointX = 0.25 * P0[0] + 0.5 * P1[0] + 0.25 * P2[0];
+            const midpointY = 0.25 * P0[1] + 0.5 * P1[1] + 0.25 * P2[1];
+            debugSvg += debugUtils.point(midpointX, midpointY, "gold", "MID");
+
+            // debug the path curve
+            debugSvg += `\n<path d="
             M 0, ${overlayFlipped ? height : 0}
             Q
             ${width / 2},
             ${height * (overlayFlipped ? (1 - yPos * tailCurveDepth) : yPos * tailCurveDepth)} ${width},
             ${overlayFlipped ? height : 0}
-            " ${pathAttributes}/>`;
+            " stroke="lightgrey" stroke-width="1" fill="none" stroke-dasharray="8,8"/>`;
 
             const polygon = `
             <polygon points="
             ${width * tailShift - tailWidth}, ${overlayFlipped ? height : 0}
             ${width * tailShift + tailWidth}, ${overlayFlipped ? height : 0}
             ${width * xPos}, ${height * (overlayFlipped ? (1 - yPos) : (yPos))}
-            " ${polygonAttributes}/>`;
+            " ${pathAttributes}/>`;
+            // debug each of the tail polygon's points
+            const TailLeftPoint = [width * tailShift - tailWidth, overlayFlipped ? height : 0];
+            debugSvg += debugUtils.point(TailLeftPoint[0], TailLeftPoint[1], "yellow", "TL");
+            const TailRightPoint = [width * tailShift + tailWidth, overlayFlipped ? height : 0];
+            debugSvg += debugUtils.point(TailRightPoint[0], TailRightPoint[1], "orange", "TR");
+            const TailEndPoint = [width * xPos, height * (overlayFlipped ? (1 - yPos) : (yPos))];
+            debugSvg += debugUtils.point(TailEndPoint[0], TailEndPoint[1], "purple", "TE");
 
-            return `
-            <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-            ${isBorder ? path : `${path}${polygon}`}
-            </svg>
-            `;
+            // find the slope of either side lines of the tail polygon; create a y=mx+b equation for each side
+            // convert SVG coordinates to mathematical coordinates (flip Y-axis)
+            const mathTailLeftPoint = [TailLeftPoint[0], height - TailLeftPoint[1]];
+            const mathTailRightPoint = [TailRightPoint[0], height - TailRightPoint[1]];
+            const mathTailEndPoint = [TailEndPoint[0], height - TailEndPoint[1]];
+
+            // left line equation: y = mx + b (in mathematical coordinates)
+            const leftSlope = (mathTailEndPoint[1] - mathTailLeftPoint[1]) / (mathTailEndPoint[0] - mathTailLeftPoint[0]);
+            const leftIntercept = mathTailLeftPoint[1] - leftSlope * mathTailLeftPoint[0];
+            const leftEquation = `y = ${leftSlope.toFixed(6)}x + ${leftIntercept.toFixed(6)}`;
+
+            // right line equation: y = mx + b (in mathematical coordinates)
+            const rightSlope = (mathTailEndPoint[1] - mathTailRightPoint[1]) / (mathTailEndPoint[0] - mathTailRightPoint[0]);
+            const rightIntercept = mathTailRightPoint[1] - rightSlope * mathTailRightPoint[0];
+            const rightEquation = `y = ${rightSlope.toFixed(6)}x + ${rightIntercept.toFixed(6)}`;
+            debugSvg += debugUtils.line(TailLeftPoint[0], TailLeftPoint[1], TailEndPoint[0], TailEndPoint[1], "blue", "L");
+            debugSvg += debugUtils.line(TailRightPoint[0], TailRightPoint[1], TailEndPoint[0], TailEndPoint[1], "red", "R");
+
+            // find intersection points between tail lines and bubble curve
+            // solve: ax² + bx + c = mx + n (where m is slope, n is intercept)
+            // rearranged: ax² + (b-m)x + (c-n) = 0
+
+            let leftIntersectionSvg: [number, number] | null = null;
+            let rightIntersectionSvg: [number, number] | null = null;
+            let leftCubicPath = "";
+            let rightCubicPath = "";
+
+            // left line intersection with curve
+            const leftQuadA = a;
+            const leftQuadB = b - leftSlope;
+            const leftQuadC = c - leftIntercept;
+            const leftDiscriminant = leftQuadB * leftQuadB - 4 * leftQuadA * leftQuadC;
+
+            if (leftDiscriminant >= 0) {
+                const leftIntersectionX1 = (-leftQuadB + Math.sqrt(leftDiscriminant)) / (2 * leftQuadA);
+                const leftIntersectionX2 = (-leftQuadB - Math.sqrt(leftDiscriminant)) / (2 * leftQuadA);
+
+                // pick the intersection that's within our domain and makes sense geometrically
+                const leftX = (leftIntersectionX1 >= 0 && leftIntersectionX1 <= width) ? leftIntersectionX1 : leftIntersectionX2;
+                const leftY = leftSlope * leftX + leftIntercept;
+
+                // convert back to SVG coordinates for display
+                leftIntersectionSvg = [leftX, height - leftY];
+                debugSvg += debugUtils.point(leftIntersectionSvg[0], leftIntersectionSvg[1], "lime", "IL");
+
+                // create cubic bezier curve from left intersection to leftmost point of bubble
+                leftCubicPath = createCubicBezierFromIntersection(
+                    leftX,
+                    leftIntersectionSvg as [number, number],
+                    0,
+                    [0, overlayFlipped ? height : 0],
+                    P0 as [number, number],
+                    P1 as [number, number],
+                    P2 as [number, number],
+                    "cyan",
+                    "LC",
+                    isBorder
+                );
+            }
+
+            // right line intersection with curve
+            const rightQuadA = a;
+            const rightQuadB = b - rightSlope;
+            const rightQuadC = c - rightIntercept;
+            const rightDiscriminant = rightQuadB * rightQuadB - 4 * rightQuadA * rightQuadC;
+
+            if (rightDiscriminant >= 0) {
+                const rightIntersectionX1 = (-rightQuadB + Math.sqrt(rightDiscriminant)) / (2 * rightQuadA);
+                const rightIntersectionX2 = (-rightQuadB - Math.sqrt(rightDiscriminant)) / (2 * rightQuadA);
+
+                // pick the intersection that's within our domain and makes sense geometrically
+                const rightX = (rightIntersectionX1 >= 0 && rightIntersectionX1 <= width) ? rightIntersectionX1 : rightIntersectionX2;
+                const rightY = rightSlope * rightX + rightIntercept;
+
+                // convert back to SVG coordinates for display
+                rightIntersectionSvg = [rightX, height - rightY];
+                debugSvg += debugUtils.point(rightIntersectionSvg[0], rightIntersectionSvg[1], "magenta", "IR");
+
+                // create cubic bezier curve from right intersection to rightmost point of bubble
+                rightCubicPath = createCubicBezierFromIntersection(
+                    rightX,
+                    rightIntersectionSvg as [number, number],
+                    width,
+                    [width, overlayFlipped ? height : 0],
+                    P0 as [number, number],
+                    P1 as [number, number],
+                    P2 as [number, number],
+                    "orange",
+                    "RC",
+                    isBorder
+                );
+            }
+
+            // create additional border elements if this is a border
+            let borderExtensions = "";
+            let backgroundPath = "";
+            if (isBorder) {
+                // add cubic bezier curves to border
+                if (leftCubicPath) {
+                    borderExtensions += `\n<path d="${leftCubicPath}" ${pathAttributes}/>`;
+                }
+                if (rightCubicPath) {
+                    borderExtensions += `\n<path d="${rightCubicPath}" ${pathAttributes}/>`;
+                }
+
+                // add lines from intersections (or line endpoints) to tail end
+                if (leftIntersectionSvg) {
+                    borderExtensions += `\n<line x1="${leftIntersectionSvg[0]}" y1="${leftIntersectionSvg[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                } else {
+                    // use left tail line endpoint if no intersection
+                    borderExtensions += `\n<line x1="${TailLeftPoint[0]}" y1="${TailLeftPoint[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                }
+
+                if (rightIntersectionSvg) {
+                    borderExtensions += `\n<line x1="${rightIntersectionSvg[0]}" y1="${rightIntersectionSvg[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                } else {
+                    // use right tail line endpoint if no intersection
+                    borderExtensions += `\n<line x1="${TailRightPoint[0]}" y1="${TailRightPoint[1]}" x2="${TailEndPoint[0]}" y2="${TailEndPoint[1]}" stroke="${color}" stroke-width="5" fill="none"/>`;
+                }
+            } else {
+                // if not a border:
+
+                // add the tail polygon
+                backgroundPath = `\n<polygon points="
+                ${TailLeftPoint[0]}, ${TailLeftPoint[1]}
+                ${TailRightPoint[0]}, ${TailRightPoint[1]}
+                ${TailEndPoint[0]}, ${TailEndPoint[1]}
+                " ${pathAttributes}/>`;
+
+                // add cubic bezier curves to background, except connect them to the tail right and left respectively
+                if (leftCubicPath) {
+                    backgroundPath += `\n<path d="${leftCubicPath} L ${TailLeftPoint[0]}, ${TailLeftPoint[1]}" ${pathAttributes}/>`;
+                }
+                if (rightCubicPath) {
+                    backgroundPath += `\n<path d="${rightCubicPath} L ${TailRightPoint[0]}, ${TailRightPoint[1]}" ${pathAttributes}/>`;
+                }
+            }
+
+            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">\n` +
+                   `${isBorder ? borderExtensions : backgroundPath}\n` +
+                   `</svg>`;
         }
 
         let overlayBuffer: Buffer | undefined;
@@ -261,6 +491,13 @@ const command = new Command(
             .png()
             .toBuffer();
         }
+
+        debugSvg += `\n</svg>`;
+
+        const debugOverlaySvg = await sharp(Buffer.from(debugSvg))
+            .png()
+            .toBuffer();
+
         const composites: sharp.OverlayOptions[] = [];
         if (backgroundCutSvg) {
             composites.push({
@@ -288,7 +525,15 @@ const command = new Command(
             });
         }
 
-        console.log(composites);
+        if (debugOverlaySvg && debug) {
+            composites.push({
+                input: debugOverlaySvg,
+                blend: "over",
+                gravity: "center",
+                tile: true,
+            });
+        }
+
         const outputBuffer = await inputImage
             .composite(composites)
             .toFormat("gif")
