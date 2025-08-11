@@ -189,7 +189,6 @@ export class GuildVoiceManager {
                 guildId: this.guild.id,
                 adapterCreator: this.guild.voiceAdapterCreator,
                 selfMute: false,
-                selfDeaf: false,
             });
 
             this.connection = connection;
