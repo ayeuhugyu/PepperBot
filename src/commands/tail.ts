@@ -13,6 +13,7 @@ const command = new Command(
             new CommandOption({
                 name: 'options',
                 description: 'arguments for tail command (e.g., -n 10 or -c 20)',
+                long_description: 'arguments to be used, e.g. -n 10 to output the last 10 lines or -c 20 to output the last 20 bytes',
                 type: CommandOptionType.String,
                 required: false,
             })
