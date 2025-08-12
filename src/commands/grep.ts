@@ -53,8 +53,11 @@ const command = new Command(
                 try {
                     const r = new RegExp(regexSearch, flags);
                     const found = lines.filter((line: string) => line.match(r));
+                    found.unshift(`found text: \`\`\`\n`);
+                    found.push("```");
                     const captureGroups = lines.map((line: string) => {
-                        const match = line.match(r);
+                        const match = r.exec(line);
+                        if (!match) return undefined;
                         if (match) {
                             return match.slice(1).join(", ");
                         }
@@ -67,12 +70,11 @@ const command = new Command(
                         });
                     }
                     let pipeText = found.join("\n");
-                    found.unshift(`found text: \`\`\`\n`)
-                    if (captureGroups.length > 0) {
-                        pipeText += `\n\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}`
-                        found.unshift(`captured: \`\`\`\n${captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0).join(", ")}\`\`\``);
+                    const filteredCaptureGroups = captureGroups.filter((value: string | undefined) => (value != undefined) && value.length > 0);
+                    if (filteredCaptureGroups.length > 0) {
+                        pipeText += `\n\n${filteredCaptureGroups.join(", ")}`
+                        found.unshift(`captured: \`\`\`\n${filteredCaptureGroups.join(", ")}\`\`\`\n`);
                     }
-                    found.push("```");
                     found.unshift(`regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\n`);
                     await action.reply(invoker, { content: will_be_piped ? `piping ${found.length} lines found with regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`` : (count ? `regex search: \`${regexSearch}\`; flags: \`${flags || "no flags found"}\`\ncount: ${found.length}` : found.join("\n")), ephemeral: guild_config.other.use_ephemeral_replies });
                     return new CommandResponse({ pipe_data: { input_text: pipeText } });
