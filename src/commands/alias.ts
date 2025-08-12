@@ -9,7 +9,7 @@ const create = new Command(
     {
         name: "create",
         description: "create a new alias",
-        long_description: "create a new alias for a command or value. \naliases are incredibly powerful, as the content in the message is directly replaced, so you can alias several commands being piped together, or a command with arguments, or just a simple command name. \nnote that alias names cannot contain spaces.",
+        long_description: "create a new alias for a command or value. \naliases are incredibly powerful, as the content in the message is directly replaced, so you can alias several commands being piped together, or a command with arguments, or just a simple command name.",
         tags: [CommandTag.Utility],
         pipable_to: [],
         options: [
@@ -29,8 +29,8 @@ const create = new Command(
         example_usage: [
             "p/alias create greet echo Hello, world!",
             'p/alias create "latestgitlog" "git log | head"',
-            'p/alias create helpgraph="help -t"',
-            'p/alias create "reason" gpt edit {"model":"o3-mini"}',
+            'p/alias create latestlog="d/sendlog global | tail"',
+            'p/alias create "enable reasoning" gpt edit {"model":"o3-mini"}',
         ],
         argument_order: "<alias> <value>",
         aliases: ["add", "new", "createalias"],
@@ -78,20 +78,19 @@ const create = new Command(
             await action.reply(invoker, { content: "you must provide both an alias and a value", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ error: true, message: "missing alias or value" });
         }
-        const includesSpace = args.alias.includes(" ");
-        const usedAlias = (args.alias.startsWith(guild_config.other.prefix) ? args.alias.slice(guild_config.other.prefix.length) : args.alias).replaceAll(" ", "");
+        const usedAlias = (args.alias.startsWith(guild_config.other.prefix) ? args.alias.slice(guild_config.other.prefix.length) : args.alias)
         const existing = await getAlias(invoker.author.id, usedAlias);
         if (existing) {
             await action.reply(invoker, { content: `alias \`${usedAlias}\` already exists, use \`${guild_config.other.prefix}alias delete ${usedAlias}\` to get rid of it.`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ error: true, message: "alias already exists" });
         }
-        if (usedAlias === "alias") {
-            await action.reply(invoker, { content: `you cannot create an alias named \`${guild_config.other.prefix}alias\`, please choose a different name. this is to prevent locking yourself out of editing aliases.`, ephemeral: guild_config.other.use_ephemeral_replies });
+        if (usedAlias.startsWith("alias")) {
+            await action.reply(invoker, { content: `you cannot create an alias that starts with \`${guild_config.other.prefix}alias\`, please choose a different name. this is to prevent locking yourself out of editing aliases.`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ error: true, message: "invalid alias name" });
         }
         const aliasObj = new Alias({ id: 0, userId: invoker.author.id, alias: usedAlias, value: args.value, write: Alias.prototype.write, delete: Alias.prototype.delete });
         await aliasObj.write();
-        await action.reply(invoker, { content: `aliased \`${guild_config.other.prefix}${aliasObj.alias}\` to \`${guild_config.other.prefix}${aliasObj.value}\`, run \`${guild_config.other.prefix}${aliasObj.alias}\` to try it out.${includesSpace ? " spaces are not allowed in alias names, so they were automatically removed." : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
+        await action.reply(invoker, { content: `aliased \`${guild_config.other.prefix}${aliasObj.alias}\` to \`${guild_config.other.prefix}${aliasObj.value}\`, run \`${guild_config.other.prefix}${aliasObj.alias}\` to try it out.`, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({});
     }
 );
@@ -184,20 +183,24 @@ const aliasCommand = new Command(
             list: [create, list, del],
         },
         options: [],
-        example_usage: "p/alias create greet Hello!",
+        example_usage: "p/alias create \"greet\"=\"echo Hello!\"",
         aliases: ["aliases", "aliasmanager", "aliasman"],
         not_pipable: true,
+        argument_order: "<subcommand>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use \`${guild_config.other.prefix}help alias\` for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}alias create\`: create a new alias\n\`${guild_config.other.prefix}alias delete\`: delete an existing alias\n\`${guild_config.other.prefix}alias list\`: list your aliases`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
-        await action.reply(invoker, { content: `this command does nothing if you don't supply a subcommand, use \`${guild_config.other.prefix}help alias\` to see available subcommands.` });
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}alias create\`: create a new alias\n\`${guild_config.other.prefix}alias delete\`: delete an existing alias\n\`${guild_config.other.prefix}alias list\`: list your aliases`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
+        });
     }
 );
 

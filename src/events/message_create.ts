@@ -8,7 +8,7 @@ import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/comman
 import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
 import * as log from "../lib/log";
-import { getAlias } from "../lib/alias_manager";
+import { getAlias, listAliases } from "../lib/alias_manager";
 
 async function gptHandler(message: Message<true>) {
     // Only process if the bot is mentioned.
@@ -65,17 +65,24 @@ async function validateCommandExecution(message: Message<true>, config: GuildCon
 
 // alias resolution, replaces appropriate content if an alias is found
 async function resolveCommandAlias(message: Message<true>, prefix: string): Promise<void> {
-    let firstWord = message.content.trim().split(" ")[0];
-    if (firstWord.startsWith(prefix)) {
-        firstWord = firstWord.slice(prefix.length);
+    const aliases = await listAliases(message.author.id);
+
+    let prefixlessContent = message.content.trim();
+    if (prefixlessContent.startsWith(prefix)) {
+        prefixlessContent = prefixlessContent.slice(prefix.length).trim();
     }
 
-    const alias = await getAlias(message.author.id, firstWord);
-    if (alias) {
-        log.debug(`found alias ${alias.alias} for command ${firstWord}, replacing with ${alias.value}`);
-        message.content = message.content.replace(firstWord, alias.value);
-    } else {
-        log.debug(`no alias found for command ${firstWord}`);
+    // find all valid aliases and score them
+    const validAliases = aliases
+        .filter(alias => prefixlessContent.startsWith(alias.alias))
+        .sort((a, b) => b.alias.length - a.alias.length); // sort by longest alias first
+
+    // use the most accurate alias (highest length)
+    if (validAliases.length > 0) {
+        const bestAlias = validAliases[0];
+        log.debug(`found ${validAliases.length} valid aliases, using most accurate: ${bestAlias.alias} (length: ${bestAlias.alias.length}) for command ${prefixlessContent}, replacing with ${bestAlias.value}`);
+        prefixlessContent = prefixlessContent.replace(bestAlias.alias, bestAlias.value);
+        message.content = prefixlessContent.startsWith(prefix) ? prefixlessContent : `${prefix}${prefixlessContent}`;
     }
 }
 
