@@ -486,14 +486,14 @@ const command = new Command(
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use \`${guild_config.other.prefix}help conversation\` for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}conversation get\`: get the current conversation\n\`${guild_config.other.prefix}conversation clear\`: clear the current conversation\n\`${guild_config.other.prefix}conversation configure\`: configure the current conversation`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
-        action.reply(invoker, {
-            content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guild_config.other.use_ephemeral_replies
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}conversation get\`: get the current conversation\n\`${guild_config.other.prefix}conversation clear\`: clear the current conversation\n\`${guild_config.other.prefix}conversation configure\`: configure the current conversation`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
         });
     }
 );
