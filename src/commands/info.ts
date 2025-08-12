@@ -33,7 +33,7 @@ const storageinfo = new Command(
     {
         name: 'storage',
         description: 'returns information about the storage',
-        long_description: 'returns information about the storage',
+        long_description: 'returns information about the storage space being used in total, and the individual components such as the database, cache, resources, and logs',
         tags: [CommandTag.Info],
         pipable_to: [],
         options: [],
@@ -80,7 +80,7 @@ const dbinfo = new Command(
     {
         name: 'database',
         description: 'returns information about the database',
-        long_description: 'returns information about the database',
+        long_description: 'returns information about the database such as the total size and number of entries in each table',
         tags: [CommandTag.Info],
         pipable_to: [],
         options: [],
@@ -131,7 +131,7 @@ const performanceinfo = new Command(
     {
         name: 'performance',
         description: 'returns information about system performance',
-        long_description: 'returns information about RAM, CPU, and GPU usage',
+        long_description: 'returns information about memory usage, CPU usage, socket ping, and uptime',
         tags: [CommandTag.Info],
         pipable_to: [],
         options: [],
@@ -183,7 +183,7 @@ const botinfo = new Command(
     {
         name: 'bot',
         description: 'returns information about the bot',
-        long_description: 'returns information about the bot',
+        long_description: 'returns information about the bot such as the bot version, total guilds, and unique users',
         tags: [CommandTag.Info],
         pipable_to: [],
         options: [],
@@ -222,7 +222,7 @@ const command = new Command(
     {
         name: 'info',
         description: 'provides information about the bot',
-        long_description: 'provides information such as the version, shard status, memory and storage usage, etc. ',
+        long_description: 'provides information such as the bot version, memory and storage usage, etc. ',
         tags: [CommandTag.Info],
         options: [
             new CommandOption({
@@ -245,11 +245,16 @@ const command = new Command(
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["subcommand"]),
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
-            action.reply(invoker, `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help info for a list of subcommands`);
-            return new CommandResponse({});
+            action.reply(invoker, {
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}info bot\`: get information about the bot\n\`${guild_config.other.prefix}info db\`: get information about the database\n\`${guild_config.other.prefix}info storage\`: get information about storage usage\n\`${guild_config.other.prefix}info performance\`: get performance information`,
+                ephemeral: guild_config.other.use_ephemeral_replies,
+            });
+            return;
         }
-        action.reply(invoker, "this command does nothing if you dont supply a subcommand")
-        return new CommandResponse({});
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}info bot\`: get information about the bot\n\`${guild_config.other.prefix}info db\`: get information about the database\n\`${guild_config.other.prefix}info storage\`: get information about storage usage\n\`${guild_config.other.prefix}info performance\`: get performance information`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
+        });
     }
 );
 
