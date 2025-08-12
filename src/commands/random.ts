@@ -32,7 +32,7 @@ const phrasecommand = new Command(
             new CommandOption({
                 name: 'list',
                 description: 'list of parts of speech',
-                long_description: 'list of parts of speech',
+                long_description: 'list of parts of speech. use `list` to see available parts of speech',
                 type: CommandOptionType.String,
                 required: true
             })
@@ -164,19 +164,16 @@ const command = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ invoker, args, guild_config }) {
-        if (!args.subcommand) {
+        if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help random for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}random pepper\`: get a random pepper\n\`${guild_config.other.prefix}random phrase\`: generate a random phrase from a list of parts of speech`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
-            return new CommandResponse({
-                error: true,
-                message: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help random for a list of subcommands`,
-            });
+            return;
         }
-        action.reply(invoker, {
-            content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guild_config.other.use_ephemeral_replies
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}random pepper\`: get a random pepper\n\`${guild_config.other.prefix}random phrase\`: generate a random phrase from a list of parts of speech`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
         });
     }
 );
