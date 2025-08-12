@@ -1,7 +1,7 @@
 import { Client, Message } from "discord.js";
 import { Conversation } from "./main";
 import * as log from "../log";
-import { GPTFormattedCommandInteraction } from "../gpt";
+import { GPTFormattedCommandInteraction } from "./main";
 
 let cached_client: Client | undefined;
 
