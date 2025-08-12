@@ -13,6 +13,7 @@ import { GuildConfig } from "../lib/guild_config_manager";
 import chalk from "chalk";
 import { DiscordAnsi as ansi } from "../lib/discord_ansi";
 import { FakeToolData, tools } from "../lib/gpt/tools";
+import { i } from "mathjs";
 
 function findModelByName(name: string): Model | undefined {
     return Object.values(models).find(m =>
@@ -25,7 +26,9 @@ function findModelByName(name: string): Model | undefined {
     );
 }
 
-function serializeModel(model: Model): string {
+function serializeModel(modelName: string): string {
+    const model = findModelByName(modelName);
+    if (!model) return "something went horribly wrong"
     return `${ansi.bold(ansi.green(model.name))} ${ansi.gray(`(${model.provider})`)}\n` +
         `${ansi.gray(model.description)}\n` +
         `${ansi.blue("capabilities: ")}${model.capabilities.join(', ')}` +
@@ -86,7 +89,7 @@ function toggleSection(label: string, value: boolean, custom_id: string, disable
             }),
         ],
         accessory: new Button({
-            style: value ? ButtonStyle.Danger : ButtonStyle.Success,
+            style: value ? ButtonStyle.Success : ButtonStyle.Danger,
             label: value ? trueLabel : falseLabel,
             custom_id,
             disabled
@@ -111,7 +114,7 @@ function buildSections(prompt: Prompt, guild_config: GuildConfig, disabled: bool
         new Separator(),
         sectionWithEdit("Description", prompt.description, "edit_prompt_description", disabled),
         new Separator(),
-        sectionWithEdit("Prompt", prompt.content, "edit_prompt_content", disabled),
+        sectionWithEdit("Prompt", prompt.content.slice(0, 1000) + ((prompt.content.length > 1000) ? "... (cut due to length)" : ""), "edit_prompt_content", disabled),
         new Separator(),
         ...["NSFW", "Default"].map(field => toggleSection(field, (prompt as any)[field.toLowerCase() as keyof Prompt], `edit_prompt_${field.toLowerCase()}`, disabled)),
         toggleSection("Published", prompt.published, "edit_prompt_publish", disabled, "Unpublish", "Publish"),
@@ -119,16 +122,13 @@ function buildSections(prompt: Prompt, guild_config: GuildConfig, disabled: bool
         new TextDisplay({ content: "__**Advanced**__\n\n" }),
         sectionWithEdit(
             "AI Model", // the label will make this automatically start and end with **
-            `${prompt.api_parameters.model || defaultModel}\n-# run \`${guild_config.other.prefix}prompt model list\` for a more detailed list of models and their capabilities.`,
+            `\`\`\`ansi\n${serializeModel((prompt.api_parameters.model || defaultModel) as string)}\`\`\``,
             "edit_prompt_model",
             disabled
         ),
         sectionWithEdit(
             "API Parameters",
-            Object.entries(prompt.api_parameters)
-                .filter(([key, _]) => key !== "model")
-                .map(([key, value]) => `**${key}**: ${value}`)
-                .join("\n"),
+            `\`\`\`ansi\n${(Object.entries(prompt.api_parameters).filter(([k, v]) => k !== "model").length > 0) ? Object.entries(prompt.api_parameters).filter(([k, v]) => k !== "model").map(([k, v]) => {return ansi.blue(k) + ": " + v}).join("\n") : ansi.red("N/A")}\`\`\``,
             "edit_prompt_api_parameters",
             disabled
         ),
@@ -291,7 +291,7 @@ async function showModalAndUpdateField(
                         style: modalOptions.style,
                         placeholder: modalOptions.placeholder,
                         required: true,
-                        value: prompt[field] as string
+                        value: (prompt[field] as string).slice(0, 3999)
                     })
                 ]
             }) as any
@@ -372,14 +372,14 @@ const build = new Command(
             new CommandOption({
                 name: 'name',
                 description: 'the name of the prompt to use',
-                long_description: 'the name of the prompt to open a builder for',
+                long_description: 'the name of the prompt to edit',
                 type: CommandOptionType.String,
                 required: false
             })
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
-        example_usage: "p/prompt build",
+        example_usage: ["p/prompt edit", "p/prompt edit myprompt"],
         argument_order: "<name?>",
         aliases: ["builder", "build"],
     },
@@ -681,14 +681,14 @@ const build = new Command(
 
 const generate = new Command({
         name: 'generate',
-        description: 'generates a response based on a prompt you input',
-        long_description: 'generates a response based on a prompt you input',
+        description: 'generates a prompt\'s content',
+        long_description: 'generates a prompt\'s content incase you don\'t feel like writing it yourself',
         tags: [CommandTag.AI],
         pipable_to: [CommandTag.TextPipable],
         options: [
             new CommandOption({
             name: 'input',
-            description: 'the input to generate a response for',
+            description: 'the prompt to use to generate a longer prompt from',
             type: CommandOptionType.String,
             required: true,
             })
@@ -717,23 +717,23 @@ const generate = new Command({
 
 let nameBlacklists = ["reset", "default", "autosave"]
 
-const name = new Command({
-        name: 'name',
-        description: 'sets the name of your prompt',
-        long_description: 'sets the name of your current prompt; this clones your prompt and effectively creates a new one.',
+const create = new Command({
+        name: 'create',
+        description: 'creates a new prompt',
+        long_description: 'creates a new prompt with the specified name, properties will be duplicated from your current prompt.',
         tags: [CommandTag.AI],
         pipable_to: [],
         options: [
             new CommandOption({
                 name: 'content',
-                description: 'the content to set the prompt name to',
+                description: 'the name of the prompt to create',
                 type: CommandOptionType.String,
                 required: true,
             })
         ],
-        example_usage: "p/prompt name myprompt",
+        example_usage: "p/prompt create myprompt",
         argument_order: "<content>",
-        aliases: ["setname", "rename", "create", "new", "switch"],
+        aliases: ["setname", "rename", "name", "new"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ invoker, guild_config, args }) {
@@ -766,7 +766,7 @@ const name = new Command({
         prompt.created_at = new Date();
         await savePrompt(prompt, invoker.author);
         userPrompts.set(invoker.author.id, prompt);
-        action.reply(invoker, { content: `prompt name set to \`${prompt.name}\`; now using/editing prompt \`${prompt.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: `created new prompt named \`${prompt.name}\`; now using/editing prompt \`${prompt.name}\``, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
@@ -787,12 +787,28 @@ const list = new Command({
         example_usage: "p/prompt list",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["user"]),
-    async function execute ({ invoker, guild_config, args }) {
-        if (args.hadArg && !args.user) {
+    async function execute ({ invoker, guild_config, args, invoker_type }) {
+        let firstMention;
+        if (invoker_type === InvokerType.Message) {
+            firstMention = (invoker as Message).mentions.users.first();
+        }
+        let inputtedUser: String | User | undefined = args.user ?? firstMention;
+        if (typeof inputtedUser === "string") {
+            if (inputtedUser.startsWith("<@") && inputtedUser.endsWith(">")) {
+                inputtedUser = firstMention;
+            }
+        }
+        if (typeof inputtedUser !== "string") {
+            if ((inputtedUser as User).id === invoker.client.user?.id) {
+                inputtedUser = "PepperBot";
+            }
+        }
+        if (args.hadArg && !inputtedUser) {
             action.reply(invoker, { content: "couldn't find user: " + args.usedArg, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
-        let username = (args.user || invoker.author.username) as string;
+        const inputtedUsername = (inputtedUser && typeof inputtedUser === "string") ? inputtedUser : (inputtedUser && (inputtedUser as User).username) || undefined;
+        let username = (inputtedUsername || invoker.author.username) as string;
         let notUser = username !== invoker.author.username;
         let prompts = await getPromptsByUsername(username);
         if (prompts.length === 0 || (notUser && prompts.filter((p) => p.published).length === 0)) {
@@ -844,6 +860,7 @@ const use = new Command({
         tags: [CommandTag.AI],
         pipable_to: [],
         root_aliases: ['useprompt'],
+        aliases: ["switch", "change", "clone"],
         options: [
             new CommandOption({
                 name: 'content',
@@ -947,17 +964,18 @@ const set = new Command({
             new CommandOption({
                 name: 'content',
                 description: 'the content to set the prompt to',
+                long_description: 'the content to set the prompt to. if you need your prompt to be extremely long, you can attach it as a file and it will be read as the content.',
                 type: CommandOptionType.String,
                 required: true,
             })
         ],
-        example_usage: "p/prompt set always respond with \"hi\"",
+        example_usage: ["p/prompt set always respond with \"hi\"", "p/prompt set [attach your prompt]"],
         argument_order: "<content>",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
     async function execute ({ invoker, guild_config, args, piped_data, invoker_type }) {
         let content = piped_data?.data?.input_text || args.content
-        if (!content) {
+        if (!content.trim()) {
             if (invoker_type === InvokerType.Message) {
                 if ((invoker as CommandInvoker<InvokerType.Message>).attachments.size > 0) {
                     const attachment = (invoker as CommandInvoker<InvokerType.Message>).attachments.first();
@@ -997,13 +1015,12 @@ const command = new Command(
     {
         name: 'prompt',
         description: 'various commands relating to your custom prompts',
-        long_description: 'allows you to manage your custom prompts, with subcommands to set the content, description, name, as well as publish them for others to use.',
+        long_description: 'allows you to manage your custom prompts. you can edit their content, names, descriptions, etc.',
         tags: [CommandTag.AI],
         pipable_to: [],
-        argument_order: "<subcommand> <content?>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [build, list, generate, set, use, name],
+            list: [build, list, generate, set, use, create],
         },
         options: [],
         example_usage: "p/prompt set always respond with \"hi\"",
@@ -1013,18 +1030,15 @@ const command = new Command(
     async function execute ({ invoker, guild_config, args }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help prompt for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}prompt edit\`: edit your current prompt\n\`${guild_config.other.prefix}prompt create\`: create a new prompt\n\`${guild_config.other.prefix}prompt delete\`: delete an existing prompt\n\`${guild_config.other.prefix}prompt list\`: list your prompts\n\`${guild_config.other.prefix}prompt use\`: use a specified prompt\n\`${guild_config.other.prefix}prompt set\`: set the content of your current prompt\n\`${guild_config.other.prefix}prompt generate\`: generate content for a prompt`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
-            })
-            return new CommandResponse({
-                error: true,
-                message: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help prompt for a list of subcommands`
             });
+            return;
         }
-        action.reply(invoker, {
-            content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guild_config.other.use_ephemeral_replies
-        })
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}prompt edit\`: edit your current prompt\n\`${guild_config.other.prefix}prompt create\`: create a new prompt\n\`${guild_config.other.prefix}prompt delete\`: delete an existing prompt\n\`${guild_config.other.prefix}prompt list\`: list your prompts\n\`${guild_config.other.prefix}prompt use\`: use a specified prompt\n\`${guild_config.other.prefix}prompt set\`: set the content of your current prompt\n\`${guild_config.other.prefix}prompt generate\`: generate content for a prompt`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
+        });
     }
 );
 
