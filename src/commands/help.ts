@@ -364,7 +364,7 @@ const command = new Command(
     {
         name: 'help',
         description: 'explains usages of specific commands',
-        long_description: 'explains how to use certain commands as well as listing all commands',
+        long_description: 'explains how to use certain commands. lists all commands if no command is specified.',
         tags: [CommandTag.Utility],
         pipable_to: [CommandTag.TextPipable],
         options: [
