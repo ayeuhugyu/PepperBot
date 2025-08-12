@@ -234,9 +234,14 @@ const configurecommand = new Command(
                     }
                 }
 
+                let appliedConfigs = Object.keys(conversation.api_parameters);
+                if (config.model) {
+                    appliedConfigs.push("model");
+                }
+
                 if (configApplied) {
                     await action.reply(invoker, {
-                        content: `configuration applied; changed \`${Object.keys(conversation.api_parameters).join("\`, \`")}\``,
+                        content: `configuration applied; changed \`${appliedConfigs.join(", ")}\``,
                         ephemeral: guild_config.other.use_ephemeral_replies
                     });
                     return;
