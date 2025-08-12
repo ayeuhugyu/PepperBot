@@ -16,6 +16,7 @@ const image = new Command(
         long_description: 'generates an image from the provided prompt',
         tags: [CommandTag.AI],
         example_usage: "p/image generate a forest with a river made of cats",
+        argument_order: "<prompt>",
         options: [
             new CommandOption({
                 name: 'prompt',
@@ -86,7 +87,7 @@ const command = new Command(
     {
         name: 'image',
         description: 'various functions related to images',
-        long_description: 'various functions related to images. allows you to generate images, describe images, or convert images to a different format.',
+        long_description: 'various functions related to images, currently only AI image generation.\nthis will likely be expanded in the future.',
         tags: [CommandTag.Utility, CommandTag.AI],
         pipable_to: [],
         access: CommandAccessTemplates.public,
@@ -102,14 +103,14 @@ const command = new Command(
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help image for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}image generate\`: generate an image from a prompt`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
-        action.reply(invoker, {
-            content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guild_config.other.use_ephemeral_replies
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}image generate\`: generate an image from a prompt`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
         });
     }
 );
