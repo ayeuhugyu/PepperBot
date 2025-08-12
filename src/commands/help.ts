@@ -154,7 +154,7 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
         if (option.type === CommandOptionType.Subcommand) return
         const components = [
             new TextDisplay({
-                content: `### <${option.name}>${(option.required || option.long_requirements) ? `?` : ""}: ${optionTypesTable[option.type]}${(option.required || option.long_requirements) ? `\n-# required option ${option.long_requirements ?? ""}` : ""}`
+                content: `### <${option.name}>${(option.required || option.long_requirements) ? `` : "?"}: ${optionTypesTable[option.type]}${(option.required || option.long_requirements) ? `\n-# required option ${option.long_requirements ?? ""}` : ""}`
             }),
             new Separator(),
             new TextDisplay({
