@@ -1,6 +1,6 @@
 // #region Imports
 
-import { Prompt } from "../prompt_manager";
+import { Prompt, writePrompt } from "../prompt_manager";
 import { tablify } from "../string_helpers";
 import { client } from "../../bot";
 
@@ -212,8 +212,9 @@ You do not have access to ROBLOX's 'task' library, do not attempt to use it.
 You also do not appear to have access to any sort of "wait" function. Do not attempt to use it.
 `
 
+let hasWrittenOnce = false;
 export function getDefaultPrompt() {
-    return new Prompt({
+    const prompt = new Prompt({
         name: "default",
         content: botPromptContent,
         author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
@@ -223,6 +224,11 @@ export function getDefaultPrompt() {
         published: true,
         published_at: new Date(),
     });
+    if (!hasWrittenOnce) {
+        writePrompt(prompt);
+        hasWrittenOnce = true;
+    }
+    return prompt;
 }
 
 // #endregion
