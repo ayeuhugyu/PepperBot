@@ -1,6 +1,6 @@
 import { Conversation, GPTMessage, ToolCall, ToolCallResponse } from "./main";
 import { Model } from "./models";
-import { tools as allTools, Tool, ToolParameter } from "./tools";
+import { tools as allTools, FakeTool, Tool, ToolParameter } from "./tools";
 import ollama, { ChatRequest, ChatResponse } from "ollama";
 import { Tool as OllamaTool, Message as OllamaMessage, ToolCall as OllamaToolCall } from "ollama";
 import path from "path";
@@ -40,7 +40,7 @@ function formatToolParameters(parameters: Record<string, ToolParameter>) {
     return formatted;
 }
 
-function formatTool(tool: Tool): OllamaTool {
+function formatTool(tool: Tool | FakeTool): OllamaTool {
     const formattedParameters = formatToolParameters(tool.data.parameters);
     const required = getRequiredParameters(tool.data.parameters);
 
