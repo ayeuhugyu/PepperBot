@@ -163,7 +163,7 @@ async function embedCommand(command: Command, invoker: CommandInvoker, guild_con
         ]
         if (option.choices && option.choices.length > 0) {
             const descriptionTextDisplay = components[components.length - 1] as TextDisplay;
-            descriptionTextDisplay.content = `**Choices:**\n${option.choices.map((choice, index) => `⁢   [${index + 1}] ${choice.name}`).join("\n")}` // invisible character before the spaces to prevent discord from collapsing the spaces
+            descriptionTextDisplay.content += `\n**Choices:**\n${option.choices.map((choice, index) => `⁢   [${index + 1}] ${choice.name}`).join("\n")}` // invisible character before the spaces to prevent discord from collapsing the spaces
         }
         if (option.channel_types && option.channel_types.length > 0) {
             components.push(new Separator());
