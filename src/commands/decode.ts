@@ -104,7 +104,7 @@ const command = new Command(
 
         const algorithm = algorithms[algorithmName];
         if (!algorithm) {
-            action.reply(invoker, { content: `unknown algorithm: ${algorithmName}; use \`list\` to see available algorithms.`, ephemeral: guild_config.other.use_ephemeral_replies });
+            action.reply(invoker, { content: `unknown algorithm: \`${algorithmName || "undefined"}\`; use \`list\` to see available algorithms.`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({ error: true, message: `unknown algorithm: ${algorithmName}` });
         }
 
