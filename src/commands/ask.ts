@@ -8,7 +8,7 @@ const command = new Command(
     {
         name: 'ask',
         description: 'ask the ai something',
-        long_description: 'ask the ai something.\nit is much easier and better to simply ping the bot rather than using this command, this is mostly for either use in aliases or as a slash command for other servers.',
+        long_description: 'ask the ai something.\nit is much easier and better to simply ping the bot rather than using this command, this is mostly for use either in aliases or as a slash command in other servers.',
         tags: [CommandTag.AI, CommandTag.TextPipable], // TODO: re-add image pipability
         pipable_to: [CommandTag.TextPipable],
         example_usage: "p/ask hi there",
@@ -19,13 +19,15 @@ const command = new Command(
                 name: 'request',
                 description: 'the question to ask the ai',
                 type: CommandOptionType.String,
-                required: false,
+                required: true,
+                long_requirements: 'if image is not provided'
             }),
             new CommandOption({
                 name: 'image',
                 description: 'an image to provide context',
                 type: CommandOptionType.Attachment,
-                required: false,
+                required: true,
+                long_requirements: 'if request is not provided'
             })
         ]
     },
@@ -40,7 +42,7 @@ const command = new Command(
     }, // No arguments template needed
     async function execute ({ args, invoker, guild_config, invoker_type, piped_data }) {
         const request = args.request || piped_data?.data?.input_text;
-        const image = args.image
+        const image = args.image;
         if (!request && !image) {
             action.reply(invoker, { content: "please provide a request", ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
@@ -55,7 +57,7 @@ const command = new Command(
 
         const formattedInvoker: GPTFormattedCommandInteraction = Object.assign(invoker, {
             author: invoker.author,
-            content: request,
+            content: request ?? "",
             attachments: attachments,
         }) as unknown as GPTFormattedCommandInteraction;
 
