@@ -269,10 +269,10 @@ const create = new Command(
         options: [
             new CommandOption({
                 name: 'text',
-                description: 'description',
-                long_description: 'description',
+                description: 'the description of the update',
+                long_description: 'the description of the update',
                 type: CommandOptionType.String,
-                required: false
+                required: true
             })
         ],
         access: CommandAccessTemplates.dev_only,
