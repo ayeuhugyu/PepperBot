@@ -70,6 +70,11 @@ Average Execution Times:\n`;
         })
 
         action.reply(invoker, { components: [embed], components_v2: true, ephemeral: guild_config.other.use_ephemeral_replies });
+        return new CommandResponse({
+            pipe_data: {
+                input_text: description,
+            }
+        })
     }
 );
 
