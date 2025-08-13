@@ -16,7 +16,7 @@ class V2PagedMenu {
         this.currentPage = 0;
         this.activeMessage = null;
         this.id = randomId();
-        log.debug(`initialized V2PagedMenu with ${pages.length} pages and id ${this.id}`);
+        log.info(`initialized V2PagedMenu with ${pages.length} pages and id ${this.id}`);
     }
 
     onPageChange(page: number): void {
@@ -79,7 +79,7 @@ class V2PagedMenu {
 
         collector.on('end', () => {
             if (this.activeMessage) {
-                log.debug(`disabling  V2PagedMenu on page ${this.currentPage} with id ${this.id}`);
+                log.info(`disabling  V2PagedMenu on page ${this.currentPage} with id ${this.id}`);
                 this.ended = true;
                 this.updateMessage()
             }

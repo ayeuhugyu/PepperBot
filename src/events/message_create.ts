@@ -17,7 +17,7 @@ async function gptHandler(message: Message<true>) {
     }
     // verify bot has permissions to send messages
     if (!message.guild?.members.me?.permissions.has("SendMessages")) {
-        log.warn(`could not complete gpt handler due to lack of permissions in #${message.channel?.id})`);
+        log.warn(`could not complete gpt handler due to lack of permissions (${message.channel?.id})`);
         return;
     }
 
@@ -36,6 +36,7 @@ async function gptHandler(message: Message<true>) {
         return;
     }
 
+    log.info(`gpt handler invoked`);
     log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
     await respond(message);
 }
@@ -139,13 +140,13 @@ function validateCommand(command: Command | undefined, provided_name: string, co
 
     // check if command is blacklisted
     if (config.command.blacklisted_commands.includes(command.name)) {
-        log.debug(`command ${command.name} is blacklisted in this guild`);
+        log.info(`command ${command.name} is blacklisted in this guild`);
         return { valid: false };
     }
 
     // check if any command tags are blacklisted
     if (command.tags && command.tags.some(tag => config.command.blacklisted_tags.includes(tag))) {
-        log.debug(`command ${command.name} has blacklisted category in this guild`);
+        log.info(`command ${command.name} has blacklisted category in this guild`);
         return { valid: false };
     }
 

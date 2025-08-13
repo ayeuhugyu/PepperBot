@@ -40,7 +40,7 @@ class ScheduledEvent {
     }
 
     async write() {
-        log.debug(`writing scheduled event ${this.id}`);
+        log.info(`writing scheduled event ${this.id}`);
         await database('scheduled').insert({
             id: this.id,
             creator_id: this.creator_id,
@@ -52,19 +52,19 @@ class ScheduledEvent {
     }
 
     async delete() {
-        log.debug(`deleting scheduled event ${this.id}`);
+        log.info(`deleting scheduled event ${this.id}`);
         await database('scheduled').where({ id: this.id }).del();
     }
 }
 
 async function fetchScheduledEventsByCreatorId(creator_id: string) {
-    log.debug(`fetching scheduled events for creator ${creator_id}`);
+    log.info(`fetching scheduled events for creator ${creator_id}`);
     const events = await database('scheduled').where({ creator_id });
     return events.map((event: any) => new ScheduledEvent(event));
 }
 
 async function fetchScheduledEventById(id: string) {
-    log.debug(`fetching scheduled event with id ${id}`);
+    log.info(`fetching scheduled event with id ${id}`);
     const event = await database('scheduled').where({ id }).first();
     if (!event) {
         return undefined;
@@ -73,7 +73,7 @@ async function fetchScheduledEventById(id: string) {
 }
 
 async function getAllEvents() {
-    log.debug(`fetching all scheduled events`);
+    log.info(`fetching all scheduled events`);
     const events = await database('scheduled');
     return events.map((event: any) => new ScheduledEvent(event));
 }
@@ -119,8 +119,8 @@ export function scheduleEvent(client: Client, event: ScheduledEvent) {
     const now = new Date();
     const timeToEvent = event.time.getTime() - now.getTime();
     if (timeToEvent > 0) {
+        log.info(`executing scheduled event ${event.id} after ${timeToEvent}ms`);
         setTimeout(() => {
-            log.info(`executing scheduled event ${event.id} after ${timeToEvent}ms`);
             execEvent(client, event);
             event.delete();
         }, timeToEvent);

@@ -147,7 +147,7 @@ export async function addExecutionTime(command: string, time: number): Promise<v
     const statistics = await getStatistics();
     if (!statistics.execution_times[command]) statistics.execution_times[command] = [];
     statistics.execution_times[command].push(time);
-    log.debug(`added execution time for command "${command}": ${time}ms`);
+    log.info(`added execution time for command "${command}": ${time}ms`);
     await statistics.write();
 }
 
@@ -156,14 +156,14 @@ export async function incrementCommandUsage(command: string): Promise<void> {
     const statistics = await getStatistics();
     if (!statistics.command_usage[command]) statistics.command_usage[command] = 0;
     statistics.command_usage[command]++;
-    log.debug(`incremented command usage for "${command}": ${statistics.command_usage[command]}`);
+    log.info(`incremented command usage for "${command}": ${statistics.command_usage[command]}`);
     await statistics.write();
 }
 
 export async function incrementGPTResponses(): Promise<void> {
     const statistics = await getStatistics();
     statistics.total_gpt_responses++;
-    log.debug(`incremented GPT responses: ${statistics.total_gpt_responses}`);
+    log.info(`incremented GPT responses: ${statistics.total_gpt_responses}`);
     await statistics.write();
 }
 
@@ -171,20 +171,20 @@ export async function incrementGPTModelUsage(modelName: keyof typeof Models): Pr
     const statistics = await getStatistics();
     if (!statistics.gpt_model_usage[modelName]) statistics.gpt_model_usage[modelName] = 0;
     statistics.gpt_model_usage[modelName]++;
-    log.debug(`incremented GPT model usage for "${modelName}": ${statistics.gpt_model_usage[modelName]}`);
+    log.info(`incremented GPT model usage for "${modelName}": ${statistics.gpt_model_usage[modelName]}`);
     await statistics.write();
 }
 
 export async function incrementPipedCommands(): Promise<void> {
     const statistics = await getStatistics();
     statistics.total_piped_commands++;
-    log.debug(`incremented piped commands: ${statistics.total_piped_commands}`);
+    log.info(`incremented piped commands: ${statistics.total_piped_commands}`);
     await statistics.write();
 }
 
 export async function incrementInvokerTypeUsage(type: InvokerType): Promise<void> {
     const statistics = await getStatistics();
     statistics.invoker_type_usage[type]++;
-    log.debug(`incremented invoker type usage for "${type}": ${statistics.invoker_type_usage[type]}`);
+    log.info(`incremented invoker type usage for "${type}": ${statistics.invoker_type_usage[type]}`);
     await statistics.write();
 }

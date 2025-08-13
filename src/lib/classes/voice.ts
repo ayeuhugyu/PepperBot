@@ -67,7 +67,7 @@ export class GuildVoiceManager {
             }
         });
 
-        log.debug(`created GuildVoiceManager for ${guild.name} (${guild.id})`);
+        log.info(`created GuildVoiceManager for ${guild.id}`);
     }
 
     emit = this.emitter.emit;
@@ -211,7 +211,7 @@ export function checkMemberPermissionsForVoiceChannel(member: GuildMember, chann
     if (!member || !channel) {
         return false;
     }
-    log.debug(`checking voice permissions for member ${member.user.username} (${member.id}) in channel ${channel.name} (${channel.id})`)
+    log.info(`checking voice permissions for ${member.id} in ${channel.id}`)
     return member.permissionsIn(channel).has("Speak");
 }
 

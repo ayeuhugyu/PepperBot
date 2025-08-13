@@ -4,6 +4,7 @@ import commands from "../lib/command_manager";
 import * as log from "../lib/log";
 
 async function commandHandler(interaction: ChatInputCommandInteraction) {
+    log.info(`recieved interaction command "${interaction.commandName}"`);
     log.debug(`recieved interaction command "${interaction.commandName}" from ${interaction.user.username} in <#${interaction.channel?.id}>`);
     const command = commands.get(interaction.commandName);
     if (!command) {

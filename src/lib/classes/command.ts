@@ -441,7 +441,7 @@ export class Command<
             log.info("executing command p/" + (this.parent_command ? this.parent_command + " " + this.name : this.name) + ((input.previous_response?.from !== undefined) ? " piped from p/" + input.previous_response?.from : ""));
             await statistics.incrementCommandUsage((this.parent_command ? this.parent_command + " " + this.name : this.name));
             await statistics.incrementInvokerTypeUsage(input.invoker_type);
-            log.info("incremented statistics for command " + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " and invoker type " + input.invoker_type);
+            log.debug("incremented statistics for command " + (this.parent_command ? this.parent_command + " " + this.name : this.name) + " and invoker type " + input.invoker_type);
             const start = performance.now();
             const { invoker } = input;
             if (!invoker) {
@@ -492,7 +492,7 @@ export class Command<
             // todo: add context checks for bot dm and private channel
 
             const bot_in_guild = invoker.guild?.members.me?.roles.cache.some(role => role.managed) || false;
-            if (!bot_in_guild) log.debug(`bot is not admin in guild ${invoker.guild?.name} ${invoker.guild?.id}`);
+            if (!bot_in_guild) log.info(`bot lacks managed role for guild ${invoker.guild?.id}; likely is not in it`);
             if (!this.allow_external_guild && !bot_in_guild) {
                 log.info("external guilds are not enabled for command " + this.name);
                 action.reply(invoker, { content: /*"this command is not enabled in guilds where i don't have administrator"*/ "this command can't be used in external guilds", ephemeral: true });
@@ -515,12 +515,12 @@ export class Command<
 
                 if (subcommand === undefined) {
                     // pass to default executor
-                    log.debug("subcommand not found, passing to default executor");
+                    log.info("subcommand not found, passing to default executor");
                     const response = await this.execute_internal(input);
                     log.info("executed command p/" + this.name + " in " + ((performance.now() - start).toFixed(3)) + "ms");
                     return response;
                 }
-                log.debug("subcommand found: " + subcommand.name);
+                log.info("subcommand found: " + subcommand.name);
 
                 if (input.is_message()) {
                     const subArg = input.args[this.subcommand_argument];
@@ -556,7 +556,7 @@ export class Command<
                 canPipe = pipableCommands.some((pipe) => next_pipe_message?.replace(input.guild_config.other.prefix, "")?.startsWith(pipe));
                 if (!canPipe) {
                     await action.reply(invoker, `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`);
-                    log.debug(`attempt to pipe command ${this.name} to ${piping_to} failed`);
+                    log.info(`attempt to pipe command ${this.name} to ${piping_to} failed`);
                     return new CommandResponse({
                         error: true,
                         message: `${input.guild_config.other.prefix}${usedSubcommand ? `${this.name} ${usedSubcommand.name}` : this.name} cannot be piped to ${input.guild_config.other.prefix}${piping_to}`,
@@ -565,7 +565,7 @@ export class Command<
             }
 
             let response
-            log.debug("executing command, input: ", inspect(input, { depth: 1, colors: true, compact: true }));
+            log.info("executing command, input: ", inspect(input, { depth: 1, colors: true, compact: true }));
             let usedCommand = usedSubcommand || this;
             // check permissions for the command
             const foundPermissions: string[] = [];
@@ -574,6 +574,7 @@ export class Command<
             const defaultExternalPermissions = new PermissionsBitField(PermissionFlagsBits.SendMessages | PermissionFlagsBits.ViewChannel | PermissionFlagsBits.AttachFiles); // these are the default permissions used when using slash commands in external guilds
             if (channel) {
                 const permissions = invoker.guild?.members?.me?.permissionsIn(channel as GuildChannelResolvable) || invoker.guild?.members.me?.permissions || defaultExternalPermissions;
+                log.info("checking permissions for command " + usedCommand.name + " in " + channel.id);
                 log.debug("checking permissions for command " + usedCommand.name + " in channel " + channel.id + " with permissions: " + permissions.toArray().join(", "));
                 log.debug("permissions to check: SendMessages, ViewChannel, " + usedCommand.requiredPermissions.join(", "));
                 // If the bot has Administrator, skip permission checks

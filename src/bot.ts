@@ -59,7 +59,7 @@ async function init() {
     try {
         await client.login(process.env.DISCORD_TOKEN);
         client.user?.setActivity("pepper whisperers.", { type: 2 });
-        log.info("set client activity")
+        log.info("set client activity: " + `"pepper whisperers.", { type: 2 }`);
         await queueAllEvents(client);
         log.info("scheduled all events");
     } catch (err) {

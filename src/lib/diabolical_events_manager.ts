@@ -135,7 +135,7 @@ export function threadEvent(message: Message) {
                 }).then((thread) => {
                     action.send(thread, "You've just been threaded! 🧵");
                 }).catch((err) => {
-                    log.error(`failed to start thread on message ${message.id} in channel ${message.channel.id}`);
+                    log.error(`failed to start thread on message ${message.id} in ${message.channel.id}`);
                     log.error(err);
                 });
         } else {
@@ -174,7 +174,7 @@ export function getRandomEmoji(): string {
 
 export async function reactionEvent(message: Message) {
     if (!message.guild?.members.me?.permissions.has("AddReactions")) {
-        log.warn(`could not complete diabolical reaction event due to lack of permissions in #${message.channel?.id})`);
+        log.warn(`could not complete diabolical reaction event due to lack of permissions in ${message.channel?.id})`);
         return;
     }
     const messageContent = message.cleanContent;
@@ -182,7 +182,7 @@ export async function reactionEvent(message: Message) {
     if (!AIEmoji) {
         AIEmoji = await getRandomEmoji()
     }
-    log.info(`diabolical emoji event triggered with AI emojis: ${AIEmoji} on message: ${message.id}`);
+    log.info(`diabolical emoji event triggered with AI emojis: ${AIEmoji} on ${message.id}`);
     let AIReactions = AIEmoji!.split(',');
     AIReactions.forEach(async (emoji) => {
         try {
