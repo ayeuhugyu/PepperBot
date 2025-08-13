@@ -32,7 +32,7 @@ for (const file of eventFiles) {
                 try {
                     event.default.execute(...args);
                 } catch (error) {
-                    log.error(`Error in event ${event.default.name}:`, error);
+                    log.error(`error in event ${event.default.name}:`, error);
                 }
             });
         });

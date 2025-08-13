@@ -116,17 +116,17 @@ export class GPTAttachment<T extends GPTAttachmentType> {
                         (this as GPTAttachment<GPTAttachmentType.Text>).content = text as any;
                     } else {
                         const msg = "[Failed to fetch text content]";
-                        log.debug(`Failed to fetch text content from ${this.url}: ${response.status} ${response.statusText}`);
+                        log.debug(`failed to fetch text content from ${this.url}: ${response.status} ${response.statusText}`);
                         (this as GPTAttachment<GPTAttachmentType.Text>).content = msg as any;
                     }
                 } catch (err) {
                     const msg = "[Error fetching text content]";
-                    log.debug(`Error fetching text content from ${this.url}:`, err);
+                    log.debug(`error fetching text content from ${this.url}:`, err);
                     (this as GPTAttachment<GPTAttachmentType.Text>).content = msg as any;
                 }
             } else {
                 const msg = "[No URL provided]";
-                log.debug(`No URL provided for text attachment: ${this.filename}`);
+                log.debug(`no URL provided for text attachment: ${this.filename}`);
                 (this as GPTAttachment<GPTAttachmentType.Text>).content = msg as any;
             }
         }
@@ -289,17 +289,17 @@ export class Conversation {
     }
 
     bindOnToolCall(fn: (calls: ToolCall[]) => void) {
-        log.debug(`Binding onToolCall listener for conversation ${this.id}.`);
+        log.debug(`binding onToolCall listener for conversation ${this.id}.`);
         this._onToolCallListener = fn;
     }
 
     unbindOnToolCall() {
-        log.debug(`Unbinding onToolCall listener for conversation ${this.id}.`);
+        log.debug(`unbinding onToolCall listener for conversation ${this.id}.`);
         this._onToolCallListener = null;
     }
 
     addMessage(message: GPTMessage, doNotAddUser: boolean = false) {
-        log.debug(`Adding message to conversation ${this.id}:`, message.serialize());
+        log.debug(`adding message to conversation ${this.id}:`, message.serialize());
         this.messages.push(message);
 
         if (!doNotAddUser) this.addUser(message.author); // ensure the user is added to the conversation
@@ -308,7 +308,7 @@ export class Conversation {
     }
 
     addToolCallResponse(response: ToolCallResponse) {
-        log.debug(`Adding tool call response to conversation ${this.id}:`, response.serialize());
+        log.debug(`adding tool call response to conversation ${this.id}:`, response.serialize());
         this.messages.push(response);
         // do not add user, as this is a tool response
         return response;
@@ -359,20 +359,20 @@ export class Conversation {
     }
 
     async processToolCalls(message: GPTMessage) {
-        log.debug(`Processing tool calls for message in conversation ${this.id}:`, message.toolCalls?.map(tc => tc.serialize()).join("\n"));
+        log.debug(`processing tool calls for message in conversation ${this.id}:`, message.toolCalls?.map(tc => tc.serialize()).join("\n"));
         if (!message.toolCalls || message.toolCalls.length === 0) {
-            log.debug(`No tool calls to process for message in conversation ${this.id}.`);
+            log.debug(`no tool calls to process for message in conversation ${this.id}.`);
             return;
         }
         // Call the single listener with the tool calls, if set
         if (this._onToolCallListener) {
-            try { this._onToolCallListener(message.toolCalls); } catch (e) { log.warn('Error in onToolCall listener:', e); }
+            try { this._onToolCallListener(message.toolCalls); } catch (e) { log.warn('error in onToolCall listener:', e); }
         }
         const tools = this.getTools();
         for (const call of message.toolCalls) {
             const tool = Object.entries(tools).find(([key, t]) => t.data.name === call.name)?.[1];
             if (!tool) {
-                log.warn(`Tool ${call.name} not found for conversation ${this.id}.`);
+                log.warn(`tool ${call.name} not found for conversation ${this.id}.`);
                 continue;
             }
             if (tool instanceof FakeTool) {
@@ -386,7 +386,7 @@ export class Conversation {
                     const toolResponse = new ToolCallResponse(call.id, call.name, call.parameters, response);
                     this.addToolCallResponse(toolResponse);
                 } catch (err) {
-                    log.error(`Error running tool ${call.name} for conversation ${this.id}:`, err);
+                    log.error(`error running tool ${call.name} for conversation ${this.id}:`, err);
                     const errorResponse = new ToolCallResponse(call.id, call.name, call.parameters, { error: err }, true);
                     this.addToolCallResponse(errorResponse);
                 }
@@ -395,11 +395,11 @@ export class Conversation {
     }
 
     async run(): Promise<GPTMessage> {
-        log.debug(`Running model ${this.model.name} for conversation ${this.id} with prompt:`, this.prompt.author.username + "/" + this.prompt.name);
+        log.debug(`running model ${this.model.name} for conversation ${this.id} with prompt:`, this.prompt.author.username + "/" + this.prompt.name);
         const start = performance.now();
         let didError = false;
         const res = await this.model.runner(this).catch(err => {
-            log.error(`Error running model ${this.model.name} for conversation ${this.id}:`, err);
+            log.error(`error running model ${this.model.name} for conversation ${this.id}:`, err);
             didError = true;
             return new GPTMessage({
                 content: `Error running model: ${err.message}`,
@@ -416,7 +416,7 @@ export class Conversation {
             if (this.messages.length > currentMessageLength) didAnyToolCalls = true;
         }
         const end = performance.now();
-        log.info(`GPT Message generated for conversation ${this.id} with model ${this.model.name} in ${(end - start).toFixed(3)}ms.`);
+        log.info(`gpt message generated for conversation ${this.id} with model ${this.model.name} in ${(end - start).toFixed(3)}ms.`);
         if (didAnyToolCalls) {
             return await this.run(); // re-run the model to process the tool call responses that were added, but only if new messages were added
         }
@@ -439,10 +439,10 @@ export class Conversation {
 
     filterParameters() {
         const availableParameters = this.model.parameters.map(p => p.key);
-        log.debug(`Filtering API parameters for conversation ${this.id}. Available parameters:`, availableParameters);
+        log.debug(`filtering API parameters for conversation ${this.id}. Available parameters:`, availableParameters);
         const entries = Object.entries(this.api_parameters || {});
         const filteredEntries = entries.filter(([key, _]) => availableParameters.includes(key));
-        log.debug(`Filtered parameters:`, Object.fromEntries(filteredEntries));
+        log.debug(`filtered parameters:`, Object.fromEntries(filteredEntries));
         return Object.fromEntries(filteredEntries);
     }
 
@@ -502,7 +502,7 @@ export class Conversation {
 function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false): Conversation {
     const currentConversation = conversations.find(c => c.users.some(u => u === user));
     if (currentConversation && !alwaysCreateNew) {
-        log.debug(`Found existing conversation for user ${user.username} (${user.id}):`, currentConversation.id);
+        log.debug(`found existing conversation for user ${user.username} (${user.id}):`, currentConversation.id);
         return currentConversation
     }
     // alwaysCreateNew is always true from here on
@@ -519,10 +519,10 @@ function ensureConversationByUserId(user: User, alwaysCreateNew: boolean = false
 }
 
 function getConversationByMessageId(messageId: string): Conversation | undefined {
-    log.debug(`Searching for conversation by messageId: ${messageId}`);
+    log.debug(`searching for conversation by messageId: ${messageId}`);
     let found: Conversation | undefined = undefined;
     for (const c of conversations) {
-        log.debug(`Checking conversation ${c.id} for messageId: ${messageId}`);
+        log.debug(`checking conversation ${c.id} for messageId: ${messageId}`);
         for (const m of c.messages) {
             if ('discordId' in m && m.discordId !== undefined) {
                 log.debug(`checking message with discordId: ${m.discordId}`);

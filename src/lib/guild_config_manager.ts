@@ -240,7 +240,7 @@ export function fetchGuildConfig(guild?: string) {
             await config.write(); // update any missing keys
             return config;
         }).catch((error) => {
-            log.error(`Failed to fetch config for guild ${guild}: ${error.message}`);
+            log.error(`failed to fetch config for guild ${guild}: ${error.message}`);
             throw error;
         });
 }

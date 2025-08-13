@@ -317,10 +317,10 @@ export function createConfigRoutes(client: Client): Router {
             // Save the updated configuration
             await guildConfig.write();
 
-            log.info(`Configuration updated for guild ${req.params.guild}`);
+            log.info(`configuration updated for guild ${req.params.guild}`);
             res.json({ success: true, message: "Configuration saved successfully" });
         } catch (error) {
-            log.error("Error saving guild config:", error);
+            log.error("error saving guild config:", error);
             res.status(500).json({ error: "internal server error" });
         }
     });

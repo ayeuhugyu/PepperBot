@@ -84,7 +84,7 @@ export class Todo {
 
         return await Promise.all(updatePromises)
             .catch((error: any) => {
-                log.error('Error updating todo list:', error);
+                log.error('error updating todo list:', error);
             });
     }
 
@@ -93,7 +93,7 @@ export class Todo {
             .where({ user: this.user, name: this.name })
             .del()
             .catch((error: any) => {
-                log.error('Error deleting todo list:', error);
+                log.error('error deleting todo list:', error);
             });
     }
 }

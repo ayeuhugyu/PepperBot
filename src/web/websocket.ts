@@ -21,7 +21,7 @@ export function initializeWebSocket(server: Server) {
 
     // WebSocket connection handler
     wss.on('connection', (ws) => {
-        log.debug('WebSocket client connected');
+        log.debug('websocket client connected');
 
         ws.on('message', async (message) => {
             try {
@@ -44,7 +44,7 @@ export function initializeWebSocket(server: Server) {
                                 isWhitelisted = true;
                             }
                         } catch (error) {
-                            log.error("Error checking user whitelist:", error);
+                            log.error("error checking user whitelist:", error);
                         }
                     }
 
@@ -63,19 +63,19 @@ export function initializeWebSocket(server: Server) {
                         isWhitelisted: logClient.isWhitelisted
                     }));
 
-                    log.debug(`WebSocket client subscribed to ${logClient.level} logs (whitelisted: ${logClient.isWhitelisted})`);
+                    log.debug(`websocket client subscribed to ${logClient.level} logs (whitelisted: ${logClient.isWhitelisted})`);
                 } else if (data.type === 'unsubscribe') {
                     // Remove client from tracking
                     for (const client of logClients) {
                         if (client.ws === ws) {
                             logClients.delete(client);
-                            log.debug('WebSocket client unsubscribed');
+                            log.debug('webSocket client unsubscribed');
                             break;
                         }
                     }
                 }
             } catch (error) {
-                log.error('WebSocket message error:', error);
+                log.error('websocket message error:', error);
             }
         });
 
@@ -87,15 +87,15 @@ export function initializeWebSocket(server: Server) {
                     break;
                 }
             }
-            log.debug('WebSocket client disconnected');
+            log.debug('websocket client disconnected');
         });
 
         ws.on('error', (error) => {
-            log.error('WebSocket error:', error);
+            log.error('websocket error:', error);
         });
     });
 
-    // Listen for log events and broadcast to WebSocket clients
+    // Listen for log events and broadcast to websocket clients
     GlobalEvents.on("log", (fileString: string, level: log.Level) => {
         const levelName = log.Level[level].toLowerCase();
 
@@ -118,6 +118,6 @@ export function initializeWebSocket(server: Server) {
         }
     });
 
-    log.info('WebSocket server initialized');
+    log.info('websocket server initialized');
     return wss;
 }

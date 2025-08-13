@@ -13,7 +13,7 @@ let botId: string;
 try {
     botId = process.env.DISCORD_CLIENT_ID || process.env.DISCORD_OAUTH_CLIENT_ID || "";
 } catch (err) {
-    log.error("Failed to fetch client ID, defaulting to fallback ID. Error:", err);
+    log.error("failed to fetch client ID, defaulting to fallback ID. Error:", err);
     botId = "111111111111111111111";
 }
 const port = 53134; // TODO: fetch this from above file; not very possible. it is Hell
@@ -83,12 +83,12 @@ export async function getUser(token: string): Promise<APIUser | OAuth2Error | un
         // check if user is in cache and not expired
         const cached = userCache.get(token);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-            log.debug(`Returning cached user for token ${token.substring(0, 8)}...`);
+            log.debug(`returning cached user for token ${token.substring(0, 8)}...`);
             return cached.user;
         }
 
         // fetch from Discord API
-        log.debug(`Fetching user from Discord API for token ${token.substring(0, 8)}...`);
+        log.debug(`fetching user from Discord API for token ${token.substring(0, 8)}...`);
         const user = await fetch(discordApi + Routes.user('@me'), {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -134,12 +134,12 @@ export async function fetchGuilds(token: string): Promise<APIGuild[] | OAuth2Err
         // check if guilds are in cache and not expired
         const cached = guildsCache.get(token);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-            log.debug(`Returning cached guilds for token ${token.substring(0, 8)}...`);
+            log.debug(`returning cached guilds for token ${token.substring(0, 8)}...`);
             return cached.guilds;
         }
 
         // fetch from Discord API
-        log.debug(`Fetching guilds from Discord API for token ${token.substring(0, 8)}...`);
+        log.debug(`fetching guilds from Discord API for token ${token.substring(0, 8)}...`);
         const guilds = await fetch(discordApi + Routes.userGuilds(), {
             headers: {
                 Authorization: `Bearer ${token}`

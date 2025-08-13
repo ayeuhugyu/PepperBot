@@ -40,7 +40,7 @@ class ScheduledEvent {
     }
 
     async write() {
-        log.debug(`Writing scheduled event ${this.id}`);
+        log.debug(`writing scheduled event ${this.id}`);
         await database('scheduled').insert({
             id: this.id,
             creator_id: this.creator_id,
@@ -52,19 +52,19 @@ class ScheduledEvent {
     }
 
     async delete() {
-        log.debug(`Deleting scheduled event ${this.id}`);
+        log.debug(`deleting scheduled event ${this.id}`);
         await database('scheduled').where({ id: this.id }).del();
     }
 }
 
 async function fetchScheduledEventsByCreatorId(creator_id: string) {
-    log.debug(`Fetching scheduled events for creator ${creator_id}`);
+    log.debug(`fetching scheduled events for creator ${creator_id}`);
     const events = await database('scheduled').where({ creator_id });
     return events.map((event: any) => new ScheduledEvent(event));
 }
 
 async function fetchScheduledEventById(id: string) {
-    log.debug(`Fetching scheduled event with id ${id}`);
+    log.debug(`fetching scheduled event with id ${id}`);
     const event = await database('scheduled').where({ id }).first();
     if (!event) {
         return undefined;
@@ -73,7 +73,7 @@ async function fetchScheduledEventById(id: string) {
 }
 
 async function getAllEvents() {
-    log.debug(`Fetching all scheduled events`);
+    log.debug(`fetching all scheduled events`);
     const events = await database('scheduled');
     return events.map((event: any) => new ScheduledEvent(event));
 }
@@ -85,7 +85,7 @@ function isMoreThan10SecondsEarlier(ts1: number, ts2: number): boolean {
 }
 
 function execEvent(client: Client, event: ScheduledEvent) {
-    log.info(`Executing scheduled event ${event.id}`);
+    log.info(`executing scheduled event ${event.id}`);
     const executingAfterTime = isMoreThan10SecondsEarlier(event.time.getTime(), Date.now());
     const text = `<t:${Math.floor(event.time.getTime()) / 1000}:F> (<t:${Math.floor(event.time.getTime() / 1000)}:R>), event id \`${event.id}\`, notifying <@${event.creator_id}>${executingAfterTime ? " (delayed)" : ""}: \n\n${event.content}`
     if (event.type === ScheduledEventType.send && event.channel_id) {
@@ -120,12 +120,12 @@ export function scheduleEvent(client: Client, event: ScheduledEvent) {
     const timeToEvent = event.time.getTime() - now.getTime();
     if (timeToEvent > 0) {
         setTimeout(() => {
-            log.info(`Executing scheduled event ${event.id} after ${timeToEvent}ms`);
+            log.info(`executing scheduled event ${event.id} after ${timeToEvent}ms`);
             execEvent(client, event);
             event.delete();
         }, timeToEvent);
     } else {
-        log.info(`Executing scheduled event ${event.id} immediately`);
+        log.info(`executing scheduled event ${event.id} immediately`);
         execEvent(client, event);
         event.delete();
     }
@@ -133,11 +133,11 @@ export function scheduleEvent(client: Client, event: ScheduledEvent) {
 
 
 export function queueAllEvents(client: Client) {
-    log.debug(`Queueing all scheduled events`);
+    log.debug(`queueing all scheduled events`);
     const events = getAllEvents();
     events.then((events) => {
         events.forEach((event) => {
-            log.debug(`Scheduling event ${event.id} for execution at ${event.time}`);
+            log.debug(`scheduling event ${event.id} for execution at ${event.time}`);
             scheduleEvent(client, event);
         });
     }).catch(log.error);
