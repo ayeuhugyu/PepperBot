@@ -76,25 +76,17 @@ const leave = new Command(
 const debug = new Command(
     {
         name: 'debug',
-        description: 'description',
-        long_description: 'description',
+        description: 'returns a bunch of debug data about the voice manager',
+        long_description: 'returns a bunch of debug data about the voice manager',
         tags: [CommandTag.Debug, CommandTag.WhitelistOnly],
         pipable_to: [],
-        options: [
-            new CommandOption({
-                name: 'argument',
-                description: 'description',
-                long_description: 'description',
-                type: CommandOptionType.String,
-                required: true
-            })
-        ],
+        options: [],
         access: CommandAccessTemplates.dev_only,
         input_types: [InvokerType.Message, InvokerType.Interaction],
         example_usage: "p/vc debug",
         aliases: []
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["argument"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
     async function execute ({ invoker, args, guild_config }) {
         let text = ``
         voice.VoiceManagers.forEach((manager) => {
