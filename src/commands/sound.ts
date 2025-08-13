@@ -17,10 +17,10 @@ const list = new Command({
         tags: [CommandTag.Voice],
         pipable_to: [CommandTag.TextPipable],
         aliases: ['ls'],
-        root_aliases: [],
+        root_aliases: ["listsounds"],
         options: [],
         example_usage: "p/sound list",
-        argument_order: undefined,
+        argument_order: "",
     },
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ invoker, guild_config, args }) {
@@ -60,26 +60,26 @@ const play = new Command({
         tags: [CommandTag.Voice],
         pipable_to: [],
         aliases: [],
-        root_aliases: [],
+        root_aliases: ["playsound"],
         options: [
             new CommandOption({
-                name: 'content',
+                name: 'sound',
                 description: 'the sound to play',
                 type: CommandOptionType.String,
                 required: true,
             })
         ],
         example_usage: "p/sound play foo.mp3",
-        argument_order: "<content>",
+        argument_order: "<sound>",
         requiredPermissions: ["Connect", "Speak"]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["sound"]),
     async function execute ({ invoker, guild_config, args }) {
-        if (!args.content) {
+        if (!args.sound) {
             action.reply(invoker, {
                 content: "you need to specify a sound to play",
                 ephemeral: guild_config.other.use_ephemeral_replies,
-            })
+            });
             return new CommandResponse({
                 error: true,
                 message: "you need to specify a sound to play",
@@ -95,15 +95,15 @@ const play = new Command({
                 message: "this command can't be used outside of a guild"
             })
         }
-        const sound = await getSound(args.content);
+        const sound = await getSound(args.sound);
         if (!sound) {
             action.reply(invoker, {
-                content: `the sound \`${fixFileName(args.content)}\` does not exist`,
+                content: `the sound \`${fixFileName(args.sound)}\` does not exist`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({
                 error: true,
-                message: `the sound \`${fixFileName(args.content)}\` does not exist`,
+                message: `the sound \`${fixFileName(args.sound)}\` does not exist`,
             });
         }
         const voiceManager = await voice.getVoiceManager(invoker.guild);
@@ -199,23 +199,22 @@ const get = new Command({
         long_description: 'returns the requested sound',
         tags: [CommandTag.Voice],
         pipable_to: [],
-        aliases: ['upload'],
         root_aliases: ["getsound"],
         options: [
             new CommandOption({
-                name: 'content',
+                name: 'sound',
                 description: 'the sound to get',
                 type: CommandOptionType.String,
                 required: true,
             })
         ],
         example_usage: "p/sound get foo.mp3",
-        argument_order: "<content>",
+        argument_order: "<sound>",
         requiredPermissions: ["AttachFiles"]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["content"]),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["sound"]),
     async function execute ({ invoker, guild_config, args }) {
-        if (!args.content) {
+        if (!args.sound) {
             action.reply(invoker, {
                 content: "you need to specify a sound to get",
                 ephemeral: guild_config.other.use_ephemeral_replies,
@@ -225,15 +224,15 @@ const get = new Command({
                 message: "you need to specify a sound to get",
             });
         }
-        const sound = await getSound(args.content);
+        const sound = await getSound(args.sound);
         if (!sound) {
             action.reply(invoker, {
-                content: `the sound \`${fixFileName(args.content)}\` does not exist`,
+                content: `the sound \`${fixFileName(args.sound)}\` does not exist`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             })
             return new CommandResponse({
                 error: true,
-                message: `the sound \`${fixFileName(args.content)}\` does not exist`,
+                message: `the sound \`${fixFileName(args.sound)}\` does not exist`,
             });
         }
         const sent = await action.reply(invoker, {
@@ -255,7 +254,7 @@ const command = new Command(
         long_description: 'allows you to manage custom sounds, such as uploading, listing, and playing them',
         tags: [CommandTag.Voice],
         pipable_to: [],
-        argument_order: "<subcommand> <content?>",
+        argument_order: "<subcommand>",
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
             list: [get, add, play, list],
@@ -268,18 +267,15 @@ const command = new Command(
     async function execute ({ invoker, guild_config, args }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help sound for a list of subcommands`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}sound get\`: get a sound\n\`${guild_config.other.prefix}sound add\`: add a sound\n\`${guild_config.other.prefix}sound list\`: list all sounds\n\`${guild_config.other.prefix}sound play\`: play a sound`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
-            })
-            return new CommandResponse({
-                error: true,
-                message: `invalid subcommand: ${args.subcommand}; use ${guild_config.other.prefix}help sound for a list of subcommands`,
             });
+            return;
         }
-        action.reply(invoker, {
-            content: "this command does nothing if you don't supply a subcommand",
-            ephemeral: guild_config.other.use_ephemeral_replies
-        })
+        await action.reply(invoker, {
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}sound get\`: get a sound\n\`${guild_config.other.prefix}sound add\`: add a sound\n\`${guild_config.other.prefix}sound list\`: list all sounds\n\`${guild_config.other.prefix}sound play\`: play a sound`,
+            ephemeral: guild_config.other.use_ephemeral_replies,
+        });
     }
 );
 
