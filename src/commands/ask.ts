@@ -19,14 +19,14 @@ const command = new Command(
                 name: 'request',
                 description: 'the question to ask the ai',
                 type: CommandOptionType.String,
-                required: true,
+                required: false,
                 long_requirements: 'if image is not provided'
             }),
             new CommandOption({
                 name: 'image',
                 description: 'an image to provide context',
                 type: CommandOptionType.Attachment,
-                required: true,
+                required: false,
                 long_requirements: 'if request is not provided'
             })
         ]
