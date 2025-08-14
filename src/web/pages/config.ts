@@ -97,7 +97,8 @@ export function createConfigRoutes(client: Client): Router {
             const manageableGuilds = Array.isArray(guilds) ? guilds.filter((guild: any) => {
                 const permissions = BigInt(guild.permissions || '0');
                 const hasManageGuild = (permissions & BigInt(0x20)) === BigInt(0x20);
-                return guild.owner || hasManageGuild;
+                const botIsInGuild = client.guilds.cache.has(guild.id);
+                return (guild.owner || hasManageGuild) && botIsInGuild;
             }) : [];
 
             res.render("config", {
