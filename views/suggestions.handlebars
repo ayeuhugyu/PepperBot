@@ -1,0 +1,119 @@
+<div class="flex column page-centered some-padding small-gap centered" id="suggestions-page">
+    <div id="suggestions-header">
+        <a href="/" class="card spinny-button side-padding pointer">← back</a>
+        <h1 class="card side-padding suggestions-title">Suggestions</h1>
+        <div class="spacer"></div>
+    </div>
+    <span class="card side-padding">have any ideas on what i could improve on? please tell me! i'm always open to suggestions.</span>
+
+    <hr>
+
+    {{#if isAuthenticated}}
+        <div class="card side-padding">
+            <span>logged in as <strong>{{user.username}}</strong></span>
+        </div>
+    {{else}}
+        <div class="card side-padding">
+            <p>you can submit suggestions anonymously, or <a href="/auth">login</a> to include your username</p>
+        </div>
+    {{/if}}
+
+    <form id="suggestion-form" class="flex column small-gap">
+        <div class="card side-padding">
+            <label for="suggestion-text">your suggestion:</label>
+            <textarea
+                id="suggestion-text"
+                name="suggestion"
+                placeholder="describe your suggestion here"
+                rows="6"
+                maxlength="10000"
+                required
+                class="suggestion-textarea"
+            ></textarea>
+        </div>
+
+        {{#if isAuthenticated}}
+        <div class="card side-padding">
+            <label class="checkbox-container">
+                <input type="checkbox" id="anonymous-checkbox" name="anonymous" value="true">
+                <span class="checkmark"></span>
+                submit anonymously
+            </label>
+            <small>if checked, your username will not be included with the suggestion</small>
+        </div>
+        {{/if}}
+
+        <button type="submit" class="card spinny-button side-padding pointer" id="submit-button">
+            Submit
+        </button>
+    </form>
+
+    <div id="message-area" class="card side-padding" style="display: none;">
+        <span id="message-text"></span>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('suggestion-form');
+    const textArea = document.getElementById('suggestion-text');
+    const charCount = document.getElementById('char-count');
+    const submitButton = document.getElementById('submit-button');
+    const messageArea = document.getElementById('message-area');
+    const messageText = document.getElementById('message-text');
+
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const suggestion = textArea.value.trim();
+        if (!suggestion) {
+            showMessage('Please enter a suggestion.', 'error');
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/suggestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showMessage(result.message, 'success');
+                form.reset();
+            } else {
+                showMessage(result.error || 'Failed to submit suggestion.', 'error');
+            }
+        } catch (error) {
+            showMessage('Network error. Please try again.', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit Suggestion';
+        }
+    });
+
+    function showMessage(message, type) {
+        messageText.textContent = message;
+        messageArea.className = `card side-padding ${type}`;
+        messageArea.style.display = 'block';
+
+        // Auto-hide after 5 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                messageArea.style.display = 'none';
+            }, 5000);
+        }
+    }
+});
+</script>
