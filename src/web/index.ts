@@ -4,6 +4,8 @@ import * as log from "../lib/log";
 import cookieParser from "cookie-parser";
 import { Client } from "discord.js";
 import { createServer } from 'http';
+import { createServer as createHttpsServer } from 'https';
+import { readFileSync } from 'fs';
 import { initializeWebSocket } from "./websocket";
 
 // Import page modules
@@ -35,7 +37,30 @@ class HttpException extends Error {
 
 export function listen(client: Client) {
     const app = express();
-    const server = createServer(app);
+    
+    // Check if HTTPS certificates are provided
+    const certPath = process.env.HTTPS_CERT_PATH;
+    const keyPath = process.env.HTTPS_KEY_PATH;
+    const useHttps = certPath && keyPath;
+    
+    let server;
+    
+    if (useHttps) {
+        try {
+            const httpsOptions = {
+                cert: readFileSync(certPath),
+                key: readFileSync(keyPath)
+            };
+            server = createHttpsServer(httpsOptions, app);
+            log.info('HTTPS server configured with provided certificates');
+        } catch (error) {
+            log.error('Failed to read HTTPS certificates, falling back to HTTP:', error);
+            server = createServer(app);
+        }
+    } else {
+        server = createServer(app);
+    }
+    
     const hbs = create({
         helpers: {
             join: function(array: string[], separator: string) {
@@ -119,5 +144,6 @@ export function listen(client: Client) {
         });
     });
 
-    server.listen(port, () => log.info(`web interface started on port ${port}`));
+    const protocol = (certPath && keyPath) ? 'https' : 'http';
+    server.listen(port, () => log.info(`web interface started on ${protocol}://localhost:${port}`));
 }
