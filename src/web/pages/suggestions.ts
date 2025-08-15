@@ -88,24 +88,24 @@ export function createSuggestionsRoutes(client: Client): Router {
             let message: MessageCreateOptions = {
                 content: messageContent,
                 files: [textToAttachment(suggestion.trim(), "suggestion.txt")]
-            }
+            };
 
-            // Send DM
-            try {
-                await (targetChannel as GuildTextBasedChannel).send(message);
-                log.info(`suggestion sent to ${channelId} from ${!anonymous ? user?.id : 'anonymous'}`);
+            // Send DM using .then and .catch
+            (targetChannel as GuildTextBasedChannel).send(message)
+                .then(() => {
+                    log.info(`suggestion sent to ${channelId} from ${!anonymous ? user?.id : 'anonymous'}`);
 
-                res.json({
-                    success: true,
-                    message: "suggestion submitted successfully"
+                    res.json({
+                        success: true,
+                        message: "suggestion submitted successfully"
+                    });
+                })
+                .catch((dmError) => {
+                    log.error("failed to send DM:", dmError);
+                    res.status(500).json({
+                        error: "failed to send suggestion - please try again later"
+                    });
                 });
-            } catch (dmError) {
-                log.error("failed to send DM:", dmError);
-                res.status(500).json({
-                    error: "failed to send suggestion - please try again later"
-                });
-            }
-
         } catch (err) {
             log.error("error in suggestions POST route:", err);
             next(err);
