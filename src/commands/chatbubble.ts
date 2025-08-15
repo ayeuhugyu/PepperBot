@@ -133,6 +133,20 @@ const command = new Command(
         }
 
         args.image = invoker.attachments.first()?.url;
+
+        if (!args.image && !args.url) {
+            if (invoker.reference?.messageId) {
+                const repliedMessage = await invoker.channel.messages.fetch(invoker.reference.messageId).catch(() => null);
+                if (repliedMessage && repliedMessage.attachments.size > 0) {
+                    args.image = repliedMessage.attachments.first()?.url;
+                } else if (repliedMessage && repliedMessage.content) {
+                    const imageUrlMatch = repliedMessage.content.match(urlRegex);
+                    if (imageUrlMatch && imageUrlMatch.length > 0) {
+                        args.image = imageUrlMatch[0];
+                    }
+                }
+            }
+        }
         return args;
     },
     async function execute ({ invoker, piped_data, args, guild_config }) {
