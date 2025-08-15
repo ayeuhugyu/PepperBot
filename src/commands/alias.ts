@@ -39,7 +39,6 @@ const create = new Command(
         // Remove the command prefix and subcommand
         const commandLength = `${guild_config.other.prefix}${command_name_used}`.length;
         let content = invoker.content.slice(commandLength).trim();
-        console.log(content);
         // Try aliasname="alias data"
         let match = content.match(/^([^"]+?)\s*=\s*"([^"]+)"\s*$/);
         if (match) {

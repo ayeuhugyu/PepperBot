@@ -150,7 +150,6 @@ const command = new Command(
         });
 
         collector.on('end', async () => {
-            console.log("collector ended");
             action.edit(sent, {
                 components: [
                     new TextDisplay({

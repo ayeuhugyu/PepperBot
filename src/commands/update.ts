@@ -234,7 +234,6 @@ const send = new Command(
                 });
             }
             for (const embed of embedsOrError) {
-                console.log(embed);
                 await action.send(channel as action.SendableChannel, {
                     components: [embed],
                     components_v2: true,
