@@ -17,6 +17,7 @@ import { createCommandsRoutes } from "./pages/commands";
 import { createConfigRoutes } from "./pages/config";
 import { createPromptsRoutes } from "./pages/prompts";
 import { createSuggestionsRoutes } from "./pages/suggestions";
+import { createComedicRoutes } from "./pages/comedic";
 
 const httpPort = 53134;
 const httpsPort = 4430; // changed to 4430 to avoid conflicts with port 443
@@ -124,6 +125,7 @@ export function listen(client: Client) {
     app.use('/', createConfigRoutes(client));
     app.use('/', createPromptsRoutes(client));
     app.use('/', createSuggestionsRoutes(client));
+    app.use('/', createComedicRoutes());
 
     // Error handlers
     app.use((req, _res, next) => {
