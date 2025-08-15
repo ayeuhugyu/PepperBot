@@ -18,7 +18,8 @@ import { createConfigRoutes } from "./pages/config";
 import { createPromptsRoutes } from "./pages/prompts";
 import { createSuggestionsRoutes } from "./pages/suggestions";
 
-const port = 53134
+const httpPort = 53134;
+const httpsPort = 443;
 const isDev = process.env.IS_DEV === "True";
 
 class HttpException extends Error {
@@ -37,30 +38,32 @@ class HttpException extends Error {
 
 export function listen(client: Client) {
     const app = express();
-    
+
     // Check if HTTPS certificates are provided
     const certPath = process.env.HTTPS_CERT_PATH;
     const keyPath = process.env.HTTPS_KEY_PATH;
     const useHttps = certPath && keyPath;
-    
-    let server;
-    
+
+    // Always create HTTP server
+    const httpServer = createServer(app);
+
+    let httpsServer;
     if (useHttps) {
         try {
             const httpsOptions = {
                 cert: readFileSync(certPath),
                 key: readFileSync(keyPath)
             };
-            server = createHttpsServer(httpsOptions, app);
+            httpsServer = createHttpsServer(httpsOptions, app);
             log.info('HTTPS server configured with provided certificates');
         } catch (error) {
-            log.error('Failed to read HTTPS certificates, falling back to HTTP:', error);
-            server = createServer(app);
+            log.error('failed to read HTTPS certificates, HTTPS will not be available:', error);
         }
-    } else {
-        server = createServer(app);
     }
-    
+
+    // Initialize WebSocket with HTTP server (can be extended to HTTPS later if needed)
+    initializeWebSocket(httpServer);
+
     const hbs = create({
         helpers: {
             join: function(array: string[], separator: string) {
@@ -86,8 +89,6 @@ export function listen(client: Client) {
             }
         }
     });
-
-    initializeWebSocket(server);
 
     app.engine("handlebars", hbs.engine);
     app.set("view engine", "handlebars");
@@ -144,6 +145,15 @@ export function listen(client: Client) {
         });
     });
 
-    const protocol = (certPath && keyPath) ? 'https' : 'http';
-    server.listen(port, () => log.info(`web interface started on ${protocol}://localhost:${port}`));
+    // Start HTTP server
+    httpServer.listen(httpPort, () => {
+        log.info(`HTTP server started on http://localhost:${httpPort}`);
+    });
+
+    // Start HTTPS server if available
+    if (httpsServer) {
+        httpsServer.listen(httpsPort, () => {
+            log.info(`HTTPS server started on https://localhost:${httpsPort}`);
+        });
+    }
 }
