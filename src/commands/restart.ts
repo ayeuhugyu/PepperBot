@@ -15,12 +15,30 @@ const command = new Command(
         example_usage: "p/restart",
         aliases: [],
         access: CommandAccessTemplates.dev_only,
-        options: []
+        options: [
+            new CommandOption({
+                name: 'pull',
+                description: 'pulls the latest changes from the repository before restarting',
+                type: CommandOptionType.String,
+                required: false,
+            })
+        ]
     },
-    getArgumentsTemplate(GetArgumentsTemplateType.DoNothing, []),
+    getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["pull"]),
     async function execute ({ invoker, args }) {
-        await action.reply(invoker, "restarting bot...");
-        process.exit(0);
+        if (args.pull) {
+            const reply = await action.reply(invoker, "pulling latest changes...");
+            await import("../../scripts/pull");
+            if (reply instanceof Message) {
+                await reply.edit("pulled latest changes, restarting...");
+            } else {
+                await action.reply(invoker, "pulled latest changes, restarting...");
+            }
+            process.exit(0);
+        } else {
+            await action.reply(invoker, "restarting bot...");
+            process.exit(0);
+        }
     }
 );
 
