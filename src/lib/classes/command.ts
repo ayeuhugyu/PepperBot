@@ -565,7 +565,7 @@ export class Command<
             }
 
             let response
-            log.info("executing command, input: ", inspect(input, { depth: 1, colors: true, compact: true }));
+            log.debug("executing command, input: ", inspect(input, { depth: 1, colors: true, compact: true }));
             let usedCommand = usedSubcommand || this;
             // check permissions for the command
             const foundPermissions: string[] = [];
