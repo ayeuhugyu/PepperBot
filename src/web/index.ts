@@ -55,18 +55,18 @@ export function listen(client: Client) {
                 key: readFileSync(keyPath)
             };
             httpsServer = createHttpsServer(httpsOptions, app);
-            log.info('HTTPS server configured with provided certificates');
+            log.info('https server configured with provided certificates');
         } catch (error) {
-            log.error('failed to read HTTPS certificates, HTTPS will not be available:', error);
+            log.error('failed to read https certificates, https will not be available:', error);
         }
     }
 
-    // Initialize WebSocket with HTTP server
-    initializeWebSocket(httpServer, 'HTTP');
+    // Initialize WebSocket for HTTP server
+    initializeWebSocket(httpServer);
 
-    // Initialize WebSocket with HTTPS server if available
+    // Initialize WebSocket for HTTPS server if available (for WSS support)
     if (httpsServer) {
-        initializeWebSocket(httpsServer, 'HTTPS');
+        initializeWebSocket(httpsServer);
     }
 
     const hbs = create({
@@ -152,13 +152,15 @@ export function listen(client: Client) {
 
     // Start HTTP server
     httpServer.listen(httpPort, () => {
-        log.info(`HTTP server started on http://localhost:${httpPort}`);
+        log.info(`http server started on http://localhost:${httpPort}`);
+        log.info(`websocket available at ws://localhost:${httpPort}`);
     });
 
     // Start HTTPS server if available
     if (httpsServer) {
         httpsServer.listen(httpsPort, () => {
-            log.info(`HTTPS server started on https://localhost:${httpsPort}`);
+            log.info(`https server started on https://localhost:${httpsPort}`);
+            log.info(`secure websocket available at wss://localhost:${httpsPort}`);
         });
     }
 }

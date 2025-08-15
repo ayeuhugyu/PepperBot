@@ -16,12 +16,15 @@ const logClients: Set<LogClient> = new Set();
 const whitelist = CommandAccessTemplates.dev_only.whitelist.users;
 const whitelistOnlyLevels = ['debug', 'access'];
 
-export function initializeWebSocket(server: Server, serverName: string = 'unknown') {
+// Track if global event listeners have been set up
+let globalEventListenersInitialized = false;
+
+export function initializeWebSocket(server: Server) {
     const wss = new WebSocketServer({ server });
 
     // WebSocket connection handler
     wss.on('connection', (ws) => {
-        log.debug(`websocket client connected via ${serverName} server`);
+        log.debug('websocket client connected');
 
         ws.on('message', async (message) => {
             try {
@@ -95,29 +98,35 @@ export function initializeWebSocket(server: Server, serverName: string = 'unknow
         });
     });
 
-    // Listen for log events and broadcast to websocket clients
-    GlobalEvents.on("log", (fileString: string, level: log.Level) => {
-        const levelName = log.Level[level].toLowerCase();
+    // Set up global event listeners only once to avoid duplication
+    if (!globalEventListenersInitialized) {
+        // Listen for log events and broadcast to websocket clients
+        GlobalEvents.on("log", (fileString: string, level: log.Level) => {
+            const levelName = log.Level[level].toLowerCase();
 
-        // Broadcast to subscribed clients
-        for (const client of logClients) {
-            // Check if client is subscribed to this level or global
-            const isSubscribedLevel = client.level === levelName ||
-                                    (client.level === 'global' && !whitelistOnlyLevels.includes(levelName));
+            // Broadcast to subscribed clients
+            for (const client of logClients) {
+                // Check if client is subscribed to this level or global
+                const isSubscribedLevel = client.level === levelName ||
+                                        (client.level === 'global' && !whitelistOnlyLevels.includes(levelName));
 
-            // Check whitelist permissions for protected levels
-            const canAccessLevel = !whitelistOnlyLevels.includes(levelName) || client.isWhitelisted;
+                // Check whitelist permissions for protected levels
+                const canAccessLevel = !whitelistOnlyLevels.includes(levelName) || client.isWhitelisted;
 
-            if (isSubscribedLevel && canAccessLevel && client.ws.readyState === WebSocket.OPEN) {
-                client.ws.send(JSON.stringify({
-                    type: 'newLog',
-                    level: levelName,
-                    data: fileString.trim()
-                }));
+                if (isSubscribedLevel && canAccessLevel && client.ws.readyState === WebSocket.OPEN) {
+                    client.ws.send(JSON.stringify({
+                        type: 'newLog',
+                        level: levelName,
+                        data: fileString.trim()
+                    }));
+                }
             }
-        }
-    });
+        });
 
-    log.info(`websocket server initialized for ${serverName} server`);
+        globalEventListenersInitialized = true;
+        log.info('global websocket event listeners initialized');
+    }
+
+    log.info('websocket server initialized');
     return wss;
 }
