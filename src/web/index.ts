@@ -19,7 +19,7 @@ import { createPromptsRoutes } from "./pages/prompts";
 import { createSuggestionsRoutes } from "./pages/suggestions";
 
 const httpPort = 53134;
-const httpsPort = 443;
+const httpsPort = 4430; // changed to 4430 to avoid conflicts with port 443
 const isDev = process.env.IS_DEV === "True";
 
 class HttpException extends Error {
