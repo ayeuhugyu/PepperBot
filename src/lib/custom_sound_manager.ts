@@ -2,6 +2,8 @@ import stream from "stream";
 import database from "./data_manager";
 import { fixFileName } from "./attachment_manager";
 import fs from "fs-extra";
+import path from "path";
+import * as log from "./log";
 
 export interface dbSound {
     guild: string | null;
@@ -108,3 +110,58 @@ export async function getSound(inputName: string): Promise<CustomSound | null> {
 export async function listSounds() {
     return (await database("sounds").select("*")).map((sound) => new CustomSound(sound));
 }
+
+export async function initializeSounds() {
+    try {
+        const soundsDir = "resources/sounds";
+
+        // ensure the sounds directory exists
+        if (!fs.existsSync(soundsDir)) {
+            log.info("sounds directory does not exist, skipping initialization");
+            return;
+        }
+
+        // read all files in the sounds directory
+        const files = fs.readdirSync(soundsDir);
+        const audioFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'].includes(ext);
+        });
+
+        log.info(`found ${audioFiles.length} audio files in sounds directory`);
+
+        for (const file of audioFiles) {
+            // remove file extension for the name
+            const soundName = path.basename(file, path.extname(file));
+            const soundPath = path.join(soundsDir, file);
+
+            // check if sound already exists in database
+            const existingSound = await getSoundNoAutocorrect(soundName);
+
+            if (!existingSound) {
+                // add sound to database with template information
+                try {
+                    await database("sounds").insert({
+                        guild: "1112819622505365556",
+                        user: "1209297323029565470",
+                        name: soundName,
+                        path: soundPath,
+                        created_at: new Date()
+                    });
+                    log.info(`added sound: ${soundName}`);
+                } catch (error) {
+                    log.error(`failed to add sound ${soundName}:`, error);
+                }
+            } else {
+                log.info(`sound ${soundName} already exists in database`);
+            }
+        }
+
+        log.info("sound initialization complete");
+    } catch (error) {
+        log.error("error initializing sounds:", error);
+    }
+}
+
+// initialize sounds on module load
+initializeSounds();
