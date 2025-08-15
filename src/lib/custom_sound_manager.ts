@@ -152,8 +152,6 @@ export async function initializeSounds() {
                 } catch (error) {
                     log.error(`failed to add sound ${soundName}:`, error);
                 }
-            } else {
-                log.info(`sound ${soundName} already exists in database`);
             }
         }
 
