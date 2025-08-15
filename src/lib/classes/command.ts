@@ -491,7 +491,7 @@ export class Command<
             }
             // todo: add context checks for bot dm and private channel
 
-            const bot_in_guild = invoker.guild?.members.me?.roles.cache.some(role => role.managed) || false;
+            const bot_in_guild = !!invoker.guild?.members.me;
             if (!bot_in_guild) log.info(`bot lacks managed role for guild ${invoker.guild?.id}; likely is not in it`);
             if (!this.allow_external_guild && !bot_in_guild) {
                 log.info("external guilds are not enabled for command " + this.name);
