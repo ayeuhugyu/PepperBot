@@ -21,5 +21,13 @@ export function createComedicRoutes(): Router {
         }
     });
 
+    router.get("/.git", async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            res.redirect("https://robtopgames.com/files/GDEditor.pdf")
+        } catch (err) {
+            next(err);
+        }
+    })
+
     return router;
 }
