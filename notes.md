@@ -111,3 +111,13 @@ $SPLIT_EMBED$
 - p/help has been greatly improved
 - p/gpt has been renamed to p/conversation
 - i've made a new update system that allows me to easily create these sorts of embeds with just text and nothing else
+- p/chatbubble has recieved a TON of improvements:
+  - you can now specify the exact position of the chatbubble
+  - you can now specify whether its a top chat bubble or a bottom chat bubble
+  - you can now change the border & background color for it
+  - it works with urls now
+
+$SPLIT_EMBED$
+
+there's so much new stuff i'm probably forgetting some
+go check it out
