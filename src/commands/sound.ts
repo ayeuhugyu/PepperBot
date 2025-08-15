@@ -4,7 +4,7 @@ import type { CommandInvoker } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
 import { addSound, getSound, listSounds } from "../lib/custom_sound_manager";
-import { fixFileName } from "../lib/attachment_manager";
+import { fixFileName, textToAttachment } from "../lib/attachment_manager";
 import * as voice from "../lib/classes/voice";
 import { CommandTag, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import { tablify } from "../lib/string_helpers";
@@ -25,29 +25,32 @@ const list = new Command({
     getArgumentsTemplate(GetArgumentsTemplateType.DoNothing),
     async function execute ({ invoker, guild_config, args }) {
         const sounds = await listSounds();
-        let reply = "sounds: ```";
+        let reply = "sounds: ";
+        let attachment
         if (sounds.length < 10) {
+            reply += "```";
             sounds.forEach(sound => {
                 reply += `\n${sound.name}`;
             });
+            reply += "```";
         } else {
             const rows: string[][] = [];
-            const columnCount = 3;
+            const columnCount = 2;
             for (let i = 0; i < sounds.length; i += columnCount) {
                 rows.push(sounds.slice(i, i + columnCount).map(sound => sound.name));
             }
 
-            const columns = ["1", "2", "3"];
+            const columns = ["1", "2"];
             const text = tablify(columns, rows, {
                 no_header: true,
                 column_separator: "  "
             });
-            reply += `\n${text}`;
+            attachment = textToAttachment(text, "sounds.txt");
         }
-        reply += "```";
         action.reply(invoker, {
             content: reply,
             ephemeral: guild_config.other.use_ephemeral_replies,
+            files: attachment ? [attachment] : [],
         });
         return new CommandResponse({ pipe_data: { input_text: reply }});
     }
