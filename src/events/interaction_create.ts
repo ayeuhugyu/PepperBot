@@ -2,10 +2,33 @@ import { ApplicationCommandOptionType, ChatInputCommandInteraction, CommandInter
 import { Command, CommandInput, FormattedCommandInteraction } from "../lib/classes/command";
 import commands from "../lib/command_manager";
 import * as log from "../lib/log";
+import { isMaintenanceModeActive, getMaintenanceEndTimestamp } from "../lib/maintenance_manager";
+import { CommandAccessTemplates } from "../lib/templates";
+import { fetchGuildConfig } from "../lib/guild_config_manager";
 
 async function commandHandler(interaction: ChatInputCommandInteraction) {
     log.info(`recieved interaction command "${interaction.commandName}"`);
     log.debug(`recieved interaction command "${interaction.commandName}" from ${interaction.user.username} in <#${interaction.channel?.id}>`);
+
+    // check maintenance mode
+    if (await isMaintenanceModeActive()) {
+        const isDevUser = CommandAccessTemplates.dev_only.whitelist.users.includes(interaction.user.id);
+
+        if (!isDevUser) {
+            const guildConfig = await fetchGuildConfig(interaction.guild?.id);
+            const endTimestamp = getMaintenanceEndTimestamp();
+            const endMessage = endTimestamp ?
+                ` expected end time: <t:${endTimestamp}:t> (<t:${endTimestamp}:R>)` :
+                "";
+
+            await interaction.reply({
+                content: `bot is currently in maintenance mode, meaning you cannot use it.${endMessage}`,
+                ephemeral: guildConfig.other.use_ephemeral_replies
+            });
+            return;
+        }
+    }
+
     const command = commands.get(interaction.commandName);
     if (!command) {
         log.warn(`invalid interaction command "${interaction.commandName}"`);

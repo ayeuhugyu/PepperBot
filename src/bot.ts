@@ -4,6 +4,7 @@ import * as log from './lib/log';
 import fs from "fs";
 import { listen } from './web/index';
 import { queueAllEvents } from './lib/schedule_manager';
+import { initializeMaintenanceMode } from './lib/maintenance_manager';
 config();
 
 export const client = new Client({
@@ -43,6 +44,9 @@ for (const file of eventFiles) {
 
 client.once('ready', async () => {
     log.info(`logged in as ${client.user?.tag}`);
+
+    // initialize maintenance mode from database
+    await initializeMaintenanceMode();
 
     // web server starting has been moved to index.ts because in here it would start one for every single shard
 

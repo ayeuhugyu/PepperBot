@@ -9,6 +9,8 @@ import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
 import * as log from "../lib/log";
 import { getAlias, listAliases } from "../lib/alias_manager";
+import { isMaintenanceModeActive, getMaintenanceEndTimestamp } from "../lib/maintenance_manager";
+import { CommandAccessTemplates } from "../lib/templates";
 
 async function gptHandler(message: Message<true>) {
     // Only process if the bot is mentioned.
@@ -19,6 +21,24 @@ async function gptHandler(message: Message<true>) {
     if (!message.guild?.members.me?.permissions.has("SendMessages")) {
         log.warn(`could not complete gpt handler due to lack of permissions (${message.channel?.id})`);
         return;
+    }
+
+    // check maintenance mode
+    if (await isMaintenanceModeActive()) {
+        // check if user is in dev whitelist
+        const isDevUser = CommandAccessTemplates.dev_only.whitelist.users.includes(message.author.id);
+
+        if (!isDevUser) {
+            const endTimestamp = getMaintenanceEndTimestamp();
+            const endMessage = endTimestamp ?
+                ` expected end time: <t:${endTimestamp}:t> (<t:${endTimestamp}:R>)` :
+                "";
+
+            await action.reply(message, {
+                content: `bot is currently in maintenance mode, meaning you cannot use it.${endMessage}`,
+            });
+            return false;
+        }
     }
 
     const gconfig = await fetchGuildConfig(message.guild?.id);
@@ -55,6 +75,25 @@ async function validateCommandExecution(message: Message<true>, config: GuildCon
     // check if message starts with prefix
     const prefix = config.other.prefix;
     if (!message.content.startsWith(prefix)) return false;
+
+    // check maintenance mode
+    if (await isMaintenanceModeActive()) {
+        // check if user is in dev whitelist
+        const isDevUser = CommandAccessTemplates.dev_only.whitelist.users.includes(message.author.id);
+
+        if (!isDevUser) {
+            const endTimestamp = getMaintenanceEndTimestamp();
+            const endMessage = endTimestamp ?
+                ` expected end time: <t:${endTimestamp}:t> (<t:${endTimestamp}:R>)` :
+                "";
+
+            await action.reply(message, {
+                content: `bot is currently in maintenance mode, meaning you cannot use it.${endMessage}`,
+                ephemeral: config.other.use_ephemeral_replies
+            });
+            return false;
+        }
+    }
 
     // check config restrictions
     if (config.command.disable_all_commands) return false;
