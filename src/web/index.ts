@@ -61,8 +61,13 @@ export function listen(client: Client) {
         }
     }
 
-    // Initialize WebSocket with HTTP server (can be extended to HTTPS later if needed)
-    initializeWebSocket(httpServer);
+    // Initialize WebSocket with HTTP server
+    initializeWebSocket(httpServer, 'HTTP');
+
+    // Initialize WebSocket with HTTPS server if available
+    if (httpsServer) {
+        initializeWebSocket(httpsServer, 'HTTPS');
+    }
 
     const hbs = create({
         helpers: {

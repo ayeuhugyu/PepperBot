@@ -16,12 +16,12 @@ const logClients: Set<LogClient> = new Set();
 const whitelist = CommandAccessTemplates.dev_only.whitelist.users;
 const whitelistOnlyLevels = ['debug', 'access'];
 
-export function initializeWebSocket(server: Server) {
+export function initializeWebSocket(server: Server, serverName: string = 'unknown') {
     const wss = new WebSocketServer({ server });
 
     // WebSocket connection handler
     wss.on('connection', (ws) => {
-        log.debug('websocket client connected');
+        log.debug(`websocket client connected via ${serverName} server`);
 
         ws.on('message', async (message) => {
             try {
@@ -118,6 +118,6 @@ export function initializeWebSocket(server: Server) {
         }
     });
 
-    log.info('websocket server initialized');
+    log.info(`websocket server initialized for ${serverName} server`);
     return wss;
 }
