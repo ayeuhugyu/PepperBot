@@ -58,8 +58,6 @@ const expectedOther: string[] = [
     "resources",
     "resources/sounds",
     "cache",
-    "cache/ytdl",
-    "cache/amdl",
     "cache/containers",
     "cache/luau",
     "logs",
