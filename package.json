@@ -10,7 +10,7 @@
         "pull": "bun run scripts/pull.ts",
         "migrate": "bunx knex migrate:latest",
         "migrate:make": "bunx knex migrate:make",
-        "setup": "cp .env.example .env && bun install && bun run migrate && mkdir -p logs",
+        "setup": "cp .env.example .env && bun install && mkdir resources && bun run migrate && mkdir -p logs",
         "start:server": "bun run pull && bun run start",
         "extras:install": "bun run scripts/install_extras.ts"
     },
