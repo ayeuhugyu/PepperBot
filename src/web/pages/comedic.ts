@@ -5,7 +5,7 @@ import * as log from "../../lib/log";
 export function createComedicRoutes(): Router {
     const router = Router();
 
-    router.get("/cgi-bin/*", async (req: Request, res: Response, next: NextFunction) => {
+    router.get("/cgi-bin", async (req: Request, res: Response, next: NextFunction) => {
         try {
             res.redirect("https://plaskinino.horse");
         } catch (err) {
