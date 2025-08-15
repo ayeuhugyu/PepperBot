@@ -132,6 +132,7 @@ const command = new Command(
         },
         options: [],
         example_usage: "p/maintenance start 1735689600",
+        access: CommandAccessTemplates.dev_only,
         aliases: []
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
