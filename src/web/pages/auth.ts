@@ -30,7 +30,10 @@ export function createAuthRoutes(): Router {
         if (token.error) {
             // do something like this in the above part (refresh token)
             if (token.error_description === 'Invalid "code" in request.') { return res.redirect(oauth2Url); }
-            else { return next(new Error(token.error)); }
+            else {
+                log.debug("Error getting token:", token.error, token.error_description);
+                return next(new Error(token.error));
+            }
         } else {
             updateCookies(res, token.access_token, token.refresh_token);
             return res.redirect('/'); // todo: implement redirect system
