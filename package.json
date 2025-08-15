@@ -12,7 +12,8 @@
         "migrate:make": "bunx knex migrate:make",
         "setup": "cp .env.example .env && bun install && mkdir resources && bun run migrate && mkdir -p logs",
         "start:server": "bun run pull && bun run start",
-        "extras:install": "bun run scripts/install_extras.ts"
+        "extras:install": "bun run scripts/install_extras.ts",
+        "update:main": "git checkout main && git pull origin dev && git push origin main && git checkout dev"
     },
     "author": "",
     "license": "ISC",
