@@ -44,14 +44,17 @@ export class Prompt {
 
     api_parameters: Record<string, number | string> = {}; // JSON string
 
-    tools: (string | FakeToolData)[] = ["request_url", "search"]
+    tools: (string | FakeToolData)[] = ["request_url", "search", "evaluate_luau"]
 
     constructor(dbObject: Partial<dbPrompt>) {
         const toolJSON = JSON.parse(dbObject.tools || "[]");
-        const tools: (string | FakeToolData)[] = [
+        const tools: (string | FakeToolData)[] | undefined = [
             ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "string")) as string[],
             ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "object" && tool !== null)) as FakeToolData[]
         ];
+        if (tools.length === 0) {
+        	tools = undefined;
+        }
         Object.assign(this, {
             name: dbObject.name || "Undefined",
             content: dbObject.content || "Prompt undefined.",
@@ -68,7 +71,7 @@ export class Prompt {
             nsfw: Boolean(dbObject.nsfw),
             default: Boolean(dbObject.default),
             api_parameters: JSON.parse(dbObject.api_parameters || "{}"),
-            tools: tools || ["request_url", "search"],
+            tools: tools || ["request_url", "search", "evaluate_luau"],
         });
     }
 }
