@@ -44,7 +44,7 @@ export class Prompt {
 
     api_parameters: Record<string, number | string> = {}; // JSON string
 
-    tools: (string | FakeToolData)[] = ["request_url", "search", "evaluate_luau"]
+    tools: (string | FakeToolData)[] = ["request_url", "search", "evaluate_luau"];
 
     constructor(dbObject: Partial<dbPrompt>) {
         const toolJSON = JSON.parse(dbObject.tools || "[]");
