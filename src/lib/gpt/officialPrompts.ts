@@ -225,6 +225,7 @@ export function getDefaultPrompt() {
         description: "The default prompt for PepperBot. ",
         published: true,
         published_at: new Date(),
+        tools: ["search", "request_url", "evaluate_luau"]
     });
     if (!hasWrittenOnce) {
         writePrompt(prompt);
