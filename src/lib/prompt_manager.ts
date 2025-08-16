@@ -48,12 +48,12 @@ export class Prompt {
 
     constructor(dbObject: Partial<dbPrompt>) {
         const toolJSON = JSON.parse(dbObject.tools || "[]");
-        const tools: (string | FakeToolData)[] | undefined = [
+        let tools: (string | FakeToolData)[] | undefined = [
             ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "string")) as string[],
             ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "object" && tool !== null)) as FakeToolData[]
         ];
         if (tools.length === 0) {
-        	tools = undefined;
+            tools = undefined;
         }
         Object.assign(this, {
             name: dbObject.name || "Undefined",
