@@ -188,15 +188,23 @@ export async function runOllama(conversation: Conversation): Promise<GPTMessage>
         throw err;
     }
 }
-
-const existingModels = await ollama.list();
-const tempModels = existingModels.models.filter((m: { name: string }) => m.name.startsWith(`conv-temp-`));
-// Clean up temporary models
-for (const model of tempModels) {
-    try {
-        await ollama.delete({ model: model.name });
-        log.info(`deleted ollama temporary model ${model.name}`);
-    } catch (err) {
-        console.error(`Failed to delete temporary model ${model.name}:`, err);
+try {
+    const existingModels = await ollama.list().catch((err) => {
+        log.error("failed to list ollama models:", err);
+        return { models: [] };
+    });
+    const tempModels = existingModels.models.filter((m: { name: string }) => m.name.startsWith(`conv-temp-`));
+    // Clean up temporary models
+    for (const model of tempModels) {
+        try {
+            await ollama.delete({ model: model.name }).catch((err) => {
+                log.error(`failed to delete temporary model ${model.name}:`, err);
+            });
+            log.info(`deleted ollama temporary model ${model.name}`);
+        } catch (err) {
+            log.error(`failed to delete temporary model ${model.name}:`, err);
+        }
     }
+} catch (err) {
+    log.error("error during ollama temp model cleanup:", err);
 }
