@@ -1,4 +1,4 @@
-import { Events, Message } from "discord.js";
+import { Events, GuildChannelResolvable, Message, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import commands from "../lib/command_manager";
 import { fetchGuildConfig, GuildConfig } from "../lib/guild_config_manager";
 import { Command, CommandInput, CommandInvoker, CommandResponse } from "../lib/classes/command";
@@ -18,7 +18,9 @@ async function gptHandler(message: Message<true>) {
         return;
     }
     // verify bot has permissions to send messages
-    if (!message.guild?.members.me?.permissions.has("SendMessages")) {
+    const defaultExternalPermissions = new PermissionsBitField(PermissionFlagsBits.SendMessages | PermissionFlagsBits.ViewChannel | PermissionFlagsBits.AttachFiles); // these are the default permissions used when using slash commands in external guilds
+    const permissions = message.guild?.members?.me?.permissionsIn(message.channel as GuildChannelResolvable) || message.guild?.members.me?.permissions || defaultExternalPermissions;
+    if (!permissions) { // TODO: replace this sort of permissions check thing with one imported from somewhere else, rn this is just copy and pasted from src/lib/classes/command.ts
         log.warn(`could not complete gpt handler due to lack of permissions (${message.channel?.id})`);
         return;
     }
