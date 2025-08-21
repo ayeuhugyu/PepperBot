@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Partials } from 'discord.js';
+import { Client, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { config } from 'dotenv';
 import * as log from './lib/log';
 import fs from "fs";
@@ -42,7 +42,7 @@ for (const file of eventFiles) {
     })();
 }
 
-client.once('ready', async () => {
+client.once(Events.ClientReady, async () => {
     log.info(`logged in as ${client.user?.tag}`);
 
     // initialize maintenance mode from database
