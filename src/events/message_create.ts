@@ -11,6 +11,7 @@ import * as log from "../lib/log";
 import { getAlias, listAliases } from "../lib/alias_manager";
 import { isMaintenanceModeActive, getMaintenanceEndTimestamp } from "../lib/maintenance_manager";
 import { CommandAccessTemplates } from "../lib/templates";
+import { getPermissionsFromMessage } from "../lib/permissions_utils";
 
 async function gptHandler(message: Message<true>) {
     // Only process if the bot is mentioned.
@@ -18,9 +19,9 @@ async function gptHandler(message: Message<true>) {
         return;
     }
     // verify bot has permissions to send messages
-    const defaultExternalPermissions = new PermissionsBitField(PermissionFlagsBits.SendMessages | PermissionFlagsBits.ViewChannel | PermissionFlagsBits.AttachFiles); // these are the default permissions used when using slash commands in external guilds
-    const permissions = message.guild?.members?.me?.permissionsIn(message.channel as GuildChannelResolvable) || message.guild?.members.me?.permissions || defaultExternalPermissions;
-    if (!permissions) { // TODO: replace this sort of permissions check thing with one imported from somewhere else, rn this is just copy and pasted from src/lib/classes/command.ts
+    const permissions = getPermissionsFromMessage(message);
+    const requiredPermissions = [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessagesInThreads];
+    if (!permissions || (!(permissions.has(PermissionFlagsBits.Administrator) || requiredPermissions.every(perm => permissions.has(perm))))) {
         log.warn(`could not complete gpt handler due to lack of permissions (${message.channel?.id})`);
         return;
     }

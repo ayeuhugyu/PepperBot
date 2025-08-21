@@ -7,6 +7,7 @@ import * as statistics from "../statistics";
 import { InvokerType, SubcommandDeploymentApproach, CommandTag, CommandOptionType, CommandEntryType } from "./command_enums";
 import type { CommandManager } from "../command_manager";
 import { inspect } from "node:util";
+import { getPermissionsFromMessage } from "../permissions_utils";
 
 let guildConfigManager
 if (!guildConfigManager) { // avoids circular dependency
@@ -571,9 +572,8 @@ export class Command<
             const foundPermissions: string[] = [];
             const missingPermissions: string[] = [];
             const channel = invoker.channel;
-            const defaultExternalPermissions = new PermissionsBitField(PermissionFlagsBits.SendMessages | PermissionFlagsBits.ViewChannel | PermissionFlagsBits.AttachFiles); // these are the default permissions used when using slash commands in external guilds
             if (channel) {
-                const permissions = invoker.guild?.members?.me?.permissionsIn(channel as GuildChannelResolvable) || invoker.guild?.members.me?.permissions || defaultExternalPermissions;
+                const permissions = getPermissionsFromMessage(invoker);
                 log.info("checking permissions for command " + usedCommand.name + " in " + channel.id);
                 log.debug("checking permissions for command " + usedCommand.name + " in channel " + channel.id + " with permissions: " + permissions.toArray().join(", "));
                 log.debug("permissions to check: SendMessages, ViewChannel, " + usedCommand.requiredPermissions.join(", "));
