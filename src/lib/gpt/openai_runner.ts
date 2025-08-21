@@ -3,7 +3,7 @@ import { Conversation, GPTAttachment, GPTMessage, ToolCall, ToolCallResponse } f
 import { JSONSchemaDefinition } from "openai/lib/jsonschema";
 import { RunnableToolFunction } from "openai/lib/RunnableFunction";
 import { JSONSchemaType } from "openai/lib/jsonschema";
-import { Tool } from "./tools";
+import { FakeTool, Tool } from "./tools";
 import {
     ChatCompletionMessageParam,
     ChatCompletionToolMessageParam,
@@ -146,7 +146,7 @@ type ToolParameter = {
     required?: boolean;
 };
 
-function formatTool(tool: Tool): ChatCompletionTool {
+function formatTool(tool: Tool | FakeTool): ChatCompletionTool {
     const formattedParameters = formatToolParameters(tool.data.parameters);
     const required = getRequiredParameters(tool.data.parameters);
 
