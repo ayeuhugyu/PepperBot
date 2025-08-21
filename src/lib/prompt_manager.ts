@@ -47,9 +47,6 @@ export class Prompt {
     tools: (string | FakeToolData)[] = ["request_url", "search", "evaluate_luau"];
 
     constructor(dbObject: Partial<dbPrompt>) {
-    	if (typeof dbObject.tools === "object") {
-    		dbObject.tools = JSON.stringify(dbObject.tools);
-    	}
         const toolJSON = JSON.parse(dbObject.tools || "[]");
         let tools: (string | FakeToolData)[] | undefined = [
             ...(toolJSON.filter((tool: string | FakeToolData) => typeof tool === "string")) as string[],
