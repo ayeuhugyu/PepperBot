@@ -35,6 +35,7 @@ module.exports = [
       'node_modules/',
       'cache/',
       '*.d.ts',
+      'tests/'
     ],
   },
 ];
