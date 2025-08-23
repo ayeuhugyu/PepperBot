@@ -5,6 +5,7 @@ import sharp from "sharp";
 import { evaluate } from "mathjs";
 import * as log from "../lib/log";
 import { CommandTag, CommandOptionType } from "../lib/classes/command_enums";
+import { screenshotUrl } from "../lib/screenshotUrl";
 
 type Gravity = "south" | "north"
 
@@ -195,11 +196,35 @@ const command = new Command(
         }
 
         const processingMessage = await action.reply(invoker, { content: "processing...\n-# this can take a while for large images", ephemeral: guild_config.other.use_ephemeral_replies });
+        if (!processingMessage) return; // this will never happen it just makes typescript happy
 
         const borderColor = args.border || "transparent";
         const backgroundColor = args.background || "transparent";
 
-        const inputImageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer());
+        // fetch the url to check the response type and verify that it is an image
+        const response = await fetch(imageUrl).catch(() => null);
+        if (!response) {
+            await action.edit(processingMessage, { content: "failed to retrieve image, check that the url is valid", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: "failed to retrieve image, check that the url is valid"
+            });
+        }
+        let inputImageBuffer;
+        if (!response.ok || !response.headers.get("content-type")?.startsWith("image/")) {
+            inputImageBuffer = await screenshotUrl(imageUrl, { resolution: { width: 1280, height: 720 } });
+        } else {
+            inputImageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer());
+        }
+
+        if (!inputImageBuffer) { // this should also never happen and is just to make typescript happy
+            await action.edit(processingMessage, { content: "failed to retrieve image, check that the url is valid", ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: "failed to retrieve image, check that the url is valid"
+            });
+        }
+
         const inputImage = await sharp(inputImageBuffer, { animated: true });
 
         const metadata = await sharp(inputImageBuffer).metadata();
