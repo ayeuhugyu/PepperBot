@@ -7,7 +7,7 @@ import { Message } from "discord.js";
 
 let lastUsedImageAt: { [key: string]: number } = {};
 let currentlyGenerating: { [key: string]: boolean } = {};
-const imageCooldown = 4 * 60 * 60 * 1000; // 4 hours
+const imageCooldown = 8 * 60 * 60 * 1000; // 8 hours
 
 const image = new Command(
     {
