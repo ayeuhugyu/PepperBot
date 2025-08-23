@@ -95,7 +95,7 @@ const command = new Command(
         example_usage: "p/image generate a forest with a river made of cats",
         aliases: [],
         subcommands: {
-            deploy: SubcommandDeploymentApproach.Merge,
+            deploy: SubcommandDeploymentApproach.Split,
             list: [image, /*convert*/]
         }
     },
