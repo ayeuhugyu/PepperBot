@@ -126,7 +126,7 @@ const command = new Command(
             args.debug = "true";
         }
 
-        const discordMatch = text.includes("discord");
+        const discordMatch = text.includes(" discord"); // the space here ensures its a separate word; it was triggering on https://discord.com/* attachment urls
         if (discordMatch) {
             args.border = "white";
             args.x = "2/3";
