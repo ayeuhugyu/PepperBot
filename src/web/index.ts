@@ -70,6 +70,15 @@ export function listen(client: Client) {
         initializeWebSocket(httpsServer);
     }
 
+    // ensure all connections come through cloudflare / actually come through pepperbot.online
+    app.use((req, res, next) => {
+        const host = req.headers.host;
+        if (host !== 'pepperbot.online' && !isDev) {
+            return res.status(403).send('Forbidden');
+        }
+        next();
+    });
+
     const hbs = create({
         helpers: {
             join: function(array: string[], separator: string) {
