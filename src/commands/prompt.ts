@@ -219,7 +219,7 @@ function getModelButtons(prompt: Prompt, disabled: boolean = false) {
 }
 
 function getAPIParametersButtons(prompt: Prompt, disabled: boolean = false) {
-    const model = findModelByName(prompt.api_parameters.model.toString() || defaultModel);
+    const model = findModelByName(prompt.api_parameters.model?.toString() || defaultModel);
     const templateAPIParameters = model?.parameters?.reduce<Record<string, any>>((acc, param) => {
         acc[param.key] = param.default || 0; // default to 0 if no default is provided
         return acc;
@@ -798,13 +798,13 @@ const list = new Command({
                 inputtedUser = firstMention;
             }
         }
-        if (typeof inputtedUser !== "string") {
+        if (typeof inputtedUser !== "string" && inputtedUser) {
             if ((inputtedUser as User).id === invoker.client.user?.id) {
                 inputtedUser = "PepperBot";
             }
         }
-        if (args.hadArg && !inputtedUser) {
-            action.reply(invoker, { content: "couldn't find user: " + args.usedArg, ephemeral: guild_config.other.use_ephemeral_replies });
+        if (!inputtedUser) {
+            action.reply(invoker, { content: "couldn't find user: " + args.user, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
         const inputtedUsername = (inputtedUser && typeof inputtedUser === "string") ? inputtedUser : (inputtedUser && (inputtedUser as User).username) || undefined;
