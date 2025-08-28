@@ -788,37 +788,61 @@ const list = new Command({
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["user"]),
     async function execute ({ invoker, guild_config, args, invoker_type }) {
-        let firstMention;
-        if (invoker_type === InvokerType.Message) {
-            firstMention = (invoker as Message).mentions.users.first();
-        }
-        let inputtedUser: String | User | undefined = args.user ?? firstMention;
-        if (typeof inputtedUser === "string") {
-            if (inputtedUser.startsWith("<@") && inputtedUser.endsWith(">")) {
-                inputtedUser = firstMention;
+        let targetUser: User | string | undefined;
+
+        // try to resolve user from args.user (could be a user object or a mention string)
+        if (args.user && typeof args.user !== "string") {
+            targetUser = args.user;
+        } else if (args.user && typeof args.user === "string") {
+            // try to resolve mention string
+            const mentionMatch = args.user.match(/^<@!?(\d+)>$/);
+            if (mentionMatch && invoker.client.users) {
+                const userObj = await invoker.client.users.fetch(mentionMatch[1]).catch(() => undefined);
+                if (userObj) targetUser = userObj;
+            } else {
+                targetUser = args.user;
             }
         }
-        if (typeof inputtedUser !== "string" && inputtedUser) {
-            if ((inputtedUser as User).id === invoker.client.user?.id) {
-                inputtedUser = "PepperBot";
+
+        // if not found, try to get first mention from message
+        if (!targetUser && invoker_type === InvokerType.Message) {
+            const msg = invoker as Message;
+            if (msg.mentions && msg.mentions.users.size > 0) {
+                targetUser = msg.mentions.users.first();
             }
         }
-        if (!inputtedUser) {
-            action.reply(invoker, { content: "couldn't find user: " + args.user, ephemeral: guild_config.other.use_ephemeral_replies });
-            return new CommandResponse({});
+
+        // if still not found, default to self
+        if (!targetUser) {
+            targetUser = invoker.author;
         }
-        const inputtedUsername = (inputtedUser && typeof inputtedUser === "string") ? inputtedUser : (inputtedUser && (inputtedUser as User).username) || undefined;
-        let username = (inputtedUsername || invoker.author.username) as string;
-        let notUser = username !== invoker.author.username;
+
+        // if user is the bot itself, show "PepperBot" prompts
+        let username: string;
+        if (typeof targetUser !== "string" && targetUser.id === invoker.client.user?.id) {
+            username = "PepperBot";
+        } else if (typeof targetUser === "string") {
+            username = targetUser;
+        } else {
+            username = targetUser.username;
+        }
+
+        const notUser = username !== invoker.author.username;
         let prompts = await getPromptsByUsername(username);
-        if (prompts.length === 0 || (notUser && prompts.filter((p) => p.published).length === 0)) {
+
+        // only show published prompts for other users
+        if (notUser) {
+            prompts = prompts.filter((p) => p.published);
+        }
+
+        if (prompts.length === 0) {
             action.reply(invoker, { content: `${notUser ? username : "you"} ${notUser ? "has" : "have"} no ${notUser ? "published" : ""} prompts`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({});
         }
+
         let reply = `${notUser ? username + "'s published" : "your"} prompts: \`\`\`\n`;
         if (prompts.length < 10) {
             prompts.forEach(prompt => {
-                if (notUser && !prompt.published) return;
                 reply += `\n${prompt.name}`;
             });
         } else {
@@ -827,7 +851,6 @@ const list = new Command({
             let currentRow: string[] = [];
 
             prompts.forEach((prompt) => {
-                if (notUser && !prompt.published) return;
                 currentRow.push(prompt.name);
                 if (currentRow.length === columnCount) {
                     rows.push(currentRow);
