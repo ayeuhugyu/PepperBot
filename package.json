@@ -16,7 +16,7 @@
         "update:main": "git checkout main && git pull origin dev && git push origin main && git checkout dev"
     },
     "author": "",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@discordjs/opus": "^0.10.0",
         "@discordjs/voice": "^0.19.0",
