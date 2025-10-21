@@ -21,6 +21,9 @@ partsOfSpeechToArray["any"] = Object.keys(partsOfSpeechToArray)
     .filter((key) => key !== "word")
     .flatMap((key) => partsOfSpeechToArray[key]);
 
+const repeatedRegex = /(?:\w+|\(.*?\)|custom: ?"[^"]*")\*(\d{1,2})/gm;
+const customRegex = /custom: ?"(.+?)"/gm;
+
 const phrasecommand = new Command(
     {
         name: 'phrase',
@@ -63,10 +66,10 @@ const phrasecommand = new Command(
             // we do this in a special way:
             // first, put everything into the first column
             const col1: string[] = partsOfSpeech.map(part => part);
-            // then, start by moving every item that ends with "pronoun" to the second column
+            // then, start by moving every item that ends with "pronoun" or "conjunction" to the second column
             const col2: string[] = [];
             col1.forEach(item => {
-                if (item.endsWith("pronoun")) {
+                if (item.endsWith("pronoun") || item.endsWith("conjunction")) {
                     col2.push(item);
                     col1.splice(col1.indexOf(item), 1);
                 }
@@ -101,22 +104,52 @@ const phrasecommand = new Command(
             const codeblock = "```" + "\n" + lines.join("\n") + "\n```";
 
             action.reply(invoker, {
-                content: `available parts of speech:\n${codeblock}`,
+                content: `available parts of speech:\n${codeblock}\nyou can use \`partofspeech*number\` to repeat a part of speech x times, for example like this: \`noun*2\` or group them together: \`(adjective noun)*5\nyou can also use \`custom:"your custom text here"\` to insert your own text, which can also be repeated using the same syntax`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
             return;
         }
+        const repeated = args.list.matchAll(repeatedRegex);
+        for (const match of repeated) {
+            const fullMatch = match[0];
+            const count = parseInt(match[1]);
+            let toRepeat = fullMatch.split("*")[0];
+            // if toRepeat is in parentheses, remove them
+            if (toRepeat.startsWith("(") && toRepeat.endsWith(")")) {
+                toRepeat = toRepeat.slice(1, -1);
+            }
+            const repeatedString = Array(count).fill(toRepeat).join(" ");
+            args.list = args.list.replace(fullMatch, repeatedString);
+        }
+
+        const customs = args.list.matchAll(customRegex);
+        for (const match of customs) {
+            // replace spaces in them with an obscure unicode character string so they dont get split later
+            // is it a good way of doing it? no
+            // do i give a shit? also no
+            let fullMatch = match[0];
+            // if it uses "custom: ""<custom_text>"" then we remove the space after the colon
+            let customText = fullMatch.replaceAll(" ", "⁂⁒℗‽¤");
+            if (fullMatch.startsWith("custom: \"")) {
+                customText = customText.replace("custom:⁂⁒℗‽¤\"", "custom:\"");
+            }
+            args.list = args.list.replace(fullMatch, customText);
+            // yea yea i could just like store a position and put it back in afterwards
+            // but that would be the RESPONSIBLE thing to do
+            // we don't do that around here
+        }
+
         const list = args.list.toLowerCase().replaceAll(",", " ").split(" ").filter((part: string) => part !== "");
         const invalidParts: string[] = [];
         list.forEach((part: string) => {
-            if (!partsOfSpeechToArray[part]) {
+            if (!partsOfSpeechToArray[part] && (!part.startsWith("custom:\"") || !part.endsWith("\""))) {
                 invalidParts.push(part);
             }
         });
 
         if (invalidParts.length > 0) {
             action.reply(invoker, {
-                content: `invalid parts of speech: ${invalidParts.join(", ")}`,
+                content: `invalid parts of speech: \`${invalidParts.join("\`, \`")}\``,
                 ephemeral: guild_config.useEphemeralReplies,
             });
             return new CommandResponse({
@@ -126,6 +159,10 @@ const phrasecommand = new Command(
         }
 
         const phrase = list.map((part: string) => {
+            if (part.startsWith("custom:\"") && part.endsWith("\"")) {
+                const customText = part.slice(8, -1);
+                return customText;
+            }
             const array = partsOfSpeechToArray[part];
             const randomnum = Math.floor(Math.random() * array.length);
             return array[randomnum].toLowerCase();
@@ -136,6 +173,10 @@ const phrasecommand = new Command(
         punctuation.forEach((punc: string) => {
             finalPhrase = finalPhrase.replaceAll(` ${punc}`, punc);
         });
+        // replace customs back to what they should be
+        finalPhrase = finalPhrase.replaceAll("⁂⁒℗‽¤", " ");
+        // remove space after newlines
+        finalPhrase = finalPhrase.replaceAll("\n ", "\n");
 
         await action.reply(invoker, {
             content: finalPhrase,
