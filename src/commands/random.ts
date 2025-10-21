@@ -110,7 +110,7 @@ const phrasecommand = new Command(
         const invalidParts: string[] = [];
         list.forEach((part: string) => {
             if (!partsOfSpeechToArray[part]) {
-            invalidParts.push(part);
+                invalidParts.push(part);
             }
         });
 
@@ -130,9 +130,15 @@ const phrasecommand = new Command(
             const randomnum = Math.floor(Math.random() * array.length);
             return array[randomnum].toLowerCase();
         }).join(" ");
+        const punctuation = partsOfSpeechToArray["punctuation"];
+        // replace all " punctuation" with just "punctuation" so that punctuation doesnt have a weird space before it
+        let finalPhrase = phrase;
+        punctuation.forEach((punc: string) => {
+            finalPhrase = finalPhrase.replaceAll(` ${punc}`, punc);
+        });
 
         await action.reply(invoker, {
-            content: phrase,
+            content: finalPhrase,
             ephemeral: guild_config.useEphemeralReplies,
         });
         return new CommandResponse({ pipe_data: { input_text: phrase } });
