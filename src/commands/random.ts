@@ -57,8 +57,51 @@ const phrasecommand = new Command(
         }
         if (args.list == "list" || args.list == "help" || args.list == "ls") {
             const partsOfSpeech = Object.keys(partsOfSpeechToArray);
+            // Sort for consistency
+            partsOfSpeech.sort();
+            // Split into two columns
+            // we do this in a special way:
+            // first, put everything into the first column
+            const col1: string[] = partsOfSpeech.map(part => part);
+            // then, start by moving every item that ends with "pronoun" to the second column
+            const col2: string[] = [];
+            col1.forEach(item => {
+                if (item.endsWith("pronoun")) {
+                    col2.push(item);
+                    col1.splice(col1.indexOf(item), 1);
+                }
+            });
+
+            // then, move everything else to the second column, one by one, until the columns are roughly equal length
+            while (col2.length < col1.length) {
+                const item = col1.pop();
+                if (item) {
+                    col2.push(item);
+                }
+            }
+
+            // pad columns to equal length
+            while (col1.length < col2.length) col1.push("");
+            while (col2.length < col1.length) col2.push("");
+
+            // format as two columns
+            let longestLength = 0;
+            col1.forEach(item => {
+                if (item.length > longestLength) {
+                    longestLength = item.length;
+                }
+            });
+            longestLength += 2; // add some padding
+            const lines = col1.map((item, idx) => {
+                const col1Item = item.padEnd(longestLength, " ");
+                const col2Item = col2[idx] || "";
+                return `${col1Item}${col2Item}`;
+            });
+
+            const codeblock = "```" + "\n" + lines.join("\n") + "\n```";
+
             action.reply(invoker, {
-                content: `available parts of speech: \`${partsOfSpeech.join("\`, \`")}\``,
+                content: `available parts of speech:\n${codeblock}`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
             return;
