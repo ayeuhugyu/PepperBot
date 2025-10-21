@@ -104,7 +104,7 @@ const phrasecommand = new Command(
             const codeblock = "```" + "\n" + lines.join("\n") + "\n```";
 
             action.reply(invoker, {
-                content: `available parts of speech:\n${codeblock}\nyou can use \`partofspeech*number\` to repeat a part of speech x times, for example like this: \`noun*2\` or group them together: \`(adjective noun)*5\nyou can also use \`custom:"your custom text here"\` to insert your own text, which can also be repeated using the same syntax`,
+                content: `available parts of speech:\n${codeblock}\nyou can use \`partofspeech*number\` to repeat a part of speech x times, for example like this: \n\`noun*2\` or group them together: \`(adjective noun)*5\`\nyou can also use \`custom:"your custom text here"\` to insert your own text, which can also be repeated using the same syntax`,
                 ephemeral: guild_config.useEphemeralReplies,
             });
             return;
