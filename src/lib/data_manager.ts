@@ -78,6 +78,7 @@ const nonFatalEnvVariables = [
     { key: "GOOGLE_CUSTOM_SEARCH_ENGINE_ID", message: "missing GOOGLE_CUSTOM_SEARCH_ENGINE_ID in .env; some features may not work, expect errors" },
     { key: "ADOBE_API_KEY", message: "missing ADOBE_API_KEY in .env; some features may not work, expect errors" },
     { key: "LASTFM_API_KEY", message: "missing LASTFM_API_KEY in .env; some features may not work, expect errors" },
+    { key: "DICTIONARY_API_KEY", message: "missing DICTIONARY_API_KEY in .env; some features may not work, expect errors" },
 ];
 
 // really messed up way to avoid verifying multiple times (just makes the logs cleaner)

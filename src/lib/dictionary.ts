@@ -3,27 +3,107 @@ import * as log from "./log";
 
 export class ThesaurusData {
     word: string;
-    synonyms: string[];
-    antonyms: string[];
+    synonyms: string[] = [];
+    antonyms: string[] = [];
+    relatives: string[] = [];
+    perDefinition: {
+        definition: string;
+        synonyms: string[];
+        antonyms: string[];
+        relatives: string[];
+    }[] = [];
 
-    constructor(word: string, data: APIThesaurusData | null) {
+    constructor(word: string, data: ThesaurusAPIResponse) {
         this.word = word;
-        this.synonyms = data ? data.syns.flat() : [];
-        this.antonyms = data ? data.ants.flat() : [];
+        if (!data[0]) {
+            return;
+        }
+        if (typeof data[0] === "string") {
+            this.synonyms = data as string[];
+            return;
+        }
+        const exactData = (data as APIDefinitionData[]).filter(entry => entry.meta.id.toLowerCase() === word.toLowerCase());
+        if (exactData.length === 0) {
+            return;
+        }
+        // literally fuck you merriam webster
+        exactData.map((data, index) => {
+            let synonyms: string[] = [];
+            synonyms.push(...data.def[0].sseq.map(seq => {
+                const entry = seq[0].filter(seq => typeof seq !== "string")[0];
+                const list = entry.syn_list ?? entry.sim_list ?? [];
+                return list ? list.flat().map(syn => syn.wd) : [];
+            }).flat());
+            if (synonyms.length === 0) {
+                synonyms.push(...data.meta.syns.flat());
+            }
+            let antonyms: string[] = [];
+            antonyms.push(...data.def[0].sseq.map(seq => {
+                const entry = seq[0].filter(seq => typeof seq !== "string")[0];
+                const list = entry.opp_list ?? [];
+                return list ? list.flat().map(ant => ant.wd) : [];
+            }).flat());
+            if (antonyms.length === 0) {
+                antonyms.push(...data.meta.ants);
+            }
+            let relatives: string[] = [];
+            relatives.push(...data.def[0].sseq.map(seq => {
+                const entry = seq[0].filter(seq => typeof seq !== "string")[0];
+                const list = entry.rel_list ?? [];
+                return list ? list.flat().map(rel => rel.wd) : [];
+            }).flat());
+            // if there are no relatives i do not give a shit because there is not an alternative
+
+            // push them all to the actual ones
+            this.synonyms.push(...synonyms.flat());
+            this.antonyms.push(...antonyms.flat());
+            this.relatives.push(...relatives.flat());
+
+            this.perDefinition[index] = {
+                definition: data.shortdef[0],
+                synonyms: synonyms.flat(),
+                antonyms: antonyms.flat(),
+                relatives: relatives.flat()
+            }
+        })
     }
 }
 
-export interface APIThesaurusData {
-    id: string; // the word being requested
-    stems: string[]; // list of root forms of the word
-    syns: string[][]; // list of lists of synonyms
-    ants: string[][]; // list of lists of antonyms
-    offensive: boolean; // whether the word is considered offensive
+export interface APIDefinitionData { // what in the ever living fuck is this piece of shit
+    meta: {
+        id: string;
+        uuid: string;
+        src: string;
+        section: string;
+        target: {
+            tuuid: string;
+            tsrc: string;
+        };
+        stems: string[];
+        syns: string[][];
+        ants: string[];
+        offensive: boolean;
+    };
+    hwi: {
+        hw: string;
+    };
+    fl: string;
+    def: Array<{
+        sseq: Array<Array<Array<string | {
+            sn: string;
+            dt: Array<
+                [string, string] |
+                [string, { t: string; }]
+            >;
+            syn_list?: Array<Array<{ wd: string }>>;
+            sim_list?: Array<Array<{ wd: string }>>;
+            opp_list?: Array<Array<{ wd: string }>>;
+            rel_list?: Array<Array<{ wd: string; wvrs?: Array<{ wvl: string; wva: string }> }>>;
+        }>>>;
+    }>;
+    shortdef: string[];
 }
-type ThesaurusAPIResponse = {
-    meta: APIThesaurusData;
-    // there's much more, but we really dont care about it
-}[] | string[];
+type ThesaurusAPIResponse = APIDefinitionData[] | string[];
 
 const baseUrl = 'https://www.dictionaryapi.com/api/v3/references/thesaurus/json/';
 
@@ -37,7 +117,10 @@ function APIfetchWord(word: string): Promise<ThesaurusAPIResponse | null> {
                 log.error(`dictionary API request failed with status ${response.status}`);
                 return Promise.reject(new Error(`API request failed with status ${response.status}`));
             }
-            return response.json();
+            return response.json().catch(err => {
+                log.error('failed to parse dictionary API response as JSON:', err);
+                return Promise.reject(new Error('failed to parse API response as JSON: ' + err.message));
+            });
         })
         .then((data: ThesaurusAPIResponse) => {
             return data;
