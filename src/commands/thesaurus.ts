@@ -65,13 +65,15 @@ const translate = new Command(
         for (const word of words) {
             if (!word) continue;
             const data = await fetchSingleWord(word);
-            if (data.relatives.length > 0) {
+            const relatives = data.relatives.filter(r => r !== word && !r.includes(" ")); // filter out multi word relatives and the original word
+            const synonyms = data.synonyms.filter(s => s !== word && !s.includes(" "));
+            if (relatives.length > 0) {
                 // pick a random relative
-                const relative = data.relatives[Math.floor(Math.random() * data.relatives.length)];
+                const relative = relatives[Math.floor(Math.random() * relatives.length)];
                 translatedWords.push(relative);
-            } else if (data.synonyms.length > 0) {
+            } else if (synonyms.length > 0) {
                 // pick a random synonym
-                const synonym = data.synonyms[Math.floor(Math.random() * data.synonyms.length)];
+                const synonym = synonyms[Math.floor(Math.random() * synonyms.length)];
                 translatedWords.push(synonym);
             } else {
                 translatedWords.push(word); // no synonym found, keep original word
@@ -268,13 +270,13 @@ const command = new Command(
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}thesaurus get\`: get antonyms and synonyms of a specific word\n\`${guild_config.other.prefix}thesaurus translate\`: translate a phrase into synonyms\n\`${guild_config.other.prefix}thesaurus antonymize\`: translate a phrase into antonyms`,
+                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}thesaurus get\`: get antonyms and synonyms of a specific word\n\`${guild_config.other.prefix}thesaurus translate\`: translate a phrase into synonyms`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
         await action.reply(invoker, {
-            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}thesaurus get\`: get antonyms and synonyms of a specific word\n\`${guild_config.other.prefix}thesaurus translate\`: translate a phrase into synonyms\n\`${guild_config.other.prefix}thesaurus antonymize\`: translate a phrase into antonyms`,
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}thesaurus get\`: get antonyms and synonyms of a specific word\n\`${guild_config.other.prefix}thesaurus translate\`: translate a phrase into synonyms`,
             ephemeral: guild_config.other.use_ephemeral_replies,
         });
     }
