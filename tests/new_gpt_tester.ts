@@ -1,27 +1,60 @@
+import readline from "readline";
 import { Message } from "discord.js";
 import { getConversation } from "../src/lib/gpt/main";
 
-const msg = {
-    id: "messageTest",
-    author: {
-        id: "1234567890",
-    },
-    content: "hey real quick just test some tool, ex. request_url on https://example.com",
-} as Message
-
-const conversation = await getConversation(msg)
-await conversation.addDiscordMessage(msg);
-
-conversation.bindOnToolCall((calls) => {
-    calls.forEach((call) => {
-        console.log(call.serialize());
-    });
-})
-
-await conversation.run().then(response => {
-    console.log("Response from model:", response.serialize());
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: "You> ",
 });
 
-console.log(conversation.serialize());
+let conversation: any = null;
+let initialized = false;
 
-conversation.unbindOnToolCall();
+rl.prompt();
+
+rl.on("line", async (line) => {
+    const content = line.trim();
+    if (!content) {
+        rl.prompt();
+        return;
+    }
+    if (content === "exit" || content === "quit") {
+        rl.close();
+        return;
+    }
+
+    const msg = {
+        id: `msg-${Date.now()}`,
+        author: { id: "1234567890" },
+        content,
+    } as Message;
+
+    if (!initialized) {
+        conversation = await getConversation(msg);
+        conversation.bindOnToolCall((calls: any[]) => {
+            calls.forEach((call) => {
+                console.log(call.serialize());
+            });
+        });
+        initialized = true;
+    }
+
+    await conversation.addDiscordMessage(msg);
+
+    try {
+        const response = await conversation.run();
+        console.log("Response from model:", response.serialize());
+        console.log(conversation.serialize());
+    } catch (err) {
+        console.error("Error running conversation:", err);
+    }
+
+    rl.prompt();
+});
+
+rl.on("close", () => {
+    if (conversation) conversation.unbindOnToolCall();
+    console.log("Exiting.");
+    process.exit(0);
+});

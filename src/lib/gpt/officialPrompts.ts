@@ -1,6 +1,6 @@
 // #region Imports
 
-import { Prompt, writePrompt } from "../prompt_manager";
+import { Prompt, writePrompt } from "../prompt_manager_old";
 import { tablify } from "../string_helpers";
 import { client } from "../../bot";
 

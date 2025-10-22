@@ -1,5 +1,5 @@
 import { Attachment, Collection, Message, User } from "discord.js";
-import { Prompt } from "../prompt_manager";
+import { Prompt } from "../prompt_manager_old";
 import { getDefaultPrompt } from "./officialPrompts";
 import { Models, Model } from "./models";
 import { client } from "../../bot";
@@ -277,7 +277,7 @@ export class Conversation {
     id: string = randomId();
     users: User[] = []; // do not include bot user
     prompt: Prompt = getDefaultPrompt();
-    model: Model = Models["gpt-4.1-nano"] // default model, can be changed later
+    model: Model = Models["gpt-4.1-nano"]; // default model, can be changed later
     api_parameters: Partial<Record<keyof typeof this.model["parameters"], string | number>> = {}; // users can only input strings, they will be converted to the correct type later by the corrosponding function
     messages: (GPTMessage | ToolCallResponse)[] = [];
 

@@ -12,6 +12,7 @@ export type ModelName =
   | 'gpt-3.5-turbo'
   | 'gpt-4o-mini'
   | 'gpt-4.1-nano'
+  | 'gpt-5-mini'
   | 'o3-mini'
   | 'grok-3-mini-beta'
   | 'deepseek-r1'
@@ -188,6 +189,15 @@ export const Models: Record<ModelName, Model> = {
         'openai',
         'an insanely fast and efficient model, though intelligence can be lacking at times. this is the default model.',
         ['chat', 'vision', 'functionCalling'],
+        OpenAIParameters,
+        [],
+        runOpenAI
+    ),
+    'gpt-5-mini': new Model(
+        'gpt-5-mini',
+        'openai',
+        'another quick-ish model (well, for a reasoning model at least), this time with reasoning tokens.',
+        ['chat', 'vision', 'functionCalling', 'reasoning'],
         OpenAIParameters,
         [],
         runOpenAI
