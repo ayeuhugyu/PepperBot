@@ -6,8 +6,9 @@ import { runOllama } from "./ollama_runner";
 import * as chalk from "chalk";
 import { DiscordAnsi } from "../discord_ansi";
 import { runGrok } from "./grok_runner";
+import { runMistral } from "./mistral_runner";
 
-export type ModelProvider = 'openai' | 'xai' | 'ollama'
+export type ModelProvider = 'openai' | 'xai' | 'mistral' | 'ollama'
 export type ModelName =
   | 'gpt-3.5-turbo'
   | 'gpt-4o-mini'
@@ -15,6 +16,7 @@ export type ModelName =
   | 'gpt-5-mini'
   | 'o3-mini'
   | 'grok-3-mini-beta'
+  | 'mistral-small-latest'
   | 'deepseek-r1'
   | 'closex/neuraldaredevil-8b-abliterated'
 export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCalling' | 'reasoning';
@@ -221,7 +223,16 @@ export const Models: Record<ModelName, Model> = {
         ["440163494529073152", "406246384409378816", "726861364848492596", "436321340304392222", "1141928464946049065", "1162874217935675392"],
         runGrok
     ),
-    // OLLAMA MODELS
+    // MISTRAL MODELS
+    'mistral-small-latest': new Model(
+        'mistral-small-latest',
+        'mistral',
+        'a fast and efficient small model from Mistral AI, capable of handling general chat tasks.',
+        ['chat', 'vision', 'functionCalling'],
+        OpenAIParameters.filter((param) => !(['presence_penalty', 'frequency_penalty'].includes(param.key))),
+        [],
+        runMistral
+    ),
     'deepseek-r1': new Model(
         'deepseek-r1',
         'ollama',
