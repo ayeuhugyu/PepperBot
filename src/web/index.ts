@@ -118,7 +118,7 @@ export function listen(client: Client) {
         const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const page = req.path;
 
-        log.access(`${ip} - ${page}`);
+        log.access(`${page}`);
         next();
     });
 
