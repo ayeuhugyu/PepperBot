@@ -5,6 +5,7 @@ import fs from "fs";
 import { listen } from './web/index';
 import { queueAllEvents } from './lib/schedule_manager';
 import { initializeMaintenanceMode } from './lib/maintenance_manager';
+import { initGPTFetchClient } from './lib/gpt/messageTypes';
 config();
 
 export const client = new Client({
@@ -56,6 +57,8 @@ client.once(Events.ClientReady, async () => {
             channel.send(`it's pepper time 🌶️`);
         }
     }
+
+    initGPTFetchClient(client);
 });
 
 async function init() {

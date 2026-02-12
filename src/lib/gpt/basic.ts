@@ -13,6 +13,9 @@ export async function generateImage(prompt: string) {
         });
         log.info(`generated gpt image in ${(performance.now() - now).toFixed(3)}ms`)
         await incrementGPTResponses();
+        if (!completion.data) { // this shouldn't happen
+            return new Error("no completion data")
+        }
         return completion.data[0].url;
     } catch (err) {
         return err; // 99% of errors are due to filtering

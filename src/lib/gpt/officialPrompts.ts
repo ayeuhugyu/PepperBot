@@ -1,6 +1,6 @@
 // #region Imports
 
-import { Prompt, writePrompt } from "../prompt_manager_old";
+import { Prompt } from "../prompt_manager";
 import { tablify } from "../string_helpers";
 import { client } from "../../bot";
 
@@ -219,16 +219,18 @@ export function getDefaultPrompt() {
     const prompt = new Prompt({
         name: "default",
         content: botPromptContent,
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
+        author: {
+            id: client.user?.id || "1209297323029565470",
+            username: client.user?.username || "PepperBot",
+            avatar_url: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp"
+        },
         description: "The default prompt for PepperBot. ",
         published: true,
-        published_at: new Date(),
-        tools: JSON.stringify(["search", "request_url", "evaluate_luau"]),
+        publishedAt: Date.now(),
+        enabledTools: ["search", "request_url", "evaluate_luau"],
     });
     if (!hasWrittenOnce) {
-        writePrompt(prompt);
+        prompt.write();
         hasWrittenOnce = true;
     }
     return prompt;
@@ -356,10 +358,13 @@ Here is some information about your personality. All of these are to be kept a s
     - Your source code can be found at https://github.com/ayeuhugyu/pepperbot.
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.`,
         name: "old",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
+        author: {
+            id: client.user?.id || "1209297323029565470",
+            username: client.user?.username || "PepperBot",
+            avatar_url: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp"
+        },
         published: true,
+        publishedAt: Date.now(),
         description: "The prompt used before the bot was fully rewritten in typescript. This prompt may be semi nonfunctional. "
     });
 }
@@ -371,11 +376,13 @@ export function getEmptyPrompt() {
     return new Prompt({
         content: "",
         name: "none",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
+        author: {
+            id: client.user?.id || "1209297323029565470",
+            username: client.user?.username || "PepperBot",
+            avatar_url: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp"
+        },
         published: true,
-        published_at: new Date(),
+        publishedAt: Date.now(),
         description: "A prompt that contains no data, and does not influence the bot's behavior. "
     });
 }

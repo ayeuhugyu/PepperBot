@@ -24,3 +24,7 @@ depending on your system, you might be able to install them by using `bun extras
 - for the evaluate_luau GPT tool:
     - install `lune` from https://github.com/lune-org/lune/releases/latest
     - add it to your PATH, however that is done on your device.
+
+- for sending animated stickers, lottie_convert.py:
+    - run `pip install lottie[all]`
+    - add it to your PATH, however that is done on your device.
