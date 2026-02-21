@@ -75,7 +75,6 @@ const nonFatalEnvVariables = [
     { key: "OPENAI_API_KEY", message: "missing OPENAI_API_KEY in .env; some features may not work, expect errors" },
     { key: "GROK_API_KEY", message: "missing GROK_API_KEY in .env; some features may not work, expect errors" },
     { key: "GOOGLE_API_KEY", message: "missing GOOGLE_API_KEY in .env; some features may not work, expect errors" },
-    { key: "GOOGLE_CUSTOM_SEARCH_ENGINE_ID", message: "missing GOOGLE_CUSTOM_SEARCH_ENGINE_ID in .env; some features may not work, expect errors" },
     { key: "ADOBE_API_KEY", message: "missing ADOBE_API_KEY in .env; some features may not work, expect errors" },
     { key: "LASTFM_API_KEY", message: "missing LASTFM_API_KEY in .env; some features may not work, expect errors" },
     { key: "DICTIONARY_API_KEY", message: "missing DICTIONARY_API_KEY in .env; some features may not work, expect errors" },
