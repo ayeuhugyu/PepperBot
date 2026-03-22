@@ -1,5 +1,6 @@
-import { Conversation, GPTMessage, ToolCall, ToolCallResponse } from "./main";
-import { Model } from "./models";
+import { Conversation } from "./main";
+import { GPTAssistantMessage, GPTBaseMessageType, GPTMessage, GPTUserMessage, ToolCall, GPTToolCallResponse as ToolCallResponse } from "./messageTypes";
+import { Model, Models } from "./models";
 import { tools as allTools, FakeTool, Tool, ToolParameter } from "./tools";
 import ollama, { ChatRequest, ChatResponse } from "ollama";
 import { Tool as OllamaTool, Message as OllamaMessage, ToolCall as OllamaToolCall } from "ollama";
@@ -7,6 +8,7 @@ import path from "path";
 import fs from "fs";
 import * as log from "../log";
 import { fixFileName } from "../attachment_manager";
+import { GPTMessage } from "./main_OLD";
 
 function getRequiredParameters(parameters: Record<string, ToolParameter>): string[] {
     const required: string[] = [];
@@ -64,8 +66,7 @@ function formatTool(tool: Tool | FakeTool): OllamaTool {
     };
 }
 
-// Helper: convert attachments to ollama format (text, image, video)
-async function formatOllamaUserMessage(msg: GPTMessage) {
+async function formatOllamaUserMessage(msg: GPTUserMessage) {
     const content: string = msg.content ?? '';
     const attachments = msg.attachments || [];
     let ollamaContent: OllamaMessage["content"] = '';
@@ -104,7 +105,7 @@ async function formatOllamaConversation(conversation: Conversation) {
     const systemPrompt = conversation.prompt?.content || '';
     const ollamaMessages: OllamaMessage[] = [{ role: 'system', content: systemPrompt }];
     for (const msg of conversation.messages) {
-        if (msg.role === 'tool' || (typeof msg === 'object' && msg !== null && 'call' in msg)) {
+        if (msg.type == GPTBaseMessageType.ToolCallResponse || (typeof msg === 'object' && msg !== null && 'call' in msg)) {
             // Tool response
             ollamaMessages.push({
                 role: 'tool',
@@ -112,10 +113,10 @@ async function formatOllamaConversation(conversation: Conversation) {
             });
             continue;
         }
-        const gptMsg = msg as GPTMessage;
-        if (gptMsg.role === 'bot') {
-            ollamaMessages.push({ role: 'assistant', content: gptMsg.content ?? '' });
-        } else if (gptMsg.role === 'user') {
+        const gptMsg = msg as GPTMessage
+        if (gptMsg.type === GPTBaseMessageType.AssistantMessage) {
+            ollamaMessages.push({ role: 'assistant', content: (gptMsg as GPTAssistantMessage).content ?? '' });
+        } else if (gptMsg.type === GPTBaseMessageType.UserMessage) {
             ollamaMessages.push({ role: 'user', ...await formatOllamaUserMessage(gptMsg) });
         }
     }
@@ -123,10 +124,11 @@ async function formatOllamaConversation(conversation: Conversation) {
 }
 
 export async function runOllama(conversation: Conversation): Promise<GPTMessage> {
-    const model: Model = conversation.model;
+    const model: Model = Models[conversation.prompt.model];
     const messages = await formatOllamaConversation(conversation);
-    const params = conversation.filterParameters();
-    const tools: OllamaTool[] = Object.entries(conversation.getTools()).map(([_, tool]) => formatTool(tool));
+    const params = model.filterParameters(conversation.prompt.apiParameters);
+    // const tools: OllamaTool[] = Object.entries(conversation.getTools()).map(([_, tool]) => formatTool(tool));
+    const tools: OllamaTool[] = []; // TEMPORARY; TODO: REMOVE
 
     // create a temporary model name using the conversation's id
     const tempModelName = `conv-temp-${conversation.id}-${model.name}`.replace(/[^a-zA-Z0-9_\-]/g, "_");

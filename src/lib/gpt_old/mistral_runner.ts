@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { runOpenAI } from "./openai_runner";
-import { Conversation, GPTMessage } from "./main";
+import { Conversation } from "./main";
+import { GPTMessage } from "./messageTypes";
 
 const Mistral = new OpenAI({
     apiKey: process.env.MISTRAL_API_KEY,

@@ -1,12 +1,14 @@
 // #region Class Definitions
 
-import { Conversation, GPTMessage } from "./main";
+import { Conversation } from "./main";
+import { GPTMessage } from "./messageTypes";
 import { runOpenAI } from "./openai_runner";
 import { runOllama } from "./ollama_runner";
 import * as chalk from "chalk";
 import { DiscordAnsi } from "../discord_ansi";
 import { runGrok } from "./grok_runner";
 import { runMistral } from "./mistral_runner";
+import z, { ZodAny } from "zod";
 
 export type ModelProvider = 'openai' | 'xai' | 'mistral' | 'ollama'
 export type ModelName =
@@ -24,15 +26,16 @@ export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCal
 export interface ModelParameter {
     key: string;
     description: string;
-    type: 'string' | 'number' | 'boolean' | 'object' | 'array';
-    restrictions?: {
-        min?: number;
-        max?: number;
-        enum?: string[];
-        pattern?: RegExp;
-        required?: boolean;
-    }
-    default?: string | number | boolean | object | any[];
+    // type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+    // restrictions?: {
+    //     min?: number;
+    //     max?: number;
+    //     enum?: string[];
+    //     pattern?: RegExp;
+    //     required?: boolean;
+    // }
+    // default?: string | number | boolean | object | any[];
+    schema: z.ZodType<any, unknown, z.core.$ZodTypeInternals<any, unknown>>;
 }
 
 export class Model {
@@ -54,26 +57,16 @@ export class Model {
             throw new Error(`No runner defined for model ${name}.`);
         });
 
-        if (parameters) {
-            for (const param of parameters) {
-                if (param.restrictions) {
-                    // min/max only valid for number
-                    if ((param.restrictions.min !== undefined || param.restrictions.max !== undefined) && param.type !== 'number') {
-                        throw new Error(`Parameter "${param.key}": min/max restrictions can only be applied to type "number".`);
-                    }
-                    // pattern only valid for string
-                    if (param.restrictions.pattern !== undefined && param.type !== 'string') {
-                        throw new Error(`Parameter "${param.key}": pattern restriction can only be applied to type "string".`);
-                    }
-                    // enum only valid for string or number
-                    if (param.restrictions.enum !== undefined && !(param.type === 'string' || param.type === 'number')) {
-                        throw new Error(`Parameter "${param.key}": enum restriction can only be applied to type "string" or "number".`);
-                    }
-                }
-            }
-        }
-
         this.parameters = parameters;
+    }
+
+    filterParameters(params: Record<string, any>) {
+        const paramsOutput: Record<string, any> = {};
+        this.parameters.forEach(param => {
+            paramsOutput[param.key] = param.schema.safeParse(params[param.key] ?? undefined);
+        });
+
+        return paramsOutput;
     }
 
     serialize(discordCompatible = false) {
@@ -88,14 +81,32 @@ export class Model {
         lines.push(c.bold("Description:") + " " + c.white(this.description));
         lines.push(c.bold("Capabilities:") + " " + this.capabilities.map((cap) => c.cyan(cap)).join(", "));
         if (this.parameters && this.parameters.length > 0) {
-            lines.push(c.bold("Parameters:") +
-                "\n" + this.parameters.map(param =>
-                    c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(param.key) : chalk.yellow(param.key)) + c.gray(` (${param.type})`) +
-                    (param.description ? c.gray(": ") + c.white(param.description) : "") +
-                    (param.default !== undefined ? c.gray(" [default: ") + c.white(JSON.stringify(param.default)) + c.gray("]") : "") +
-                    (param.restrictions ? c.gray(" [restrictions: ") + c.white(JSON.stringify(param.restrictions)) + c.gray("]") : "")
-                ).join("\n")
-            );
+            // lines.push(c.bold("Parameters:") +
+            //     "\n" + this.parameters.map(param =>
+            //         c.cyan("  • ") + (discordCompatible ? DiscordAnsi.gold(param.key) : chalk.yellow(param.key)) + c.gray(` (${param.type})`) +
+            //         (param.description ? c.gray(": ") + c.white(param.description) : "") +
+            //         (param.default !== undefined ? c.gray(" [default: ") + c.white(JSON.stringify(param.default)) + c.gray("]") : "") +
+            //         (param.restrictions ? c.gray(" [restrictions: ") + c.white(JSON.stringify(param.restrictions)) + c.gray("]") : "")
+            //     ).join("\n")
+            // );
+            lines.push(c.bold("Parameters: \n"));
+            this.parameters.forEach(param => {
+                let text = `${c.cyan("  • ")} ${c.yellow(param.key)}  ${c.gray(`(${param.schema.type})`)}`;
+                if (param.description) text += `${c.gray(": ")} ${c.white(param.description)}`;
+                const jsonSchema = param.schema.toJSONSchema();
+                if (jsonSchema.default !== undefined) text += `${c.gray(" [default:")} ${c.white(JSON.stringify(jsonSchema.default))}${c.gray("]")}`;
+
+                const restrictions = [];
+                if (jsonSchema.minimum !== undefined) restrictions.push(`min: ${jsonSchema.minimum}`);
+                if (jsonSchema.maximum !== undefined) restrictions.push(`max: ${jsonSchema.maximum}`);
+                if (jsonSchema.enum) restrictions.push(`enum: ${jsonSchema.enum.join(', ')}`);
+                if (jsonSchema.minLength !== undefined) restrictions.push(`minLength: ${jsonSchema.minLength}`);
+                if (jsonSchema.maxLength !== undefined) restrictions.push(`maxLength: ${jsonSchema.maxLength}`);
+
+                if (restrictions.length > 0) text += ` ${c.gray("[restrictions:")} ${c.white(restrictions.join(", "))}${c.gray("]")}`;
+
+                lines.push(text);
+            });
         } else {
             lines.push(c.bold("Parameters:") + " " + c.gray("[none]"));
         }
@@ -114,52 +125,41 @@ const OpenAIParameters: ModelParameter[] = [
     {
         key: 'temperature',
         description: 'Controls randomness in the output. Lower values make output more deterministic.',
-        type: 'number',
-        restrictions: {
-            min: 0,
-            max: 2,
-        },
-        default: 1,
+        schema: z.float32("value must be a float / decimal number").
+            min(0, "value must be >= 0").
+            max(2, "value must be <= 2").
+            default(1),
     },
     {
         key: 'top_p',
         description: 'Controls diversity via nucleus sampling. Lower values make output more focused.',
-        type: 'number',
-        restrictions: {
-            min: 0,
-            max: 1,
-        },
-        default: 1,
+        schema: z.float32("value must be a float / decimal number").
+            min(0, "value must be >= 0").
+            max(1, "value must be <= 1").
+            default(1),
     },
     {
         key: 'max_tokens',
         description: 'Maximum number of tokens in the output.',
-        type: 'number',
-        restrictions: {
-            min: 1,
-            max: 4096,
-        },
-        default: 4096,
+        schema: z.int("value must be an integer").
+            min(0, "value must be >= 0").
+            default(4096),
     },
     {
         key: 'presence_penalty',
         description: 'Penalizes new tokens based on whether they appear in the text so far.',
-        type: 'number',
-        restrictions: {
-            min: -2,
-            max: 2,
-        },
-        default: 0,
+        schema: z.float32("value must be a float / decimal number").
+            min(-2, "value must be >= -2").
+            max(2, "value must be <= 2").
+            default(0),
     },
     {
         key: 'frequency_penalty',
         description: 'Penalizes new tokens based on their existing frequency in the text so far.',
-        type: 'number',
-        restrictions: {
-            min: -2,
-            max: 2,
-        },
-        default: 0,
+        schema: z.float32("value must be a float / decimal number").
+            min(-2, "value must be >= -2").
+            max(2, "value must be <= 2").
+            default(0)
     }
 ];
 
@@ -242,16 +242,18 @@ export const Models: Record<ModelName, Model> = {
             {
                 key: 'temperature',
                 description: 'Controls randomness in the output. Lower values make output more deterministic.',
-                type: 'number',
-                restrictions: { min: 0, max: 2 },
-                default: 0.6,
+                schema: z.float32("value must be a float / decimal number").
+                    min(0, "value must be >= 0").
+                    max(2, "value must be <= 2").
+                    default(0.6),
             },
             {
                 key: 'top_p',
                 description: 'Controls diversity via nucleus sampling. Lower values make output more focused.',
-                type: 'number',
-                restrictions: { min: 0, max: 1 },
-                default: 0.95,
+                schema: z.float32("value must be a float / decimal number").
+                    min(0, "value must be >= 0").
+                    max(1, "value must be <= 1").
+                    default(0.95),
             },
         ],
         [],
@@ -266,23 +268,26 @@ export const Models: Record<ModelName, Model> = {
             {
                 key: 'num_ctx',
                 description: 'The number of context tokens to use for the model.',
-                type: 'number',
-                restrictions: { min: 1, max: 16384 },
-                default: 8192,
+                schema: z.int("value must be an integer").
+                    min(1, "value must be >= 1").
+                    max(16384, "value must be <= 16384").
+                    default(8192),
             },
             {
                 key: 'temperature',
                 description: 'Controls randomness in the output. Lower values make output more deterministic.',
-                type: 'number',
-                restrictions: { min: 0, max: 2 },
-                default: 0.7,
+                schema: z.float32("value must be a float / decimal number").
+                    min(0, "value must be >= 0").
+                    max(2, "value must be <= 2").
+                    default(0.7),
             },
             {
                 key: 'num_keep',
                 description: 'The number of tokens to keep in the context.',
-                type: 'number',
-                restrictions: { min: 1, max: 2048 },
-                default: 24,
+                schema: z.int("value must be an integer").
+                    min(1, "value must be >= 1").
+                    max(2048, "value must be <= 2048").
+                    default(24),
             },
         ],
         [],

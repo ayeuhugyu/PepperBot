@@ -131,7 +131,7 @@ interface SearchResponse {
 // #endregion
 // #region Tool Definitions
 
-export const tools: Record<string, Tool> = {
+export const tools = {
     // #region Math
     'math': new Tool(
         new ToolData(
@@ -377,5 +377,7 @@ export const tools: Record<string, Tool> = {
         }
     ),
     // #endregion
-}
+} as const;
 // #endregion
+
+export type ToolName = keyof typeof tools;

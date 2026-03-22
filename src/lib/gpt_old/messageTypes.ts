@@ -105,7 +105,7 @@ export class GPTAttachment<T extends GPTAttachmentType> {
     }
 }
 
-enum GPTBaseMessageType {
+export enum GPTBaseMessageType {
     AssistantMessage = "assistant message",
     UserMessage = "user message",
     ToolCallResponse = "tool call response",
@@ -361,4 +361,13 @@ export class GPTSystemMessage implements GPTBaseMessage {
     }
 }
 
-export type GPTMessage = GPTSystemMessage | GPTToolCallResponse | GPTAssistantMessage | GPTUserMessage
+type GPTMessageMap = {
+    [GPTBaseMessageType.AssistantMessage]: GPTAssistantMessage,
+    [GPTBaseMessageType.UserMessage]: GPTUserMessage,
+    [GPTBaseMessageType.ToolCallResponse]: GPTToolCallResponse,
+    [GPTBaseMessageType.System]: GPTSystemMessage,
+}
+
+export type GPTMessage<T extends GPTBaseMessageType = GPTBaseMessageType> = T extends keyof GPTMessageMap ? GPTMessageMap[T] : never;
+
+// export type GPTMessage = GPTSystemMessage | GPTToolCallResponse | GPTAssistantMessage | GPTUserMessage

@@ -1,5 +1,5 @@
 import { randomId } from "../id";
-import { Prompt } from "../prompt_manager";
+import { Prompt } from "./prompt_manager";
 import { GPTMessage } from "./messageTypes";
 import { getDefaultPrompt } from "./officialPrompts";
 
