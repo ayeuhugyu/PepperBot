@@ -25,3 +25,4 @@ model parameters and tool call parameters now use zod schemas to define their ty
 
 ## other stuff
 updated discord.js and @discordjs/voice
+fixed index page redirects wrapping and looking really ugly on certain browsers
