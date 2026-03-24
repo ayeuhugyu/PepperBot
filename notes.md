@@ -2,6 +2,15 @@ info:
 $SPLIT$ - add horizontal line
 $SPLIT_EMBED$ - new container
 
+TODO
+---
+- finish OverrideParameters type
+- start/finish new Prompt type
+- start/finish Conversation type
+- create model runners
+- database schemas
+- message types
+
 LATEST UPDATE
 ---
 # so i did it again...
