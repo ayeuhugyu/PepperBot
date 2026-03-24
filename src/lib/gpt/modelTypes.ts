@@ -1,4 +1,4 @@
-import { ZodAnySchema } from "../zodhelpers";
+import { ZodAnySchema, ZodInferSchema } from "../zodhelpers";
 import type { OmitMethods } from "../omitMethods"
 
 export type ModelCapabilities = 'chat' | 'vision' | 'videoVision' | 'functionCalling' | 'reasoning';
@@ -9,26 +9,30 @@ export interface ModelParameter {
     schema: ZodAnySchema;
 }
 
-export class Model {
+export type InferModelParameters<P extends Record<string, ModelParameter>> = {
+    [K in keyof P]: ZodInferSchema<P[K]['schema']>
+};
+
+export class Model<P extends Record<string, ModelParameter>> {
     name: string;
     provider: string;
     description: string;
     capabilities: ModelCapabilities[];
-    parameters: ModelParameter[];
+    parameters: P;
     whitelist?: string[];
 
-    constructor(data: OmitMethods<Model>) {
+    constructor(data: OmitMethods<Model<Record<string, ModelParameter>>>) {
         this.name = data.name;
         this.provider = data.provider;
         this.description = data.description;
         this.capabilities = data.capabilities;
-        this.parameters = data.parameters;
+        this.parameters = data.parameters as P;
         this.whitelist = data.whitelist;
     }
 
     filterParameters(params: Record<string, any>) {
         const paramsOutput: Record<string, any> = {};
-        this.parameters.forEach(param => {
+        Object.values(this.parameters).forEach(param => {
             paramsOutput[param.key] = param.schema.safeParse(params[param.key] ?? undefined);
         });
 

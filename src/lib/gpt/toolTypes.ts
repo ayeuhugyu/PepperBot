@@ -1,5 +1,5 @@
 import { ZodType } from "zod";
-import { ZodAnySchema } from "../zodhelpers";
+import { ZodAnySchema, ZodInferSchema } from "../zodhelpers";
 
 export enum ToolType {
     Official = 'official',
@@ -43,7 +43,7 @@ export interface ToolParameter {
 }
 
 type InferParameters<A extends Record<string, ToolParameter>> = {
-    [K in keyof A]: A[K] extends { schema: ZodType<infer T> } ? T : never
+    [K in keyof A]: ZodInferSchema<A[K]['schema']>
 };
 
 export class Tool<A extends Record<string, ToolParameter>, R> extends BaseTool {
