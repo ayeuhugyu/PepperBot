@@ -8,6 +8,7 @@ import gpt41Nano from "./models/gpt-4.1-nano";
 import { models } from "./models";
 import * as log from "../log";
 import { Mutex } from "async-mutex";
+import database from "../data_manager";
 
 const promptParameters: Record<string, ModelParameter> = { // no need to remake this type just because this isn't a model, it'd be the exact same
     "processingMessage": {
@@ -26,13 +27,13 @@ interface DBPrompt {
     name: string;
     author_id: string;
     author_username: string;
-    author_avatar: string;
+    author_avatar: string | null;
     content: string;
 
-    createdAt: number;
-    updatedAt: number;
+    created_at: number;
+    updated_at: number;
 
-    publishedAt: number | null;
+    published_at: number | null;
     published: boolean;
     description: string;
 
@@ -40,11 +41,11 @@ interface DBPrompt {
 
     model: string;
 
-    enabledTools: string;
-    customTools: string;
+    enabled_tools: string;
+    custom_tools: string;
 
-    modelParameters: string;
-    promptParameters: string;
+    model_parameters: string;
+    prompt_parameters: string;
 }
 
 type PromptInput = OmitMethods<Prompt<AnyModel, boolean, (string | undefined)>>
@@ -63,11 +64,24 @@ export function initPromptFetchClient(inputClient: Client) {
 
 function safeJSONParse(data: any, onFailValue: any) {
     let didFail = false;
-    let parsed = JSON.parse(data).catch((err: any) => {
+    let parsed
+    try {
+        parsed = JSON.parse(data)
+    } catch (err: any) {
         log.warn(`error safeparsing json:`);
         log.warn(err);
         didFail = true;
-    });
+    }
+
+    if ((typeof parsed) !== (typeof onFailValue)) {
+        log.warn(`error safeparsing json: typeof parsed did not match typeof onFailValue`);
+        didFail = true;
+    }
+
+    if (Array.isArray(parsed) !== Array.isArray(onFailValue)) {
+        log.warn(`error safeparsing json: parsed and onFailValue were not both arrays or not arrays, tldr they mismatched Array.isArray`);
+        didFail = true;
+    }
 
     return didFail ? parsed : onFailValue;
 }
@@ -123,53 +137,47 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             (await clientDefinedMutex.acquire())(); // acquire and then immediately release it since we don't gaf about it beyond this
             client = client! as Client; // makes typescript shut up
         }
+        log.debug(`creating prompt from DB data:`);
+        log.debug(data);
+
         const author = (await client.users.fetch(data.author_id).catch(err => {
             log.error(`failed to fetch user for prompt ${data.author_id}/${data.name}`);
         }));
         if (!author) return;
-
-        log.debug(`creating prompt from DB data:`);
-        log.debug(data);
+        
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
         if (!model) model = gpt41Nano;
+
         let origin = data.origin ?? undefined;
         
-        let enabledTools = defaultTools;
-        let jsonParsedEnabledTools = safeJSONParse(data.enabledTools, defaultTools)
-        if (Array.isArray(jsonParsedEnabledTools)) {
-            enabledTools = jsonParsedEnabledTools.filter(v => Object.keys(tools).includes(v));
-        } else { // shouldn't ever happen, but just in case
-            log.warn(`JSON parsed tools for ${data.author_id}/${data.name} was not an array`);
-        }
-
         const inputData: PromptInput = {
             name: data.name,
             author: author,
             content: data.content,
 
-            createdAt: new Date(data.createdAt),
-            updatedAt: new Date(data.updatedAt),
+            createdAt: new Date(data.created_at),
+            updatedAt: new Date(data.updated_at),
 
-            publishedAt: data.published ? new Date(data.publishedAt ?? new Date()) : undefined,
-            published: data.published,
+            publishedAt: data.published ? new Date(data.published_at ?? new Date()) : undefined,
+            published: Boolean(data.published),
             description: data.description,
             
             origin: origin,
 
             model: model,
 
-            enabledTools: enabledTools as ToolName[],
-            customTools: safeJSONParse(data.customTools, []), 
+            enabledTools: safeJSONParse(data.enabled_tools, defaultTools),
+            customTools: safeJSONParse(data.custom_tools, []), 
 
-            modelParameters: safeJSONParse(data.modelParameters, {}),
-            promptParameters: safeJSONParse(data.promptParameters, {})
+            modelParameters: safeJSONParse(data.model_parameters, {}),
+            promptParameters: safeJSONParse(data.prompt_parameters, {})
         }
 
-        return new Prompt(inputData);
+        return new Prompt(inputData) as AnyPrompt;
     }
 
     static async new(name: string, author: User) {
-        return new Prompt({ 
+        return new Prompt<typeof gpt41Nano, false, undefined>({ 
             name: name, 
             author: author, 
             content: "[empty prompt]",
@@ -192,5 +200,65 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             promptParameters: {},
         });
     }
+
+    static async checkExists(author: string, name: string) {
+        const data = await database("prompts").select("*").where({ author_username: author, name }).orWhere({ author_id: author, name }).first();
+        if (data) return true;
+        return false;
+    }
+
+    static async fromName(author: string, name: string) {
+        const data = await database("prompts").select("*").where({ author_username: author, name }).orWhere({ author_id: author, name }).first();
+        if (!data) return undefined;
+        return this.fromDB(data);
+    }
+
+    static async clone(originAuthorId: string, originName: string, newAuthor: User, newName: string) {
+        const origin = await Prompt.fromName(originAuthorId, originName) as AnyPrompt | undefined;
+        if (!origin) return undefined;
+        origin.author = newAuthor;
+        origin.name = newName;
+        (origin.origin as string | undefined) = `${originAuthorId}/${originName}`;
+        origin.published = false;
+        origin.publishedAt = undefined;
+        return origin as unknown as Prompt<AnyModel, false, string>;
+    }
+
+    async write() {
+        log.debug(`writing prompt ${this.author.id}/${this.name} with data:`);
+        log.debug(this);
+
+        const data: DBPrompt = {
+            name: this.name,
+            author_id: this.author.id,
+            author_username: this.author.username,
+            author_avatar: this.author.displayAvatarURL(),
+            content: this.content,
+
+            created_at: this.createdAt.getTime(),
+            updated_at: new Date().getTime(), // updated Just Now as we are writing it
+            
+            published: this.published,
+            published_at: this.published ? (this.publishedAt?.getTime() ?? new Date().getTime()) : null,
+            description: this.description,
+
+            origin: this.origin ?? null,
+
+            model: this.model.name,
+
+            enabled_tools: JSON.stringify(this.enabledTools),
+            custom_tools: JSON.stringify(this.customTools),
+
+            model_parameters: JSON.stringify(this.customTools),
+            prompt_parameters: JSON.stringify(this.promptParameters),
+        }
+
+        log.debug(`converted to DB data:`);
+        log.debug(data);
+        log.debug(`writing to DB...`)
+
+        return await database("prompts").insert(data).onConflict("author_id, name").merge();
+    }
 }
 
+type AnyPrompt = Prompt<AnyModel, boolean, (string | undefined)>;
