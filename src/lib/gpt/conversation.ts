@@ -1,12 +1,12 @@
+import { User } from "discord.js";
 import { AnyModel, InferModelParameters, Model, ModelParameter } from "./modelTypes"
-
-interface OverrideParameters<P extends Record<string, ModelParameter>> {
-    modelParameters: InferModelParameters<P>
-}
+import { Prompt, promptParameterTypings } from "./promptManager"
 
 export class Conversation<M extends AnyModel> {
-    messages: unknown // TODO: make message types
-    prompt: unknown // TODO: make prompt type
-    overrides: OverrideParameters<M['parameters']>
+    messages: unknown; // TODO: make message types
+    prompt: Prompt<M, boolean, (string | undefined)>;
+    promptParameterOverrides: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
+    modelParameterOverrides: Partial<InferModelParameters<M['parameters']>> = {};
     model: M;
+    users: User[];
 }

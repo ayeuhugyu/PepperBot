@@ -10,7 +10,7 @@ import * as log from "../log";
 import { Mutex } from "async-mutex";
 import database from "../data_manager";
 
-const promptParameters: Record<string, ModelParameter> = { // no need to remake this type just because this isn't a model, it'd be the exact same
+export const promptParameterTypings: Record<string, ModelParameter> = { // no need to remake this type just because this isn't a model, it'd be the exact same
     "processingMessage": {
         key: "processingMessage",
         description: "toggles whether or not the \"processing...\" message will appear. when true (default), it will appear. when false, it won't.",
@@ -106,7 +106,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     customTools: CustomTool[] = [];
     
     modelParameters: Partial<InferModelParameters<M['parameters']>> = {};
-    promptParameters: Partial<InferModelParameters<typeof promptParameters>> = {};
+    promptParameters: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
 
     constructor(data: PromptInput) {
         this.name = data.name;
@@ -261,4 +261,4 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     }
 }
 
-type AnyPrompt = Prompt<AnyModel, boolean, (string | undefined)>;
+export type AnyPrompt = Prompt<AnyModel, boolean, (string | undefined)>;
