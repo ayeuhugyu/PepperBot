@@ -61,6 +61,17 @@ export function initPromptFetchClient(inputClient: Client) {
     releaseClientDefinedMutex();
 }
 
+function safeJSONParse(data: any, onFailValue: any) {
+    let didFail = false;
+    let parsed = JSON.parse(data).catch((err: any) => {
+        log.warn(`error safeparsing json:`);
+        log.warn(err);
+        didFail = true;
+    });
+
+    return didFail ? parsed : onFailValue;
+}
+
 export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = false, O extends (string | undefined) = undefined> {
     name: string;
     author: User;
@@ -124,13 +135,10 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         let origin = data.origin ?? undefined;
         
         let enabledTools = defaultTools;
-        let jsonParsedEnabledTools = JSON.parse(data.enabledTools).catch((err: any) => { // shouldn't ever happen, but just in case
-            log.warn(`failed to JSON parse tools for ${data.author_id}/${data.name}`);
-            log.warn(err);
-        });
+        let jsonParsedEnabledTools = safeJSONParse(data.enabledTools, defaultTools)
         if (Array.isArray(jsonParsedEnabledTools)) {
             enabledTools = jsonParsedEnabledTools.filter(v => Object.keys(tools).includes(v));
-        } else { // also shouldn't ever happen, but again just in case
+        } else { // shouldn't ever happen, but just in case
             log.warn(`JSON parsed tools for ${data.author_id}/${data.name} was not an array`);
         }
 
@@ -151,10 +159,10 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             model: model,
 
             enabledTools: enabledTools as ToolName[],
-            customTools: JSON.parse(data.customTools), // TODO: make safter
+            customTools: safeJSONParse(data.customTools, []), 
 
-            modelParameters: JSON.parse(data.modelParameters), // TODO: make safer
-            promptParameters: JSON.parse(data.promptParameters) // TODO: make safer
+            modelParameters: safeJSONParse(data.modelParameters, {}),
+            promptParameters: safeJSONParse(data.promptParameters, {})
         }
 
         return new Prompt(inputData);
