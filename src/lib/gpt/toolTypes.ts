@@ -58,6 +58,8 @@ export class Tool<A extends Record<string, ToolParameter>, R> extends BaseTool {
     }
 }
 
+export type AnyTool = Tool<Record<string, ToolParameter>, any>;
+
 export class ToolSuccessResponse<T> {
     success = true;
     data: T;

@@ -21,7 +21,7 @@ export class Model<P extends Record<string, ModelParameter>> {
     parameters: P;
     whitelist?: string[];
 
-    constructor(data: OmitMethods<Model<Record<string, ModelParameter>>>) {
+    constructor(data: OmitMethods<AnyModel>) {
         this.name = data.name;
         this.provider = data.provider;
         this.description = data.description;
@@ -39,3 +39,5 @@ export class Model<P extends Record<string, ModelParameter>> {
         return paramsOutput;
     }
 }
+
+export type AnyModel = Model<Record<string, ModelParameter>>;
