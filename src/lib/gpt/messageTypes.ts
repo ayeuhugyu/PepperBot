@@ -1,5 +1,6 @@
 import { AttachmentFlags, Message, type APIAttachment } from "discord.js";
 import { OmitMethods } from "../omitMethods";
+import { randomId } from "../id";
 
 export enum GPTMessageType {
     User = 'user',
@@ -11,6 +12,7 @@ export enum GPTMessageType {
 
 export interface GPTBaseMessage {
     readonly type: GPTMessageType;
+    id: string;
 }
 
 // each type will need to have its own properties
@@ -42,8 +44,16 @@ interface GPTAttachment {
     isRemix: boolean; // found in AttachmentFlags
 }
 
-export class GPTUserMessage implements GPTBaseMessage {
+interface GPTDiscordMessage extends GPTBaseMessage {
+    attachments: GPTAttachment[];
+    content: string;
+    beenDeleted: boolean;
+    discordData: GPTDiscordData;
+}
+
+export class GPTUserMessage implements GPTDiscordMessage {
     readonly type = GPTMessageType.User;
+    id: string = randomId("gpt-user-message");
     author: GPTUser;
     attachments: GPTAttachment[] = [];
     content: string;
@@ -79,7 +89,7 @@ export class GPTUserMessage implements GPTBaseMessage {
                 isRemix: attachment.flags.has(AttachmentFlags.IsRemix),
             })),
             content: message.content,
-            beenDeleted: false, // 
+            beenDeleted: false,
             discordData: {
                 messageId: message.id,
                 referenceMessageId: message.reference?.messageId,
@@ -88,4 +98,20 @@ export class GPTUserMessage implements GPTBaseMessage {
             }
         });
     };
+}
+
+export class GPTAssistantMessage implements GPTDiscordMessage {
+    readonly type = GPTMessageType.Assistant;
+    id: string = randomId("gpt-assistant-message");
+    attachments: GPTAttachment[] = [];
+    content: string;
+    beenDeleted: boolean = false;
+    discordData: GPTDiscordData;
+
+    constructor(data: Pick<OmitMethods<GPTAssistantMessage>, "attachments" | "content" | "beenDeleted" | "discordData">) {
+        this.attachments = data.attachments;
+        this.content = data.content;
+        this.beenDeleted = data.beenDeleted;
+        this.discordData = data.discordData;
+    }
 }
