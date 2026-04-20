@@ -1,6 +1,8 @@
 import { AttachmentFlags, Message, type APIAttachment } from "discord.js";
 import { OmitMethods } from "../omitMethods";
 import { randomId } from "../id";
+import * as log from "../log";
+
 
 export enum GPTMessageType {
     User = 'user',
@@ -44,14 +46,7 @@ interface GPTAttachment {
     isRemix: boolean; // found in AttachmentFlags
 }
 
-interface GPTDiscordMessage extends GPTBaseMessage {
-    attachments: GPTAttachment[];
-    content: string;
-    beenDeleted: boolean;
-    discordData: GPTDiscordData;
-}
-
-export class GPTUserMessage implements GPTDiscordMessage {
+export class GPTUserMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.User;
     id: string = randomId("gpt-user-message");
     author: GPTUser;
@@ -100,18 +95,20 @@ export class GPTUserMessage implements GPTDiscordMessage {
     };
 }
 
-export class GPTAssistantMessage implements GPTDiscordMessage {
+export class GPTAssistantMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.Assistant;
     id: string = randomId("gpt-assistant-message");
     attachments: GPTAttachment[] = [];
     content: string;
     beenDeleted: boolean = false;
+    sent?: boolean = false;
     discordData: GPTDiscordData;
 
-    constructor(data: Pick<OmitMethods<GPTAssistantMessage>, "attachments" | "content" | "beenDeleted" | "discordData">) {
+    constructor(data: Pick<OmitMethods<GPTAssistantMessage>, "attachments" | "content" | "beenDeleted" | "sent" | "discordData">) {
         this.attachments = data.attachments;
         this.content = data.content;
         this.beenDeleted = data.beenDeleted;
+        this.sent = data.sent;
         this.discordData = data.discordData;
     }
 }
