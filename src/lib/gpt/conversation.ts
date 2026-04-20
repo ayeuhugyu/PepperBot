@@ -5,13 +5,13 @@ import { getDefaultPrompt } from "./officialPrompts";
 import { models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
-import { GPTUser } from "./messageTypes";
+import { AnyGPTMessage, GPTUser } from "./messageTypes";
 
 const defaultPrompt = await getDefaultPrompt();
 
 export class Conversation<M extends AnyModel = typeof models['gpt-4.1-nano']> {
     id: string = randomId("conv");
-    messages: unknown; // TODO: make message types
+    messages: AnyGPTMessage[] = [];
     prompt: Prompt<M, boolean, (string | undefined)> = defaultPrompt! as Prompt<M>;
     promptParameterOverrides: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
     modelParameterOverrides: Partial<InferModelParameters<M['parameters']>> = {};
