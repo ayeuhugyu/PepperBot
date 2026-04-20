@@ -11,10 +11,10 @@ import { Mutex } from "async-mutex";
 import database from "../data_manager";
 
 export const promptParameterTypings: Record<string, ModelParameter> = { // no need to remake this type just because this isn't a model, it'd be the exact same
-    "processingMessage": {
-        key: "processingMessage",
-        description: "toggles whether or not the \"processing...\" message will appear. when true (default), it will appear. when false, it won't.",
-        schema: z.boolean().default(true),
+    "processingType": {
+        key: "processingType",
+        description: "changes how the \"processing...\" message behaves. `default` will cause it to do as normal, send a message containing \"processing...\" until it finishes. `typing` will cause the bot to show as typing in the channel until it finishes, without sending any message. `none` will disable the processing message entirely.",
+        schema: z.enum(["default", "typing", "none"]).default("default"),
     },
     "IOReplacements": {
         key: "IOReplacements",
@@ -90,10 +90,10 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     name: string;
     author: User;
     content: string = "[empty prompt]";
-    
+
     createdAt: Date = new Date();
     updatedAt: Date = new Date();
-    
+
     publishedAt: P extends true ? Date : undefined = undefined!;
     published: P = false as P;
     description: string = "[no description provided]";
@@ -104,7 +104,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
     enabledTools: ToolName[] = defaultTools;
     customTools: CustomTool[] = [];
-    
+
     modelParameters: Partial<InferModelParameters<M['parameters']>> = {};
     promptParameters: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
 
@@ -144,12 +144,12 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             log.error(`failed to fetch user for prompt ${data.author_id}/${data.name}`);
         }));
         if (!author) return;
-        
+
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
         if (!model) model = gpt41Nano;
 
         let origin = data.origin ?? undefined;
-        
+
         const inputData: PromptInput = {
             name: data.name,
             author: author,
@@ -161,13 +161,13 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             publishedAt: data.published ? new Date(data.published_at ?? new Date()) : undefined,
             published: Boolean(data.published),
             description: data.description,
-            
+
             origin: origin,
 
             model: model,
 
             enabledTools: safeJSONParse(data.enabled_tools, defaultTools),
-            customTools: safeJSONParse(data.custom_tools, []), 
+            customTools: safeJSONParse(data.custom_tools, []),
 
             modelParameters: safeJSONParse(data.model_parameters, {}),
             promptParameters: safeJSONParse(data.prompt_parameters, {})
@@ -177,9 +177,9 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     }
 
     static async new(name: string, author: User) {
-        return new Prompt<typeof gpt41Nano, false, undefined>({ 
-            name: name, 
-            author: author, 
+        return new Prompt<typeof gpt41Nano, false, undefined>({
+            name: name,
+            author: author,
             content: "[empty prompt]",
 
             createdAt: new Date(),
@@ -237,7 +237,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             created_at: this.createdAt.getTime(),
             updated_at: new Date().getTime(), // updated Just Now as we are writing it
-            
+
             published: this.published,
             published_at: this.published ? (this.publishedAt?.getTime() ?? new Date().getTime()) : null,
             description: this.description,
