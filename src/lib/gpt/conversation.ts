@@ -5,6 +5,7 @@ import { getDefaultPrompt } from "./officialPrompts";
 import { models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
+import { GPTUser } from "./messageTypes";
 
 const defaultPrompt = await getDefaultPrompt();
 
@@ -15,7 +16,7 @@ export class Conversation<M extends AnyModel = typeof models['gpt-4.1-nano']> {
     promptParameterOverrides: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
     modelParameterOverrides: Partial<InferModelParameters<M['parameters']>> = {};
     model: M = models['gpt-4.1-nano'] as unknown as M;
-    users: User[] = [];
+    users: GPTUser[] = [];
 
     setPrompt(prompt: AnyPrompt) {
         const conv = this as Conversation<typeof prompt.model>;
