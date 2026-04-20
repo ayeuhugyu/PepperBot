@@ -1,4 +1,4 @@
-import { AttachmentFlags, Client, type Message } from "discord.js";
+import { AttachmentFlags, Client, User, type Message } from "discord.js";
 import { type OmitMethods } from "../omitMethods";
 import { randomId } from "../id";
 import { type ToolName } from "./tools";
@@ -9,8 +9,6 @@ let client: Client | null = null;
 export function initGPTFetchClient(newClient: Client) {
     client = newClient;
 }
-
-
 
 export enum GPTMessageType {
     User = 'user',
@@ -25,8 +23,6 @@ export interface GPTBaseMessage {
     id: string;
     createdAt: Date;
 }
-
-// each type will need to have its own properties
 
 export interface GPTUser {
     id: string;
@@ -104,6 +100,46 @@ export class GPTUserMessage implements GPTBaseMessage {
             }
         });
     };
+
+    async fetchDiscordMessage(): Promise<Message | undefined> {
+        if (this.beenDeleted) {
+            return undefined;
+        }
+        if (!client) {
+            log.warn("attempt to fetch discord message for gpt user message without initializing client");
+            return undefined;
+        }
+
+        // if this fails due to the message not existing, consider the message deleted
+        try {
+            const channel = await client.channels.fetch(this.discordData.channelId);
+            if (!channel?.isTextBased()) {
+                log.warn("channel for gpt user message is not text based or does not exist", { channelId: this.discordData.channelId });
+                this.beenDeleted = true;
+                return undefined;
+            }
+            const message = await channel.messages.fetch(this.discordData.messageId);
+            return message;
+        } catch (error) {
+            log.error("failed to fetch discord message for gpt user message, marking as deleted", { messageId: this.discordData.messageId, channelId: this.discordData.channelId, error });
+            this.beenDeleted = true;
+            return undefined;
+        }
+    }
+
+    async fetchUser(): Promise<User | undefined> {
+        if (!client) {
+            log.warn("attempt to fetch gpt user without initializing client");
+            return undefined;
+        }
+
+        try {
+            return await client.users.fetch(this.author.id);
+        } catch (error) {
+            log.error("failed to fetch user for gpt message", { userId: this.author.id, error });
+            return undefined;
+        }
+    }
 }
 
 export class GPTAssistantMessage implements GPTBaseMessage {
@@ -121,6 +157,31 @@ export class GPTAssistantMessage implements GPTBaseMessage {
         this.content = data.content;
         this.beenDeleted = data.beenDeleted;
         this.discordData = data.discordData;
+    }
+
+    async fetchDiscordMessage(): Promise<Message | undefined> {
+        if (this.beenDeleted || !this.discordData || !this.sent) {
+            return undefined;
+        }
+        if (!client) {
+            log.warn("attempt to fetch discord message for gpt assistant message without initializing client");
+            return undefined;
+        }
+
+        try {
+            const channel = await client.channels.fetch(this.discordData.channelId);
+            if (!channel?.isTextBased()) {
+                log.warn("channel for gpt assistant message is not text based or does not exist", { channelId: this.discordData.channelId });
+                this.beenDeleted = true;
+                return undefined;
+            }
+            const message = await channel.messages.fetch(this.discordData.messageId);
+            return message;
+        } catch (error) {
+            log.error("failed to fetch discord message for gpt assistant message, marking as deleted", { messageId: this.discordData.messageId, channelId: this.discordData.channelId, error });
+            this.beenDeleted = true;
+            return undefined;
+        }
     }
 }
 
@@ -144,10 +205,12 @@ export class GPTToolResponse implements GPTBaseMessage {
     id: string = randomId("gpt-tool-response");
     createdAt: Date = new Date();
     toolCallId: string;
+    toolName: ToolName | string; // | string because there's no way to know the names of custom tools
     response: ToolResponse<unknown>;
 
     constructor(data: Omit<OmitMethods<GPTToolResponse>, "id" | "type" | "createdAt">) {
         this.toolCallId = data.toolCallId;
+        this.toolName = data.toolName;
         this.response = data.response;
     }
 }

@@ -4,31 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import { execFile } from 'child_process';
 
-/*
-"evaluate_luau": new Tool(
-        new ToolData(
-            'evaluate_luau',
-            'evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you don\'t print something, it won\'t be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX\'s \'task\' library, do not attempt to use it.',
-            ToolType.Official,
-            {
-                "expression": { key: 'expression', description: 'luau expression to evaluate', type: 'string', required: true }
-            },
-            true // disabled by default
-        ),
-        async ({ expression }: { expression: string }) => {
-            if (!expression.includes("print")) {
-                return "ERROR: the expression must contain a print statement. please remember to print your output.";
-            }
-            try {
-                const result = await runLuauScript(expression);
-                return result.stdout || result.stderr || "No output returned.";
-            } catch (err: any) {
-                return `an error occurred while attempting to evaluate the expression: ${err.message || err}`;
-            }
-        }
-    ),
-*/
-
 function runLuauScript(luauCode: string): Promise<{ stdout: string; stderr: string }> {
     const filePath = "cache/luau/" + Date.now() + ".luau";
     return new Promise((resolve, reject) => {
@@ -60,14 +35,14 @@ function runLuauScript(luauCode: string): Promise<{ stdout: string; stderr: stri
 const parameters = {
     "expression": {
         key: "expression",
-        description: "mathematical expression to evaluate",
+        description: "a program or expression written in the LUA / LUAU programming language.",
         schema: z.string(),
     },
 }
 
 export default new Tool<typeof parameters, string>({
     name: "evaluate_luau",
-    description: "evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you don\'t print something, it won\'t be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX\'s \'task\' library, do not attempt to use it.",
+    description: "evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you don\'t print something, it won\'t be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX\'s \'task\' library, do not attempt to use it. Do not attempt to use this for any programming language other than lua / luau, it will not work.",
     parameters,
     execute: async function({ expression }) {
         if (!expression.includes("print")) {
