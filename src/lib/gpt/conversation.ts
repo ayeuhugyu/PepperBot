@@ -1,13 +1,18 @@
-import { User } from "discord.js";
+import { Client, User } from "discord.js";
 import { AnyModel, InferModelParameters, Model, ModelParameter } from "./modelTypes"
 import { AnyPrompt, Prompt, promptParameterTypings } from "./promptManager"
 import { getDefaultPrompt } from "./officialPrompts";
 import { models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
-import { AnyGPTMessage, GPTUser } from "./messageTypes";
+import { AnyGPTMessage, GPTMessageType, GPTMessageTypeMap, GPTUser, GPTUserMessage } from "./messageTypes";
 
 const defaultPrompt = await getDefaultPrompt();
+
+let client: Client | undefined = undefined;
+export function initGPTMainClient(newClient: Client) {
+    client = newClient;
+}
 
 export class Conversation<M extends AnyModel = typeof models['gpt-4.1-nano']> {
     id: string = randomId("conv");
@@ -27,5 +32,20 @@ export class Conversation<M extends AnyModel = typeof models['gpt-4.1-nano']> {
         log.debug(`set prompt on conversation ${this.id} to ${prompt.author.id}/${prompt.name}; full data:`)
         log.debug(conv);
         return conv;
+    }
+
+    sortMessages() {
+        this.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    }
+
+    getLatestMessage<T extends GPTMessageType>(type?: GPTMessageType): GPTMessageTypeMap[T] | undefined {
+        this.sortMessages();
+        for (let i = this.messages.length - 1; i >= 0; i--) {
+            const msg = this.messages[i];
+            if (!type || msg.type === type) {
+                return msg as GPTMessageTypeMap[T];
+            }
+        }
+        return undefined;
     }
 }

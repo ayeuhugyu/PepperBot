@@ -192,8 +192,9 @@ export class GPTToolCall implements GPTBaseMessage {
     toolCallId: string = randomId("gpt-tool-call-id"); // this is the id that will be sent to openai, and should be used to match tool calls and responses. openai will more than likely provide their own.
     toolName: ToolName | string; // | string because there's no way to know the names of custom tools
     arguments: Record<string, unknown>;
+    answered: boolean = false;
 
-    constructor(data: Omit<OmitMethods<GPTToolCall>, "type" | "id" | "createdAt">) {
+    constructor(data: Omit<OmitMethods<GPTToolCall>, "type" | "id" | "createdAt" | "answered">) {
         this.toolCallId = data.toolCallId ?? randomId("gpt-tool-call-id");
         this.toolName = data.toolName;
         this.arguments = data.arguments;
@@ -227,3 +228,11 @@ export class GPTSystemMessage implements GPTBaseMessage {
 }
 
 export type AnyGPTMessage = GPTUserMessage | GPTAssistantMessage | GPTToolCall | GPTToolResponse | GPTSystemMessage;
+
+export type GPTMessageTypeMap = {
+    [GPTMessageType.User]: GPTUserMessage;
+    [GPTMessageType.Assistant]: GPTAssistantMessage;
+    [GPTMessageType.ToolCall]: GPTToolCall;
+    [GPTMessageType.ToolResponse]: GPTToolResponse;
+    [GPTMessageType.System]: GPTSystemMessage;
+};
