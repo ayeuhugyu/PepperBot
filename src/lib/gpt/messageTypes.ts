@@ -1,9 +1,11 @@
-import { AttachmentFlags, Client, User, type Message } from "discord.js";
+import { AttachmentFlags, Client, MessageType, User, type Message, type Collection, APIAttachment } from "discord.js";
 import { type OmitMethods } from "../omitMethods";
 import { randomId } from "../id";
 import { type ToolName } from "./tools";
 import { type ToolResponse } from "./toolTypes";
 import * as log from "../log";
+import { Conversation } from "./conversation";
+import { MIMEType } from "node:util";
 
 let client: Client | null = null;
 export function initGPTFetchClient(newClient: Client) {
@@ -37,13 +39,15 @@ interface GPTDiscordData {
     guildId?: string;
 }
 
+
+
 interface GPTAttachment {
     id: string;
     filename: string;
     url: string;
     proxyUrl: string;
     size: number;
-    contentType?: string;
+    contentType?: MIMEType;
     height?: number | null;
     width?: number | null;
     durationSecs?: number;
@@ -83,7 +87,7 @@ export class GPTUserMessage implements GPTBaseMessage {
                 url: attachment.url,
                 proxyUrl: attachment.proxyURL,
                 size: attachment.size,
-                contentType: attachment.contentType ?? undefined,
+                contentType: attachment.contentType ? new MIMEType(attachment.contentType) : undefined,
                 height: attachment.height,
                 width: attachment.width,
                 durationSecs: attachment.duration ?? undefined,
@@ -148,6 +152,7 @@ export class GPTAssistantMessage implements GPTBaseMessage {
     createdAt: Date = new Date();
     attachments: GPTAttachment[] = [];
     content: string;
+    toolCallIds: string[]; // list of tool call ids associated with this message
     beenDeleted: boolean = false;
     sent?: boolean = false;
     discordData?: GPTDiscordData;
@@ -155,6 +160,7 @@ export class GPTAssistantMessage implements GPTBaseMessage {
     constructor(data: Omit<OmitMethods<GPTAssistantMessage>, "id" | "type" | "sent" | "createdAt">) {
         this.attachments = data.attachments;
         this.content = data.content;
+        this.toolCallIds = data.toolCallIds;
         this.beenDeleted = data.beenDeleted;
         this.discordData = data.discordData;
     }
@@ -183,6 +189,15 @@ export class GPTAssistantMessage implements GPTBaseMessage {
             return undefined;
         }
     }
+
+    fetchToolCalls(conversation: Conversation): Collection<number, GPTToolCall> {
+        return conversation.messages.filter(m => {
+            if (m.type === GPTMessageType.ToolCall) {
+                return (this.toolCallIds.includes(m.toolCallId));
+            }
+            return false;
+        }) as Collection<number, GPTToolCall>;
+    }
 }
 
 export class GPTToolCall implements GPTBaseMessage {
@@ -198,6 +213,15 @@ export class GPTToolCall implements GPTBaseMessage {
         this.toolCallId = data.toolCallId ?? randomId("gpt-tool-call-id");
         this.toolName = data.toolName;
         this.arguments = data.arguments;
+    }
+
+    fetchResponse(conversation: Conversation): GPTToolResponse | undefined {
+        return conversation.messages.filter((m) => {
+            if (m.type === GPTMessageType.ToolResponse) {
+                if (m.toolCallId === this.toolCallId) return true
+            }
+            return false;
+        }).first() as GPTToolResponse | undefined;
     }
 }
 
