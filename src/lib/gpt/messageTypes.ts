@@ -6,6 +6,7 @@ import { type ToolResponse } from "./toolTypes";
 import * as log from "../log";
 import { Conversation } from "./conversation";
 import { MIMEType } from "node:util";
+import { getType } from "mime";
 
 let client: Client | null = null;
 export function initGPTFetchClient(newClient: Client) {
@@ -40,19 +41,58 @@ interface GPTDiscordData {
 }
 
 
+export enum GPTAttachmentType {
+    Image = "image",
+    Video = "video",
+    Audio = "audio",
+    Unknown = "unknown",
+    Text = "text",
+    Error = "error",
+}
 
-interface GPTAttachment {
-    id: string;
+export class BaseGPTAttachment {
+    type: GPTAttachmentType = GPTAttachmentType.Unknown;
+    id: string = randomId("gpt-attachment");
     filename: string;
     url: string;
-    proxyUrl: string;
-    size: number;
-    contentType?: MIMEType;
-    height?: number | null;
-    width?: number | null;
-    durationSecs?: number;
-    waveform?: string;
-    isRemix: boolean; // found in AttachmentFlags
+    size: number; // in bytes
+    expiresAt: Date;
+
+    constructor(data: Omit<OmitMethods<BaseGPTAttachment>, "id">) {
+        this.filename = data.filename;
+        this.url = data.url;
+        this.size = data.size;
+        this.expiresAt = data.expiresAt;
+        this.type = data.type;
+    }
+
+    static new(data: { filename: string, url: string, size: number, expiresAt: Date }) {
+        const extensionSplit = data.filename.split(".");
+        const extension = extensionSplit[extensionSplit.length - 1];
+    }
+}
+
+type ImageGPTAttachment = BaseGPTAttachment;
+type AudioGPTAttachment = BaseGPTAttachment;
+
+export class TextGPTAttachment extends BaseGPTAttachment {
+    type: GPTAttachmentType.Text;
+    content?: string;
+
+    constructor(data: Omit<OmitMethods<BaseGPTAttachment>, "id" | "type" >) {
+        super({...data, type: GPTAttachmentType.Text});
+        this.type = GPTAttachmentType.Text;
+    }
+}
+
+export class ErrorGPTAttachment extends BaseGPTAttachment {
+    type: GPTAttachmentType.Error;
+    error?: string;
+
+    constructor(data: Omit<OmitMethods<BaseGPTAttachment>, "id" | "type" >) {
+        super({...data, type: GPTAttachmentType.Error});
+        this.type = GPTAttachmentType.Error;
+    }
 }
 
 export class GPTUserMessage implements GPTBaseMessage {
