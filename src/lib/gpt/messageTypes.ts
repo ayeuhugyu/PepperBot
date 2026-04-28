@@ -6,7 +6,9 @@ import { type ToolResponse } from "./toolTypes";
 import * as log from "../log";
 import { Conversation } from "./conversation";
 import { MIMEType } from "node:util";
-import { getType } from "mime";
+import { lookup } from "mime-types";
+import { existsSync } from "fs-extra";
+import { readFileSync, writeFileSync } from "node:fs";
 
 let client: Client | null = null;
 export function initGPTFetchClient(newClient: Client) {
@@ -50,15 +52,16 @@ export enum GPTAttachmentType {
     Error = "error",
 }
 
-export class BaseGPTAttachment {
+export class GPTAttachment {
     type: GPTAttachmentType = GPTAttachmentType.Unknown;
-    id: string = randomId("gpt-attachment");
+    id: string;
     filename: string;
     url: string;
     size: number; // in bytes
     expiresAt: Date;
 
-    constructor(data: Omit<OmitMethods<BaseGPTAttachment>, "id">) {
+    constructor(data: Omit<OmitMethods<GPTAttachment>, "id"> & { id?: string }) {
+        this.id = data.id ?? randomId("gpt-attachment");
         this.filename = data.filename;
         this.url = data.url;
         this.size = data.size;
@@ -66,41 +69,95 @@ export class BaseGPTAttachment {
         this.type = data.type;
     }
 
-    static new(data: { filename: string, url: string, size: number, expiresAt: Date }) {
-        const extensionSplit = data.filename.split(".");
-        const extension = extensionSplit[extensionSplit.length - 1];
+    static async new(data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> & { id?: string }) {
+        const type = lookup(data.filename);
+        if (type) {
+            const pureType = type.split("/")[0];
+            switch (pureType) {
+                case "image":
+                    return new ImageGPTAttachment(data);
+                case "audio":
+                    return new AudioGPTAttachment(data);
+                case "text":
+                case "application":
+                    // will run for both "text" and "application"
+                    // attempt to download the text content and decode it as utf-8
+                    try {
+                        // check cache
+                        if (data.id && existsSync(`cache/attachments/${data.id}`)) {
+                            const content = readFileSync(`cache/attachments/${data.id}`, "utf-8");
+                            return new TextGPTAttachment({...data, content: content});
+                        }
+                        // fetch content
+                        const response = await fetch(data.url);
+                        if (!response.ok) {
+                            return new ErrorGPTAttachment({...data, error: "error fetching attachment content: non-200 response from attachment url"});
+                        }
+                        const buffer = await response.arrayBuffer();
+                        const decoded = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+
+                        // write cache
+                        const att = new TextGPTAttachment({...data, content: decoded});
+                        writeFileSync(`cache/attachments/${att.id}`, decoded, "utf-8");
+                        return att;
+                    } catch (err) {
+                        log.error(`error while fetching attachment content:`);
+                        log.error(err);
+                        return new ErrorGPTAttachment({...data, error: `error while fetching attachment content: ${err}`});
+                    }
+            }
+        } else {
+            return new ErrorGPTAttachment({...data, error: "unknown attachment type"})
+        }
     }
 }
 
-type ImageGPTAttachment = BaseGPTAttachment;
-type AudioGPTAttachment = BaseGPTAttachment;
+export class ImageGPTAttachment extends GPTAttachment {
+    type: GPTAttachmentType.Image = GPTAttachmentType.Image;
 
-export class TextGPTAttachment extends BaseGPTAttachment {
+    constructor(data: Omit<OmitMethods<ImageGPTAttachment>, "id" | "type"> & { id?: string }) {
+        super({...data, type: GPTAttachmentType.Image});
+    }
+};
+
+export class AudioGPTAttachment extends GPTAttachment {
+    type: GPTAttachmentType.Audio = GPTAttachmentType.Audio;
+
+    constructor(data: Omit<OmitMethods<ImageGPTAttachment>, "id" | "type"> & { id?: string }) {
+        super({...data, type: GPTAttachmentType.Audio});
+    }
+};
+
+export class TextGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Text;
-    content?: string;
+    content: string;
 
-    constructor(data: Omit<OmitMethods<BaseGPTAttachment>, "id" | "type" >) {
+    constructor(data: Omit<OmitMethods<TextGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Text});
         this.type = GPTAttachmentType.Text;
+        this.content = data.content;
     }
 }
 
-export class ErrorGPTAttachment extends BaseGPTAttachment {
+export class ErrorGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Error;
-    error?: string;
+    error: string;
 
-    constructor(data: Omit<OmitMethods<BaseGPTAttachment>, "id" | "type" >) {
+    constructor(data: Omit<OmitMethods<ErrorGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Error});
         this.type = GPTAttachmentType.Error;
+        this.error = data.error;
     }
 }
+
+type AnyGPTAttachment = ErrorGPTAttachment | TextGPTAttachment | ImageGPTAttachment | AudioGPTAttachment
 
 export class GPTUserMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.User;
     id: string = randomId("gpt-user-message");
     createdAt: Date = new Date();
     author: GPTUser;
-    attachments: GPTAttachment[] = [];
+    attachments: AnyGPTAttachment[] = [];
     content: string;
     beenDeleted: boolean = false;
     discordData: GPTDiscordData;
@@ -190,7 +247,7 @@ export class GPTAssistantMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.Assistant;
     id: string = randomId("gpt-assistant-message");
     createdAt: Date = new Date();
-    attachments: GPTAttachment[] = [];
+    attachments: AnyGPTAttachment[] = [];
     content: string;
     toolCallIds: string[]; // list of tool call ids associated with this message
     beenDeleted: boolean = false;

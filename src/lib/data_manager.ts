@@ -60,6 +60,7 @@ const expectedOther: string[] = [
     "cache",
     "cache/containers",
     "cache/luau",
+    "cache/attachments",
     "logs",
 ];
 const expectedLogs: string[] = [
