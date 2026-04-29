@@ -1,8 +1,10 @@
 import OpenAI from "openai";
-import { AnyGPTMessage, GPTMessageType } from "../messageTypes";
-import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionMessageParam, ChatCompletionUserMessageParam } from "openai/resources/chat";
+import { AnyGPTMessage, GPTAttachmentType, GPTMessageType } from "../messageTypes";
+import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from "openai/resources/chat";
 import { Conversation } from "../conversation";
 import * as log from "../../log";
+import { AnyTool, CustomTool, Tool, ToolParameter } from "../toolTypes";
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const openaiDefault = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -10,7 +12,7 @@ export const openaiDefault = new OpenAI({
 
 const supportedImageFileTypes = ["png", "jpg", "jpeg", "webp", "gif"];
 
-async function formatMessage(message: AnyGPTMessage, conversation: Conversation): Promise<ChatCompletionMessageParam | null> {
+function formatMessage(message: AnyGPTMessage, conversation: Conversation): ChatCompletionMessageParam | null {
     log.debug(`formatting gpt message:`);
     log.debug(message);
 
@@ -34,86 +36,53 @@ async function formatMessage(message: AnyGPTMessage, conversation: Conversation)
             }
 
             if (message.attachments.length > 0) { // TODO: make this less shit because oml this sucks
-                await Promise.all(message.attachments.map((att) => {
-                    return new Promise<void>(async (resolve, reject) => {
-                        log.debug(`GPT processing attachment of type ${att.contentType} (${att.filename})`);
-                    const currentDate = new Date();
-                    if ((message.createdAt.getTime() + (att.durationSecs ?? (24 * 60 * 60)) * 1000) < currentDate.getTime()) { // if the attachment has expired OR it has been 24 hours since its creation (if an expiry date was not specified),
-                        (userdata.content as ChatCompletionContentPart[]).push({
-                            type: "text",
-                            text: `[SYSTEM]: user attached a file (${att.filename}), but it has now expired and is no longer available. please ignore this image and pretend it does not exist. do not inform the user unless directly inquired.`,
-                        });
-                    } else {
-                        switch (att.contentType?.type) {
-                            case "video":
-                                if (conversation.model.capabilities.includes("videoVision")) {
-                                    // do something...
-                                    // dunno what yet because there are no models with this that i have enabled
-                                    // will add if i find a model capable of this later
-                                } else {
-                                    (userdata.content as ChatCompletionContentPart[]).push({
-                                        type: "text",
-                                        text: `[SYSTEM]: user attached a video (${att.filename}) but this model is not capable of viewing videos.`,
-                                    });
-                                }
-                            break;
-                            case "image":
-                                if (conversation.model.capabilities.includes("vision")) {
-                                    const splitImageFilename = att.filename.split(".");
-                                    if (supportedImageFileTypes.includes(splitImageFilename[splitImageFilename.length - 1])) {
-                                        (userdata.content as ChatCompletionContentPart[]).push({
-                                            type: "image_url",
-                                            image_url: {
-                                                url: att.url
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    (userdata.content as ChatCompletionContentPart[]).push({
-                                        type: "text",
-                                        text: `[SYSTEM]: user attached an image (${att.filename}) but this model is not capable of viewing images.`
-                                    });
-                                }
-                            break;
-                            case "audio":
-                                (userdata.content as ChatCompletionContentPart[]).push({
-                                    type: "text",
-                                    text: `[SYSTEM]: user attached an audio file (${att.filename}), but audio files are not currently supported.` // openai's audio stuff is for GENERATING them, it does not hear.
-                                });
-                            default: // for any other file types:
-                            // attempt to download the file, if it is utf-8 encoded put it in there as text.
-                            if (att.size > 5 * 1000 * 1000) { // 5MB size limit
-                                (userdata.content as ChatCompletionContentPart[]).push({
-                                    type: "text",
-                                    text: `[SYSTEM]: user attached a file (${att.filename}), but it exceeded the 5 megabyte size limit for further processing.`
-                                });
+                message.attachments.map((att) => {
+                    switch (att.type) {
+                        case GPTAttachmentType.Video:
+                            if (conversation.model.capabilities.includes("videoVision")) {
+                                // do something...
+                                // dunno what yet because there are no models with this that i have enabled
+                                // will add if i find a model capable of this later
                             } else {
-                                try {
-                                    const response = await fetch(att.url);
-                                    const buffer = await response.arrayBuffer();
-                                    const decoder = new TextDecoder('utf-8', { fatal: true });
-                                    let text = decoder.decode(buffer);
-
+                                (userdata.content as ChatCompletionContentPart[]).push({
+                                    type: "text",
+                                    text: `[SYSTEM]: user attached a video (${att.filename}) but this model is not capable of viewing videos.`,
+                                });
+                            }
+                        break;
+                        case GPTAttachmentType.Image:
+                            if (conversation.model.capabilities.includes("vision")) {
+                                const splitImageFilename = att.filename.split(".");
+                                if (supportedImageFileTypes.includes(splitImageFilename[splitImageFilename.length - 1])) {
                                     (userdata.content as ChatCompletionContentPart[]).push({
-                                        type: "text",
-                                        text: `[SYSTEM]: user attached a text attachment. its decoded contents are below, after the filename and size:\n${att.filename} (${att.size} BYTES)\n\n${text}`
-                                    })
-                                } catch (err) {
-                                    log.error(`failed to decode GPT attachment text content from ${att.url}: ${err}`);
-                                    log.debug(`failed to decode GPT attachment text content from ${att.filename} (${att.url}) ${err}`);
-                                    (userdata.content as ChatCompletionContentPart[]).push({
-                                        type: "text",
-                                        text: `[SYSTEM]: an error occurred while decoding this attachment's content: ${err}`,
+                                        type: "image_url",
+                                        image_url: {
+                                            url: att.url
+                                        }
                                     });
                                 }
+                            } else {
+                                (userdata.content as ChatCompletionContentPart[]).push({
+                                    type: "text",
+                                    text: `[SYSTEM]: user attached an image (${att.filename}) but this model is not capable of viewing images.`
+                                });
                             }
+                        break;
+                        case GPTAttachmentType.Audio:
+                            (userdata.content as ChatCompletionContentPart[]).push({
+                                type: "text",
+                                text: `[SYSTEM]: user attached an audio file (${att.filename}), but audio files are not currently supported.` // openai's audio stuff is for GENERATING them, it does not hear.
+                            });
                             break;
-                        }
+                        case GPTAttachmentType.Text:
+                        case GPTAttachmentType.Error:
+                            (userdata.content as ChatCompletionContentPart[]).push({
+                                type: "text",
+                                text: att.formatText(),
+                            });
+                        break;
                     }
-
-                    resolve();
-                    });
-                }));
+                });
             }
 
             return userdata;
@@ -153,6 +122,80 @@ async function formatMessage(message: AnyGPTMessage, conversation: Conversation)
                 content: "[SYSTEM MESSAGE]: this message was unable to be processed correctly. the error has been logged and it will be dealt with."
             }
     }
+}
+
+function formatToolParameters(parameters: (AnyTool | CustomTool)['parameters']): ChatCompletionTool['function']['parameters'] {
+    const formatted: Record<string, {
+        type: string;
+        description: string;
+        items?: { type: string };
+        default?: unknown;
+    }> = {};
+    for (const paramKey in parameters) {
+        const param = parameters[paramKey];
+        if ("schema" in param) {
+            const jsonSchema = zodToJsonSchema(param.schema as unknown as any, { target: "openAi" });
+
+            
+            // formatted[param.key] = {
+            //     type: (param.schema.type === "array") ? "array" : param.schema.type,
+            //     description: param.description,
+            // };
+            // if (param.schema.type === "array" && param.schema) {
+            //     formatted[param.key].items = { type: param.arraytype };
+            // }
+            // if (param.default !== undefined) {
+            //     formatted[param.key].default = param.default;
+            // }
+        } else {
+            formatted[param.key] = {
+                type: param.type,
+                description: param.description,
+            }
+        }
+    }
+    return formatted;
+}
+
+
+function formatTool(tool: AnyTool | CustomTool): ChatCompletionTool {
+    const formattedParameters = formatToolParameters(tool.parameters);
+    const required = getRequiredParameters(tool.parameters);
+
+    const parametersObj: {
+        type: 'object';
+        properties: typeof formattedParameters;
+        required?: string[];
+    } = {
+        type: 'object',
+        properties: formattedParameters,
+    };
+    if (required.length > 0) parametersObj.required = required;
+
+    return {
+        type: 'function',
+        function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: parametersObj,
+        },
+    };
+}
+
+function formatMessages(conversation: Conversation): ChatCompletionMessageParam[] {
+    const systemPrompt: string = conversation.prompt?.content || '';
+    const openaiMessages: ChatCompletionMessageParam[] = [{
+        role: "system",
+        content: systemPrompt,
+    }];
+
+    conversation.messages.forEach(msg => {
+        const formatted = formatMessage(msg, conversation);
+        if (formatted) {
+            openaiMessages.push(formatted);
+        }
+    });
+    return openaiMessages;
 }
 
 

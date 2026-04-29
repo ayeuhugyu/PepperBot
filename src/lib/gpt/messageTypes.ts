@@ -9,6 +9,7 @@ import { MIMEType } from "node:util";
 import { lookup } from "mime-types";
 import { existsSync } from "fs-extra";
 import { readFileSync, writeFileSync } from "node:fs";
+import prettyBytes from "pretty-bytes";
 
 let client: Client | null = null;
 export function initGPTFetchClient(newClient: Client) {
@@ -61,6 +62,7 @@ export class GPTAttachment {
     expiresAt: Date;
 
     constructor(data: Omit<OmitMethods<GPTAttachment>, "id"> & { id?: string }) {
+        this.type = GPTAttachmentType.Unknown;
         this.id = data.id ?? randomId("gpt-attachment");
         this.filename = data.filename;
         this.url = data.url;
@@ -71,13 +73,25 @@ export class GPTAttachment {
 
     static async new(data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> & { id?: string }) {
         const type = lookup(data.filename);
+        let expired = data.expiresAt.getTime() < new Date().getTime();
         if (type) {
             const pureType = type.split("/")[0];
             switch (pureType) {
                 case "image":
+                    if (expired) {
+                        return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the image was never added."});
+                    }
                     return new ImageGPTAttachment(data);
                 case "audio":
+                    if (expired) {
+                        return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the sound was never added."});
+                    }[SYSTEM]: user attached a file (${att.filename}), but it has now expired and is no longer available. please ignore this image and pretend it does not exist. do not inform the user unless directly inquired.
                     return new AudioGPTAttachment(data);
+                case "video":
+                    if (expired) {
+                        return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the video was never added."});
+                    }
+                    return new VideoGPTAttachment(data);
                 case "text":
                 case "application":
                     // will run for both "text" and "application"
@@ -89,6 +103,9 @@ export class GPTAttachment {
                             return new TextGPTAttachment({...data, content: content});
                         }
                         // fetch content
+                        if (expired) {
+                            return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired, and it was not previously cached. please ignore this message and pretend as though the file was never added."});
+                        }
                         const response = await fetch(data.url);
                         if (!response.ok) {
                             return new ErrorGPTAttachment({...data, error: "error fetching attachment content: non-200 response from attachment url"});
@@ -105,6 +122,8 @@ export class GPTAttachment {
                         log.error(err);
                         return new ErrorGPTAttachment({...data, error: `error while fetching attachment content: ${err}`});
                     }
+                default:
+                    return new ErrorGPTAttachment({...data, error: "unprocessable attachment type"});
             }
         } else {
             return new ErrorGPTAttachment({...data, error: "unknown attachment type"})
@@ -114,28 +133,48 @@ export class GPTAttachment {
 
 export class ImageGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Image = GPTAttachmentType.Image;
+    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<ImageGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Image});
+        this.type = GPTAttachmentType.Image
     }
 };
 
+export class VideoGPTAttachment extends GPTAttachment {
+    type: GPTAttachmentType.Video = GPTAttachmentType.Video;
+    useURLAsFile?: boolean = false;
+
+    constructor(data: Omit<OmitMethods<VideoGPTAttachment>, "id" | "type"> & { id?: string }) {
+        super({...data, type: GPTAttachmentType.Video});
+        this.type = GPTAttachmentType.Video
+    }
+};
+
+
 export class AudioGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Audio = GPTAttachmentType.Audio;
+    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<ImageGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Audio});
+        this.type = GPTAttachmentType.Audio
     }
 };
 
 export class TextGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Text;
     content: string;
+    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<TextGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Text});
         this.type = GPTAttachmentType.Text;
         this.content = data.content;
+    }
+
+    formatText() {
+        return `user attached a file: ${this.filename} (${prettyBytes(this.size)}), its content is as follows:\n\n${this.content}`;
     }
 }
 
@@ -148,9 +187,13 @@ export class ErrorGPTAttachment extends GPTAttachment {
         this.type = GPTAttachmentType.Error;
         this.error = data.error;
     }
+
+    formatText() {
+        return `user attached a file: ${this.filename} (${prettyBytes(this.size)}) however there was an error in processing it:\n\n${this.error}`;
+    }
 }
 
-type AnyGPTAttachment = ErrorGPTAttachment | TextGPTAttachment | ImageGPTAttachment | AudioGPTAttachment
+type AnyGPTAttachment = ErrorGPTAttachment | TextGPTAttachment | ImageGPTAttachment | AudioGPTAttachment | VideoGPTAttachment;
 
 export class GPTUserMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.User;
@@ -170,7 +213,7 @@ export class GPTUserMessage implements GPTBaseMessage {
         this.discordData = data.discordData;
     }
 
-    static fromMessage(message: Message): GPTUserMessage {
+    static async fromMessage(message: Message): Promise<GPTUserMessage> {
         return new GPTUserMessage({
             createdAt: message.createdAt,
             author: {
@@ -178,18 +221,15 @@ export class GPTUserMessage implements GPTBaseMessage {
                 username: message.author.username,
                 avatar: message.author.displayAvatarURL()
             },
-            attachments: message.attachments.map((attachment): GPTAttachment => ({
-                id: attachment.id,
-                filename: attachment.name ?? 'unknown',
-                url: attachment.url,
-                proxyUrl: attachment.proxyURL,
-                size: attachment.size,
-                contentType: attachment.contentType ? new MIMEType(attachment.contentType) : undefined,
-                height: attachment.height,
-                width: attachment.width,
-                durationSecs: attachment.duration ?? undefined,
-                waveform: attachment.waveform ?? undefined,
-                isRemix: attachment.flags.has(AttachmentFlags.IsRemix),
+            attachments: await Promise.all(message.attachments.map(async (att) => {
+                const data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> = {
+                    filename: att.name,
+                    size: att.size,
+                    url: att.url,
+                    expiresAt: new Date(Date.now() + (att.duration ?? (12 * 60 * 60) * 1000)) // 12 hours default
+                }
+
+                return await GPTAttachment.new(data);
             })),
             content: message.content,
             beenDeleted: false,
