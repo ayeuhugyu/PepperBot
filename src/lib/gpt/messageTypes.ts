@@ -85,7 +85,7 @@ export class GPTAttachment {
                 case "audio":
                     if (expired) {
                         return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the sound was never added."});
-                    }[SYSTEM]: user attached a file (${att.filename}), but it has now expired and is no longer available. please ignore this image and pretend it does not exist. do not inform the user unless directly inquired.
+                    }
                     return new AudioGPTAttachment(data);
                 case "video":
                     if (expired) {

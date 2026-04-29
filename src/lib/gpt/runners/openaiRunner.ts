@@ -3,7 +3,7 @@ import { AnyGPTMessage, GPTAttachmentType, GPTMessageType } from "../messageType
 import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from "openai/resources/chat";
 import { Conversation } from "../conversation";
 import * as log from "../../log";
-import { AnyTool, CustomTool, Tool, ToolParameter } from "../toolTypes";
+import { AnyTool, CustomTool, CustomToolParameter, Tool, ToolParameter } from "../toolTypes";
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const openaiDefault = new OpenAI({
@@ -125,28 +125,15 @@ function formatMessage(message: AnyGPTMessage, conversation: Conversation): Chat
 }
 
 function formatToolParameters(parameters: (AnyTool | CustomTool)['parameters']): ChatCompletionTool['function']['parameters'] {
-    const formatted: Record<string, {
-        type: string;
-        description: string;
-        items?: { type: string };
-        default?: unknown;
-    }> = {};
+    const formatted: ChatCompletionTool['function']['parameters'] = {};
     for (const paramKey in parameters) {
         const param = parameters[paramKey];
         if ("schema" in param) {
-            const jsonSchema = zodToJsonSchema(param.schema as unknown as any, { target: "openAi" });
-
-            
-            // formatted[param.key] = {
-            //     type: (param.schema.type === "array") ? "array" : param.schema.type,
-            //     description: param.description,
-            // };
-            // if (param.schema.type === "array" && param.schema) {
-            //     formatted[param.key].items = { type: param.arraytype };
-            // }
-            // if (param.default !== undefined) {
-            //     formatted[param.key].default = param.default;
-            // }
+            const modifiedSchema = param.schema.describe(param.description);
+            const jsonSchema = zodToJsonSchema(modifiedSchema as unknown as any, { target: "openAi" });
+            if (jsonSchema.definitions) {
+                formatted[param.key] = Object.values(jsonSchema.definitions)[0];
+            }
         } else {
             formatted[param.key] = {
                 type: param.type,
@@ -157,8 +144,20 @@ function formatToolParameters(parameters: (AnyTool | CustomTool)['parameters']):
     return formatted;
 }
 
+function getRequiredParameters(parameters: Record<string, ToolParameter | CustomToolParameter>): string[] {
+    const required: string[] = [];
+    for (const paramKey in parameters) {
+        const param = parameters[paramKey];
+        if ("schema" in param) {
+            if (!param.schema.safeParse(undefined).success) required.push(param.key);
+        } else {
+            if (param.required) required.push(param.key);
+        }
+    }
+    return required;
+}
 
-function formatTool(tool: AnyTool | CustomTool): ChatCompletionTool {
+export function formatTool(tool: AnyTool | CustomTool): ChatCompletionTool {
     const formattedParameters = formatToolParameters(tool.parameters);
     const required = getRequiredParameters(tool.parameters);
 
