@@ -1,7 +1,7 @@
 import { Client, ClientUser, User } from "discord.js"
 import { AnyModel, InferModelParameters, Model, ModelParameter } from "./modelTypes";
 import { ToolName, tools } from "./tools";
-import { CustomTool } from "./toolTypes";
+import { AnyTool, CustomTool, Tool } from "./toolTypes";
 import z from "zod";
 import { OmitMethods } from "../omitMethods";
 import gpt41Nano from "./models/gpt-4.1-nano";
@@ -258,6 +258,16 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         log.debug(`writing to DB...`)
 
         return await database("prompts").insert(data).onConflict("author_id, name").merge();
+    }
+
+    getTools(): (AnyTool | CustomTool)[] {
+        const regularTools: AnyTool[] = [];
+        const customTools = this.customTools;
+        this.enabledTools.forEach(toolName => {
+            regularTools.push(tools[toolName]);
+        });
+
+        return [...regularTools, ...customTools];
     }
 }
 

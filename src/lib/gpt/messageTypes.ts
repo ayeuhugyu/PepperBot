@@ -333,7 +333,7 @@ export class GPTAssistantMessage implements GPTBaseMessage {
                 return (this.toolCallIds.includes(m.toolCallId));
             }
             return false;
-        }) as Collection<number, GPTToolCall>;
+        });
     }
 }
 

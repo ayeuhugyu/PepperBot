@@ -1,5 +1,6 @@
 import { ZodType } from "zod";
 import { ZodAnySchema, ZodInferSchema } from "../zodhelpers";
+import { tools } from "./tools";
 
 export enum ToolType {
     Official = 'official',
@@ -58,7 +59,7 @@ export class Tool<A extends Record<string, ToolParameter>, R> extends BaseTool {
     }
 }
 
-export type AnyTool = Tool<Record<string, ToolParameter>, any>;
+export type AnyTool = typeof tools[keyof typeof tools];
 
 export class ToolSuccessResponse<T> {
     success = true;

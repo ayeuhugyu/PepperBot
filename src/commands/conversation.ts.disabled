@@ -2,8 +2,8 @@ import { ApplicationCommandOptionType, ApplicationCommandType, ChannelType, Coll
 import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse, FormattedCommandInteraction } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
 import { CommandAccessTemplates, getArgumentsTemplate, GetArgumentsTemplateType } from "../lib/templates";
-import { getConversation, conversations, GPTFormattedCommandInteraction, Conversation } from "../lib/gpt/main";
-import { Model, Models as models } from "../lib/gpt/models";
+import { getConversation, conversations, GPTFormattedCommandInteraction, Conversation } from "../lib/gpt_old/main";
+import { Model, Models as models } from "../lib/gpt_old/models";
 import { textToAttachment } from "../lib/attachment_manager";
 import { CommandTag, SubcommandDeploymentApproach, CommandOptionType, InvokerType } from "../lib/classes/command_enums";
 import { DiscordAnsi as ansi } from "../lib/discord_ansi";

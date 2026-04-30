@@ -3,7 +3,7 @@ import commands from "../lib/command_manager";
 import { fetchGuildConfig, GuildConfig } from "../lib/guild_config_manager";
 import { Command, CommandInput, CommandInvoker, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { respond } from "../lib/gpt/main";
+// import { respond } from "../lib/gpt/main";
 import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
@@ -14,6 +14,7 @@ import { CommandAccessTemplates } from "../lib/templates";
 import { getPermissionsFromMessage } from "../lib/permissions_utils";
 
 async function gptHandler(message: Message<true>) {
+    return; // temporarily DO NOTHIGN!!!
     // Only process if the bot is mentioned.
     if (!message.mentions || !message.mentions.has(message.client.user?.id)) {
         return;
@@ -61,7 +62,7 @@ async function gptHandler(message: Message<true>) {
 
     log.info(`gpt handler invoked`);
     log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
-    await respond(message);
+    // await respond(message);
 }
 
 interface QueuedCommand {

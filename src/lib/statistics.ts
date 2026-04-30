@@ -1,6 +1,6 @@
 import { InvokerType } from "./classes/command_enums";
 import database from "./data_manager";
-import { Models } from "./gpt/models";
+import { models as Models } from "./gpt/models";
 import * as log from "./log";
 
 enum StatisticsEntryType {
