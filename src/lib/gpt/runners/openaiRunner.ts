@@ -129,10 +129,12 @@ function formatToolParameters(parameters: (AnyTool | CustomTool)['parameters']):
     for (const paramKey in parameters) {
         const param = parameters[paramKey];
         if ("schema" in param) {
-            const modifiedSchema = param.schema.describe(param.description);
-            const jsonSchema = zodToJsonSchema(modifiedSchema as unknown as any, { target: "openAi" });
-            if (jsonSchema.definitions) {
-                formatted[param.key] = Object.values(jsonSchema.definitions)[0];
+            formatted[param.key] = {
+                type: param.schema.type,
+                description: param.description,
+            }
+            if (param.schema.type == "array") {
+                (formatted[param.key] as any).items = { type: (param.schema as any).element?.type };
             }
         } else {
             formatted[param.key] = {
