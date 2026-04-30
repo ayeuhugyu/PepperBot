@@ -43,7 +43,7 @@ export interface ToolParameter {
     schema: ZodAnySchema
 }
 
-type InferParameters<A extends Record<string, ToolParameter>> = {
+export type InferParameters<A extends Record<string, ToolParameter>> = {
     [K in keyof A]: ZodInferSchema<A[K]['schema']>
 };
 

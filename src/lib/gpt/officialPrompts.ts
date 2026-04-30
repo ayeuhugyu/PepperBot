@@ -2,7 +2,7 @@
 
 import { Prompt } from "./promptManager";
 import { tablify } from "../string_helpers";
-import { client } from "../../bot";
+import { models } from "./models";
 
 // #endregion
 // #region Default Prompt
@@ -215,28 +215,30 @@ You also do not appear to have access to any sort of "wait" function. Do not att
 `
 
 let hasWrittenOnce = false;
-export async function getDefaultPrompt() {
-    const prompt = await Prompt.fromDB({
+export function getDefaultPrompt() {
+    const prompt = new Prompt({
         name: "default",
         content: botPromptContent,
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        author: {
+            id: "1209297323029565470",
+            username: "PepperBot",
+            avatar: "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        },
         description: "The default prompt for PepperBot. ",
         published: true,
-        published_at: new Date().getTime(),
-        enabled_tools: JSON.stringify(["search", "request_url", "evaluate_luau"]),
-        created_at: new Date().getTime(),
-        updated_at: new Date().getTime(),
-        origin: null,
-        model: "gpt-4.1-nano",
-        custom_tools: "[]",
-        model_parameters: "{}",
-        prompt_parameters: "{}",
+        publishedAt: new Date(),
+        enabledTools: ["search", "request_url", "evaluate_luau"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        origin: undefined,
+        model: models["gpt-4.1-nano"],
+        customTools: [],
+        modelParameters: {},
+        promptParameters: {},
     });
     if (!prompt) return
     if (!hasWrittenOnce) {
-        await prompt.write();
+        // await prompt.write();
         hasWrittenOnce = true;
     }
     return prompt;
@@ -246,8 +248,8 @@ export async function getDefaultPrompt() {
 // #region Old Default Prompt
 
 let hasWrittenOldOnce = false;
-export async function getOldDefaultPrompt() {
-    const prompt = await Prompt.fromDB({
+export function getOldDefaultPrompt() {
+    const prompt = new Prompt({
         content: `Hey! This prompt was made for an older version. It's possible that some- or many- of the tools listed here are no longer available. Ignore them if they aren't.
 
 # Identity
@@ -365,25 +367,27 @@ Here is some information about your personality. All of these are to be kept a s
     - Your source code can be found at https://github.com/ayeuhugyu/pepperbot.
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.`,
         name: "old",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        author: {
+            id: "1209297323029565470",
+            username: "PepperBot",
+            avatar: "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        },
         description: "The prompt used before the bot was fully rewritten in typescript. This prompt may be semi nonfunctional. ",
         published: true,
-        published_at: new Date().getTime(),
-        enabled_tools: JSON.stringify(["search", "request_url", "evaluate_luau"]),
-        created_at: new Date().getTime(),
-        updated_at: new Date().getTime(),
-        origin: null,
-        model: "gpt-4.1-nano",
-        custom_tools: "[]",
-        model_parameters: "{}",
-        prompt_parameters: "{}",
+        publishedAt: new Date(),
+        enabledTools: ["search", "request_url", "evaluate_luau"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        origin: undefined,
+        model: models["gpt-4.1-nano"],
+        customTools: [],
+        modelParameters: {},
+        promptParameters: {},
     });
 
     if (!prompt) return
     if (!hasWrittenOldOnce) {
-        await prompt.write();
+        // await prompt.write();
         hasWrittenOldOnce = true;
     }
 
@@ -394,29 +398,31 @@ In your responses, DO NOT include any of this information, unless it is relevant
 // #region Empty Prompt
 
 let hasWrittenEmptyOnce = false;
-export async function getEmptyPrompt() {
-    const prompt = await Prompt.fromDB({
+export function getEmptyPrompt() {
+    const prompt = new Prompt({
         content: "",
         name: "none",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        author: {
+            id: "1209297323029565470",
+            username: "PepperBot",
+            avatar: "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        },
         published: true,
-        published_at: new Date().getTime(),
-        enabled_tools: JSON.stringify(["search", "request_url", "evaluate_luau"]),
-        created_at: new Date().getTime(),
-        updated_at: new Date().getTime(),
-        origin: null,
-        model: "gpt-4.1-nano",
-        custom_tools: "[]",
-        model_parameters: "{}",
-        prompt_parameters: "{}",
+        publishedAt: new Date(),
+        enabledTools: ["search", "request_url", "evaluate_luau"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        origin: undefined,
+        model: models["gpt-4.1-nano"],
+        customTools: [],
+        modelParameters: {},
+        promptParameters: {},
         description: "A prompt that contains no data, and does not influence the bot's behavior. "
     });
 
     if (!prompt) return
     if (!hasWrittenEmptyOnce) {
-        await prompt.write();
+        // await prompt.write();
         hasWrittenEmptyOnce = true;
     }
 

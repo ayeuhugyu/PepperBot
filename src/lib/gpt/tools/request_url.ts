@@ -61,7 +61,7 @@ export default new Tool<typeof parameters, string>({
             if (markdown.length > 100000) {
                 return new ToolSuccessResponse<string>(markdown.slice(0, 100000) + " ... (truncated due to length)");
             }
-            return new ToolSuccessResponse<string>(markdown || "no text content returned")
+            return new ToolSuccessResponse<string>(markdown || "[SYSTEM]: no text content returned")
         } catch (err: any) {
             return new ToolErrorResponse(`an error occurred while attempting to fetch the URL: ${err.message}`);
         }

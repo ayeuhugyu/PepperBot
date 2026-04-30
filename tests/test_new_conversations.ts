@@ -2,13 +2,13 @@ import { Conversation } from "../src/lib/gpt/conversation";
 import { GPTUserMessage } from "../src/lib/gpt/messageTypes";
 
 const conversation = new Conversation();
-conversation.messages.push(new GPTUserMessage({
+conversation.addMessage(new GPTUserMessage({
     author: {
         id: "440163494529073152",
         username: "ayeuhugyu",
         avatar: "https://example.com/"
     },
-    content: "hello!!!",
+    content: "hello!!! please try to use the request_url tool on https://pepperbot.online/. i am testing rewritten things.",
     attachments: [],
     beenDeleted: true,
     createdAt: new Date(),
@@ -19,4 +19,7 @@ conversation.messages.push(new GPTUserMessage({
 }));
 await conversation.run();
 
-console.log(conversation.getLatestMessage());
+// console.log(conversation.getLatestMessage());
+// await conversation.run();
+console.log(conversation.messages);
+process.exit(0);

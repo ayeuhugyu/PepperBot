@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { AnyGPTMessage, GPTAssistantMessage, GPTAttachmentType, GPTMessageType, GPTToolCall } from "../messageTypes";
-import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionMessageParam, ChatCompletionTool, ChatCompletionUserMessageParam } from "openai/resources/chat";
+import { ChatCompletionAssistantMessageParam, ChatCompletionContentPart, ChatCompletionMessageParam, ChatCompletionTool, ChatCompletionToolMessageParam, ChatCompletionUserMessageParam } from "openai/resources/chat";
 import { Conversation } from "../conversation";
 import * as log from "../../log";
 import { AnyTool, CustomTool, CustomToolParameter, Tool, ToolParameter } from "../toolTypes";
@@ -12,16 +12,16 @@ export const openaiDefault = new OpenAI({
 
 const supportedImageFileTypes = ["png", "jpg", "jpeg", "webp", "gif"];
 
-function formatMessage(message: AnyGPTMessage, conversation: Conversation): ChatCompletionMessageParam | null {
+function formatMessage(message: AnyGPTMessage, conversation: Conversation): ChatCompletionMessageParam[] | null {
     log.debug(`formatting gpt message:`);
     log.debug(message);
 
     switch (message.type) {
         case GPTMessageType.System:
-            return {
+            return [{
                 role: "system",
                 content: message.content
-            }
+            }]
         case GPTMessageType.User:
             const userdata: ChatCompletionUserMessageParam = {
                 role: "user",
@@ -85,13 +85,14 @@ function formatMessage(message: AnyGPTMessage, conversation: Conversation): Chat
                 });
             }
 
-            return userdata;
+            return [userdata];
         case GPTMessageType.Assistant:
             const assistantdata: ChatCompletionAssistantMessageParam = {
                 role: "assistant",
                 content: message.content,
                 tool_calls: [],
             };
+            let toolResponseData: ChatCompletionToolMessageParam | undefined = undefined;
             if (conversation.model.capabilities.includes("functionCalling")) {
                 message.fetchToolCalls(conversation).forEach(toolCall => {
                     const response = toolCall.fetchResponse(conversation);
@@ -104,23 +105,29 @@ function formatMessage(message: AnyGPTMessage, conversation: Conversation): Chat
                                 name: toolCall.toolName,
                             },
                         });
+
+                        toolResponseData = {
+                            role: "tool",
+                            content: JSON.stringify(response.response),
+                            tool_call_id: toolCall.toolCallId,
+                        }
                     }
                 });
             } else {
                 delete assistantdata.tool_calls;
             }
 
-            return assistantdata;
+            return [assistantdata, toolResponseData].filter(i => i !== undefined);
         case GPTMessageType.ToolCall: // for tool calls, do nothing. they are handled in the assistant message formatter.
             return null;
         case GPTMessageType.ToolResponse:
             return null;
         default:
             log.error(`wrongly typed gpt message was attempted to be formatted.`);
-            return {
+            return [{
                 role: "system",
                 content: "[SYSTEM MESSAGE]: this message was unable to be processed correctly. the error has been logged and it will be dealt with."
-            }
+            }]
     }
 }
 
@@ -193,7 +200,7 @@ function formatMessages(conversation: Conversation): ChatCompletionMessageParam[
     conversation.messages.forEach(msg => {
         const formatted = formatMessage(msg, conversation);
         if (formatted) {
-            openaiMessages.push(formatted);
+            openaiMessages.push(...formatted);
         }
     });
     return openaiMessages;

@@ -327,13 +327,13 @@ export class GPTAssistantMessage implements GPTBaseMessage {
         }
     }
 
-    fetchToolCalls(conversation: Conversation): Collection<number, GPTToolCall> {
+    fetchToolCalls(conversation: Conversation): GPTToolCall[] {
         return conversation.messages.filter(m => {
             if (m.type === GPTMessageType.ToolCall) {
                 return (this.toolCallIds.includes(m.toolCallId));
             }
             return false;
-        });
+        }) as GPTToolCall[];
     }
 }
 
@@ -358,7 +358,7 @@ export class GPTToolCall implements GPTBaseMessage {
                 if (m.toolCallId === this.toolCallId) return true
             }
             return false;
-        }).first() as GPTToolResponse | undefined;
+        })[0] as GPTToolResponse | undefined;
     }
 }
 

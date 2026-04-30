@@ -86,9 +86,15 @@ function safeJSONParse(data: any, onFailValue: any) {
     return didFail ? parsed : onFailValue;
 }
 
+export interface PromptAuthor {
+    id: string,
+    username: string,
+    avatar?: string,
+}
+
 export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = false, O extends (string | undefined) = undefined> {
     name: string;
-    author: User;
+    author: PromptAuthor;
     content: string = "[empty prompt]";
 
     createdAt: Date = new Date();
@@ -131,19 +137,24 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         this.promptParameters = data.promptParameters;
     }
 
-    static async fromDB(data: DBPrompt) {
+    async fetchAuthor(): Promise<User | undefined> {
         if (!client) {
-            log.warn(`attempt to create prompt from DB while client is undefined, waiting for it to be defined`);
+            log.warn(`attempt to fetch prompt author while client is undefined, waiting for it to be defined`);
             (await clientDefinedMutex.acquire())(); // acquire and then immediately release it since we don't gaf about it beyond this
             client = client! as Client; // makes typescript shut up
         }
+
+        const author = (await client.users.fetch(this.author.id).catch(err => {
+            log.error(`failed to fetch user for prompt ${this.author.id}/${this.name}`);
+        }));
+        if (!author) return;
+        return author;
+    }
+
+    static async fromDB(data: DBPrompt) {
         log.debug(`creating prompt from DB data:`);
         log.debug(data);
 
-        const author = (await client.users.fetch(data.author_id).catch(err => {
-            log.error(`failed to fetch user for prompt ${data.author_id}/${data.name}`);
-        }));
-        if (!author) return;
 
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
         if (!model) model = gpt41Nano;
@@ -152,7 +163,11 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
         const inputData: PromptInput = {
             name: data.name,
-            author: author,
+            author: {
+                id: data.author_id,
+                username: data.author_username,
+                avatar: data.author_avatar ?? undefined,
+            },
             content: data.content,
 
             createdAt: new Date(data.created_at),
@@ -179,7 +194,11 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     static async new(name: string, author: User) {
         return new Prompt<typeof gpt41Nano, false, undefined>({
             name: name,
-            author: author,
+            author: {
+                id: author.id,
+                username: author.username,
+                avatar: author.displayAvatarURL(),
+            },
             content: "[empty prompt]",
 
             createdAt: new Date(),
@@ -216,7 +235,11 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     static async clone(originAuthorId: string, originName: string, newAuthor: User, newName: string) {
         const origin = await Prompt.fromName(originAuthorId, originName) as AnyPrompt | undefined;
         if (!origin) return undefined;
-        origin.author = newAuthor;
+        origin.author = {
+            id: newAuthor.id,
+            username: newAuthor.username,
+            avatar: newAuthor.displayAvatarURL(),
+        };
         origin.name = newName;
         (origin.origin as string | undefined) = `${originAuthorId}/${originName}`;
         origin.published = false;
@@ -232,7 +255,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             name: this.name,
             author_id: this.author.id,
             author_username: this.author.username,
-            author_avatar: this.author.displayAvatarURL(),
+            author_avatar: this.author.avatar ?? null,
             content: this.content,
 
             created_at: this.createdAt.getTime(),
