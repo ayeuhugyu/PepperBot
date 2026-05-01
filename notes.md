@@ -21,6 +21,10 @@ $SPLIT$
 added some new models:
 - `gpt-5-mini`: openai's latest reasoning model, wayyyy faster than previous iterations
 - `mistral-small-2`: i'm testing out mistral models here, in my experience they seem to be better with casual conversations. this might end up being useless, but we'll have to see.
+removed some models:
+- `deepseek-r1`: it lowkey fucking sucks at following prompts and i hate it
+- `closex/neuraldaredevil-8b-abliterated`: really just not very good in general
+mostly removed these because supporting ollama models is kindof annoying, and i'd like to eventually remake it with llama.cpp instead of ollama. nobody was using these models anyways.
 model parameters and tool call parameters now use zod schemas to define their types instead of weird json data. basically they'll have better type checking n stuff now
 prompts can no longer be marked as nsfw, i don't wish to encourage their creation and having it as an option kindof did that.
 you can now have default prompts which are not your own

@@ -90,14 +90,15 @@ function formatMessage(message: AnyGPTMessage, conversation: Conversation): Chat
             const assistantdata: ChatCompletionAssistantMessageParam = {
                 role: "assistant",
                 content: message.content,
-                tool_calls: [],
+                tool_calls: undefined,
             };
-            let toolResponseData: ChatCompletionToolMessageParam | undefined = undefined;
+            let toolResponseData: ChatCompletionToolMessageParam[] | undefined = undefined;
             if (conversation.model.capabilities.includes("functionCalling")) {
                 message.fetchToolCalls(conversation).forEach(toolCall => {
                     const response = toolCall.fetchResponse(conversation);
                     if (response) { // if the response doesn't exist yet, we will simply omit it. openai throws errors if the responses don't exist. due to the mutex, this shouldn't ever happen, but just in case.
-                        assistantdata.tool_calls?.push({
+                        if (!assistantdata.tool_calls) assistantdata.tool_calls = [];
+                        assistantdata.tool_calls.push({
                             type: "function",
                             id: toolCall.toolCallId,
                             function: {
@@ -106,18 +107,19 @@ function formatMessage(message: AnyGPTMessage, conversation: Conversation): Chat
                             },
                         });
 
-                        toolResponseData = {
+                        if (!toolResponseData) toolResponseData = [];
+                        toolResponseData.push({
                             role: "tool",
                             content: JSON.stringify(response.response),
                             tool_call_id: toolCall.toolCallId,
-                        }
+                        });
                     }
                 });
             } else {
                 delete assistantdata.tool_calls;
             }
 
-            return [assistantdata, toolResponseData].filter(i => i !== undefined);
+            return [assistantdata, ...(toolResponseData ?? [])].filter(i => i !== undefined);
         case GPTMessageType.ToolCall: // for tool calls, do nothing. they are handled in the assistant message formatter.
             return null;
         case GPTMessageType.ToolResponse:
@@ -219,7 +221,13 @@ export async function runOpenAI(conversation: Conversation, openai: OpenAI = ope
     const apiConversation: ChatCompletionMessageParam[] = formatMessages(conversation);
     const tools: ChatCompletionTool[] = conversation.prompt.getTools().map((tool) => formatTool(tool));
 
+
     const params = conversation.getModelParameters();
+
+    log.debug(`openai formatted data:`);
+    log.debug(apiConversation);
+    log.debug(tools);
+    log.debug(params);
 
     const response = await openai.chat.completions.create({
         model: model,

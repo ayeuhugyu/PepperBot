@@ -10,6 +10,6 @@
 
         "esModuleInterop": true,
     },
-    "include": ["**/*.ts"],
+    "include": ["**/*.ts", "src/lib/gpt/models/closex-neuraldaredevil-8b-abliterated.ts.disabled"],
     "exclude": ["node_modules", "tests", "cache"]
 }

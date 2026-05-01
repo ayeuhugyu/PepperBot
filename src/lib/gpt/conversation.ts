@@ -5,11 +5,12 @@ import { getDefaultPrompt } from "./officialPrompts";
 import { ModelName, models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
-import { AnyGPTMessage, GPTMessageType, GPTMessageTypeMap, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage } from "./messageTypes";
+import { AnyGPTMessage, GPTAssistantMessage, GPTMessageType, GPTMessageTypeMap, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage } from "./messageTypes";
 import { Mutex } from "async-mutex";
 import { modelRunnerIndex } from "./modelRunners";
 import { ToolName, tools } from "./tools";
 import { InferParameters } from "./toolTypes";
+import EventEmitter from "events";
 
 let client: Client | undefined = undefined;
 export function initGPTMainClient(newClient: Client) {
@@ -28,10 +29,19 @@ export class Conversation<M extends AnyModel = any> {
     model: M = models['gpt-4.1-nano'] as unknown as M;
     users: GPTUser[] = [];
     isRunningMutex: Mutex = new Mutex();
+    emitter: EventEmitter = new EventEmitter();
+
+    on(event: "message", listener: (message: AnyGPTMessage) => void): this {
+        this.emitter.on(event, listener);
+        return this;
+    };
 
     addMessage(...messages: AnyGPTMessage[]) {
         log.debug(`adding gpt messages to conversation ${this.id}`);
         log.debug(messages);
+        messages.forEach(m => {
+            this.emitter.emit("message", m);
+        })
         this.messages.push(...messages);
     }
 
@@ -78,7 +88,7 @@ export class Conversation<M extends AnyModel = any> {
         return this.messages.filter(m => m.type === GPTMessageType.ToolCall && m.answered == false) as GPTToolCall[];
     }
 
-    async run() {
+    async run(): Promise<GPTAssistantMessage | undefined> {
         // acquire running mutex
         const release = await this.isRunningMutex.acquire();
         try {
@@ -106,6 +116,8 @@ export class Conversation<M extends AnyModel = any> {
                 this.addMessage(...response);
                 unansweredToolCalls = this.getUnansweredToolCalls();
             }
+
+            return response.filter(m => m.type === GPTMessageType.Assistant)[0];
         } catch (err) {
             log.error(`error while running gpt conversation ${this.id}:`);
             log.error(err);
