@@ -50,6 +50,8 @@
         "openai": "^4.93.0",
         "pretty-bytes": "^6.1.1",
         "puppeteer": "^24.17.0",
+        "puppeteer-extra": "^3.3.6",
+        "puppeteer-extra-plugin-stealth": "^2.11.2",
         "sharp": "^0.33.5",
         "shelljs": "^0.8.5",
         "simple-git": "^3.27.0",
