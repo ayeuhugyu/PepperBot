@@ -9,8 +9,9 @@ import { AnyGPTMessage, GPTAssistantMessage, GPTMessageType, GPTMessageTypeMap, 
 import { Mutex } from "async-mutex";
 import { modelRunnerIndex } from "./modelRunners";
 import { ToolName, tools } from "./tools";
-import { InferParameters } from "./toolTypes";
+import { InferParameters, ToolErrorResponse } from "./toolTypes";
 import EventEmitter from "events";
+import TypedEventEmitter from "typed-emitter";
 
 let client: Client | undefined = undefined;
 export function initGPTMainClient(newClient: Client) {
@@ -29,18 +30,29 @@ export class Conversation<M extends AnyModel = any> {
     model: M = models['gpt-4.1-nano'] as unknown as M;
     users: GPTUser[] = [];
     isRunningMutex: Mutex = new Mutex();
-    emitter: EventEmitter = new EventEmitter();
-
-    on(event: "message", listener: (message: AnyGPTMessage) => void): this {
-        this.emitter.on(event, listener);
-        return this;
-    };
+    readonly emitter = new EventEmitter() as TypedEventEmitter<{
+        message: (message: AnyGPTMessage) => void;
+        toolCall: (tc: GPTToolCall) => void;
+        toolCallResponse: (res: GPTToolResponse) => void;
+        customToolCall: (tc: GPTToolCall) => void;
+    }>;
 
     addMessage(...messages: AnyGPTMessage[]) {
         log.debug(`adding gpt messages to conversation ${this.id}`);
         log.debug(messages);
         messages.forEach(m => {
             this.emitter.emit("message", m);
+            if (m.type === GPTMessageType.ToolCall) {
+                this.emitter.emit("toolCall", m);
+                if (!(m.toolName in tools)) {
+                    // is custom tool
+                    console.log(`emitting custom tc`);
+                    this.emitter.emit("customToolCall", m);
+                }
+            }
+            if (m.type === GPTMessageType.ToolResponse) {
+                this.emitter.emit("toolCallResponse", m);
+            }
         })
         this.messages.push(...messages);
     }
@@ -106,12 +118,30 @@ export class Conversation<M extends AnyModel = any> {
                             toolCallId: tc.toolCallId,
                             toolName: tc.toolName,
                         }));
+
                         tc.answered = true;
+                        return;
                     } else {
                         // is custom tool
-                        // do nothing because i do not want to deal with this right now
+                        // do nothing, wait for a tool response to be added. if it takes longer than 15 minutes for that, timeout
+                        const start = Date.now();
+                        while (!tc.fetchResponse(this)) {
+                            if ((Date.now() - start) > 15 * 60 * 1000) {
+                                this.addMessage(new GPTToolResponse({
+                                    response: new ToolErrorResponse("custom tool response took longer than 15 minutes and timed out."),
+                                    toolCallId: tc.toolCallId,
+                                    toolName: tc.toolName,
+                                }));
+                            }
+
+                            await new Promise((resolve) => setTimeout(resolve, 1000)); // check only every second to prevent super ultra spam
+                        }
+
+                        tc.answered = true;
+                        return;
                     }
                 }));
+
                 response = await modelRunnerIndex[this.model.name as ModelName](this);
                 this.addMessage(...response);
                 unansweredToolCalls = this.getUnansweredToolCalls();

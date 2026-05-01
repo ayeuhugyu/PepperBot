@@ -2,7 +2,7 @@ import { AttachmentFlags, Client, MessageType, User, type Message, type Collecti
 import { type OmitMethods } from "../omitMethods";
 import { randomId } from "../id";
 import { type ToolName } from "./tools";
-import { type ToolResponse } from "./toolTypes";
+import { ToolErrorResponse, ToolSuccessResponse, type ToolResponse } from "./toolTypes";
 import * as log from "../log";
 import { Conversation } from "./conversation";
 import { MIMEType } from "node:util";
@@ -374,6 +374,22 @@ export class GPTToolResponse implements GPTBaseMessage {
         this.toolCallId = data.toolCallId;
         this.toolName = data.toolName;
         this.response = data.response;
+    }
+
+    static newCustom(tc: GPTToolCall, data: string, isError: boolean) {
+        if (isError) {
+            return new GPTToolResponse({
+                toolName: tc.toolName,
+                toolCallId: tc.toolCallId,
+                response: new ToolErrorResponse(data),
+            });
+        } else {
+            return new GPTToolResponse({
+                toolName: tc.toolName,
+                toolCallId: tc.toolCallId,
+                response: new ToolSuccessResponse(data),
+            })
+        }
     }
 }
 
