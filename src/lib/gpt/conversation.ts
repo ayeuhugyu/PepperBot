@@ -5,17 +5,22 @@ import { getDefaultPrompt } from "./officialPrompts";
 import { ModelName, models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
-import { AnyGPTMessage, GPTAssistantMessage, GPTMessageType, GPTMessageTypeMap, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage } from "./messageTypes";
+import { AnyGPTMessage, GPTAssistantMessage, GPTMessageType, GPTMessageTypeMap, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage, initGPTFetchClient } from "./messageTypes";
 import { Mutex } from "async-mutex";
 import { modelRunnerIndex } from "./modelRunners";
 import { ToolName, tools } from "./tools";
 import { InferParameters, ToolErrorResponse } from "./toolTypes";
 import EventEmitter from "events";
 import TypedEventEmitter from "typed-emitter";
+import { initReplacerClient } from "./contentReplace";
+import { initTemplatingClient } from "./promptTemplating";
 
 let client: Client | undefined = undefined;
-export function initGPTMainClient(newClient: Client) {
+export function initGPTClients(newClient: Client) {
     client = newClient;
+    initReplacerClient(newClient);
+    initTemplatingClient(newClient);
+    initGPTFetchClient(newClient);
 }
 
 const defaultPrompt = await getDefaultPrompt();

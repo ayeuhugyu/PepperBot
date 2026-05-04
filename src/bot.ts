@@ -5,8 +5,7 @@ import fs from "fs";
 import { listen } from './web/index';
 import { queueAllEvents } from './lib/schedule_manager';
 import { initializeMaintenanceMode } from './lib/maintenance_manager';
-import { initGPTFetchClient } from './lib/gpt/messageTypes';
-import { initGPTMainClient } from './lib/gpt/conversation';
+import { initGPTClients } from './lib/gpt/conversation';
 config();
 
 export const client = new Client({
@@ -59,8 +58,7 @@ client.once(Events.ClientReady, async () => {
         }
     }
 
-    initGPTFetchClient(client);
-    initGPTMainClient(client);
+    initGPTClients(client);
 });
 
 async function init() {
