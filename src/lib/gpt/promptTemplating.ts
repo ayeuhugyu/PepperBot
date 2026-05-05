@@ -8,5 +8,26 @@ export function initTemplatingClient(inputclient: Client) {
 }
 
 export async function applyPromptTemplating(promptContent: string, conversation: Conversation): Promise<string> {
-    // /(?<!\\)\${([^}]+[^\\])}/g
+    const regex = /(?<!\\)\${([^}]+[^\\])}/g;
+
+    const matches = promptContent.matchAll(regex);
+    const replacements: Record<string, string> = {};
+    matches.forEach((match) => {
+        const fulltext = match[0];
+        const templateName = match[1];
+
+        switch (templateName) {
+            default:
+                replacements[fulltext] = `\${ERR: unknown template: ${templateName}}`;
+                break;
+        }
+    });
+
+    let text = promptContent;
+
+    Object.entries(replacements).forEach(([v, k]) => {
+        text.replace(k, v);
+    });
+
+    return text;
 }
