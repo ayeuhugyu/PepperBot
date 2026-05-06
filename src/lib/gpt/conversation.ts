@@ -1,4 +1,4 @@
-import { Client, Collection, User } from "discord.js";
+import { Client, Collection, Guild, User } from "discord.js";
 import { AnyModel, InferModelParameters, Model, ModelParameter } from "./modelTypes"
 import { AnyPrompt, Prompt, promptParameterTypings } from "./promptManager"
 import { getDefaultPrompt } from "./officialPrompts";
@@ -159,5 +159,22 @@ export class Conversation<M extends AnyModel = any> {
         } finally {
             release();
         }
+    }
+
+    async fetchGuild(): Promise<Guild | null> {
+        let guild: Guild | null = null;
+        await Promise.all(this.messages.map(async (m) => {
+            if (m.type === GPTMessageType.User) {
+                if (!m.beenDeleted) {
+                    const msg = await m.fetchDiscordMessage();
+                    if (msg) {
+                        guild = msg.guild;
+                        return guild;
+                    }
+                }
+            }
+        }));
+
+        return guild;
     }
 }

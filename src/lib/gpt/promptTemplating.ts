@@ -12,16 +12,29 @@ export async function applyPromptTemplating(promptContent: string, conversation:
 
     const matches = promptContent.matchAll(regex);
     const replacements: Record<string, string> = {};
-    matches.forEach((match) => {
+    await Promise.all(matches.map(async (match) => {
         const fulltext = match[0];
         const templateName = match[1];
 
         switch (templateName) {
+            case "guildemojis":
+                const guild = await conversation.fetchGuild();
+                let emojitext = `here is a list of guild emojis available to you:\n`;
+                if (guild) {
+                    (await guild.emojis.fetch()).forEach(emoji => {
+                        emojitext += `:${emoji.name}:\n`
+                    });
+                } else {
+                    emojitext += `no guild emojis available`;
+                }
+
+                replacements[fulltext] = emojitext;
+            break;
             default:
                 replacements[fulltext] = `\${ERR: unknown template: ${templateName}}`;
                 break;
         }
-    });
+    }));
 
     let text = promptContent;
 
