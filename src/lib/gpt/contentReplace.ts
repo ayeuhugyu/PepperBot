@@ -8,9 +8,9 @@ export function initReplacerClient(inputclient: Client) {
 
 export async function replaceContentIn(content: string) {
     const mentions = {
-        users: content.matchAll(/<@(\d+)>/gm),
-        channels: content.matchAll(/<#(\d+)>/gm),
-        roles: content.matchAll(/<@&(\d+)>/gm),
+        users: content.matchAll(/<@!?(\d+)>/gm),
+        channels: content.matchAll(/<#!?(\d+)>/gm),
+        roles: content.matchAll(/<@&!?(\d+)>/gm),
     };
 
     if (mentions.users && client) {
