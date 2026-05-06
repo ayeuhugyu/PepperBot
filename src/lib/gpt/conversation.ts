@@ -101,6 +101,10 @@ export class Conversation<M extends AnyModel = any> {
         return filteredParameters as Partial<InferModelParameters<M['parameters']>>;
     }
 
+    getPromptParameters(): Partial<InferModelParameters<typeof promptParameterTypings>> {
+        return { ...this.prompt.promptParameters, ...this.promptParameterOverrides };;
+    }
+
     getUnansweredToolCalls(): GPTToolCall[] {
         return this.messages.filter(m => m.type === GPTMessageType.ToolCall && m.answered == false) as GPTToolCall[];
     }

@@ -20,6 +20,11 @@ export const promptParameterTypings: Record<string, ModelParameter> = { // no ne
         key: "IOReplacements",
         description: "whether or not to enable the input / output replacements. when true (default), user, channel, and role mentions will be replaced with their actual names instead of their id's. when false, they will be left untouched. note that the bot will still have mass pings (@everyone, @here, and all role mentions) replaced, assuming the server was not configured otherwise.",
         schema: z.boolean().default(true),
+    },
+    "enableTemplating": {
+        key: "enableTemplating",
+        description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
+        schema: z.boolean().default(false),
     }
 }
 

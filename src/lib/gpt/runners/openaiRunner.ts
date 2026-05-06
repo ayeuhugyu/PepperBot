@@ -5,6 +5,8 @@ import { Conversation } from "../conversation";
 import * as log from "../../log";
 import { AnyTool, CustomTool, CustomToolParameter, Tool, ToolParameter } from "../toolTypes";
 import { ModelName } from "../models";
+import { replaceContentIn, replaceContentOut } from "../contentReplace";
+import { applyPromptTemplating } from "../promptTemplating";
 
 export const openaiDefault = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -12,7 +14,7 @@ export const openaiDefault = new OpenAI({
 
 const supportedImageFileTypes = ["png", "jpg", "jpeg", "webp", "gif"];
 
-function formatMessage(message: AnyGPTMessage, conversation: Conversation): ChatCompletionMessageParam[] | null {
+async function formatMessage(message: AnyGPTMessage, conversation: Conversation): Promise<ChatCompletionMessageParam[] | null> {
     log.debug(`formatting gpt message:`);
     log.debug(message);
 
@@ -29,9 +31,15 @@ function formatMessage(message: AnyGPTMessage, conversation: Conversation): Chat
             };
 
             if (message.content.length > 0) {
+                let content = message.content;
+
+                if (conversation.getPromptParameters().IOReplacements) {
+                    content = await replaceContentIn(message.content);
+                }
+
                 (userdata.content as ChatCompletionContentPart[]).push({
                     type: "text",
-                    text: message.content,
+                    text: content,
                 });
             }
 
@@ -192,19 +200,24 @@ export function formatTool(tool: AnyTool | CustomTool): ChatCompletionTool {
     };
 }
 
-function formatMessages(conversation: Conversation): ChatCompletionMessageParam[] {
-    const systemPrompt: string = conversation.prompt?.content || '';
+async function formatMessages(conversation: Conversation): Promise<ChatCompletionMessageParam[]> {
+    let systemPrompt: string = conversation.prompt?.content || '';
+
+    if (conversation.getPromptParameters().enableTemplating) {
+        systemPrompt = await applyPromptTemplating(systemPrompt, conversation);
+    }
+
     const openaiMessages: ChatCompletionMessageParam[] = [{
         role: "system",
         content: systemPrompt,
     }];
 
-    conversation.messages.forEach(msg => {
-        const formatted = formatMessage(msg, conversation);
+    await Promise.all(conversation.messages.map(async (msg) => {
+        const formatted = await formatMessage(msg, conversation);
         if (formatted) {
             openaiMessages.push(...formatted);
         }
-    });
+    }));
     return openaiMessages;
 }
 
@@ -218,7 +231,7 @@ function safeJSONParse(text: string) {
 
 export async function runOpenAI(conversation: Conversation, openai: OpenAI = openaiDefault): Promise<(GPTAssistantMessage | GPTToolCall)[]> {
     const model: ModelName = conversation.model.name as ModelName;
-    const apiConversation: ChatCompletionMessageParam[] = formatMessages(conversation);
+    const apiConversation: ChatCompletionMessageParam[] = await formatMessages(conversation);
     const tools: ChatCompletionTool[] = conversation.prompt.getTools().map((tool) => formatTool(tool));
 
 
@@ -237,9 +250,14 @@ export async function runOpenAI(conversation: Conversation, openai: OpenAI = ope
         ...params,
     });
 
+    let assistantContent = response.choices[0]?.message.content ?? "";
+    if (conversation.getPromptParameters().IOReplacements) {
+        assistantContent = replaceContentOut(assistantContent);
+    }
+
     return [
         new GPTAssistantMessage({
-            content: response.choices[0]?.message.content ?? "",
+            content: assistantContent,
             attachments: [],
             beenDeleted: false,
             toolCallIds: response.choices[0]?.message?.tool_calls?.map(tc => tc.id) ?? [],
