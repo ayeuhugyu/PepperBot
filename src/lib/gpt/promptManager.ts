@@ -8,7 +8,7 @@ import gpt41Nano from "./models/gpt-4.1-nano";
 import { models } from "./models";
 import * as log from "../log";
 import { Mutex } from "async-mutex";
-import database from "../data_manager";
+import database, { DBPrompt } from "../data_manager";
 
 export const promptParameterTypings: Record<string, ModelParameter> = { // no need to remake this type just because this isn't a model, it'd be the exact same
     "processingType": {
@@ -26,31 +26,6 @@ export const promptParameterTypings: Record<string, ModelParameter> = { // no ne
         description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
         schema: z.boolean().default(false),
     }
-}
-
-interface DBPrompt {
-    name: string;
-    author_id: string;
-    author_username: string;
-    author_avatar: string | null;
-    content: string;
-
-    created_at: number;
-    updated_at: number;
-
-    published_at: number | null;
-    published: boolean;
-    description: string;
-
-    origin: string | null;
-
-    model: string;
-
-    enabled_tools: string;
-    custom_tools: string;
-
-    model_parameters: string;
-    prompt_parameters: string;
 }
 
 type PromptInput = OmitMethods<Prompt<AnyModel, boolean, (string | undefined)>>
@@ -107,7 +82,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
     publishedAt: P extends true ? Date : undefined = undefined!;
     published: P = false as P;
-    description: string = "[no description provided]";
+    description: string | undefined = undefined;
 
     origin: O = undefined as O;
 
@@ -180,7 +155,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             publishedAt: data.published ? new Date(data.published_at ?? new Date()) : undefined,
             published: Boolean(data.published),
-            description: data.description,
+            description: data.description ?? undefined,
 
             origin: origin,
 
@@ -211,7 +186,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             published: false,
             publishedAt: undefined,
-            description: "[no description provided]",
+            description: undefined,
 
             origin: undefined,
 
@@ -268,7 +243,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             published: this.published,
             published_at: this.published ? (this.publishedAt?.getTime() ?? new Date().getTime()) : null,
-            description: this.description,
+            description: this.description ?? null,
 
             origin: this.origin ?? null,
 

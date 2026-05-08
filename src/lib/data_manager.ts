@@ -156,6 +156,114 @@ const database = knex({
 });
 log.info("opened database connection");
 
+/**
+ *         await knex.schema.createTable('prompts', (table) => {
+            table.string('name').notNullable();
+            table.string('author_id').notNullable();
+            table.string('author_username').notNullable();
+            table.string('author_avatar')
+            table.text('content').notNullable();
+
+            table.bigInteger('created_at').notNullable();
+            table.bigInteger('updated_at').notNullable();
+
+            table.bigInteger('published_at').nullable();
+            table.boolean('published').notNullable();
+            table.string('description').notNullable();
+
+            table.string('origin').nullable();
+
+            table.string('model').notNullable();
+
+            table.text('enabled_tools').notNullable();
+            table.text('custom_tools').notNullable();
+
+            table.text('model_parameters').notNullable();
+            table.text('prompt_parameters').notNullable();
+
+            table.primary(['author_id', 'name']);
+        });
+ */
+
+
+export interface DBPrompt {
+    name: string;
+    author_id: string;
+    author_username: string;
+    author_avatar: string | null;
+    content: string;
+
+    created_at: number;
+    updated_at: number;
+
+    published_at: number | null;
+    published: boolean;
+    description: string | null;
+
+    origin: string | null;
+
+    model: string;
+
+    enabled_tools: string;
+    custom_tools: string;
+
+    model_parameters: string;
+    prompt_parameters: string;
+}
+declare module "knex/types/tables" {
+    interface SoundEntry {
+        guild: string | null;
+        user: string | null;
+        name: string;
+        path: string;
+        created_at: string;
+    }
+
+    interface ScheduledEventEntry {
+        id: string;
+        creator_id: string;
+        channel_id: string | null;
+        content: string;
+        time: string;
+        type: string;
+    }
+
+    interface MaintenanceEntry {
+        id: number;
+        enabled: boolean;
+        end_timestamp: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+    }
+
+    interface ConfigEntry {
+        guild: string;
+        key: string;
+        value: string;
+        category: string;
+    }
+    interface ThesaurusCacheEntry {
+        id: number;
+        word: string;
+        data: string;
+        created_at: number;
+    }
+    interface PromptDefaultEntry {
+        user_id: string;
+        author_id: string;
+        prompt_name: string;
+    }
+    interface Tables {
+        prompts: DBPrompt;
+        prompt_defaults: PromptDefaultEntry;
+        sounds: SoundEntry;
+        configs: ConfigEntry;
+        scheduled: ScheduledEventEntry;
+        thesaurus_cache: ThesaurusCacheEntry;
+        maintenance_mode: MaintenanceEntry;
+    }
+}
+
 export default database;
 async function getTables(): Promise<string[]> {
     try {

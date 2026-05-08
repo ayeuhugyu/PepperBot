@@ -6,18 +6,18 @@ exports.up = async function(knex) {
     return new Promise(async (resolve) => {
         await knex.schema.renameTable('prompts', 'old_prompts');
         await knex.schema.createTable('prompts', (table) => {
-            table.string('name').notNullable();
-            table.string('author_id').notNullable();
+            table.string('name').notNullable().index();
+            table.string('author_id').notNullable().index();
             table.string('author_username').notNullable();
-            table.string('author_avatar')
+            table.string('author_avatar').nullable();
             table.text('content').notNullable();
 
             table.bigInteger('created_at').notNullable();
-            table.bigInteger('updated_at').notNullable();
+            table.bigInteger('updated_at').notNullable().index();
 
             table.bigInteger('published_at').nullable();
-            table.boolean('published').notNullable();
-            table.string('description').notNullable();
+            table.boolean('published').notNullable().index();
+            table.string('description').nullable();
 
             table.string('origin').nullable();
 
@@ -33,7 +33,7 @@ exports.up = async function(knex) {
         });
 
         await knex.schema.createTable('prompt_defaults', (table) => {
-            table.text("user_id").notNullable();
+            table.text("user_id").notNullable().index();
             table.text("author_id").notNullable();
             table.text("prompt_name").notNullable();
         });
@@ -65,10 +65,10 @@ exports.up = async function(knex) {
                 origin: null, // origin doesn't exist in the previous table
 
                 model: parsedAPIParameters["model"] ?? "gpt-4.1-nano",
-                
+
                 enabled_tools: JSON.stringify(JSON.parse(record.tools) ?? ["request_url", "search", "evaluate_luau"]),
                 custom_tools: JSON.stringify([]), // custom tools couldn't be created before this point, while theoretically the data structures for them existed none will have been created
-                
+
                 model_parameters: JSON.stringify(parsedAPIParameters), // these will be autofiltered the next time it is applicable, no need to worry about the "model" key being in them
                 prompt_parameters: JSON.stringify({}) // didn't exist in the previous table
             });
@@ -85,7 +85,7 @@ exports.up = async function(knex) {
  */
 exports.down = async function(knex) {
     return new Promise(async (resolve) => {
-        
+
         await knex.schema.renameTable('prompts', 'old_prompts');
         await knex.schema.createTable("prompts", (table) => {
             table.string("name").notNullable();
