@@ -135,7 +135,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         log.debug(`creating prompt from DB data:`);
         log.debug(data);
 
-
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
         if (!model) model = gpt41Nano;
 

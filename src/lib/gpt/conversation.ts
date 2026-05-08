@@ -25,7 +25,6 @@ export function initGPTClients(newClient: Client) {
 
 const defaultPrompt = await getDefaultPrompt();
 
-
 export class Conversation<M extends AnyModel = any> {
     id: string = randomId("conv");
     messages: AnyGPTMessage[] = [];
