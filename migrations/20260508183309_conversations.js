@@ -5,8 +5,8 @@
 exports.up = async function(knex) {
     await knex.schema.createTableIfNotExists("gpt_conversation_meta", (table) => {
         table.string("id").index().notNullable().primary();
-        table.string("prompt_author_id").notNullable();
-        table.string("prompt_name").notNullable();
+        table.string("prompt_author_id").notNullable().references("prompts.author_id");
+        table.string("prompt_name").notNullable().references("prompts.name");
         table.json("prompt_parameter_overrides").notNullable().defaultTo("{}");
         table.json("model_parameter_overrides").notNullable().defaultTo("{}");
         table.string("model").notNullable().defaultTo("gpt-4.1-nano");

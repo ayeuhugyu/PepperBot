@@ -253,6 +253,56 @@ declare module "knex/types/tables" {
         author_id: string;
         prompt_name: string;
     }
+
+    interface DBGPTConversationMeta {
+        id: string;
+        prompt_author_id: string;
+        prompt_name: string;
+        prompt_parameter_overrides: string; // json
+        model_parameter_overrides: string; // json
+        model: string;
+    }
+    interface DBGPTUser {
+        conversation_id: string;
+        id: string;
+        username: string;
+        avatar: string;
+    }
+
+    interface DBGPTAttachment {
+        message_id: string;
+        type: "image" | "video" | "text" | "unknown" | "error";
+        id: string;
+        filename: string;
+        url: string;
+        url_as_file: boolean;
+        size: number;
+        expires_at: Date | string;
+    }
+    interface DBGPTMessage {
+        id: string;
+        conversation_id: string;
+        type: "user" | "asisstant" | "tool_call" | "tool_response" | "system";
+        created_at: Date | string;
+
+        content: string | null;
+
+        discord_message_id?: string;
+        discord_reference_id?: string | null;
+        discord_channel_id?: string;
+        discord_guild_id?: string | null;
+
+        tool_call_id?: string; // specific to tool calls & responses
+        tool_name?: string; // specific to tool calls & responses
+        arguments?: string; // json
+        response?: string; // json
+        tool_call_ids?: string[]; // specific to assistant messages
+
+        been_deleted?: boolean;
+        sent?: boolean; // specific to assistant messages
+        answered?: boolean; // specific to tool calls
+    }
+
     interface Tables {
         prompts: DBPrompt;
         prompt_defaults: PromptDefaultEntry;
@@ -261,7 +311,18 @@ declare module "knex/types/tables" {
         scheduled: ScheduledEventEntry;
         thesaurus_cache: ThesaurusCacheEntry;
         maintenance_mode: MaintenanceEntry;
-    }
+
+        gpt_users: DBGPTUser;
+
+        gpt_messages: DBGPTMessage;
+        gpt_attachments: DBGPTAttachment;
+
+        gpt_user_messages: DBGPTMessage;
+        gpt_assistant_messages: DBGPTMessage;
+        gpt_tool_call_messages: DBGPTMessage;
+        gpt_tool_response_messages: DBGPTMessage;
+        gpt_system_messages: DBGPTMessage;
+        }
 }
 
 export default database;
