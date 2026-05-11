@@ -282,7 +282,7 @@ declare module "knex/types/tables" {
     interface DBGPTMessage {
         id: string;
         conversation_id: string;
-        type: "user" | "asisstant" | "tool_call" | "tool_response" | "system";
+        type: "user" | "assistant" | "tool_call" | "tool_response" | "system";
         created_at: Date | string | number;
 
         content: string | null;

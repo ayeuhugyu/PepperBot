@@ -47,11 +47,13 @@ export class Conversation<M extends AnyModel = any> {
         log.debug(messages);
         messages.forEach(m => {
             this.emitter.emit("message", m);
+            if (m.type === GPTMessageType.User) {
+                if (!this.users.find((u) => u.id === m.author.id)) this.users.push(m.author);
+            }
             if (m.type === GPTMessageType.ToolCall) {
                 this.emitter.emit("toolCall", m);
                 if (!(m.toolName in tools)) {
                     // is custom tool
-                    console.log(`emitting custom tc`);
                     this.emitter.emit("customToolCall", m);
                 }
             }
@@ -156,6 +158,9 @@ export class Conversation<M extends AnyModel = any> {
                 unansweredToolCalls = this.getUnansweredToolCalls();
             }
 
+            log.debug(`writing conversation ${this.id}`);
+            await this.write();
+
             return response.filter(m => m.type === GPTMessageType.Assistant)[0];
         } catch (err) {
             log.error(`error while running gpt conversation ${this.id}:`);
@@ -183,82 +188,134 @@ export class Conversation<M extends AnyModel = any> {
     }
 
     async write() {
-        // write metadata
-        await database.transaction((trx) => {
-            trx("gpt_conversation_meta").insert({
-                id: this.id,
-                model: this.model.name,
-                prompt_author_id: this.prompt.author.id,
-                prompt_name: this.prompt.name,
-                model_parameter_overrides: JSON.stringify(this.modelParameterOverrides),
-                prompt_parameter_overrides: JSON.stringify(this.promptParameterOverrides),
-            }).onConflict().merge().then(() => {
-                // write users
-                trx.transaction((usertransac) => {
-                    this.users.forEach(user => {
-                        usertransac("gpt_users").insert({
-                            conversation_id: this.id,
-                            id: user.id,
-                            username: user.username,
-                            avatar: user.avatar,
-                        });
+        try {
+            await database.transaction(async (trx) => {
+                // write metadata
+                await trx("gpt_conversation_meta")
+                    .insert({
+                        id: this.id,
+                        model: this.model.name,
+                        prompt_author_id: this.prompt.author.id,
+                        prompt_name: this.prompt.name,
+                        model_parameter_overrides: JSON.stringify(this.modelParameterOverrides),
+                        prompt_parameter_overrides: JSON.stringify(this.promptParameterOverrides),
                     })
-                }).then(() => {
-                    // write messages
-                    trx.transaction((messagetransac) => {
-                        this.messages.forEach((msg) => {
-                            switch (msg.type) {
-                                case GPTMessageType.Assistant:
-                                    messagetransac("gpt_assistant_messages").insert({
-                                        conversation_id: this.id,
-                                        type: "asisstant",
-                                        id: msg.id,
-                                        created_at: msg.createdAt.getTime(),
-                                        content: msg.content,
-                                        tool_call_ids: JSON.stringify(msg.toolCallIds),
-                                        been_deleted: msg.beenDeleted,
-                                        sent: msg.sent,
-                                        discord_message_id: msg.discordData?.messageId,
-                                        discord_reference_id: msg.discordData?.referenceMessageId,
-                                        discord_channel_id: msg.discordData?.channelId,
-                                        discord_guild_id: msg.discordData?.guildId,
-                                    });
-                                break;
-                                case GPTMessageType.User:
-                                    if (msg.attachments.length > 0) {
-                                        messagetransac.transaction((atttransac) => {
-                                            msg.attachments.forEach(att => {
-                                                atttransac("gpt_attachments").insert({
-                                                    id: att.id,
-                                                    filename: att.filename,
-                                                    expires_at: att.expiresAt.getTime(),
-                                                    message_id: msg.id,
-                                                    size: att.size,
-                                                    type: att.type,
-                                                    url: att.url,
-                                                })
-                                            })
-                                        })
-                                    }
-                                    messagetransac("gpt_user_messages").insert({
-                                        conversation_id: this.id,
-                                        type: "user",
-                                        id: msg.id,
-                                        author_id: msg.author.id,
-                                        created_at: msg.createdAt.getTime(),
-                                        content: msg.content,
-                                        been_deleted: msg.beenDeleted,
-                                        discord_message_id: msg.discordData?.messageId,
-                                        discord_reference_id: msg.discordData?.referenceMessageId,
-                                        discord_channel_id: msg.discordData?.channelId,
-                                        discord_guild_id: msg.discordData?.guildId,
-                                    });
-                                break;
+                    .onConflict()
+                    .merge();
+
+                // write users
+                const userPromises = this.users.map(user =>
+                    trx("gpt_users").insert({
+                        conversation_id: this.id,
+                        id: user.id,
+                        username: user.username,
+                        avatar: user.avatar,
+                    })
+                );
+                await Promise.all(userPromises);
+
+                // write messages
+                for (const msg of this.messages) {
+                    switch (msg.type) {
+                        case GPTMessageType.Assistant:
+                            await trx("gpt_assistant_messages").insert({
+                                conversation_id: this.id,
+                                type: "assistant",
+                                id: msg.id,
+                                created_at: msg.createdAt.getTime(),
+                                content: msg.content,
+                                tool_call_ids: JSON.stringify(msg.toolCallIds),
+                                been_deleted: msg.beenDeleted,
+                                sent: msg.sent,
+                                discord_message_id: msg.discordData?.messageId,
+                                discord_reference_id: msg.discordData?.referenceMessageId,
+                                discord_channel_id: msg.discordData?.channelId,
+                                discord_guild_id: msg.discordData?.guildId,
+                            });
+                            break;
+
+                        case GPTMessageType.User:
+                            await trx("gpt_user_messages").insert({
+                                conversation_id: this.id,
+                                type: "user",
+                                id: msg.id,
+                                author_id: msg.author.id,
+                                created_at: msg.createdAt.getTime(),
+                                content: msg.content,
+                                been_deleted: msg.beenDeleted,
+                                discord_message_id: msg.discordData?.messageId,
+                                discord_reference_id: msg.discordData?.referenceMessageId,
+                                discord_channel_id: msg.discordData?.channelId,
+                                discord_guild_id: msg.discordData?.guildId,
+                            });
+
+                            // write attachments for this message (if applicable)
+                            if (msg.attachments.length > 0) {
+                                const attPromises = msg.attachments.map(att =>
+                                    trx("gpt_attachments").insert({
+                                        id: att.id,
+                                        filename: att.filename,
+                                        expires_at: att.expiresAt.getTime(),
+                                        message_id: msg.id,
+                                        size: att.size,
+                                        type: att.type,
+                                        url: att.url,
+                                    })
+                                );
+                                await Promise.all(attPromises);
                             }
-                        })
-                    });
-                });
+                        break;
+                        case GPTMessageType.System:
+                            await trx("gpt_system_messages").insert({
+                                conversation_id: this.id,
+                                type: "system",
+                                id: msg.id,
+                                created_at: msg.createdAt.getTime(),
+                                content: msg.content,
+                            });
+                            break;
+                    case GPTMessageType.ToolCall:
+                        await trx("gpt_tool_call_messages").insert({
+                            conversation_id: this.id,
+                            type: "tool_call",
+                            id: msg.id,
+                            tool_call_id: msg.toolCallId,
+                            tool_name: msg.toolName,
+                            // Ensure this is stringified since Knex won't auto-convert
+                            // objects to JSON strings for all DB dialects
+                            arguments: JSON.stringify(msg.arguments),
+                            answered: msg.answered,
+                        });
+                        break;
+
+                    case GPTMessageType.ToolResponse:
+                        await trx("gpt_tool_response_messages").insert({
+                            conversation_id: this.id,
+                            type: "tool_response",
+                            id: msg.id,
+                            tool_call_id: msg.toolCallId,
+                            tool_name: msg.toolName,
+                            response: JSON.stringify(msg.response),
+                        });
+                        break;
+
+                    default:
+                        log.error(`wrongly typed message (WHADDAFUK)!???!?? on conversation ${this.id}`);
+                        break;
+                    }
+                }
             });
-        });
+        } catch (error) {
+
+        }
     }
+
+    constructor(id?: string) {
+        if (id) this.id = id;
+    }
+}
+
+async function getConversation(id: string) {
+    const conversation = new Conversation(id);
+
 }

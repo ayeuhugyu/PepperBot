@@ -35,7 +35,7 @@ exports.up = async function(knex) {
 
     await knex.schema.createTableIfNotExists("gpt_assistant_messages", (table) => {
         table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
-        table.enu("type", ["asisstant"]).notNullable().index();
+        table.enu("type", ["assistant"]).notNullable().index();
         table.string("id").notNullable();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
         table.string("content").notNullable();
@@ -129,7 +129,6 @@ FROM gpt_system_messages`);
         table.string("id").notNullable();
         table.string("filename").notNullable();
         table.string("url").notNullable();
-        table.boolean("url_as_file").notNullable().defaultTo(false);
         table.integer("size").notNullable();
         table.datetime("expires_at").notNullable();
     });
