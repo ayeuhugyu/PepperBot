@@ -14,6 +14,7 @@ import EventEmitter from "events";
 import TypedEventEmitter from "typed-emitter";
 import { initReplacerClient } from "./contentReplace";
 import { initTemplatingClient } from "./promptTemplating";
+import database from "../data_manager";
 
 let client: Client | undefined = undefined;
 export function initGPTClients(newClient: Client) {
@@ -179,5 +180,85 @@ export class Conversation<M extends AnyModel = any> {
         }));
 
         return guild;
+    }
+
+    async write() {
+        // write metadata
+        await database.transaction((trx) => {
+            trx("gpt_conversation_meta").insert({
+                id: this.id,
+                model: this.model.name,
+                prompt_author_id: this.prompt.author.id,
+                prompt_name: this.prompt.name,
+                model_parameter_overrides: JSON.stringify(this.modelParameterOverrides),
+                prompt_parameter_overrides: JSON.stringify(this.promptParameterOverrides),
+            }).onConflict().merge().then(() => {
+                // write users
+                trx.transaction((usertransac) => {
+                    this.users.forEach(user => {
+                        usertransac("gpt_users").insert({
+                            conversation_id: this.id,
+                            id: user.id,
+                            username: user.username,
+                            avatar: user.avatar,
+                        });
+                    })
+                }).then(() => {
+                    // write messages
+                    trx.transaction((messagetransac) => {
+                        this.messages.forEach((msg) => {
+                            switch (msg.type) {
+                                case GPTMessageType.Assistant:
+                                    messagetransac("gpt_assistant_messages").insert({
+                                        conversation_id: this.id,
+                                        type: "asisstant",
+                                        id: msg.id,
+                                        created_at: msg.createdAt.getTime(),
+                                        content: msg.content,
+                                        tool_call_ids: JSON.stringify(msg.toolCallIds),
+                                        been_deleted: msg.beenDeleted,
+                                        sent: msg.sent,
+                                        discord_message_id: msg.discordData?.messageId,
+                                        discord_reference_id: msg.discordData?.referenceMessageId,
+                                        discord_channel_id: msg.discordData?.channelId,
+                                        discord_guild_id: msg.discordData?.guildId,
+                                    });
+                                break;
+                                case GPTMessageType.User:
+                                    if (msg.attachments.length > 0) {
+                                        messagetransac.transaction((atttransac) => {
+                                            msg.attachments.forEach(att => {
+                                                atttransac("gpt_attachments").insert({
+                                                    id: att.id,
+                                                    filename: att.filename,
+                                                    expires_at: att.expiresAt.getTime(),
+                                                    message_id: msg.id,
+                                                    size: att.size,
+                                                    type: att.type,
+                                                    url: att.url,
+                                                })
+                                            })
+                                        })
+                                    }
+                                    messagetransac("gpt_user_messages").insert({
+                                        conversation_id: this.id,
+                                        type: "user",
+                                        id: msg.id,
+                                        author_id: msg.author.id,
+                                        created_at: msg.createdAt.getTime(),
+                                        content: msg.content,
+                                        been_deleted: msg.beenDeleted,
+                                        discord_message_id: msg.discordData?.messageId,
+                                        discord_reference_id: msg.discordData?.referenceMessageId,
+                                        discord_channel_id: msg.discordData?.channelId,
+                                        discord_guild_id: msg.discordData?.guildId,
+                                    });
+                                break;
+                            }
+                        })
+                    });
+                });
+            });
+        });
     }
 }

@@ -271,21 +271,23 @@ declare module "knex/types/tables" {
 
     interface DBGPTAttachment {
         message_id: string;
-        type: "image" | "video" | "text" | "unknown" | "error";
+        type: "image" | "video" | "audio" | "text" | "unknown" | "error";
         id: string;
         filename: string;
         url: string;
         url_as_file: boolean;
         size: number;
-        expires_at: Date | string;
+        expires_at: Date | string | number;
     }
     interface DBGPTMessage {
         id: string;
         conversation_id: string;
         type: "user" | "asisstant" | "tool_call" | "tool_response" | "system";
-        created_at: Date | string;
+        created_at: Date | string | number;
 
         content: string | null;
+
+        author_id: string | null; // specific to user messages
 
         discord_message_id?: string;
         discord_reference_id?: string | null;
@@ -296,9 +298,9 @@ declare module "knex/types/tables" {
         tool_name?: string; // specific to tool calls & responses
         arguments?: string; // json
         response?: string; // json
-        tool_call_ids?: string[]; // specific to assistant messages
+        tool_call_ids?: string; // specific to assistant messages, json
 
-        been_deleted?: boolean;
+        been_deleted?: boolean; // specific to discordable messages
         sent?: boolean; // specific to assistant messages
         answered?: boolean; // specific to tool calls
     }
@@ -312,6 +314,7 @@ declare module "knex/types/tables" {
         thesaurus_cache: ThesaurusCacheEntry;
         maintenance_mode: MaintenanceEntry;
 
+        gpt_conversation_meta: DBGPTConversationMeta;
         gpt_users: DBGPTUser;
 
         gpt_messages: DBGPTMessage;
@@ -322,7 +325,7 @@ declare module "knex/types/tables" {
         gpt_tool_call_messages: DBGPTMessage;
         gpt_tool_response_messages: DBGPTMessage;
         gpt_system_messages: DBGPTMessage;
-        }
+    }
 }
 
 export default database;

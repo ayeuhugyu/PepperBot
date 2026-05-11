@@ -125,7 +125,7 @@ FROM gpt_system_messages`);
 
     return await knex.schema.createTableIfNotExists("gpt_attachments", (table) => {
         table.string("message_id").notNullable().index().references("gpt_messages.id");
-        table.enu("type", ["image", "video", "text", "unknown", "error"]).notNullable().index();
+        table.enu("type", ["image", "video", "text", "audio", "unknown", "error"]).notNullable().index();
         table.string("id").notNullable();
         table.string("filename").notNullable();
         table.string("url").notNullable();
