@@ -278,6 +278,8 @@ declare module "knex/types/tables" {
         url_as_file: boolean;
         size: number;
         expires_at: Date | string | number;
+        content?: string;
+        error?: string;
     }
     interface DBGPTMessage {
         id: string;

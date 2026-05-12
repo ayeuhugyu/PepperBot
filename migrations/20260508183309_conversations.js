@@ -3,7 +3,7 @@
  * @returns { Promise<void> }
 */
 exports.up = async function(knex) {
-    await knex.schema.createTableIfNotExists("gpt_conversation_meta", (table) => {
+    if (!(await knex.schema.hasTable("gpt_conversation_meta"))) await knex.schema.createTable("gpt_conversation_meta", (table) => {
         table.string("id").index().notNullable().primary();
         table.string("prompt_author_id").notNullable().references("prompts.author_id");
         table.string("prompt_name").notNullable().references("prompts.name");
@@ -12,17 +12,19 @@ exports.up = async function(knex) {
         table.string("model").notNullable().defaultTo("gpt-4.1-nano");
     });
 
-    await knex.schema.createTableIfNotExists("gpt_users", (table) => {
+    if (!(await knex.schema.hasTable("gpt_users"))) await knex.schema.createTable("gpt_users", (table) => {
         table.string("conversation_id").references("gpt_conversation_meta.id").notNullable();
         table.string("id").notNullable();
         table.string("username").notNullable();
         table.string("avatar");
+
+        table.primary(["conversation_id", "id"]);
     })
 
-    await knex.schema.createTableIfNotExists("gpt_user_messages", (table) => {
+    if (!(await knex.schema.hasTable("gpt_user_messages"))) await knex.schema.createTable("gpt_user_messages", (table) => {
         table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
         table.enu("type", ["user"]).notNullable().index();
-        table.string("id").notNullable();
+        table.string("id").notNullable().primary();
         table.string("author_id").notNullable().references("gpt_users.id");
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
         table.string("content").notNullable();
@@ -33,25 +35,25 @@ exports.up = async function(knex) {
         table.string("discord_guild_id").nullable();
     });
 
-    await knex.schema.createTableIfNotExists("gpt_assistant_messages", (table) => {
+    if (!(await knex.schema.hasTable("gpt_assistant_messages"))) await knex.schema.createTable("gpt_assistant_messages", (table) => {
         table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
         table.enu("type", ["assistant"]).notNullable().index();
-        table.string("id").notNullable();
+        table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
         table.string("content").notNullable();
         table.json("tool_call_ids").notNullable().defaultTo("[]");
         table.boolean("been_deleted").notNullable().defaultTo(false);
         table.boolean("sent").notNullable().defaultTo(false);
-        table.string("discord_message_id").notNullable();
-        table.string("discord_reference_id").notNullable();
-        table.string("discord_channel_id").notNullable();
-        table.string("discord_guild_id").notNullable();
+        table.string("discord_message_id").nullable();
+        table.string("discord_reference_id").nullable();
+        table.string("discord_channel_id").nullable();
+        table.string("discord_guild_id").nullable();
     });
 
-    await knex.schema.createTableIfNotExists("gpt_tool_call_messages", (table) => {
+    if (!(await knex.schema.hasTable("gpt_tool_call_messages"))) await knex.schema.createTable("gpt_tool_call_messages", (table) => {
         table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
         table.enu("type", ["tool_call"]).notNullable().index();
-        table.string("id").notNullable();
+        table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
         table.string("tool_call_id").notNullable();
         table.string("tool_name").notNullable();
@@ -59,20 +61,20 @@ exports.up = async function(knex) {
         table.boolean("answered").notNullable().defaultTo(false);
     });
 
-    await knex.schema.createTableIfNotExists("gpt_tool_response_messages", (table) => {
+    if (!(await knex.schema.hasTable("gpt_tool_response_messages"))) await knex.schema.createTable("gpt_tool_response_messages", (table) => {
         table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
         table.enu("type", ["tool_response"]).notNullable().index();
-        table.string("id").notNullable();
+        table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
         table.string("tool_call_id").notNullable();
         table.string("tool_name").notNullable();
         table.json("response").notNullable();
     });
 
-    await knex.schema.createTableIfNotExists("gpt_system_messages", (table) => {
+    if (!(await knex.schema.hasTable("gpt_system_messages"))) await knex.schema.createTable("gpt_system_messages", (table) => {
         table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
         table.enu("type", ["system"]).notNullable().index();
-        table.string("id").notNullable();
+        table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
         table.string("content").notNullable();
     });
@@ -81,8 +83,8 @@ exports.up = async function(knex) {
 -- user messages
 SELECT
     id, conversation_id, type, created_at, content,
-    NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response,
-    discord_message_id, discord_channel_id, discord_guild_id
+    NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response, NULL AS answered,
+    discord_message_id, discord_channel_id, discord_guild_id, author_id, been_deleted
 FROM gpt_user_messages
 
 UNION ALL
@@ -90,8 +92,8 @@ UNION ALL
 -- assistant messages
 SELECT
     id, conversation_id, type, created_at, content,
-    NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response,
-    discord_message_id, discord_channel_id, discord_guild_id
+    NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response, NULL AS answered,
+    discord_message_id, discord_channel_id, discord_guild_id, NULL AS author_id, been_deleted
 FROM gpt_assistant_messages
 
 UNION ALL
@@ -100,8 +102,8 @@ UNION ALL
 SELECT
     id, conversation_id, type, created_at,
     'Tool Call: ' || tool_name AS content,
-    tool_call_id, tool_name, arguments, NULL AS response,
-    NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id
+    tool_call_id, tool_name, arguments, NULL AS response, answered,
+    NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id, NULL AS author_id, 0 AS been_deleted
     FROM gpt_tool_call_messages
 
 UNION ALL
@@ -110,8 +112,8 @@ UNION ALL
 SELECT
     id, conversation_id, type, created_at,
     'Tool Response: ' || tool_name AS content,
-    tool_call_id, tool_name, NULL AS arguments, response,
-    NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id
+    tool_call_id, tool_name, NULL AS arguments, response, NULL AS answered,
+    NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id, NULL AS author_id, 0 AS been_deleted
 FROM gpt_tool_response_messages
 
 UNION ALL
@@ -119,18 +121,20 @@ UNION ALL
 -- system messages
 SELECT
 id, conversation_id, type, created_at, content,
-NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response,
-NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id
+NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response, NULL AS answered,
+NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id, NULL AS author_id, 0 AS been_deleted
 FROM gpt_system_messages`);
 
-    return await knex.schema.createTableIfNotExists("gpt_attachments", (table) => {
+    if (!(await knex.schema.hasTable("gpt_attachments"))) return await knex.schema.createTable("gpt_attachments", (table) => {
         table.string("message_id").notNullable().index().references("gpt_messages.id");
         table.enu("type", ["image", "video", "text", "audio", "unknown", "error"]).notNullable().index();
-        table.string("id").notNullable();
+        table.string("id").notNullable().primary();
         table.string("filename").notNullable();
         table.string("url").notNullable();
         table.integer("size").notNullable();
         table.datetime("expires_at").notNullable();
+        table.text("content").nullable(); // specific to text attachments
+        table.text("error").nullable(); // specific to error attachments
     });
 };
 

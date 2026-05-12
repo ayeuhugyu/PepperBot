@@ -1,4 +1,4 @@
-import { Conversation } from "../src/lib/gpt/conversation";
+import { Conversation, getConversation } from "../src/lib/gpt/conversation";
 import readline from "readline"
 import { AnyGPTMessage, GPTMessageType, GPTToolCall, GPTToolResponse, GPTUserMessage } from "../src/lib/gpt/messageTypes";
 import { getDefaultPrompt } from "../src/lib/gpt/officialPrompts";
@@ -19,7 +19,8 @@ const channelId = "1312566483569741896";
 
 //
 
-const conversation = new Conversation();
+const conversation = await getConversation("gpt-tester");
+// if (!conversation) conversation = new Conversation("gpt-tester");
 const prompt = getDefaultPrompt();
 prompt?.customTools.push(new CustomTool({
     name: "enrich_url",
@@ -34,6 +35,7 @@ prompt?.customTools.push(new CustomTool({
     }
 }));
 // conversation.setPrompt(prompt!);
+await conversation.write();
 
 rl.prompt();
 
@@ -92,6 +94,7 @@ rl.on("line", async (line) => {
 
     conversation.emitter.removeAllListeners();
 
+    await conversation.write();
     console.log(`pepperbot> ${response?.content}`);
 
     rl.prompt();

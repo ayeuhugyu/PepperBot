@@ -133,7 +133,6 @@ export class GPTAttachment {
 
 export class ImageGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Image = GPTAttachmentType.Image;
-    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<ImageGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Image});
@@ -143,7 +142,6 @@ export class ImageGPTAttachment extends GPTAttachment {
 
 export class VideoGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Video = GPTAttachmentType.Video;
-    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<VideoGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Video});
@@ -154,18 +152,15 @@ export class VideoGPTAttachment extends GPTAttachment {
 
 export class AudioGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Audio = GPTAttachmentType.Audio;
-    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<ImageGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Audio});
         this.type = GPTAttachmentType.Audio
     }
 };
-
 export class TextGPTAttachment extends GPTAttachment {
     type: GPTAttachmentType.Text;
     content: string;
-    useURLAsFile?: boolean = false;
 
     constructor(data: Omit<OmitMethods<TextGPTAttachment>, "id" | "type"> & { id?: string }) {
         super({...data, type: GPTAttachmentType.Text});
@@ -193,7 +188,13 @@ export class ErrorGPTAttachment extends GPTAttachment {
     }
 }
 
-type AnyGPTAttachment = ErrorGPTAttachment | TextGPTAttachment | ImageGPTAttachment | AudioGPTAttachment | VideoGPTAttachment;
+export type AnyGPTAttachment = ErrorGPTAttachment | TextGPTAttachment | ImageGPTAttachment | AudioGPTAttachment | VideoGPTAttachment;
+export type TypeofAnyGPTAttachment =
+    typeof ErrorGPTAttachment |
+    typeof TextGPTAttachment |
+    typeof ImageGPTAttachment |
+    typeof AudioGPTAttachment |
+    typeof VideoGPTAttachment;
 
 export class GPTUserMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.User;
@@ -205,7 +206,9 @@ export class GPTUserMessage implements GPTBaseMessage {
     beenDeleted: boolean = false;
     discordData: GPTDiscordData;
 
-    constructor(data: Omit<OmitMethods<GPTUserMessage>, "id" | "type"> & { id?: string }) {
+    constructor(data: Omit<OmitMethods<GPTUserMessage>, "id" | "type" | "createdAt"> & { id?: string, createdAt?: Date }) {
+        if (data.id) this.id = data.id;
+        if (data.createdAt) this.createdAt = data.createdAt;
         this.author = data.author;
         this.attachments = data.attachments;
         this.content = data.content;
@@ -294,7 +297,9 @@ export class GPTAssistantMessage implements GPTBaseMessage {
     sent?: boolean = false;
     discordData?: GPTDiscordData;
 
-    constructor(data: Omit<OmitMethods<GPTAssistantMessage>, "id" | "type" | "sent" | "createdAt"> & { id?: string }) {
+    constructor(data: Omit<OmitMethods<GPTAssistantMessage>, "id" | "type" | "sent" | "createdAt"> & { id?: string, createdAt?: Date }) {
+        if (data.id) this.id = data.id;
+        if (data.createdAt) this.createdAt = data.createdAt;
         this.attachments = data.attachments;
         this.content = data.content;
         this.toolCallIds = data.toolCallIds;
@@ -346,7 +351,10 @@ export class GPTToolCall implements GPTBaseMessage {
     arguments: Record<string, unknown>;
     answered: boolean = false;
 
-    constructor(data: Omit<OmitMethods<GPTToolCall>, "type" | "id" | "createdAt" | "answered"> & { id?: string }) {
+    constructor(data: Omit<OmitMethods<GPTToolCall>, "type" | "id" | "createdAt" | "answered"> & { id?: string, createdAt?: Date, answered?: boolean }) {
+        if (data.id) this.id = data.id;
+        if (data.createdAt) this.createdAt = data.createdAt;
+        if (data.answered) this.answered = data.answered;
         this.toolCallId = data.toolCallId ?? randomId("gpt-tool-call-id");
         this.toolName = data.toolName;
         this.arguments = data.arguments;
@@ -370,7 +378,9 @@ export class GPTToolResponse implements GPTBaseMessage {
     toolName: ToolName | string; // | string because there's no way to know the names of custom tools
     response: ToolResponse<unknown>;
 
-    constructor(data: Omit<OmitMethods<GPTToolResponse>, "id" | "type" | "createdAt"> & { id?: string }) {
+    constructor(data: Omit<OmitMethods<GPTToolResponse>, "id" | "type" | "createdAt"> & { id?: string, createdAt?: Date }) {
+        if (data.id) this.id = data.id;
+        if (data.createdAt) this.createdAt = data.createdAt;
         this.toolCallId = data.toolCallId;
         this.toolName = data.toolName;
         this.response = data.response;
@@ -399,7 +409,9 @@ export class GPTSystemMessage implements GPTBaseMessage {
     createdAt: Date = new Date();
     content: string;
 
-    constructor(data: Omit<OmitMethods<GPTSystemMessage>, "id" | "type" | "createdAt"> & { id?: string }) {
+    constructor(data: Omit<OmitMethods<GPTSystemMessage>, "id" | "type" | "createdAt"> & { id?: string, createdAt?: Date }) {
+        if (data.id) this.id = data.id;
+        if (data.createdAt) this.createdAt = data.createdAt;
         this.content = data.content;
     }
 }

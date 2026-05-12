@@ -5,7 +5,7 @@ import { getDefaultPrompt } from "./officialPrompts";
 import { ModelName, models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
-import { AnyGPTMessage, GPTAssistantMessage, GPTMessageType, GPTMessageTypeMap, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage, initGPTFetchClient } from "./messageTypes";
+import { AnyGPTAttachment, AnyGPTMessage, AudioGPTAttachment, ErrorGPTAttachment, GPTAssistantMessage, GPTAttachment, GPTAttachmentType, GPTMessageType, GPTMessageTypeMap, GPTSystemMessage, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage, ImageGPTAttachment, initGPTFetchClient, TextGPTAttachment, TypeofAnyGPTAttachment, VideoGPTAttachment } from "./messageTypes";
 import { Mutex } from "async-mutex";
 import { modelRunnerIndex } from "./modelRunners";
 import { ToolName, tools } from "./tools";
@@ -15,6 +15,7 @@ import TypedEventEmitter from "typed-emitter";
 import { initReplacerClient } from "./contentReplace";
 import { initTemplatingClient } from "./promptTemplating";
 import database from "../data_manager";
+import { DBGPTAttachment } from "knex/types/tables";
 
 let client: Client | undefined = undefined;
 export function initGPTClients(newClient: Client) {
@@ -48,7 +49,7 @@ export class Conversation<M extends AnyModel = any> {
         messages.forEach(m => {
             this.emitter.emit("message", m);
             if (m.type === GPTMessageType.User) {
-                if (!this.users.find((u) => u.id === m.author.id)) this.users.push(m.author);
+                if (!this.users.find((u) => u.id === m.author?.id)) this.users.push(m.author);
             }
             if (m.type === GPTMessageType.ToolCall) {
                 this.emitter.emit("toolCall", m);
@@ -200,7 +201,7 @@ export class Conversation<M extends AnyModel = any> {
                         model_parameter_overrides: JSON.stringify(this.modelParameterOverrides),
                         prompt_parameter_overrides: JSON.stringify(this.promptParameterOverrides),
                     })
-                    .onConflict()
+                    .onConflict("id")
                     .merge();
 
                 // write users
@@ -210,7 +211,7 @@ export class Conversation<M extends AnyModel = any> {
                         id: user.id,
                         username: user.username,
                         avatar: user.avatar,
-                    })
+                    }).onConflict(['conversation_id', 'id']).merge()
                 );
                 await Promise.all(userPromises);
 
@@ -231,7 +232,7 @@ export class Conversation<M extends AnyModel = any> {
                                 discord_reference_id: msg.discordData?.referenceMessageId,
                                 discord_channel_id: msg.discordData?.channelId,
                                 discord_guild_id: msg.discordData?.guildId,
-                            });
+                            }).onConflict("id").merge();
                         break;
                         case GPTMessageType.User:
                             await trx("gpt_user_messages").insert({
@@ -246,7 +247,7 @@ export class Conversation<M extends AnyModel = any> {
                                 discord_reference_id: msg.discordData?.referenceMessageId,
                                 discord_channel_id: msg.discordData?.channelId,
                                 discord_guild_id: msg.discordData?.guildId,
-                            });
+                            }).onConflict("id").merge();
 
                             // write attachments for this message (if applicable)
                             if (msg.attachments.length > 0) {
@@ -259,7 +260,9 @@ export class Conversation<M extends AnyModel = any> {
                                         size: att.size,
                                         type: att.type,
                                         url: att.url,
-                                    })
+                                        content: att.type === GPTAttachmentType.Text ? att.content : undefined,
+                                        error: att.type === GPTAttachmentType.Error ? att.error : undefined,
+                                    }).onConflict("id").merge()
                                 );
                                 await Promise.all(attPromises);
                             }
@@ -271,7 +274,7 @@ export class Conversation<M extends AnyModel = any> {
                                 id: msg.id,
                                 created_at: msg.createdAt.getTime(),
                                 content: msg.content,
-                            });
+                            }).onConflict("id").merge();
                         break;
                         case GPTMessageType.ToolCall:
                             await trx("gpt_tool_call_messages").insert({
@@ -284,7 +287,8 @@ export class Conversation<M extends AnyModel = any> {
                                 // objects to JSON strings for all DB dialects
                                 arguments: JSON.stringify(msg.arguments),
                                 answered: msg.answered,
-                            });
+                                created_at: msg.createdAt.getTime(),
+                            }).onConflict("id").merge();
                         break;
                         case GPTMessageType.ToolResponse:
                             await trx("gpt_tool_response_messages").insert({
@@ -294,7 +298,8 @@ export class Conversation<M extends AnyModel = any> {
                                 tool_call_id: msg.toolCallId,
                                 tool_name: msg.toolName,
                                 response: JSON.stringify(msg.response),
-                            });
+                                created_at: msg.createdAt.getTime(),
+                            }).onConflict("id").merge();
                         break;
                         default:
                             log.error(`wrongly typed message (WHADDAFUK)!???!?? on conversation ${this.id}`);
@@ -315,9 +320,52 @@ export class Conversation<M extends AnyModel = any> {
     }
 }
 
-async function getConversation(id: string) {
+function parseDBAttachments(dbattachments: DBGPTAttachment[]) {
+    return dbattachments.map((att) => {
+        let usedClass: TypeofAnyGPTAttachment;
+        let extraData: any = {};
+        switch (att.type) {
+            case "unknown":
+                return undefined;
+            case "error":
+                usedClass = ErrorGPTAttachment
+                extraData = { error: att.error };
+            break;
+            case "text":
+                usedClass = TextGPTAttachment;
+                extraData = { content: att.content };
+            break;
+            case "audio":
+                usedClass = AudioGPTAttachment;
+            break;
+            case "image":
+                usedClass = ImageGPTAttachment;
+            break;
+            case "video":
+                usedClass = VideoGPTAttachment;
+            break;
+            default:
+                return undefined;
+        }
+
+        return new usedClass({
+            ...extraData,
+            expiresAt: new Date(att.expires_at),
+            filename: att.filename,
+            id: att.id,
+            url: att.url,
+            size: att.size
+        })
+    }).filter((a) => a != undefined)
+}
+
+export async function getConversation(id: string, noensure: true): Promise<Conversation | undefined>;
+export async function getConversation(id: string, noensure?: false): Promise<Conversation>;
+export async function getConversation(id: string, noensure?: boolean): Promise<Conversation | undefined> {
     const conversation = new Conversation(id);
     const dbmeta = await database("gpt_conversation_meta").select("*").where({ id }).first();
+    if (noensure && !dbmeta) return undefined;
+
     const dbusers = await database("gpt_users").select("*").where({ conversation_id: id });
     const dbmessages = await database("gpt_messages").select("*").where({ conversation_id: id });
 
@@ -330,7 +378,7 @@ async function getConversation(id: string) {
         switch (msg.type) {
             case "user":
                 const dbattachments = await database("gpt_attachments").where({ message_id: msg.id });
-                conversation.messages.push(new GPTUserMessage({
+                conversation.addMessage(new GPTUserMessage({
                     createdAt: new Date(msg.created_at),
                     id: msg.id,
                     content: msg.content!,
@@ -342,11 +390,56 @@ async function getConversation(id: string) {
                         guildId: msg.discord_guild_id ?? undefined,
                     },
                     beenDeleted: msg.been_deleted!,
-                    attachments: dbattachments.map((att) => {
-                        return
-                    }).filter((a) => a != undefined),
+                    attachments: parseDBAttachments(dbattachments),
+                }));
+            break;
+            case "assistant":
+                const assistantDBAttachments = await database("gpt_attachments").where({ message_id: msg.id });
+                conversation.addMessage(new GPTAssistantMessage({
+                    createdAt: new Date(msg.created_at),
+                    id: msg.id,
+                    content: msg.content!,
+                    discordData: {
+                        messageId: msg.discord_message_id!,
+                        channelId: msg.discord_channel_id!,
+                        referenceMessageId: msg.discord_reference_id!,
+                        guildId: msg.discord_guild_id ?? undefined,
+                    },
+                    beenDeleted: msg.been_deleted!,
+                    attachments: parseDBAttachments(assistantDBAttachments),
+                    toolCallIds: JSON.parse(msg.tool_call_ids ?? "[]"),
+                }));
+            break;
+            case "tool_call":
+                conversation.addMessage(new GPTToolCall({
+                    createdAt: new Date(msg.created_at),
+                    id: msg.id,
+                    arguments: JSON.parse(msg.arguments ?? "{}"),
+                    toolCallId: msg.tool_call_id!,
+                    toolName: msg.tool_name!,
+                    answered: Boolean(msg.answered),
+                }));
+            break;
+            case "tool_response":
+                conversation.addMessage(new GPTToolResponse({
+                    createdAt: new Date(msg.created_at),
+                    id: msg.id,
+                    toolCallId: msg.tool_call_id!,
+                    toolName: msg.tool_name!,
+                    response: JSON.parse(msg.response!),
+                }));
+            break;
+            case "system":
+                conversation.addMessage(new GPTSystemMessage({
+                    createdAt: new Date(msg.created_at),
+                    id: msg.id,
+                    content: msg.content ?? "",
                 }));
             break;
         }
     }));
+
+    conversation.sortMessages();
+
+    return conversation;
 }
