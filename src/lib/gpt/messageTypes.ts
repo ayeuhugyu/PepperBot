@@ -205,7 +205,7 @@ export class GPTUserMessage implements GPTBaseMessage {
     beenDeleted: boolean = false;
     discordData: GPTDiscordData;
 
-    constructor(data: Omit<OmitMethods<GPTUserMessage>, "id" | "type">) {
+    constructor(data: Omit<OmitMethods<GPTUserMessage>, "id" | "type"> & { id?: string }) {
         this.author = data.author;
         this.attachments = data.attachments;
         this.content = data.content;
@@ -294,7 +294,7 @@ export class GPTAssistantMessage implements GPTBaseMessage {
     sent?: boolean = false;
     discordData?: GPTDiscordData;
 
-    constructor(data: Omit<OmitMethods<GPTAssistantMessage>, "id" | "type" | "sent" | "createdAt">) {
+    constructor(data: Omit<OmitMethods<GPTAssistantMessage>, "id" | "type" | "sent" | "createdAt"> & { id?: string }) {
         this.attachments = data.attachments;
         this.content = data.content;
         this.toolCallIds = data.toolCallIds;
@@ -346,7 +346,7 @@ export class GPTToolCall implements GPTBaseMessage {
     arguments: Record<string, unknown>;
     answered: boolean = false;
 
-    constructor(data: Omit<OmitMethods<GPTToolCall>, "type" | "id" | "createdAt" | "answered">) {
+    constructor(data: Omit<OmitMethods<GPTToolCall>, "type" | "id" | "createdAt" | "answered"> & { id?: string }) {
         this.toolCallId = data.toolCallId ?? randomId("gpt-tool-call-id");
         this.toolName = data.toolName;
         this.arguments = data.arguments;
@@ -370,7 +370,7 @@ export class GPTToolResponse implements GPTBaseMessage {
     toolName: ToolName | string; // | string because there's no way to know the names of custom tools
     response: ToolResponse<unknown>;
 
-    constructor(data: Omit<OmitMethods<GPTToolResponse>, "id" | "type" | "createdAt">) {
+    constructor(data: Omit<OmitMethods<GPTToolResponse>, "id" | "type" | "createdAt"> & { id?: string }) {
         this.toolCallId = data.toolCallId;
         this.toolName = data.toolName;
         this.response = data.response;
@@ -399,7 +399,7 @@ export class GPTSystemMessage implements GPTBaseMessage {
     createdAt: Date = new Date();
     content: string;
 
-    constructor(data: Omit<OmitMethods<GPTSystemMessage>, "id" | "type" | "createdAt">) {
+    constructor(data: Omit<OmitMethods<GPTSystemMessage>, "id" | "type" | "createdAt"> & { id?: string }) {
         this.content = data.content;
     }
 }

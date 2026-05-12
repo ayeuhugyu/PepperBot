@@ -319,10 +319,34 @@ async function getConversation(id: string) {
     const conversation = new Conversation(id);
     const dbmeta = await database("gpt_conversation_meta").select("*").where({ id }).first();
     const dbusers = await database("gpt_users").select("*").where({ conversation_id: id });
+    const dbmessages = await database("gpt_messages").select("*").where({ conversation_id: id });
+
     conversation.prompt = (await Prompt.fromName(dbmeta?.prompt_author_id ?? "PepperBot", dbmeta?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!;
     conversation.model = (dbmeta?.model ?? "") in models ? models[dbmeta?.model as keyof typeof models] : models["gpt-4.1-nano"];
     conversation.promptParameterOverrides = JSON.parse(dbmeta?.prompt_parameter_overrides ?? "{}");
     conversation.modelParameterOverrides = JSON.parse(dbmeta?.model_parameter_overrides ?? "{}");
     conversation.users = dbusers;
-    
+    await Promise.all(dbmessages.map(async (msg) => {
+        switch (msg.type) {
+            case "user":
+                const dbattachments = await database("gpt_attachments").where({ message_id: msg.id });
+                conversation.messages.push(new GPTUserMessage({
+                    createdAt: new Date(msg.created_at),
+                    id: msg.id,
+                    content: msg.content!,
+                    author: dbusers.find(u => u.id === msg.author_id)!,
+                    discordData: {
+                        messageId: msg.discord_message_id!,
+                        channelId: msg.discord_channel_id!,
+                        referenceMessageId: msg.discord_reference_id!,
+                        guildId: msg.discord_guild_id ?? undefined,
+                    },
+                    beenDeleted: msg.been_deleted!,
+                    attachments: dbattachments.map((att) => {
+                        return
+                    }).filter((a) => a != undefined),
+                }));
+            break;
+        }
+    }));
 }
