@@ -232,8 +232,7 @@ export class Conversation<M extends AnyModel = any> {
                                 discord_channel_id: msg.discordData?.channelId,
                                 discord_guild_id: msg.discordData?.guildId,
                             });
-                            break;
-
+                        break;
                         case GPTMessageType.User:
                             await trx("gpt_user_messages").insert({
                                 conversation_id: this.id,
@@ -273,40 +272,41 @@ export class Conversation<M extends AnyModel = any> {
                                 created_at: msg.createdAt.getTime(),
                                 content: msg.content,
                             });
-                            break;
-                    case GPTMessageType.ToolCall:
-                        await trx("gpt_tool_call_messages").insert({
-                            conversation_id: this.id,
-                            type: "tool_call",
-                            id: msg.id,
-                            tool_call_id: msg.toolCallId,
-                            tool_name: msg.toolName,
-                            // Ensure this is stringified since Knex won't auto-convert
-                            // objects to JSON strings for all DB dialects
-                            arguments: JSON.stringify(msg.arguments),
-                            answered: msg.answered,
-                        });
                         break;
-
-                    case GPTMessageType.ToolResponse:
-                        await trx("gpt_tool_response_messages").insert({
-                            conversation_id: this.id,
-                            type: "tool_response",
-                            id: msg.id,
-                            tool_call_id: msg.toolCallId,
-                            tool_name: msg.toolName,
-                            response: JSON.stringify(msg.response),
-                        });
+                        case GPTMessageType.ToolCall:
+                            await trx("gpt_tool_call_messages").insert({
+                                conversation_id: this.id,
+                                type: "tool_call",
+                                id: msg.id,
+                                tool_call_id: msg.toolCallId,
+                                tool_name: msg.toolName,
+                                // Ensure this is stringified since Knex won't auto-convert
+                                // objects to JSON strings for all DB dialects
+                                arguments: JSON.stringify(msg.arguments),
+                                answered: msg.answered,
+                            });
                         break;
-
-                    default:
-                        log.error(`wrongly typed message (WHADDAFUK)!???!?? on conversation ${this.id}`);
+                        case GPTMessageType.ToolResponse:
+                            await trx("gpt_tool_response_messages").insert({
+                                conversation_id: this.id,
+                                type: "tool_response",
+                                id: msg.id,
+                                tool_call_id: msg.toolCallId,
+                                tool_name: msg.toolName,
+                                response: JSON.stringify(msg.response),
+                            });
+                        break;
+                        default:
+                            log.error(`wrongly typed message (WHADDAFUK)!???!?? on conversation ${this.id}`);
                         break;
                     }
                 }
             });
         } catch (error) {
-
+            log.error(`error writing conversation ${this.id}:`);
+            log.error(error);
+            log.debug(`error writing conversation`);
+            log.debug(JSON.stringify(this));
         }
     }
 
@@ -317,5 +317,12 @@ export class Conversation<M extends AnyModel = any> {
 
 async function getConversation(id: string) {
     const conversation = new Conversation(id);
-
+    const dbmeta = await database("gpt_conversation_meta").select("*").where({ id }).first();
+    const dbusers = await database("gpt_users").select("*").where({ conversation_id: id });
+    conversation.prompt = (await Prompt.fromName(dbmeta?.prompt_author_id ?? "PepperBot", dbmeta?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!;
+    conversation.model = (dbmeta?.model ?? "") in models ? models[dbmeta?.model as keyof typeof models] : models["gpt-4.1-nano"];
+    conversation.promptParameterOverrides = JSON.parse(dbmeta?.prompt_parameter_overrides ?? "{}");
+    conversation.modelParameterOverrides = JSON.parse(dbmeta?.model_parameter_overrides ?? "{}");
+    conversation.users = dbusers;
+    
 }
