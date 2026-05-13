@@ -20,8 +20,9 @@ const subcommand = new Command(
                 name: 'id',
                 description: 'the id of the conversation to manipulate the messages of',
                 long_description: 'the id of the conversation to manipulate the messages of, whitelist only. used for debugging/fixing',
-                type: CommandOptionType.Boolean,
+                type: CommandOptionType.String,
                 required: false,
+                deployed: false,
             }),
         ]
     },

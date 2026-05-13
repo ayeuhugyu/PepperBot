@@ -16,6 +16,7 @@ import { initReplacerClient } from "./contentReplace";
 import { initTemplatingClient } from "./promptTemplating";
 import database from "../data_manager";
 import { parseDBAttachments } from "./parseDbAttachments";
+import { Tables } from "knex/types/tables";
 
 let client: Client | undefined = undefined;
 export function initGPTClients(newClient: Client) {
@@ -363,6 +364,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
 export async function getConversation(id: string, noensure: true): Promise<Conversation | undefined>;
 export async function getConversation(id?: string, noensure?: false): Promise<Conversation>;
 export async function getConversation(id?: string, noensure?: boolean): Promise<Conversation | undefined> {
+    if (!id) return new Conversation();
     const conversation = new Conversation(id);
     const dbmeta = await database("gpt_conversation_meta").select("*").where({ id }).first();
     if (noensure && !dbmeta) return undefined;
@@ -465,4 +467,8 @@ export async function shouldForceNextNew(userid: string) {
     const should = forceNewEntries.includes({ user_id: userid });
     if (should) await database("gpt_force_next_new").where({ user_id: userid }).delete();
     return should;
+}
+
+export async function writeOverrides(data: Tables["gpt_starting_data_overrides"]) {
+    await database("gpt_starting_data_overrides").insert(data).onConflict("user_id").merge();
 }

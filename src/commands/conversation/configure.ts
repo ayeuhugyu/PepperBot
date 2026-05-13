@@ -3,26 +3,28 @@ import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../../lib/classes/command_enums";
 import database from "../../lib/data_manager";
-import { getConversation, getUsersLatestConversation } from "../../lib/gpt/conversation";
+import { getConversation, getUsersLatestConversation, writeOverrides } from "../../lib/gpt/conversation";
 import { ActionRow, Button, ButtonStyle, TextDisplay } from "../../lib/classes/components";
 import { promptParameterTypings } from "../../lib/gpt/promptManager";
-import { ButtonInteraction, LabelBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ButtonInteraction, LabelBuilder, Message, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 
 const subcommand = new Command(
     {
-        name: 'manipulate',
+        name: 'configure',
         description: 'allows you to configure conversation parameters',
         long_description: 'allows you to configure parameters in a gpt conversation',
+        aliases: ["config", "edit", "cfg"],
         tags: [CommandTag.AI],
-        example_usage: "p/conversation manipulate",
+        example_usage: "p/conversation configure",
         pipable_to: [],
         options: [
             new CommandOption({
                 name: 'id',
                 description: 'the id of the conversation to configure',
                 long_description: 'the id of the conversation to configure, whitelist only. used for debugging/fixing',
-                type: CommandOptionType.Boolean,
+                type: CommandOptionType.String,
                 required: false,
+                deployed: false,
             }),
         ]
     },
@@ -39,11 +41,7 @@ const subcommand = new Command(
         } else {
             conversation = await getUsersLatestConversation(invoker.author.id, true);
         }
-
-        if (!conversation) {
-            await action.reply(invoker, { content: "no conversation found", ephemeral: guild_config.other.use_ephemeral_replies })
-            return;
-        }
+        if (!conversation) conversation = await getConversation();
 
         // model parameters
         const sent = await action.reply(invoker, {
@@ -65,7 +63,8 @@ const subcommand = new Command(
                         }),
                     ]
                 })
-            ]
+            ],
+            components_v2: true
         });
 
         if (!sent) return;
@@ -87,7 +86,8 @@ const subcommand = new Command(
                             })
                         ]
                     })
-                ]
+                ],
+                components_v2: true
             });
         }
 
@@ -108,7 +108,8 @@ const subcommand = new Command(
                             })
                         ]
                     })
-                ]
+                ],
+                components_v2: true,
             });
         }
 
@@ -127,22 +128,28 @@ const subcommand = new Command(
             const key = interaction.customId.slice(`${editingType}_`.length)
             let schema;
             let currentValue;
+            let overrideType: "model" | "prompt" = "model";
+            let refreshFunction: typeof refreshModelParameters | typeof refreshPromptParameters = refreshModelParameters;
             switch (editingType) {
                 case "editmodel":
                     schema = conversation.model.parameters[key];
                     currentValue = conversation.getModelParameters()[key];
+                    overrideType = "model";
+                    refreshFunction = refreshModelParameters;
                 break;
                 case "editprompt":
                     schema = promptParameterTypings[key as keyof typeof promptParameterTypings];
                     currentValue = conversation.getPromptParameters()[key as keyof typeof promptParameterTypings];
+                    overrideType = "prompt";
+                    refreshFunction = refreshPromptParameters
                 break;
             }
 
             const data_input = new TextInputBuilder()
                 .setCustomId('data_input')
                 .setStyle(TextInputStyle.Paragraph)
-                .setPlaceholder('value goes here')
-                .setValue('12345')
+                .setPlaceholder(schema?.description ?? "_")
+                .setValue(currentValue)
                 .setRequired(true)
                 .setMinLength(10)
                 .setMaxLength(1000);
@@ -156,7 +163,31 @@ const subcommand = new Command(
                 .setTitle(`editing ${key}`)
                 .addLabelComponents(label);
 
-            interaction.showModal(modal)
+            interaction.showModal(modal);
+            const response = await interaction.awaitModalSubmit({ time: 30 * 60 * 60 });
+
+            const parsed = schema?.schema.safeParse(response.fields.getTextInputValue("data_input"));
+            if (!parsed) {
+                await response.reply({ content: "something has gone very wrong...", ephemeral: true });
+                return;
+            }
+            if (parsed.error) {
+                await response.reply({ content: `error parsing value:\n${parsed.error}\nfix it and try again.`, ephemeral: true });
+                return;
+            }
+
+            (conversation[`${overrideType}ParameterOverrides`] as any)[schema?.key as unknown as any] = parsed.data;
+            await writeOverrides({
+                user_id: invoker.author.id,
+                model_parameter_overrides: JSON.stringify(conversation.modelParameterOverrides),
+                prompt_parameter_overrides: JSON.stringify(conversation.promptParameterOverrides),
+            });
+            await refreshFunction();
+            await interaction.reply({ content: `overrode value of ${key} to \`${JSON.stringify(parsed.data)}\`.`, ephemeral: true });
+        });
+
+        collector.on("end", async () => {
+            await action.edit(sent, { components: (sent as Message).components.slice(0, 1) as action.TopLevelComponent[], components_v2: true });
         });
     }
 );

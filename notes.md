@@ -29,6 +29,9 @@ model parameters and tool call parameters now use zod schemas to define their ty
 prompts can no longer be marked as nsfw, i don't wish to encourage their creation and having it as an option kindof did that.
 you can now have default prompts which are not your own
 
+added prompt parameters:
+- `IOReplacements`: 
+
 ## tool changes
 request_url has been greatly improved:
 - no longer uses just plain fetch(), instead uses an actual browser. means that the resulting content will be much closer to what actual people see.

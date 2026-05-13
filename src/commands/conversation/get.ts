@@ -20,8 +20,9 @@ const subcommand = new Command(
                 name: 'id',
                 description: 'the id of the conversation to return the data for',
                 long_description: 'the id of the conversation to return the data for, whitelist only. used for debugging',
-                type: CommandOptionType.Boolean,
+                type: CommandOptionType.String,
                 required: false,
+                deployed: false,
             }),
         ]
     },

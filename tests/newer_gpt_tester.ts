@@ -19,7 +19,7 @@ const channelId = "1312566483569741896";
 
 //
 
-const conversation = await getConversation("gpt-tester");
+const conversation = await getConversation();
 // if (!conversation) conversation = new Conversation("gpt-tester");
 const prompt = getDefaultPrompt();
 prompt?.customTools.push(new CustomTool({
