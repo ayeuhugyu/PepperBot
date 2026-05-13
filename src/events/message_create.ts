@@ -57,9 +57,6 @@ async function gptHandler(message: Message<true>) {
         message.author.id === message.client.user?.id
     ) return;
 
-    log.info(`gpt handler invoked successfully`);
-    log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
-
     await respond(message);
 }
 

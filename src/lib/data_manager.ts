@@ -293,7 +293,7 @@ declare module "knex/types/tables" {
 
         discord_message_id?: string;
         discord_reference_id?: string | null;
-        discord_channel_id?: string;
+        discord_channel_id?: string | null;
         discord_guild_id?: string | null;
 
         tool_call_id?: string; // specific to tool calls & responses
@@ -318,6 +318,7 @@ declare module "knex/types/tables" {
 
         gpt_conversation_meta: DBGPTConversationMeta;
         gpt_starting_data_overrides: Partial<Omit<DBGPTConversationMeta, "id"> & { user_id: string }>;
+        gpt_force_next_new: { user_id: string };
         gpt_users: DBGPTUser;
 
         gpt_messages: DBGPTMessage;

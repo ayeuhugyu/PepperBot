@@ -21,6 +21,10 @@ exports.up = async function(knex) {
         table.string("model").defaultTo("gpt-4.1-nano");
     });
 
+    if (!(await knex.schema.hasTable("gpt_force_next_new"))) await knex.schema.createTable("gpt_force_next_new", (table) => {
+        table.string("user_id").notNullable().primary();
+    });
+
     if (!(await knex.schema.hasTable("gpt_users"))) await knex.schema.createTable("gpt_users", (table) => {
         table.string("conversation_id").references("gpt_conversation_meta.id").notNullable();
         table.string("id").notNullable();
@@ -40,7 +44,7 @@ exports.up = async function(knex) {
         table.boolean("been_deleted").notNullable().defaultTo(false);
         table.string("discord_message_id").notNullable();
         table.string("discord_reference_id").nullable();
-        table.string("discord_channel_id").notNullable();
+        table.string("discord_channel_id").nullable();
         table.string("discord_guild_id").nullable();
     });
 

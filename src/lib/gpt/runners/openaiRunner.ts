@@ -7,7 +7,6 @@ import { AnyTool, CustomTool, CustomToolParameter, Tool, ToolParameter } from ".
 import { ModelName } from "../models";
 import { replaceContentIn, replaceContentOut } from "../contentReplace";
 import { applyPromptTemplating } from "../promptTemplating";
-import { inspect } from "util";
 
 export const openaiDefault = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -16,8 +15,7 @@ export const openaiDefault = new OpenAI({
 const supportedImageFileTypes = ["png", "jpg", "jpeg", "webp", "gif"];
 
 async function formatMessage(message: AnyGPTMessage, conversation: Conversation): Promise<ChatCompletionMessageParam[] | null> {
-    log.debug(`formatting gpt message:`);
-    log.debug(message);
+    log.debug(`formatting gpt message: ${message.id}`);
 
     switch (message.type) {
         case GPTMessageType.System:

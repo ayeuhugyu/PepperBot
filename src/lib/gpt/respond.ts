@@ -1,20 +1,23 @@
 import { Message } from "discord.js";
-import { Conversation, getConversationFromMessageId } from "./conversation";
+import { Conversation, getConversationFromMessageId, getUsersLatestConversation, shouldForceNextNew } from "./conversation";
 import { GPTAssistantMessage, GPTAttachment, GPTAttachmentType, GPTMessageType, GPTToolCall, GPTToolResponse, GPTUserMessage } from "./messageTypes";
 import * as action from "../discord_action";
 import { CustomTool, ToolErrorResponse } from "./toolTypes";
 import { OmitMethods } from "../omitMethods";
 import { getDefaultPrompt } from "./officialPrompts";
+import * as log from "../log";
 
 let activeCustomToolPrompts: string[] = [];
 
-export async function respond(message: Message<true>) {
+export async function respond(message: Message<true>, forceTypingType?: "default" | "typing" | "none", useLatestConversation?: boolean) {
     // if this is a reply to a active custom tool prompt, skip it.
     if (activeCustomToolPrompts.includes(message.reference?.messageId ?? "")) return;
 
+    log.info(`gpt handler invoked`);
+    log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
+
     // first, if it includes a direct mention we start a new conversation.
     let conversation = new Conversation();
-    await conversation.useOverrideData(message.author.id);
     const directMention = message.content.replaceAll("@!", "@").includes(`<@${message.client.user?.id}>`)
 
     // before we push this message, check for referenced messages.
@@ -22,14 +25,27 @@ export async function respond(message: Message<true>) {
         const referencedMessage = await message.channel.messages.fetch(message.reference.messageId!);
         if (directMention) {
             // if it was a direct mention, add the reference as context
+            log.debug(`adding referenced message to conversation`);
             const formattedReference = await GPTUserMessage.fromMessage(referencedMessage);
             conversation.addMessage(formattedReference);
         } else {
             // if it wasn't, see if we can use it to find the correct conversation
             const resultingConversation = await getConversationFromMessageId(message.reference.messageId!)
+            log.debug(`found conversation ${resultingConversation?.id} based on reference id ${message.reference.messageId}`);
             if (resultingConversation) conversation = resultingConversation;
         }
     }
+
+    if (useLatestConversation) {
+        conversation = await getUsersLatestConversation(message.author.id);
+    }
+
+    if (await shouldForceNextNew(message.author.id)) {
+        conversation = new Conversation();
+    }
+
+    // now that we're done making sure our conversation is right, use the overides
+    await conversation.useOverrideData(message.author.id);
 
     // add our message
     conversation.addMessage(await GPTUserMessage.fromMessage(message));
@@ -38,7 +54,8 @@ export async function respond(message: Message<true>) {
     // if there is a processing message, send it now
     const params = conversation.getPromptParameters();
     let processingMessage: Message | undefined
-    if (params.processingType == "default") {
+    const processingType = forceTypingType ?? params.processingType;
+    if (processingType == "default") {
         processingMessage = await action.reply(message, "processing...") ?? undefined;
         if (processingMessage) {
             let content = "processing...";
@@ -55,7 +72,7 @@ export async function respond(message: Message<true>) {
             conversation.emitter.on("toolCall", tcListener);
             conversation.emitter.on("toolCallResponse", responseListener);
         }
-    } else if (params.processingType === "typing") {
+    } else if (processingType === "typing") {
         message.channel.sendTyping();
     }
 
@@ -146,6 +163,8 @@ export async function respond(message: Message<true>) {
     }
 
     await conversation.write();
+
+    log.info(`gpt handler finished for ${conversation.id}`);
 
     return sent;
 }

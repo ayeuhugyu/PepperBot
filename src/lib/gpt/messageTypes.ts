@@ -258,7 +258,7 @@ export class GPTUserMessage implements GPTBaseMessage {
             discordData: {
                 messageId: message.id,
                 referenceMessageId: message.reference?.messageId,
-                channelId: message.channel.id,
+                channelId: message.channel?.id,
                 guildId: message.guild?.id
             }
         });

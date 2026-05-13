@@ -27,7 +27,7 @@ export function initGPTClients(newClient: Client) {
 
 const defaultPrompt = await getDefaultPrompt();
 
-export class Conversation<M extends AnyModel = any> {
+export class Conversation<M extends AnyModel = AnyModel> {
     id: string = randomId("conv");
     messages: AnyGPTMessage[] = [];
     prompt: Prompt<M, boolean, (string | undefined)> = defaultPrompt! as unknown as Prompt<M>;
@@ -208,18 +208,19 @@ export class Conversation<M extends AnyModel = any> {
                     .merge();
 
                 // write users
-                const userPromises = this.users.map(user =>
-                    trx("gpt_users").insert({
+                for (const user of this.users) {
+                    await trx("gpt_users").insert({
                         conversation_id: this.id,
                         id: user.id,
                         username: user.username,
                         avatar: user.avatar,
                     }).onConflict(['conversation_id', 'id']).merge()
-                );
-                await Promise.all(userPromises);
+                };
 
                 // write messages
                 for (const msg of this.messages) {
+                    log.debug(`writing ${msg.id}`);
+                    let attachmentPromises: Promise<any>[] = [];
                     switch (msg.type) {
                         case GPTMessageType.Assistant:
                             await trx("gpt_assistant_messages").insert({
@@ -236,6 +237,24 @@ export class Conversation<M extends AnyModel = any> {
                                 discord_channel_id: msg.discordData?.channelId,
                                 discord_guild_id: msg.discordData?.guildId,
                             }).onConflict("id").merge();
+
+                            // write attachments for this message (if applicable)
+                            if (msg.attachments.length > 0) {
+                                for (const att of msg.attachments) {
+                                    attachmentPromises.push(trx("gpt_attachments").insert({
+                                        id: att.id,
+                                        filename: att.filename,
+                                        expires_at: att.expiresAt.getTime(),
+                                        message_id: msg.id,
+                                        size: att.size,
+                                        type: att.type,
+                                        url: att.url,
+                                        content: att.type === GPTAttachmentType.Text ? att.content : undefined,
+                                        error: att.type === GPTAttachmentType.Error ? att.error : undefined,
+                                    }).onConflict("id").merge());
+                                }
+                                await Promise.all(attachmentPromises);
+                            }
                         break;
                         case GPTMessageType.User:
                             await trx("gpt_user_messages").insert({
@@ -254,8 +273,8 @@ export class Conversation<M extends AnyModel = any> {
 
                             // write attachments for this message (if applicable)
                             if (msg.attachments.length > 0) {
-                                const attPromises = msg.attachments.map(att =>
-                                    trx("gpt_attachments").insert({
+                                for (const att of msg.attachments) {
+                                    attachmentPromises.push(trx("gpt_attachments").insert({
                                         id: att.id,
                                         filename: att.filename,
                                         expires_at: att.expiresAt.getTime(),
@@ -265,9 +284,9 @@ export class Conversation<M extends AnyModel = any> {
                                         url: att.url,
                                         content: att.type === GPTAttachmentType.Text ? att.content : undefined,
                                         error: att.type === GPTAttachmentType.Error ? att.error : undefined,
-                                    }).onConflict("id").merge()
-                                );
-                                await Promise.all(attPromises);
+                                    }).onConflict("id").merge())
+                                }
+                                await Promise.all(attachmentPromises);
                             }
                         break;
                         case GPTMessageType.System:
@@ -309,6 +328,8 @@ export class Conversation<M extends AnyModel = any> {
                         break;
                     }
                 }
+
+                await trx.commit();
             });
         } catch (error) {
             log.error(`error writing conversation ${this.id}:`);
@@ -340,8 +361,8 @@ export class Conversation<M extends AnyModel = any> {
 }
 
 export async function getConversation(id: string, noensure: true): Promise<Conversation | undefined>;
-export async function getConversation(id: string, noensure?: false): Promise<Conversation>;
-export async function getConversation(id: string, noensure?: boolean): Promise<Conversation | undefined> {
+export async function getConversation(id?: string, noensure?: false): Promise<Conversation>;
+export async function getConversation(id?: string, noensure?: boolean): Promise<Conversation | undefined> {
     const conversation = new Conversation(id);
     const dbmeta = await database("gpt_conversation_meta").select("*").where({ id }).first();
     if (noensure && !dbmeta) return undefined;
@@ -385,7 +406,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
                         referenceMessageId: msg.discord_reference_id!,
                         guildId: msg.discord_guild_id ?? undefined,
                     },
-                    beenDeleted: msg.been_deleted!,
+                    beenDeleted: Boolean(msg.been_deleted),
                     attachments: parseDBAttachments(assistantDBAttachments),
                     toolCallIds: JSON.parse(msg.tool_call_ids ?? "[]"),
                 }));
@@ -430,4 +451,18 @@ export async function getConversationFromMessageId(messageId: string): Promise<C
         return await getConversation(message.conversation_id, true);
     }
     return undefined;
+}
+
+export async function getUsersLatestConversation(userid: string, noensure: true): Promise<Conversation | undefined>;
+export async function getUsersLatestConversation(userid: string, noensure?: false): Promise<Conversation>;
+export async function getUsersLatestConversation(userid: string, noensure?: boolean) {
+    const message = await database("gpt_user_messages").where({ author_id: userid }).orderBy("created_at", "desc").first();
+    return await getConversation(message?.conversation_id ?? "", (noensure ?? false) as any); // idfk why typescript doesn't like this
+}
+
+export async function shouldForceNextNew(userid: string) {
+    const forceNewEntries = await database("gpt_force_next_new").select("*");
+    const should = forceNewEntries.includes({ user_id: userid });
+    if (should) await database("gpt_force_next_new").where({ user_id: userid }).delete();
+    return should;
 }
