@@ -6,6 +6,7 @@ import database from "../../lib/data_manager";
 import { getConversation, getUsersLatestConversation } from "../../lib/gpt/conversation";
 import { ActionRow, Button, ButtonStyle, TextDisplay } from "../../lib/classes/components";
 import { promptParameterTypings } from "../../lib/gpt/promptManager";
+import { ButtonInteraction, LabelBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 
 const subcommand = new Command(
     {
@@ -79,7 +80,7 @@ const subcommand = new Command(
                         components: [
                             ...Object.values(conversation.model.parameters).map((p, i) => {
                                 return new Button({
-                                    custom_id: `edit_model_${p.key}`,
+                                    custom_id: `editmodel_${p.key}`,
                                     label: p.key,
                                     style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
                                 });
@@ -100,7 +101,7 @@ const subcommand = new Command(
                         components: [
                             ...Object.values(promptParameterTypings).map((p, i) => {
                                 return new Button({
-                                    custom_id: `edit_prompt_${p.key}`,
+                                    custom_id: `editprompt_${p.key}`,
                                     label: p.key,
                                     style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
                                 });
@@ -112,13 +113,50 @@ const subcommand = new Command(
         }
 
         const collector = sent.createMessageComponentCollector({ filter: (c) => c.user.id === invoker.author.id, time: 15_000 });
-        collector.on("collect", async (interaction) => {
-            switch (interaction.custom_id) {
+        collector.on("collect", async (interaction: ButtonInteraction) => {
+            if (!interaction.isButton()) return;
+
+            switch (interaction.customId) {
                 case "configureModelParameters":
                     await refreshModelParameters();
                 case "configurePromptParameters":
                     await refreshPromptParameters();
             }
+
+            const editingType = interaction.customId.split("_")[0];
+            const key = interaction.customId.slice(`${editingType}_`.length)
+            let schema;
+            let currentValue;
+            switch (editingType) {
+                case "editmodel":
+                    schema = conversation.model.parameters[key];
+                    currentValue = conversation.getModelParameters()[key];
+                break;
+                case "editprompt":
+                    schema = promptParameterTypings[key as keyof typeof promptParameterTypings];
+                    currentValue = conversation.getPromptParameters()[key as keyof typeof promptParameterTypings];
+                break;
+            }
+
+            const data_input = new TextInputBuilder()
+                .setCustomId('data_input')
+                .setStyle(TextInputStyle.Paragraph)
+                .setPlaceholder('value goes here')
+                .setValue('12345')
+                .setRequired(true)
+                .setMinLength(10)
+                .setMaxLength(1000);
+
+            const label = new LabelBuilder()
+                .setLabel("value")
+                .setTextInputComponent(data_input);
+
+            const modal = new ModalBuilder()
+                .setCustomId(`${editingType}_modal_${key}`)
+                .setTitle(`editing ${key}`)
+                .addLabelComponents(label);
+
+            interaction.showModal(modal)
         });
     }
 );
