@@ -425,7 +425,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
 }
 
 export async function getConversationFromMessageId(messageId: string): Promise<Conversation | undefined> {
-    const message = await database("gpt_messages").where({ id: messageId }).first();
+    const message = await database("gpt_messages").where({ discord_message_id: messageId }).first();
     if (message) {
         return await getConversation(message.conversation_id, true);
     }

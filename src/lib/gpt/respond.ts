@@ -26,7 +26,7 @@ export async function respond(message: Message<true>) {
             conversation.addMessage(formattedReference);
         } else {
             // if it wasn't, see if we can use it to find the correct conversation
-            const resultingConversation = await getConversationFromMessageId(referencedMessage.id)
+            const resultingConversation = await getConversationFromMessageId(message.reference.messageId!)
             if (resultingConversation) conversation = resultingConversation;
         }
     }
