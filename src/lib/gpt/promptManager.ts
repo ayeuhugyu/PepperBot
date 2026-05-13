@@ -10,21 +10,35 @@ import * as log from "../log";
 import { Mutex } from "async-mutex";
 import database, { DBPrompt } from "../data_manager";
 
+const boolSchema = z.preprocess((val) => {
+    if (typeof val === "boolean") return val;
+
+    if (typeof val === "number") return val === 1;
+
+    if (typeof val === "string") {
+        const s = val.trim().toLowerCase();
+        if (["true", "1", "yes", "y", "on"].includes(s)) return true;
+        if (["false", "0", "no", "n", "off", ""].includes(s)) return false;
+    }
+
+    return val;
+}, z.boolean("value must be a boolean (true/false)"));
+
 export const promptParameterTypings = { // no need to remake this type just because this isn't a model, it'd be the exact same
     "processingType": {
         key: "processingType",
-        description: "changes how the \"processing...\" message behaves. `default` will cause it to do as normal, send a message containing \"processing...\" until it finishes. `typing` will cause the bot to show as typing in the channel until it finishes, without sending any message. `none` will disable the processing message entirely.",
-        schema: z.enum(["default", "typing", "none"]).default("default"),
+        description: "changes how the \"processing...\" message behaves. \n- `default` will cause it to do as normal, send a message containing \"processing...\" until it finishes. \n- `typing` will cause the bot to show as typing in the channel until it finishes, without sending any message. \n- `none` will disable the processing message entirely.",
+        schema: z.enum(["default", "typing", "none"], "value must be either `default`, `typing`, or `none`").default("default"),
     },
     "IOReplacements": {
         key: "IOReplacements",
         description: "whether or not to enable the input / output replacements. when true (default), user, channel, and role mentions will be replaced with their actual names instead of their id's. when false, they will be left untouched. note that the bot will still have mass pings (@everyone, @here, and all role mentions) replaced, assuming the server was not configured otherwise.",
-        schema: z.boolean().default(true),
+        schema: boolSchema.default(false),
     },
     "enableTemplating": {
         key: "enableTemplating",
         description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
-        schema: z.boolean().default(false),
+        schema: boolSchema.default(false),
     }
 }
 

@@ -6,7 +6,7 @@ import database from "../../lib/data_manager";
 import { getConversation, getUsersLatestConversation, writeOverrides } from "../../lib/gpt/conversation";
 import { ActionRow, Button, ButtonStyle, TextDisplay } from "../../lib/classes/components";
 import { promptParameterTypings } from "../../lib/gpt/promptManager";
-import { ButtonInteraction, LabelBuilder, Message, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ButtonInteraction, LabelBuilder, Message, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 
 const subcommand = new Command(
     {
@@ -44,26 +44,28 @@ const subcommand = new Command(
         if (!conversation) conversation = await getConversation();
 
         // model parameters
+        const baseContent = [
+            new TextDisplay({
+                content: "what parameters would you like to configure",
+            }),
+            new ActionRow({
+                components: [
+                    new Button({
+                        style: ButtonStyle.Primary,
+                        label: "model",
+                        custom_id: `configureModelParameters`,
+                    }),
+                    new Button({
+                        style: ButtonStyle.Secondary,
+                        label: "other",
+                        custom_id: `configurePromptParameters`,
+                    }),
+                ]
+            })
+        ];
+
         const sent = await action.reply(invoker, {
-            components: [
-                new TextDisplay({
-                    content: "what parameters would you like to configure",
-                }),
-                new ActionRow({
-                    components: [
-                        new Button({
-                            style: ButtonStyle.Primary,
-                            label: "model",
-                            custom_id: `configureModelParameters`,
-                        }),
-                        new Button({
-                            style: ButtonStyle.Secondary,
-                            label: "other",
-                            custom_id: `configurePromptParameters`,
-                        }),
-                    ]
-                })
-            ],
+            components: baseContent,
             components_v2: true
         });
 
@@ -85,7 +87,16 @@ const subcommand = new Command(
                                 });
                             })
                         ]
-                    })
+                    }),
+                    new ActionRow({
+                        components: [
+                            new Button({
+                                custom_id: `back_button`,
+                                label: "back",
+                                style: ButtonStyle.Danger,
+                            })
+                        ]
+                    }),
                 ],
                 components_v2: true
             });
@@ -107,21 +118,38 @@ const subcommand = new Command(
                                 });
                             })
                         ]
-                    })
+                    }),
+                    new ActionRow({
+                        components: [
+                            new Button({
+                                custom_id: `back_button`,
+                                label: "back",
+                                style: ButtonStyle.Danger,
+                            })
+                        ]
+                    }),
                 ],
                 components_v2: true,
             });
         }
 
-        const collector = sent.createMessageComponentCollector({ filter: (c) => c.user.id === invoker.author.id, time: 15_000 });
+        const collector = sent.createMessageComponentCollector({ filter: (c) => c.user.id === invoker.author.id, time: 15_000 * 60 });
         collector.on("collect", async (interaction: ButtonInteraction) => {
             if (!interaction.isButton()) return;
 
             switch (interaction.customId) {
                 case "configureModelParameters":
                     await refreshModelParameters();
+                    await interaction.deferUpdate();
+                    return;
                 case "configurePromptParameters":
                     await refreshPromptParameters();
+                    await interaction.deferUpdate();
+                    return;
+                case "back_button":
+                    await action.edit(sent, { components: baseContent, components_v2: true });
+                    await interaction.deferUpdate();
+                    return;
             }
 
             const editingType = interaction.customId.split("_")[0];
@@ -148,11 +176,9 @@ const subcommand = new Command(
             const data_input = new TextInputBuilder()
                 .setCustomId('data_input')
                 .setStyle(TextInputStyle.Paragraph)
-                .setPlaceholder(schema?.description ?? "_")
-                .setValue(currentValue)
+                .setPlaceholder("enter value")
+                .setValue(String(currentValue != undefined ? currentValue : ""))
                 .setRequired(true)
-                .setMinLength(10)
-                .setMaxLength(1000);
 
             const label = new LabelBuilder()
                 .setLabel("value")
@@ -161,18 +187,21 @@ const subcommand = new Command(
             const modal = new ModalBuilder()
                 .setCustomId(`${editingType}_modal_${key}`)
                 .setTitle(`editing ${key}`)
+                .addTextDisplayComponents(new TextDisplay({
+                    content: schema?.description ?? "[undefined]",
+                }))
                 .addLabelComponents(label);
 
             interaction.showModal(modal);
-            const response = await interaction.awaitModalSubmit({ time: 30 * 60 * 60 });
+            const response = await interaction.awaitModalSubmit({ time: 15 * 60 * 60 });
 
-            const parsed = schema?.schema.safeParse(response.fields.getTextInputValue("data_input"));
+            const parsed = schema?.schema.safeParse(response.fields.getTextInputValue("data_input"), {  });
             if (!parsed) {
                 await response.reply({ content: "something has gone very wrong...", ephemeral: true });
                 return;
             }
             if (parsed.error) {
-                await response.reply({ content: `error parsing value:\n${parsed.error}\nfix it and try again.`, ephemeral: true });
+                await response.reply({ content: `error parsing value:\n${parsed.error.message}\nfix it and try again.`, ephemeral: true });
                 return;
             }
 
@@ -183,7 +212,7 @@ const subcommand = new Command(
                 prompt_parameter_overrides: JSON.stringify(conversation.promptParameterOverrides),
             });
             await refreshFunction();
-            await interaction.reply({ content: `overrode value of ${key} to \`${JSON.stringify(parsed.data)}\`.`, ephemeral: true });
+            await response.reply({ content: `overrode value of ${key} to \`${JSON.stringify(parsed.data)}\`.`, flags: MessageFlags.Ephemeral });
         });
 
         collector.on("end", async () => {

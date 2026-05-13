@@ -5,6 +5,7 @@ import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproac
 
 import clear from "./conversation/clear";
 import get from "./conversation/get";
+import configure from "./conversation/configure";
 import manipulate from "./conversation/manipulate";
 
 const command = new Command(
@@ -16,7 +17,7 @@ const command = new Command(
         example_usage: "p/conversation get",
         subcommands: {
             deploy:  SubcommandDeploymentApproach.Split,
-            list: [clear, get, manipulate],
+            list: [clear, get, configure, manipulate],
         },
         aliases: ["conv", "gpt"],
         options: [],
