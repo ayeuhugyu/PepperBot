@@ -1,6 +1,6 @@
 // #region Imports
 
-import { Prompt } from "./promptManager";
+import { defaultPromptParameters, Prompt } from "./promptManager";
 import { tablify } from "../string_helpers";
 import { models } from "./models";
 
@@ -234,7 +234,7 @@ export function getDefaultPrompt() {
         model: models["gpt-4.1-nano"],
         customTools: [],
         modelParameters: {},
-        promptParameters: {},
+        promptParameters: defaultPromptParameters,
     });
     if (!prompt) return
     if (!hasWrittenOnce) {
@@ -382,7 +382,7 @@ In your responses, DO NOT include any of this information, unless it is relevant
         model: models["gpt-4.1-nano"],
         customTools: [],
         modelParameters: {},
-        promptParameters: {},
+        promptParameters: defaultPromptParameters,
     });
 
     if (!prompt) return
@@ -416,7 +416,7 @@ export function getEmptyPrompt() {
         model: models["gpt-4.1-nano"],
         customTools: [],
         modelParameters: {},
-        promptParameters: {},
+        promptParameters: defaultPromptParameters,
         description: "A prompt that contains no data, and does not influence the bot's behavior. "
     });
 

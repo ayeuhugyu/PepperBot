@@ -12,6 +12,15 @@ exports.up = async function(knex) {
         table.string("model").notNullable().defaultTo("gpt-4.1-nano");
     });
 
+    if (!(await knex.schema.hasTable("gpt_starting_data_overrides"))) await knex.schema.createTable("gpt_starting_data_overrides", (table) => {
+        table.string("user_id").notNullable().primary();
+        table.string("prompt_author_id").references("prompts.author_id");
+        table.string("prompt_name").references("prompts.name");
+        table.json("prompt_parameter_overrides").defaultTo("{}");
+        table.json("model_parameter_overrides").defaultTo("{}");
+        table.string("model").defaultTo("gpt-4.1-nano");
+    });
+
     if (!(await knex.schema.hasTable("gpt_users"))) await knex.schema.createTable("gpt_users", (table) => {
         table.string("conversation_id").references("gpt_conversation_meta.id").notNullable();
         table.string("id").notNullable();
@@ -82,7 +91,7 @@ exports.up = async function(knex) {
     await knex.raw(`CREATE VIEW gpt_messages AS
 -- user messages
 SELECT
-    id, conversation_id, type, created_at, content,
+    id, conversation_id, type, created_at, content, NULL AS tool_call_ids,
     NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response, NULL AS answered,
     discord_message_id, discord_channel_id, discord_guild_id, author_id, been_deleted
 FROM gpt_user_messages
@@ -91,7 +100,7 @@ UNION ALL
 
 -- assistant messages
 SELECT
-    id, conversation_id, type, created_at, content,
+    id, conversation_id, type, created_at, content, tool_call_ids,
     NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response, NULL AS answered,
     discord_message_id, discord_channel_id, discord_guild_id, NULL AS author_id, been_deleted
 FROM gpt_assistant_messages
@@ -100,8 +109,8 @@ UNION ALL
 
 -- tool call messages
 SELECT
-    id, conversation_id, type, created_at,
-    'Tool Call: ' || tool_name AS content,
+    id, conversation_id, type, created_at, NULL AS tool_call_ids,
+    'tc: ' || tool_name AS content,
     tool_call_id, tool_name, arguments, NULL AS response, answered,
     NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id, NULL AS author_id, 0 AS been_deleted
     FROM gpt_tool_call_messages
@@ -110,8 +119,8 @@ UNION ALL
 
 -- tool response messages
 SELECT
-    id, conversation_id, type, created_at,
-    'Tool Response: ' || tool_name AS content,
+    id, conversation_id, type, created_at, NULL AS tool_call_ids,
+    'tr: ' || tool_name AS content,
     tool_call_id, tool_name, NULL AS arguments, response, NULL AS answered,
     NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id, NULL AS author_id, 0 AS been_deleted
 FROM gpt_tool_response_messages
@@ -120,7 +129,7 @@ UNION ALL
 
 -- system messages
 SELECT
-id, conversation_id, type, created_at, content,
+id, conversation_id, type, created_at, content, NULL AS tool_call_ids,
 NULL AS tool_call_id, NULL AS tool_name, NULL AS arguments, NULL AS response, NULL AS answered,
 NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id, NULL AS author_id, 0 AS been_deleted
 FROM gpt_system_messages`);
@@ -151,5 +160,6 @@ exports.down = async function(knex) {
     await knex.schema.dropTableIfExists("gpt_assistant_messages");
     await knex.schema.dropTableIfExists("gpt_user_messages");
     await knex.schema.dropTableIfExists("gpt_users");
+    await knex.schema.dropTableIfExists("gpt_starting_data_overrides");
     return await knex.schema.dropTableIfExists("gpt_conversation_meta");
 };

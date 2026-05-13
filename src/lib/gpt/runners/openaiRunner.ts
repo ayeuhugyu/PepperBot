@@ -7,6 +7,7 @@ import { AnyTool, CustomTool, CustomToolParameter, Tool, ToolParameter } from ".
 import { ModelName } from "../models";
 import { replaceContentIn, replaceContentOut } from "../contentReplace";
 import { applyPromptTemplating } from "../promptTemplating";
+import { inspect } from "util";
 
 export const openaiDefault = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -212,12 +213,13 @@ async function formatMessages(conversation: Conversation): Promise<ChatCompletio
         content: systemPrompt,
     }];
 
-    await Promise.all(conversation.messages.map(async (msg) => {
+
+    for (const msg of conversation.messages) {
         const formatted = await formatMessage(msg, conversation);
         if (formatted) {
             openaiMessages.push(...formatted);
         }
-    }));
+    }
     return openaiMessages;
 }
 
@@ -236,11 +238,6 @@ export async function runOpenAI(conversation: Conversation, openai: OpenAI = ope
 
 
     const params = conversation.getModelParameters();
-
-    log.debug(`openai formatted data:`);
-    log.debug(apiConversation);
-    log.debug(tools);
-    log.debug(params);
 
     const response = await openai.chat.completions.create({
         model: model,

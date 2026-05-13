@@ -317,6 +317,7 @@ declare module "knex/types/tables" {
         maintenance_mode: MaintenanceEntry;
 
         gpt_conversation_meta: DBGPTConversationMeta;
+        gpt_starting_data_overrides: Partial<Omit<DBGPTConversationMeta, "id"> & { user_id: string }>;
         gpt_users: DBGPTUser;
 
         gpt_messages: DBGPTMessage;

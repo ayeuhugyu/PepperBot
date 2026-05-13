@@ -1,11 +1,11 @@
-import { Client, Collection, Guild, User } from "discord.js";
+import { Client, Collection, Guild, Message, User } from "discord.js";
 import { AnyModel, InferModelParameters, Model, ModelParameter } from "./modelTypes"
 import { AnyPrompt, Prompt, promptParameterTypings } from "./promptManager"
 import { getDefaultPrompt } from "./officialPrompts";
 import { ModelName, models } from "./models";
 import * as log from "../log";
 import { randomId } from "../id";
-import { AnyGPTAttachment, AnyGPTMessage, AudioGPTAttachment, ErrorGPTAttachment, GPTAssistantMessage, GPTAttachment, GPTAttachmentType, GPTMessageType, GPTMessageTypeMap, GPTSystemMessage, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage, ImageGPTAttachment, initGPTFetchClient, TextGPTAttachment, TypeofAnyGPTAttachment, VideoGPTAttachment } from "./messageTypes";
+import { AnyGPTAttachment, AnyGPTMessage, GPTAssistantMessage, GPTAttachment, GPTAttachmentType, GPTMessageType, GPTMessageTypeMap, GPTSystemMessage, GPTToolCall, GPTToolResponse, GPTUser, GPTUserMessage, initGPTFetchClient } from "./messageTypes";
 import { Mutex } from "async-mutex";
 import { modelRunnerIndex } from "./modelRunners";
 import { ToolName, tools } from "./tools";
@@ -15,7 +15,7 @@ import TypedEventEmitter from "typed-emitter";
 import { initReplacerClient } from "./contentReplace";
 import { initTemplatingClient } from "./promptTemplating";
 import database from "../data_manager";
-import { DBGPTAttachment } from "knex/types/tables";
+import { parseDBAttachments } from "./parseDbAttachments";
 
 let client: Client | undefined = undefined;
 export function initGPTClients(newClient: Client) {
@@ -71,7 +71,6 @@ export class Conversation<M extends AnyModel = any> {
         conv.prompt = prompt;
         conv.model = prompt.model;
         // no need to update the prompt's model parameters, they'll be filtered later on their own.
-        log.info(`set prompt on conversation ${this.id}`);
         log.debug(`set prompt on conversation ${this.id} to ${prompt.author.id}/${prompt.name}; full data:`)
         log.debug(conv);
         return conv;
@@ -116,6 +115,7 @@ export class Conversation<M extends AnyModel = any> {
         // acquire running mutex
         const release = await this.isRunningMutex.acquire();
         try {
+            this.sortMessages();
             let response = await modelRunnerIndex[this.model.name as ModelName](this);
             this.addMessage(...response);
             let unansweredToolCalls = this.getUnansweredToolCalls();
@@ -165,7 +165,10 @@ export class Conversation<M extends AnyModel = any> {
             return response.filter(m => m.type === GPTMessageType.Assistant)[0];
         } catch (err) {
             log.error(`error while running gpt conversation ${this.id}:`);
-            log.error(err);
+            log.error((err as unknown as Error)?.message?.replaceAll(/(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm, "[URL REDACTED]") ?? "unknown error, full error found on debug loglevel");
+            // shoutout regex from https://regex101.com/r/3fYy3x/1
+            log.debug(`error while running gpt conversation ${this.id}:`);
+            log.debug(err);
         } finally {
             release();
         }
@@ -318,45 +321,22 @@ export class Conversation<M extends AnyModel = any> {
     constructor(id?: string) {
         if (id) this.id = id;
     }
-}
 
-function parseDBAttachments(dbattachments: DBGPTAttachment[]) {
-    return dbattachments.map((att) => {
-        let usedClass: TypeofAnyGPTAttachment;
-        let extraData: any = {};
-        switch (att.type) {
-            case "unknown":
-                return undefined;
-            case "error":
-                usedClass = ErrorGPTAttachment
-                extraData = { error: att.error };
-            break;
-            case "text":
-                usedClass = TextGPTAttachment;
-                extraData = { content: att.content };
-            break;
-            case "audio":
-                usedClass = AudioGPTAttachment;
-            break;
-            case "image":
-                usedClass = ImageGPTAttachment;
-            break;
-            case "video":
-                usedClass = VideoGPTAttachment;
-            break;
-            default:
-                return undefined;
+    async useOverrideData(userid: string) {
+        const userPromptDefault = await database("prompt_defaults").where({ user_id: userid }).first();
+        if (userPromptDefault) {
+            this.prompt = ((await Prompt.fromName(userPromptDefault.author_id ?? "PepperBot", userPromptDefault.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>;
         }
-
-        return new usedClass({
-            ...extraData,
-            expiresAt: new Date(att.expires_at),
-            filename: att.filename,
-            id: att.id,
-            url: att.url,
-            size: att.size
-        })
-    }).filter((a) => a != undefined)
+        const data = await database("gpt_starting_data_overrides").where({ user_id: userid }).first();
+        if (data) {
+            if (data.prompt_author_id && data.prompt_name) this.prompt = ((await Prompt.fromName(data?.prompt_author_id ?? "PepperBot", data?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>;
+            if (data.model) this.model = ((data?.model ?? "") in models ? models[data?.model as keyof typeof models] : models["gpt-4.1-nano"]) as M;
+            if (data.prompt_parameter_overrides) this.promptParameterOverrides = JSON.parse(data?.prompt_parameter_overrides ?? "{}");
+            if (data.model_parameter_overrides) this.modelParameterOverrides = JSON.parse(data?.model_parameter_overrides ?? "{}");
+            // now that this conversation has used these overrides, drop them
+            await database("gpt_starting_data_overrides").where({ user_id: userid }).delete();
+        }
+    }
 }
 
 export async function getConversation(id: string, noensure: true): Promise<Conversation | undefined>;
@@ -378,7 +358,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
         switch (msg.type) {
             case "user":
                 const dbattachments = await database("gpt_attachments").where({ message_id: msg.id });
-                conversation.addMessage(new GPTUserMessage({
+                conversation.messages.push(new GPTUserMessage({
                     createdAt: new Date(msg.created_at),
                     id: msg.id,
                     content: msg.content!,
@@ -395,7 +375,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
             break;
             case "assistant":
                 const assistantDBAttachments = await database("gpt_attachments").where({ message_id: msg.id });
-                conversation.addMessage(new GPTAssistantMessage({
+                conversation.messages.push(new GPTAssistantMessage({
                     createdAt: new Date(msg.created_at),
                     id: msg.id,
                     content: msg.content!,
@@ -411,7 +391,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
                 }));
             break;
             case "tool_call":
-                conversation.addMessage(new GPTToolCall({
+                conversation.messages.push(new GPTToolCall({
                     createdAt: new Date(msg.created_at),
                     id: msg.id,
                     arguments: JSON.parse(msg.arguments ?? "{}"),
@@ -421,7 +401,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
                 }));
             break;
             case "tool_response":
-                conversation.addMessage(new GPTToolResponse({
+                conversation.messages.push(new GPTToolResponse({
                     createdAt: new Date(msg.created_at),
                     id: msg.id,
                     toolCallId: msg.tool_call_id!,
@@ -430,7 +410,7 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
                 }));
             break;
             case "system":
-                conversation.addMessage(new GPTSystemMessage({
+                conversation.messages.push(new GPTSystemMessage({
                     createdAt: new Date(msg.created_at),
                     id: msg.id,
                     content: msg.content ?? "",
@@ -442,4 +422,12 @@ export async function getConversation(id: string, noensure?: boolean): Promise<C
     conversation.sortMessages();
 
     return conversation;
+}
+
+export async function getConversationFromMessageId(messageId: string): Promise<Conversation | undefined> {
+    const message = await database("gpt_messages").where({ id: messageId }).first();
+    if (message) {
+        return await getConversation(message.conversation_id, true);
+    }
+    return undefined;
 }

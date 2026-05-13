@@ -5,11 +5,12 @@ import { type ToolName } from "./tools";
 import { ToolErrorResponse, ToolSuccessResponse, type ToolResponse } from "./toolTypes";
 import * as log from "../log";
 import { Conversation } from "./conversation";
-import { MIMEType } from "node:util";
 import { lookup } from "mime-types";
 import { existsSync } from "fs-extra";
 import { readFileSync, writeFileSync } from "node:fs";
 import prettyBytes from "pretty-bytes";
+import database from "../data_manager";
+import { parseDBAttachments } from "./parseDbAttachments";
 
 let client: Client | null = null;
 export function initGPTFetchClient(newClient: Client) {
@@ -33,7 +34,7 @@ export interface GPTBaseMessage {
 export interface GPTUser {
     id: string;
     username: string;
-    avatar: string;
+    avatar?: string;
 }
 
 interface GPTDiscordData {
@@ -216,7 +217,25 @@ export class GPTUserMessage implements GPTBaseMessage {
         this.discordData = data.discordData;
     }
 
-    static async fromMessage(message: Message): Promise<GPTUserMessage> {
+    static async fromMessage(message: Message): Promise<GPTUserMessage | GPTAssistantMessage> {
+        if (message.author.id === client?.user?.id) {
+            const msg = (await database("gpt_messages").where({ id: message.id }).first())!;
+            const assistantDBAttachments = await database("gpt_attachments").where({ message_id: message.id });
+            return new GPTAssistantMessage({
+                createdAt: new Date(msg.created_at),
+                id: msg.id,
+                content: msg.content!,
+                discordData: {
+                    messageId: msg.discord_message_id!,
+                    channelId: msg.discord_channel_id!,
+                    referenceMessageId: msg.discord_reference_id!,
+                    guildId: msg.discord_guild_id ?? undefined,
+                },
+                beenDeleted: msg.been_deleted!,
+                attachments: parseDBAttachments(assistantDBAttachments),
+                toolCallIds: JSON.parse(msg.tool_call_ids ?? "[]"),
+            });
+        }
         return new GPTUserMessage({
             createdAt: message.createdAt,
             author: {

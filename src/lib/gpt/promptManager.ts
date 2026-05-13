@@ -10,7 +10,7 @@ import * as log from "../log";
 import { Mutex } from "async-mutex";
 import database, { DBPrompt } from "../data_manager";
 
-export const promptParameterTypings: Record<string, ModelParameter> = { // no need to remake this type just because this isn't a model, it'd be the exact same
+export const promptParameterTypings = { // no need to remake this type just because this isn't a model, it'd be the exact same
     "processingType": {
         key: "processingType",
         description: "changes how the \"processing...\" message behaves. `default` will cause it to do as normal, send a message containing \"processing...\" until it finishes. `typing` will cause the bot to show as typing in the channel until it finishes, without sending any message. `none` will disable the processing message entirely.",
@@ -26,6 +26,12 @@ export const promptParameterTypings: Record<string, ModelParameter> = { // no ne
         description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
         schema: z.boolean().default(false),
     }
+}
+
+export const defaultPromptParameters: InferModelParameters<typeof promptParameterTypings> = {
+    processingType: "default",
+    IOReplacements: true,
+    enableTemplating: false,
 }
 
 type PromptInput = OmitMethods<Prompt<AnyModel, boolean, (string | undefined)>>
@@ -92,7 +98,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     customTools: CustomTool[] = [];
 
     modelParameters: Partial<InferModelParameters<M['parameters']>> = {};
-    promptParameters: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
+    promptParameters: Partial<InferModelParameters<typeof promptParameterTypings>> = defaultPromptParameters;
 
     constructor(data: PromptInput) {
         this.name = data.name;
@@ -164,7 +170,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             customTools: safeJSONParse(data.custom_tools, []),
 
             modelParameters: safeJSONParse(data.model_parameters, {}),
-            promptParameters: safeJSONParse(data.prompt_parameters, {})
+            promptParameters: safeJSONParse(data.prompt_parameters, defaultPromptParameters)
         }
 
         return new Prompt(inputData) as AnyPrompt;
@@ -195,7 +201,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             customTools: [],
 
             modelParameters: {},
-            promptParameters: {},
+            promptParameters: defaultPromptParameters,
         });
     }
 
