@@ -5,7 +5,7 @@ import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproac
 
 import clear from "./conversation/clear";
 import get from "./conversation/get";
-
+import manipulate from "./conversation/manipulate";
 
 const command = new Command(
     {
@@ -16,11 +16,11 @@ const command = new Command(
         example_usage: "p/conversation get",
         subcommands: {
             deploy:  SubcommandDeploymentApproach.Split,
-            list: [clear, get],
+            list: [clear, get, manipulate],
         },
         aliases: ["conv", "gpt"],
         options: [],
-        pipable_to: []
+        pipable_to: [],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringFirstSpace, ["subcommand"]),
     async function execute ({ invoker, args, guild_config }) {
