@@ -84,7 +84,7 @@ function log(level: Level, ...message: unknown[]) {
     const stdoutString = `${prefix}${formatted.split("\n").join("\n" + prefix)}\n`;
     const fileString = `${cleanPrefix}${formatted.split("\n").join("\n" + cleanPrefix)}\n`;
 
-    if (!nonGlobalLevels.includes(level) || (stringToBool(process.env.IS_DEV || "") && !neverGlobalLevels.includes(level))) process.stdout.write(stdoutString);
+    if (!nonGlobalLevels.includes(level) || (/*stringToBool(process.env.IS_DEV || "")*/ process.argv.includes("--logdebug") && !neverGlobalLevels.includes(level))) process.stdout.write(stdoutString);
     GlobalEvents.emit("log", fileString, level);
     // TODO: catch these?
     fs.appendFile(`./logs/${Level[level].toLowerCase()}.log`, fileString)
