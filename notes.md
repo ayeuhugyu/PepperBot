@@ -28,9 +28,10 @@ mostly removed these because supporting ollama models is kindof annoying, and i'
 model parameters and tool call parameters now use zod schemas to define their types instead of weird json data. basically they'll have better type checking n stuff now
 prompts can no longer be marked as nsfw, i don't wish to encourage their creation and having it as an option kindof did that.
 you can now have default prompts which are not your own
-
 added prompt parameters:
-- `IOReplacements`: 
+- `IOReplacements`: allows you to toggle on and off the input/output replacements. if you don't know what these are, tldr messages get edited when sent to the AI so that @'s (ex. `<@12345678912345678901>`) get transformed into something more useful than just the ID. (ex. `<@ayeuhugyu>`). this happens to users, channels, roles, etc.
+- `enableTemplating`: whether or not to enable prompt templating. this is a new system that will replace some of the prompt's content with generated content, sometimes static sometimes dynamic. some of it is just like a shorthand, ex. `${slangTable}` is static and just outputs my slang table. others are dynamic, ex. `${guildemojis}` which outputs a list of all guild-based emojis available.
+- `processingType`: allows you to swap between various "processing..." types. there's the `default`, where it just sends a message containing "processing..." and edits it with updates and stuff. there's `typing`, where it just starts typing in the channel, and finally there's `none`, which makes it do nothing as expected.
 
 ## tool changes
 request_url has been greatly improved:
