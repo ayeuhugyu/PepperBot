@@ -2,7 +2,6 @@ import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse 
 import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../../lib/classes/command_enums";
-import database from "../../lib/data_manager";
 import { Conversation, getConversation, getUsersLatestConversation, writeOverrides } from "../../lib/gpt/conversation";
 import { ActionRow, Button, ButtonStyle, TextDisplay } from "../../lib/classes/components";
 import { promptParameterTypings } from "../../lib/gpt/promptManager";

@@ -294,3 +294,9 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 }
 
 export type AnyPrompt = Prompt<AnyModel, boolean, (string | undefined)>;
+
+export async function listPrompts(user: string, onlyPublished: boolean = false) {
+    const query = database("prompts").select("name").where({ author_id: user }).orWhere({ author_username: user });
+    if (onlyPublished) query.andWhere({ published: true });
+    return await query;
+}
