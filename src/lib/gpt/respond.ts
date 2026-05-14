@@ -23,16 +23,19 @@ export async function respond(message: Message<true>, forceTypingType?: "default
     // before we push this message, check for referenced messages.
     if (message.reference) {
         const referencedMessage = await message.channel.messages.fetch(message.reference.messageId!);
-        if (directMention) {
-            // if it was a direct mention, add the reference as context
+        const referencedConversation = await getConversationFromMessageId(message.reference.messageId!);
+        if (!directMention) {
+            // if it wasn't a direct mention, use the referenced conversation
+            log.debug(`found conversation ${referencedConversation?.id} based on reference id ${message.reference.messageId}`);
+            if (referencedConversation) conversation = referencedConversation;
+        }
+
+        // if there was no referenced conversation OR it WAS a direct mention, add the referenced message to the conversation
+        if (!referencedConversation || directMention) {
             log.debug(`adding referenced message to conversation`);
             const formattedReference = await GPTUserMessage.fromMessage(referencedMessage);
             conversation.addMessage(formattedReference);
-        } else {
-            // if it wasn't, see if we can use it to find the correct conversation
-            const resultingConversation = await getConversationFromMessageId(message.reference.messageId!)
-            log.debug(`found conversation ${resultingConversation?.id} based on reference id ${message.reference.messageId}`);
-            if (resultingConversation) conversation = resultingConversation;
+            conversation.sortMessages();
         }
     }
 

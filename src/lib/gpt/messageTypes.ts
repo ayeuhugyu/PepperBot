@@ -197,6 +197,20 @@ export type TypeofAnyGPTAttachment =
     typeof AudioGPTAttachment |
     typeof VideoGPTAttachment;
 
+
+async function extractAttachments(message: Message<boolean>): Promise<AnyGPTAttachment[]> {
+    return await Promise.all(message.attachments.map(async (att) => {
+        const data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> = {
+            filename: att.name,
+            size: att.size,
+            url: att.url,
+            expiresAt: new Date(Date.now() + (att.duration ?? (12 * 60 * 60) * 1000)) // 12 hours default
+        };
+
+        return await GPTAttachment.new(data);
+    }));
+}
+
 export class GPTUserMessage implements GPTBaseMessage {
     readonly type = GPTMessageType.User;
     id: string = randomId("gpt-user-message");
@@ -219,21 +233,21 @@ export class GPTUserMessage implements GPTBaseMessage {
 
     static async fromMessage(message: Message): Promise<GPTUserMessage | GPTAssistantMessage> {
         if (message.author.id === client?.user?.id) {
-            const msg = (await database("gpt_messages").where({ id: message.id }).first())!;
+            const msg = (await database("gpt_messages").where({ id: message.id }).first());
             const assistantDBAttachments = await database("gpt_attachments").where({ message_id: message.id });
             return new GPTAssistantMessage({
-                createdAt: new Date(msg.created_at),
-                id: msg.id,
-                content: msg.content!,
+                createdAt: new Date(msg?.created_at ?? message.createdTimestamp),
+                id: msg?.id,
+                content: msg?.content ?? message.content,
                 discordData: {
-                    messageId: msg.discord_message_id!,
-                    channelId: msg.discord_channel_id!,
-                    referenceMessageId: msg.discord_reference_id!,
-                    guildId: msg.discord_guild_id ?? undefined,
+                    messageId: msg?.discord_message_id ?? message.content,
+                    channelId: msg?.discord_channel_id ?? message.channelId,
+                    referenceMessageId: msg?.discord_reference_id ?? message.reference?.messageId,
+                    guildId: msg?.discord_guild_id ?? message.guildId ?? undefined,
                 },
-                beenDeleted: msg.been_deleted!,
-                attachments: parseDBAttachments(assistantDBAttachments),
-                toolCallIds: JSON.parse(msg.tool_call_ids ?? "[]"),
+                beenDeleted: msg?.been_deleted ?? false,
+                attachments: assistantDBAttachments.length > 0 ? parseDBAttachments(assistantDBAttachments) : await extractAttachments(message),
+                toolCallIds: JSON.parse(msg?.tool_call_ids ?? "[]"),
             });
         }
         return new GPTUserMessage({
@@ -243,16 +257,7 @@ export class GPTUserMessage implements GPTBaseMessage {
                 username: message.author.username,
                 avatar: message.author.displayAvatarURL()
             },
-            attachments: await Promise.all(message.attachments.map(async (att) => {
-                const data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> = {
-                    filename: att.name,
-                    size: att.size,
-                    url: att.url,
-                    expiresAt: new Date(Date.now() + (att.duration ?? (12 * 60 * 60) * 1000)) // 12 hours default
-                }
-
-                return await GPTAttachment.new(data);
-            })),
+            attachments: await extractAttachments(message),
             content: message.content,
             beenDeleted: false,
             discordData: {
