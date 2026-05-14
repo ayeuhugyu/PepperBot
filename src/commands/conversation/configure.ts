@@ -3,10 +3,11 @@ import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../../lib/classes/command_enums";
 import database from "../../lib/data_manager";
-import { getConversation, getUsersLatestConversation, writeOverrides } from "../../lib/gpt/conversation";
+import { Conversation, getConversation, getUsersLatestConversation, writeOverrides } from "../../lib/gpt/conversation";
 import { ActionRow, Button, ButtonStyle, TextDisplay } from "../../lib/classes/components";
 import { promptParameterTypings } from "../../lib/gpt/promptManager";
-import { ButtonInteraction, LabelBuilder, Message, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ButtonInteraction, InteractionResponse, LabelBuilder, Message, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { AnyModel } from "../../lib/gpt/modelTypes";
 
 const subcommand = new Command(
     {
@@ -71,67 +72,8 @@ const subcommand = new Command(
 
         if (!sent) return;
 
-        const refreshModelParameters = async () => {
-            await action.edit(sent, {
-                components: [
-                    new TextDisplay({
-                        content: `which model parameter would you like to configure?\ncurrent values:\n\`\`\`json\n${JSON.stringify(conversation.getModelParameters(), null, 4)}\n\`\`\``,
-                    }),
-                    new ActionRow({
-                        components: [
-                            ...Object.values(conversation.model.parameters).map((p, i) => {
-                                return new Button({
-                                    custom_id: `editmodel_${p.key}`,
-                                    label: p.key,
-                                    style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
-                                });
-                            })
-                        ]
-                    }),
-                    new ActionRow({
-                        components: [
-                            new Button({
-                                custom_id: `back_button`,
-                                label: "back",
-                                style: ButtonStyle.Danger,
-                            })
-                        ]
-                    }),
-                ],
-                components_v2: true
-            });
-        }
-
-        const refreshPromptParameters = async () => {
-            await action.edit(sent, {
-                components: [
-                    new TextDisplay({
-                        content: `which prompt parameter would you like to configure?\ncurrent values:\n\`\`\`json\n${JSON.stringify(conversation.getPromptParameters(), null, 4)}\n\`\`\``,
-                    }),
-                    new ActionRow({
-                        components: [
-                            ...Object.values(promptParameterTypings).map((p, i) => {
-                                return new Button({
-                                    custom_id: `editprompt_${p.key}`,
-                                    label: p.key,
-                                    style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
-                                });
-                            })
-                        ]
-                    }),
-                    new ActionRow({
-                        components: [
-                            new Button({
-                                custom_id: `back_button`,
-                                label: "back",
-                                style: ButtonStyle.Danger,
-                            })
-                        ]
-                    }),
-                ],
-                components_v2: true,
-            });
-        }
+        const refreshModelParameters = makeModelRefresher(sent, conversation)
+        const refreshPromptParameters = makePromptRefresher(sent, conversation)
 
         const collector = sent.createMessageComponentCollector({ filter: (c) => c.user.id === invoker.author.id, time: 15_000 * 60 });
         collector.on("collect", async (interaction: ButtonInteraction) => {
@@ -222,3 +164,69 @@ const subcommand = new Command(
 );
 
 export default subcommand;
+
+function makePromptRefresher(sent: Message<true> | InteractionResponse<boolean>, conversation: Conversation<AnyModel>) {
+    return async () => {
+        await action.edit(sent, {
+            components: [
+                new TextDisplay({
+                    content: `which prompt parameter would you like to configure?\ncurrent values:\n\`\`\`json\n${JSON.stringify(conversation.getPromptParameters(), null, 4)}\n\`\`\``,
+                }),
+                new ActionRow({
+                    components: [
+                        ...Object.values(promptParameterTypings).map((p, i) => {
+                            return new Button({
+                                custom_id: `editprompt_${p.key}`,
+                                label: p.key,
+                                style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
+                            });
+                        })
+                    ]
+                }),
+                new ActionRow({
+                    components: [
+                        new Button({
+                            custom_id: `back_button`,
+                            label: "back",
+                            style: ButtonStyle.Danger,
+                        })
+                    ]
+                }),
+            ],
+            components_v2: true,
+        });
+    };
+}
+
+function makeModelRefresher(sent: Message<true> | InteractionResponse<boolean>, conversation: Conversation<AnyModel>) {
+    return async () => {
+        await action.edit(sent, {
+            components: [
+                new TextDisplay({
+                    content: `which model parameter would you like to configure?\ncurrent values:\n\`\`\`json\n${JSON.stringify(conversation.getModelParameters(), null, 4)}\n\`\`\``,
+                }),
+                new ActionRow({
+                    components: [
+                        ...Object.values(conversation.model.parameters).map((p, i) => {
+                            return new Button({
+                                custom_id: `editmodel_${p.key}`,
+                                label: p.key,
+                                style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
+                            });
+                        })
+                    ]
+                }),
+                new ActionRow({
+                    components: [
+                        new Button({
+                            custom_id: `back_button`,
+                            label: "back",
+                            style: ButtonStyle.Danger,
+                        })
+                    ]
+                }),
+            ],
+            components_v2: true
+        });
+    };
+}
