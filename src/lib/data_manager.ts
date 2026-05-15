@@ -211,6 +211,10 @@ export interface DBPrompt {
     prompt_parameters: string;
 }
 declare module "knex/types/tables" {
+    interface DBPromptEditingMetadata {
+        user: string;
+        editingPrompt: string;
+    }
     interface SoundEntry {
         guild: string | null;
         user: string | null;
@@ -310,6 +314,8 @@ declare module "knex/types/tables" {
     interface Tables {
         prompts: DBPrompt;
         prompt_defaults: PromptDefaultEntry;
+        prompt_editing_metadata: DBPromptEditingMetadata;
+
         sounds: SoundEntry;
         configs: ConfigEntry;
         scheduled: ScheduledEventEntry;

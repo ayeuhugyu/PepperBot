@@ -300,3 +300,11 @@ export async function listPrompts(user: string, onlyPublished: boolean = false) 
     if (onlyPublished) query.andWhere({ published: true });
     return await query;
 }
+
+export async function setEditingPrompt(user: string, promptname: string) {
+    return await database("prompt_editing_metadata").insert({ user, editingPrompt: promptname }).onConflict("user").merge();
+}
+
+export async function countUnnamedPrompts(user: string) {
+    return Number(((await database("prompts").where({ author_id: user }).orWhere({ author_username: user }).andWhereLike("name", "unnamed").count().first()) ?? undefined)?.[0]) || 0;
+}

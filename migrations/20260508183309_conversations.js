@@ -5,20 +5,28 @@
 exports.up = async function(knex) {
     if (!(await knex.schema.hasTable("gpt_conversation_meta"))) await knex.schema.createTable("gpt_conversation_meta", (table) => {
         table.string("id").index().notNullable().primary();
-        table.string("prompt_author_id").notNullable().references("prompts.author_id");
-        table.string("prompt_name").notNullable().references("prompts.name");
+        table.string("prompt_author_id").notNullable();
+        table.string("prompt_name").notNullable();
         table.json("prompt_parameter_overrides").notNullable().defaultTo("{}");
         table.json("model_parameter_overrides").notNullable().defaultTo("{}");
         table.string("model").notNullable().defaultTo("gpt-4.1-nano");
+
+        table.foreign(["prompt_author_id", "prompt_name"])
+            .references(["author_id", "name"])
+            .inTable("prompts");
     });
 
     if (!(await knex.schema.hasTable("gpt_starting_data_overrides"))) await knex.schema.createTable("gpt_starting_data_overrides", (table) => {
         table.string("user_id").notNullable().primary();
-        table.string("prompt_author_id").references("prompts.author_id");
-        table.string("prompt_name").references("prompts.name");
+        table.string("prompt_author_id");
+        table.string("prompt_name");
         table.json("prompt_parameter_overrides").defaultTo("{}");
         table.json("model_parameter_overrides").defaultTo("{}");
         table.string("model").defaultTo("gpt-4.1-nano");
+
+        table.foreign(["prompt_author_id", "prompt_name"])
+            .references(["author_id", "name"])
+            .inTable("prompts");
     });
 
     if (!(await knex.schema.hasTable("gpt_force_next_new"))) await knex.schema.createTable("gpt_force_next_new", (table) => {
@@ -26,7 +34,7 @@ exports.up = async function(knex) {
     });
 
     if (!(await knex.schema.hasTable("gpt_users"))) await knex.schema.createTable("gpt_users", (table) => {
-        table.string("conversation_id").references("gpt_conversation_meta.id").notNullable();
+        table.string("conversation_id").notNullable().references("gpt_conversation_meta.id").onDelete("CASCADE");
         table.string("id").notNullable();
         table.string("username").notNullable();
         table.string("avatar");
@@ -35,7 +43,7 @@ exports.up = async function(knex) {
     })
 
     if (!(await knex.schema.hasTable("gpt_user_messages"))) await knex.schema.createTable("gpt_user_messages", (table) => {
-        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
+        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id").onDelete("CASCADE");
         table.enu("type", ["user"]).notNullable().index();
         table.string("id").notNullable().primary();
         table.string("author_id").notNullable().references("gpt_users.id");
@@ -49,7 +57,7 @@ exports.up = async function(knex) {
     });
 
     if (!(await knex.schema.hasTable("gpt_assistant_messages"))) await knex.schema.createTable("gpt_assistant_messages", (table) => {
-        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
+        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id").onDelete("CASCADE");
         table.enu("type", ["assistant"]).notNullable().index();
         table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
@@ -64,7 +72,7 @@ exports.up = async function(knex) {
     });
 
     if (!(await knex.schema.hasTable("gpt_tool_call_messages"))) await knex.schema.createTable("gpt_tool_call_messages", (table) => {
-        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
+        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id").onDelete("CASCADE");
         table.enu("type", ["tool_call"]).notNullable().index();
         table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
@@ -75,7 +83,7 @@ exports.up = async function(knex) {
     });
 
     if (!(await knex.schema.hasTable("gpt_tool_response_messages"))) await knex.schema.createTable("gpt_tool_response_messages", (table) => {
-        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
+        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id").onDelete("CASCADE");
         table.enu("type", ["tool_response"]).notNullable().index();
         table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
@@ -85,7 +93,7 @@ exports.up = async function(knex) {
     });
 
     if (!(await knex.schema.hasTable("gpt_system_messages"))) await knex.schema.createTable("gpt_system_messages", (table) => {
-        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id");
+        table.string("conversation_id").notNullable().index().references("gpt_conversation_meta.id").onDelete("CASCADE");
         table.enu("type", ["system"]).notNullable().index();
         table.string("id").notNullable().primary();
         table.datetime("created_at").notNullable().defaultTo(knex.fn.now());
@@ -139,7 +147,7 @@ NULL AS discord_message_id, NULL AS discord_channel_id, NULL AS discord_guild_id
 FROM gpt_system_messages`);
 
     if (!(await knex.schema.hasTable("gpt_attachments"))) return await knex.schema.createTable("gpt_attachments", (table) => {
-        table.string("message_id").notNullable().index().references("gpt_messages.id");
+        table.string("message_id").notNullable().index().references("gpt_messages.id").onDelete("CASCADE");
         table.enu("type", ["image", "video", "text", "audio", "unknown", "error"]).notNullable().index();
         table.string("id").notNullable().primary();
         table.string("filename").notNullable();
