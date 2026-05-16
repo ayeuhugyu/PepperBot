@@ -3,6 +3,9 @@ import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../../lib/classes/command_enums";
 
+import list from "./list";
+import create from "./create";
+
 const command = new Command(
     {
         name: 'prompt',
@@ -13,7 +16,7 @@ const command = new Command(
         options: [],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [],
+            list: [create, list],
         },
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],

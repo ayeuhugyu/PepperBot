@@ -34,6 +34,11 @@ const command = new Command(
         const notUs = user !== invoker.author.id;
         const prompts = await listPrompts(user, notUs);
 
+        if (prompts.length === 0) {
+            await action.reply(invoker, { content: `you have no prompts`, ephemeral: guild_config.other.use_ephemeral_replies });
+            return;
+        }
+
         const content = `here's a list of ${notUs ? `${args.user}'s published` : "your"} prompts:\n\`\`\`\n${prompts.map(p => p.name).join("\n")}\n\`\`\``
 
         await action.reply(invoker, { content, ephemeral: guild_config.other.use_ephemeral_replies });
