@@ -27,6 +27,7 @@ const command = new Command(
             "p/prompt create my prompt"
         ],
         aliases: ["new"],
+        argument_order: "<name?>"
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, args, guild_config }) {

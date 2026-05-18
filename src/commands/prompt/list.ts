@@ -27,6 +27,7 @@ const command = new Command(
             "p/prompt list PepperBot"
         ],
         aliases: ["ls"],
+        argument_order: "<user>"
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["user"]),
     async function execute ({ invoker, args, guild_config }) {

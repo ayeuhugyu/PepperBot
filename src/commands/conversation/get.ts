@@ -24,7 +24,8 @@ const subcommand = new Command(
                 required: false,
                 deployed: false,
             }),
-        ]
+        ],
+        argument_order: "<id?>"
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["id"]),
     async function execute ({ invoker, args, guild_config }) {

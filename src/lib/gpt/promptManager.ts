@@ -305,6 +305,12 @@ export async function setEditingPrompt(user: string, promptname: string) {
     return await database("prompt_editing_metadata").insert({ user, editingPrompt: promptname }).onConflict("user").merge();
 }
 
+export async function getEditingPrompt(user: string) {
+    const promptname = await database("prompt_editing_metadata").select("editingPrompt").where({ user }).first();
+    if (!promptname?.editingPrompt) return undefined;
+    return await Prompt.fromName(user, promptname?.editingPrompt);
+}
+
 export async function countUnnamedPrompts(user: string) {
     return Number(((await database("prompts").where({ author_id: user }).orWhere({ author_username: user }).andWhereLike("name", "unnamed").count().first()) ?? undefined)?.[0]) || 0;
 }
