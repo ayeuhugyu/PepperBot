@@ -59,10 +59,11 @@ const command = new Command(
             }
         }
         let prompt = await getEditingPrompt(invoker.author.id);
-        if (!prompt) 
+        if (!prompt) prompt = await Prompt.new("autosave", invoker.author);
         prompt.content = content as string;
-        await savePrompt(prompt, invoker.author);
-        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nthe next time you start a new conversation by pinging the bot, it will be used. you can also run \`${guild_config.other.prefix}prompt use ${prompt.name}\` to use it in the current conversation.${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
+        await prompt.write();
+        // await setActivePrompt
+        action.reply(invoker, { content: `prompt content of \`${invoker.author.username}/${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 
