@@ -2,7 +2,7 @@ import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse 
 import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../../lib/classes/command_enums";
-import { getEditingPrompt, listPrompts, Prompt } from "../../lib/gpt/promptManager";
+import { getEditingPrompt, listPrompts, Prompt, setActivePrompt } from "../../lib/gpt/promptManager";
 
 const command = new Command(
     {
@@ -62,7 +62,7 @@ const command = new Command(
         if (!prompt) prompt = await Prompt.new("autosave", invoker.author);
         prompt.content = content as string;
         await prompt.write();
-        // await setActivePrompt
+        await setActivePrompt(invoker.author.id, invoker.author.id, prompt.name);
         action.reply(invoker, { content: `prompt content of \`${invoker.author.username}/${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );

@@ -314,3 +314,7 @@ export async function getEditingPrompt(user: string) {
 export async function countUnnamedPrompts(user: string) {
     return Number(((await database("prompts").where({ author_id: user }).orWhere({ author_username: user }).andWhereLike("name", "unnamed").count().first()) ?? undefined)?.[0]) || 0;
 }
+
+export async function setActivePrompt(user: string, promptAuthor: string, promptName: string) {
+    return await database("gpt_starting_data_overrides").insert({ user_id: user, prompt_author_id: promptAuthor, prompt_name: promptName }).onConflict("user_id").merge();
+}
