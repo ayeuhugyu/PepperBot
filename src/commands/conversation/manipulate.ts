@@ -46,14 +46,7 @@ const subcommand = new Command(
             return;
         }
 
-        const data = Object.assign(conversation as any, {
-            model: conversation.model.name,
-            prompt: `${conversation.prompt.author.username}/${conversation.prompt.name}`,
-        });
-        delete data.emitter;
-        delete data.isRunningMutex;
-
-        await action.reply(invoker, { content: "here's your conversation", files: [textToAttachment(inspect(data, { depth: Infinity }), `${conversation.id}.txt`)], ephemeral: guild_config.other.use_ephemeral_replies })
+        // TODO: finish
     }
 );
 

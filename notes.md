@@ -4,12 +4,8 @@ $SPLIT_EMBED$ - new container
 
 TODO
 ---
-- finish OverrideParameters type
-- start/finish new Prompt type
-- start/finish Conversation type
-- create model runners
-- database schemas
-- message types
+- finish p/prompt edit
+- finish p/conversation manipulate
 
 LATEST UPDATE
 ---
