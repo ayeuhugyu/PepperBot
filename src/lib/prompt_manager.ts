@@ -1,5 +1,5 @@
 import database from "./data_manager";
-import officialPrompts from "../../constants/official_prompts.json" assert { type: "json" };
+import officialPrompts from "../../constants/official_prompts.json" with { type: "json" };
 import { FakeToolData } from "./gpt/tools"
 
 export interface PromptAuthor {
@@ -44,7 +44,7 @@ export class Prompt {
 
     api_parameters: Record<string, number | string> = {}; // JSON string
 
-    tools: (string | FakeToolData)[] = ["request_url", "search", "evaluate_luau"];
+    tools: (string | FakeToolData)[] = ["request_url", "search"];
 
     constructor(dbObject: Partial<dbPrompt>) {
         const toolJSON = JSON.parse(dbObject.tools || "[]");
@@ -71,7 +71,7 @@ export class Prompt {
             nsfw: Boolean(dbObject.nsfw),
             default: Boolean(dbObject.default),
             api_parameters: JSON.parse(dbObject.api_parameters || "{}"),
-            tools: tools || ["request_url", "search", "evaluate_luau"],
+            tools: tools || ["request_url", "search"],
         });
     }
 }
