@@ -5,13 +5,13 @@ export interface MaintenanceMode {
     id: number;
     enabled: boolean;
     end_timestamp: string | null;
-    created_at: string;
-    updated_at: string;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export async function getMaintenanceMode(): Promise<MaintenanceMode | null> {
     try {
-        const result = await database("maintenance_mode").select("*").first();
+        const result = await database("maintenance_mode").select("*").orderBy("id", "desc").first();
         return result || null;
     } catch (error) {
         log.error(`failed to get maintenance mode: ${error}`);
@@ -21,7 +21,7 @@ export async function getMaintenanceMode(): Promise<MaintenanceMode | null> {
 
 export async function enableMaintenanceMode(endTimestamp?: string): Promise<void> {
     try {
-        const existing = await database("maintenance_mode").select("*").first();
+        const existing = await database("maintenance_mode").select("*").orderBy("id", "desc").first();
 
         if (existing) {
             await database("maintenance_mode")
@@ -51,7 +51,7 @@ export async function enableMaintenanceMode(endTimestamp?: string): Promise<void
 
 export async function disableMaintenanceMode(): Promise<void> {
     try {
-        const existing = await database("maintenance_mode").select("*").first();
+        const existing = await database("maintenance_mode").select("*").orderBy("id", "desc").first();
 
         if (existing) {
             await database("maintenance_mode")
