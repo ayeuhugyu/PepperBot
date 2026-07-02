@@ -1,5 +1,6 @@
 .index-redirect {
     width: min-content;
+    white-space: nowrap;
 }
 
 /* Center the column divider using CSS Grid */
