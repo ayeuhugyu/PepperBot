@@ -380,29 +380,5 @@ export const tools: Record<string, Tool> = {
         }
     ),
     // #endregion
-    // #region Evaluate Luau
-    "evaluate_luau": new Tool(
-        new ToolData(
-            'evaluate_luau',
-            'evaluates a luau expression. this should only be used to automate complex tasks. MAKE ABSOLUTELY CERTAIN THAT YOU USE A PRINT STATEMENT! this just returns stdout, so if you don\'t print something, it won\'t be shown to you. If you are returned an error, fix it and try again (if possible). You do not have access to ROBLOX\'s \'task\' library, do not attempt to use it.',
-            ToolType.Official,
-            {
-                "expression": { key: 'expression', description: 'luau expression to evaluate', type: 'string', required: true }
-            },
-            true // disabled by default
-        ),
-        async ({ expression }: { expression: string }) => {
-            if (!expression.includes("print")) {
-                return "ERROR: the expression must contain a print statement. please remember to print your output.";
-            }
-            try {
-                const result = await runLuauScript(expression);
-                return result.stdout || result.stderr || "No output returned.";
-            } catch (err: any) {
-                return `an error occurred while attempting to evaluate the expression: ${err.message || err}`;
-            }
-        }
-    ),
-    // #endregion
 }
 // #endregion
