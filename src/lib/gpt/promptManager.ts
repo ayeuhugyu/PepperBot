@@ -50,7 +50,7 @@ export const defaultPromptParameters: InferModelParameters<typeof promptParamete
 
 type PromptInput = OmitMethods<Prompt<AnyModel, boolean, (string | undefined)>>
 
-const defaultTools: ToolName[] = ["request_url", "search", /*"evaluate_luau"*/];
+const defaultTools: ToolName[] = ["request_url", "search"];
 
 // this is a super fucked up way to use mutexes but idc it works & is Safe
 const clientDefinedMutex = new Mutex();

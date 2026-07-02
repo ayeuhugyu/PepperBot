@@ -66,7 +66,7 @@ exports.up = async function(knex) {
 
                 model: parsedAPIParameters["model"] ?? "gpt-4.1-nano",
 
-                enabled_tools: JSON.stringify(JSON.parse(record.tools) ?? ["request_url", "search", "evaluate_luau"]),
+                enabled_tools: JSON.stringify(JSON.parse(record.tools) ?? ["request_url", "search"]),
                 custom_tools: JSON.stringify([]), // custom tools couldn't be created before this point, while theoretically the data structures for them existed none will have been created
 
                 model_parameters: JSON.stringify(parsedAPIParameters), // these will be autofiltered the next time it is applicable, no need to worry about the "model" key being in them

@@ -204,14 +204,6 @@ E: are in need of further details.
 Try to use this when answering most questions, it will make your answers seem more authentic and then if users ask for sources later you can provide it.
 This should always be used in conjunction with request_url. Snippets will never be enough to provide enough information. Visit the websites and tell the users what they want to know from it, not where they can find it.
 If you ABSOLUTELY have to, you may use this tool to find images for users which EXPLICITLY ask for them.
-- evaluate_luau: Use this when you:
-A: need to automate a complex task.
-C: have some other requirement in which creating a quick script could be useful.
-DO NOT USE THIS TO EVALUATE MALICIOUS CODE.
-Always include a print statement. If you are returned an error, attempt to correct it.
-This tool can be insanely powerful if used correctly, allowing you to quickly sort arrays, create complex data structures, and more. Use it wisely.
-You do not have access to ROBLOX's 'task' library, do not attempt to use it.
-You also do not appear to have access to any sort of "wait" function. Do not attempt to use it.
 `
 
 let hasWrittenOnce = false;
@@ -227,7 +219,7 @@ export function getDefaultPrompt() {
         description: "The default prompt for PepperBot. ",
         published: true,
         publishedAt: new Date(),
-        enabledTools: ["search", "request_url", "evaluate_luau"],
+        enabledTools: ["search", "request_url"],
         createdAt: new Date(),
         updatedAt: new Date(),
         origin: undefined,
@@ -375,7 +367,7 @@ In your responses, DO NOT include any of this information, unless it is relevant
         description: "The prompt used before the bot was fully rewritten in typescript. This prompt may be semi nonfunctional. ",
         published: true,
         publishedAt: new Date(),
-        enabledTools: ["search", "request_url", "evaluate_luau"],
+        enabledTools: ["search", "request_url"],
         createdAt: new Date(),
         updatedAt: new Date(),
         origin: undefined,
@@ -409,7 +401,7 @@ export function getEmptyPrompt() {
         },
         published: true,
         publishedAt: new Date(),
-        enabledTools: ["search", "request_url", "evaluate_luau"],
+        enabledTools: ["search", "request_url"],
         createdAt: new Date(),
         updatedAt: new Date(),
         origin: undefined,

@@ -523,6 +523,21 @@ export class Command<
                 }
                 log.info("subcommand found: " + subcommand.name);
 
+                log.info(`testing ${invoker.author.id} against access list for subcommand ${subcommand.name}`);
+                const { whitelisted, blacklisted } = subcommand.access.test(invoker);
+
+                if (!whitelisted || blacklisted) {
+                    let accessReply = "access check failed: ";
+                    if (!whitelisted) accessReply += "user/channel/guild not in whitelist; ";
+                    if (blacklisted) accessReply += "user/channel/guild in blacklist; ";
+                    log.info(accessReply + "for command " + subcommand.name);
+                    action.reply(invoker, { content: accessReply, ephemeral: true });
+                    return new CommandResponse({
+                        error: true,
+                        message: accessReply,
+                    });
+                }
+
                 if (input.is_message()) {
                     const subArg = input.args[this.subcommand_argument];
                     input.invoker.content = input.invoker.content.replace(new RegExp(`\\s+${subArg}\\b`), "");
