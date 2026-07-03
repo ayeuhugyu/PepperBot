@@ -196,12 +196,6 @@ export interface DBPrompt {
     created_at: number;
     updated_at: number;
 
-    published_at: number | null;
-    published: boolean;
-    description: string | null;
-
-    origin: string | null;
-
     model: string;
 
     enabled_tools: string;

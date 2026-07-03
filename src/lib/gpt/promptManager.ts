@@ -48,7 +48,7 @@ export const defaultPromptParameters: InferModelParameters<typeof promptParamete
     enableTemplating: false,
 }
 
-type PromptInput = OmitMethods<Prompt<AnyModel, boolean, (string | undefined)>>
+type PromptInput = OmitMethods<Prompt<AnyModel>>
 
 const defaultTools: ToolName[] = ["request_url", "search"];
 
@@ -92,19 +92,13 @@ export interface PromptAuthor {
     avatar?: string,
 }
 
-export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = false, O extends (string | undefined) = undefined> {
+export class Prompt<M extends AnyModel = typeof gpt41Nano> {
     name: string;
     author: PromptAuthor;
     content: string = "[empty prompt]";
 
     createdAt: Date = new Date();
     updatedAt: Date = new Date();
-
-    publishedAt: P extends true ? Date : undefined = undefined!;
-    published: P = false as P;
-    description: string | undefined = undefined;
-
-    origin: O = undefined as O;
 
     model: M = gpt41Nano as unknown as M;
 
@@ -121,12 +115,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
         this.createdAt = data.createdAt;
         this.updatedAt = data.updatedAt;
-
-        this.publishedAt = data.publishedAt as P extends true ? Date : undefined;
-        this.published = data.publishedAt as unknown as P;
-        this.description = data.description;
-
-        this.origin = data.origin as O;
 
         this.model = data.model as M;
 
@@ -158,8 +146,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
         if (!model) model = gpt41Nano;
 
-        let origin = data.origin ?? undefined;
-
         const inputData: PromptInput = {
             name: data.name,
             author: {
@@ -171,12 +157,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             createdAt: new Date(data.created_at),
             updatedAt: new Date(data.updated_at),
-
-            publishedAt: data.published ? new Date(data.published_at ?? new Date()) : undefined,
-            published: Boolean(data.published),
-            description: data.description ?? undefined,
-
-            origin: origin,
 
             model: model,
 
@@ -191,7 +171,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     }
 
     static async new(name: string, author: User) {
-        return new Prompt<typeof gpt41Nano, false, undefined>({
+        return new Prompt<typeof gpt41Nano>({
             name: name,
             author: {
                 id: author.id,
@@ -202,12 +182,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             createdAt: new Date(),
             updatedAt: new Date(),
-
-            published: false,
-            publishedAt: undefined,
-            description: undefined,
-
-            origin: undefined,
 
             model: gpt41Nano,
 
@@ -231,20 +205,20 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         return this.fromDB(data);
     }
 
-    static async clone(originAuthorId: string, originName: string, newAuthor: User, newName: string) {
-        const origin = await Prompt.fromName(originAuthorId, originName) as AnyPrompt | undefined;
-        if (!origin) return undefined;
-        origin.author = {
-            id: newAuthor.id,
-            username: newAuthor.username,
-            avatar: newAuthor.displayAvatarURL(),
-        };
-        origin.name = newName;
-        (origin.origin as string | undefined) = `${originAuthorId}/${originName}`;
-        origin.published = false;
-        origin.publishedAt = undefined;
-        return origin as unknown as Prompt<AnyModel, false, string>;
-    }
+    // static async clone(originAuthorId: string, originName: string, newAuthor: User, newName: string) {
+    //     const origin = await Prompt.fromName(originAuthorId, originName) as AnyPrompt | undefined;
+    //     if (!origin) return undefined;
+    //     origin.author = {
+    //         id: newAuthor.id,
+    //         username: newAuthor.username,
+    //         avatar: newAuthor.displayAvatarURL(),
+    //     };
+    //     origin.name = newName;
+    //     (origin.origin as string | undefined) = `${originAuthorId}/${originName}`;
+    //     origin.published = false;
+    //     origin.publishedAt = undefined;
+    //     return origin as unknown as Prompt<AnyModel>;
+    // }
 
     async write() {
         log.debug(`writing prompt ${this.author.id}/${this.name} with data:`);
@@ -259,12 +233,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
 
             created_at: this.createdAt.getTime(),
             updated_at: new Date().getTime(), // updated Just Now as we are writing it
-
-            published: this.published ?? false,
-            published_at: this.published ? (this.publishedAt?.getTime() ?? new Date().getTime()) : null,
-            description: this.description ?? "No description provided.",
-
-            origin: this.origin ?? null,
 
             model: this.model.name,
 
@@ -293,12 +261,10 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
     }
 }
 
-export type AnyPrompt = Prompt<AnyModel, boolean, (string | undefined)>;
+export type AnyPrompt = Prompt<AnyModel>;
 
-export async function listPrompts(user: string, onlyPublished: boolean = false) {
-    const query = database("prompts").select("name").where({ author_id: user }).orWhere({ author_username: user });
-    if (onlyPublished) query.andWhere({ published: true });
-    return await query;
+export async function listPrompts(user: string) {
+    return await database("prompts").select("name").where({ author_id: user }).orWhere({ author_username: user });
 }
 
 export async function setEditingPrompt(user: string, promptname: string) {
