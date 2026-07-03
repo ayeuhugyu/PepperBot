@@ -38,14 +38,14 @@ const command = new Command(
         }
 
         if (await Prompt.checkExists(invoker.author.id, name)) {
-            await action.reply(invoker, { content: `cannot create prompt; \`${invoker.author.username}/${name}\` already exists.`, ephemeral: guild_config.other.use_ephemeral_replies });
+            await action.reply(invoker, { content: `cannot create prompt; you already have a prompt named \`${name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies });
             return
         }
 
         const prompt = await Prompt.new(name, invoker.author);
         await prompt.write();
         await setEditingPrompt(invoker.author.id, name);
-        await action.reply(invoker, { content: `created new prompt: \`${invoker.author.username}/${name}\`. you are now editing prompt \`${name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies })
+        await action.reply(invoker, { content: `created new prompt: \`${name}\`. you are now editing prompt \`${name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies })
     }
 );
 

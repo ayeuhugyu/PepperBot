@@ -12,15 +12,7 @@ const command = new Command(
         long_description: 'lists all prompts which you have created, or all prompts that someone else has published',
         tags: [CommandTag.AI],
         pipable_to: [CommandTag.TextPipable],
-        options: [
-            new CommandOption({
-                name: 'user',
-                description: 'the user to list prompts for',
-                long_description: 'the username of the person to list published prompts for',
-                type: CommandOptionType.String,
-                required: false,
-            })
-        ],
+        options: [],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
         example_usage: [
@@ -32,10 +24,7 @@ const command = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["user"]),
     async function execute ({ invoker, args, guild_config }) {
-        console.log("user", args.user);
-        const user = (args.user?.length > 0) ? (args.user ?? invoker.author.id) : invoker.author.id;
-        const notUs = (user !== invoker.author.id);
-        const prompts = await listPrompts(user, notUs);
+        const prompts = await listPrompts(invoker.author.id);
 
         if (prompts.length === 0) {
             await action.reply(invoker, { content: `you have no prompts`, ephemeral: guild_config.other.use_ephemeral_replies });
@@ -64,7 +53,7 @@ const command = new Command(
             values.push(currentCol);
         }
 
-        const content = `here's a list of ${notUs ? `${args.user}'s published` : "your"} prompts:\n\`\`\`\n${tablify(columnNames, values, { column_separator: "  ", no_header: true })}\n\`\`\``
+        const content = `here's a list of your prompts:\n\`\`\`\n${tablify(columnNames, values, { column_separator: "  ", no_header: true })}\n\`\`\``
 
 
         await action.reply(invoker, { content, ephemeral: guild_config.other.use_ephemeral_replies });
