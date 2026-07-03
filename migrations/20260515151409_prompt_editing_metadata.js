@@ -3,7 +3,7 @@
  * @returns { Promise<void> }
  */
 exports.up = async function(knex) {
-    if (!knex.schema.hasTable("prompt_editing_metadata")) return await knex.schema.createTable("prompt_editing_metadata", (table) => {
+    if (!(await knex.schema.hasTable("prompt_editing_metadata"))) return await knex.schema.createTable("prompt_editing_metadata", (table) => {
         table.string("user").primary().notNullable();
         table.string("editingPrompt").notNullable();
 

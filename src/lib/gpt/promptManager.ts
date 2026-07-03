@@ -260,9 +260,9 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
             created_at: this.createdAt.getTime(),
             updated_at: new Date().getTime(), // updated Just Now as we are writing it
 
-            published: this.published,
+            published: this.published ?? false,
             published_at: this.published ? (this.publishedAt?.getTime() ?? new Date().getTime()) : null,
-            description: this.description ?? null,
+            description: this.description ?? "No description provided.",
 
             origin: this.origin ?? null,
 
@@ -279,7 +279,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano, P extends boolean = f
         log.debug(data);
         log.debug(`writing to DB...`)
 
-        return await database("prompts").insert(data).onConflict("author_id, name").merge();
+        return await database("prompts").insert(data).onConflict(["author_id", "name"]).merge();
     }
 
     getTools(): (AnyTool | CustomTool)[] {

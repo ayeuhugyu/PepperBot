@@ -3,6 +3,7 @@ import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../../lib/classes/command_enums";
 import { listPrompts } from "../../lib/gpt/promptManager";
+import { tablify } from "../../lib/string_helpers";
 
 const command = new Command(
     {
@@ -31,8 +32,9 @@ const command = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["user"]),
     async function execute ({ invoker, args, guild_config }) {
-        const user = args.user ?? invoker.author.id;
-        const notUs = user !== invoker.author.id;
+        console.log("user", args.user);
+        const user = (args.user?.length > 0) ? (args.user ?? invoker.author.id) : invoker.author.id;
+        const notUs = (user !== invoker.author.id);
         const prompts = await listPrompts(user, notUs);
 
         if (prompts.length === 0) {
@@ -40,7 +42,30 @@ const command = new Command(
             return;
         }
 
-        const content = `here's a list of ${notUs ? `${args.user}'s published` : "your"} prompts:\n\`\`\`\n${prompts.map(p => p.name).join("\n")}\n\`\`\``
+        let columnNames = ["1"];
+        const colCount = (prompts.length > 25) ? (prompts.length > 50) ? 3 : 2 : 1;
+        if (colCount > 1) columnNames.push("2");
+        if (colCount > 2) columnNames.push("3");
+
+        let values: string[][] = [];
+        let currentCol: string[] = [];
+        prompts.forEach(p => {
+            if (currentCol.length == colCount) {
+                values.push(currentCol);
+                currentCol = [];
+            }
+
+            currentCol.push(p.name);
+        });
+        if (currentCol.length > 0) {
+            while (currentCol.length != colCount) {
+                currentCol.push(" ");
+            }
+            values.push(currentCol);
+        }
+
+        const content = `here's a list of ${notUs ? `${args.user}'s published` : "your"} prompts:\n\`\`\`\n${tablify(columnNames, values, { column_separator: "  ", no_header: true })}\n\`\`\``
+
 
         await action.reply(invoker, { content, ephemeral: guild_config.other.use_ephemeral_replies });
         return new CommandResponse({ pipe_data: { input_text: content } });
