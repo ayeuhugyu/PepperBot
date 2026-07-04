@@ -33,7 +33,7 @@ exports.up = async function(knex) {
         });
 
         await knex.schema.createTable('prompt_defaults', (table) => {
-            table.text("user_id").notNullable().index();
+            table.text("user_id").notNullable().index().unique();
             table.text("author_id").notNullable();
             table.text("prompt_name").notNullable();
         });
@@ -46,7 +46,7 @@ exports.up = async function(knex) {
                     user_id: record.author_id,
                     author_id: record.author_id,
                     prompt_name: record.name,
-                });
+                }).onConflict("author_id").merge();
             }
             await knex("prompts").insert({
                 name: record.name,

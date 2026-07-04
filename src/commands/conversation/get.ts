@@ -25,10 +25,11 @@ const subcommand = new Command(
                 deployed: false,
             }),
         ],
-        argument_order: "<id?>"
+        argument_order: "<id?>",
+        requiredPermissions: ["AttachFiles"],
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["id"]),
-    async function execute ({ invoker, args, guild_config }) {
+    async function execute ({ invoker, args, guild_config, will_be_piped }) {
         const whitelisted = CommandAccessTemplates.dev_only.whitelist.users.includes(invoker.author.id);
 
         let conversation;
@@ -36,14 +37,20 @@ const subcommand = new Command(
             conversation = await getConversation(args.id, true);
         } else if (args.id) {
             await action.reply(invoker, { content: `you are not whitelisted to see specific conversation ids.`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `you are not whitelisted to see specific conversation ids.`,
+            });
         } else {
             conversation = await getUsersLatestConversation(invoker.author.id, true);
         }
 
         if (!conversation) {
             await action.reply(invoker, { content: "no conversation found", ephemeral: guild_config.other.use_ephemeral_replies })
-            return;
+            return new CommandResponse({
+                error: true,
+                message: `no conversation found`,
+            });
         }
 
         const data = Object.assign(conversation as any, {
@@ -52,8 +59,18 @@ const subcommand = new Command(
         });
         delete data.emitter;
         delete data.isRunningMutex;
+        if (!will_be_piped) {
+            await action.reply(invoker, { content: "here's your conversation", files: [textToAttachment(inspect(data, { depth: Infinity }), `${conversation.id}.txt`)], ephemeral: guild_config.other.use_ephemeral_replies });
+        } else {
+            await action.reply(invoker, { content: `piped conversation data`, ephemeral: guild_config.other.use_ephemeral_replies });
+        }
 
-        await action.reply(invoker, { content: "here's your conversation", files: [textToAttachment(inspect(data, { depth: Infinity }), `${conversation.id}.txt`)], ephemeral: guild_config.other.use_ephemeral_replies })
+        return new CommandResponse({
+            error: false,
+            pipe_data: {
+                input_text: inspect(data, { depth: Infinity }),
+            }
+        });
     }
 );
 

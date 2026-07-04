@@ -14,6 +14,7 @@ export interface MessageInput {
     content?: string;
     embeds?: (JSONEncodable<APIEmbed> | APIEmbed | Embed | EmbedBuilder)[];
     allowPings?: boolean;
+    allowOverflow?: boolean;
     files?: (BufferResolvable | Stream | JSONEncodable<APIAttachment> | Attachment | AttachmentBuilder | AttachmentPayload)[];
     components?: (ApiMessageComponents | TopLevelComponent)[];
     attachments?: Attachment[] | AttachmentBuilder[];
@@ -71,7 +72,7 @@ export function fixMessage(message: Partial<MessageInput> | string): Partial<Mes
         //message.content = "<empty>";
     }
 
-    if (message.content && message.content.length > 2000) {
+    if ((!message.allowOverflow) && message.content && message.content.length > 2000) {
         log.warn("attempt to send a message longer than 2000 characters")
         const attachment = textToAttachment(message.content, "overflow.txt", "the contents of the message as a file");
         message.content = "message content exceeded 2000 characters, here's a file with the text instead"
@@ -117,7 +118,7 @@ export function send(channel: SendableChannel, content: Partial<MessageInput> | 
             delete content.components_v2
         }
     }
-    
+
     const reply = fixMessage(content)  as InteractionReplyOptions & MessageReplyOptions
     log.debug(`sending message to ${channel.id} with`, reply);
     return channel.send(reply)
@@ -157,7 +158,7 @@ export function editReply(commandInteraction: FormattedCommandInteraction, conte
             delete content.components_v2
         }
     }
-    
+
     log.debug(`editing reply to ${commandInteraction.user.username} (${commandInteraction.user.id}) with`, reply);
     return commandInteraction.editReply(reply)
         .catch((err) => {

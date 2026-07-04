@@ -205,23 +205,15 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
         return this.fromDB(data);
     }
 
-    // static async clone(originAuthorId: string, originName: string, newAuthor: User, newName: string) {
-    //     const origin = await Prompt.fromName(originAuthorId, originName) as AnyPrompt | undefined;
-    //     if (!origin) return undefined;
-    //     origin.author = {
-    //         id: newAuthor.id,
-    //         username: newAuthor.username,
-    //         avatar: newAuthor.displayAvatarURL(),
-    //     };
-    //     origin.name = newName;
-    //     (origin.origin as string | undefined) = `${originAuthorId}/${originName}`;
-    //     origin.published = false;
-    //     origin.publishedAt = undefined;
-    //     return origin as unknown as Prompt<AnyModel>;
-    // }
+    async delete() {
+        log.debug(`deleting prompt \`${this.author.id}/${this.name}\` with current data:`);
+        log.debug(this);
+
+        return await database("prompts").where({ author_id: this.author.id, name: this.name }).delete();
+    }
 
     async write() {
-        log.debug(`writing prompt ${this.author.id}/${this.name} with data:`);
+        log.debug(`writing prompt \`${this.author.id}/${this.name}\` with data:`);
         log.debug(this);
 
         const data: DBPrompt = {
@@ -239,7 +231,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
             enabled_tools: JSON.stringify(this.enabledTools),
             custom_tools: JSON.stringify(this.customTools),
 
-            model_parameters: JSON.stringify(this.customTools),
+            model_parameters: JSON.stringify(this.modelParameters),
             prompt_parameters: JSON.stringify(this.promptParameters),
         }
 
@@ -275,10 +267,6 @@ export async function getEditingPrompt(user: string) {
     const promptname = await database("prompt_editing_metadata").select("editingPrompt").where({ user }).first();
     if (!promptname?.editingPrompt) return undefined;
     return await Prompt.fromName(user, promptname?.editingPrompt);
-}
-
-export async function countUnnamedPrompts(user: string) {
-    return Number(((await database("prompts").where({ author_id: user }).orWhere({ author_username: user }).andWhereLike("name", "unnamed").count().first()) ?? undefined)?.[0]) || 0;
 }
 
 export async function setActivePrompt(user: string, promptAuthor: string, promptName: string) {

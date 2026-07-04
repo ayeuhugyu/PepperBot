@@ -63,7 +63,7 @@ const command = new Command(
         prompt.content = content as string;
         await prompt.write();
         await setActivePrompt(invoker.author.id, invoker.author.id, prompt.name);
-        action.reply(invoker, { content: `prompt content of \`${invoker.author.username}/${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 10) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using **${guild_config.other.prefix}prompt generate** to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
+        action.reply(invoker, { content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 15) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using \`${guild_config.other.prefix}prompt generate\` to make it longer.` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
     }
 );
 

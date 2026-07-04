@@ -319,7 +319,7 @@ const command = new Command(
         const subcommand = args.subcommand;
         if (subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}todo view\`: view your todo list\n\`${guild_config.other.prefix}todo add\`: add an item to your todo list\n\`${guild_config.other.prefix}todo remove\`: remove an item from your todo list by index\n\`${guild_config.other.prefix}todo check\`: toggle the completion status of an item in your todo list by index\n\`${guild_config.other.prefix}todo clear\`: clear your todo list\n\`${guild_config.other.prefix}todo switch\`: switch to a different todo list\n\`${guild_config.other.prefix}todo list\`: list all your todo lists`,
+                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}todo view\`: view your todo list\n\`${guild_config.other.prefix}todo add\`: add an item to your todo list\n\`${guild_config.other.prefix}todo remove\`: remove an item from your todo list by index\n\`${guild_config.other.prefix}todo check\`: toggle the completion status of an item in your todo list by index\n\`${guild_config.other.prefix}todo clear\`: clear your todo list\n\`${guild_config.other.prefix}todo switch\`: switch to a different todo list\n\`${guild_config.other.prefix}todo list\`: list all your todo lists`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;

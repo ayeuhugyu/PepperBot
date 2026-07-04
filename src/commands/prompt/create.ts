@@ -2,7 +2,7 @@ import { Command, CommandAccess, CommandInvoker, CommandOption, CommandResponse 
 import * as action from "../../lib/discord_action";
 import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates } from "../../lib/templates";
 import { CommandTag, InvokerType, CommandOptionType } from "../../lib/classes/command_enums";
-import { countUnnamedPrompts, listPrompts, Prompt, setEditingPrompt } from "../../lib/gpt/promptManager";
+import { listPrompts, Prompt, setEditingPrompt } from "../../lib/gpt/promptManager";
 
 const command = new Command(
     {
@@ -17,7 +17,7 @@ const command = new Command(
                 description: 'the name of the prompt to create',
                 long_description: 'the name of the prompt to create',
                 type: CommandOptionType.String,
-                required: false,
+                required: true,
             })
         ],
         access: CommandAccessTemplates.public,
@@ -31,21 +31,26 @@ const command = new Command(
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
     async function execute ({ invoker, args, guild_config }) {
-        let name = args.name
-        if (!name) {
-            const unnamedCount = await countUnnamedPrompts(invoker.author.id);
-            name = `unnamed-${unnamedCount}`;
+        if (!args.name) {
+            await action.reply(invoker, { content: `please supply the name of the prompt to create`, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `please supply the name of the prompt to create`,
+            });
         }
 
-        if (await Prompt.checkExists(invoker.author.id, name)) {
-            await action.reply(invoker, { content: `cannot create prompt; you already have a prompt named \`${name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies });
-            return
+        if (await Prompt.checkExists(invoker.author.id, args.name)) {
+            await action.reply(invoker, { content: `cannot create prompt; you already have a prompt named \`${args.name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies });
+            return new CommandResponse({
+                error: true,
+                message: `cannot create prompt; you already have a prompt named \`${args.name}\`.`,
+            });
         }
 
-        const prompt = await Prompt.new(name, invoker.author);
+        const prompt = await Prompt.new(args.name.replaceAll(/[`\n]/g, " "), invoker.author);
         await prompt.write();
-        await setEditingPrompt(invoker.author.id, name);
-        await action.reply(invoker, { content: `created new prompt: \`${name}\`. you are now editing prompt \`${name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies })
+        await setEditingPrompt(invoker.author.id, prompt.name);
+        await action.reply(invoker, { content: `created new prompt: \`${prompt.name}\`. you are now editing prompt \`${prompt.name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies })
     }
 );
 

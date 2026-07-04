@@ -23,7 +23,7 @@ const command = new Command(
         argument_order: "<user>"
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["user"]),
-    async function execute ({ invoker, args, guild_config }) {
+    async function execute ({ invoker, args, guild_config, will_be_piped }) {
         const prompts = await listPrompts(invoker.author.id);
 
         if (prompts.length === 0) {
@@ -32,7 +32,8 @@ const command = new Command(
         }
 
         let columnNames = ["1"];
-        const colCount = (prompts.length > 25) ? (prompts.length > 50) ? 3 : 2 : 1;
+        let colCount = (prompts.length > 25) ? (prompts.length > 50) ? 3 : 2 : 1;
+        if (will_be_piped) colCount = 1;
         if (colCount > 1) columnNames.push("2");
         if (colCount > 2) columnNames.push("3");
 
@@ -55,8 +56,11 @@ const command = new Command(
 
         const content = `here's a list of your prompts:\n\`\`\`\n${tablify(columnNames, values, { column_separator: "  ", no_header: true })}\n\`\`\``
 
-
-        await action.reply(invoker, { content, ephemeral: guild_config.other.use_ephemeral_replies });
+        if (!will_be_piped) {
+            await action.reply(invoker, { content, ephemeral: guild_config.other.use_ephemeral_replies });
+        } else {
+            await action.reply(invoker, { content: "piped prompts list", ephemeral: guild_config.other.use_ephemeral_replies });
+        }
         return new CommandResponse({ pipe_data: { input_text: content } });
     }
 );

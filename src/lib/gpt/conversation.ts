@@ -31,7 +31,7 @@ const defaultPrompt = await getDefaultPrompt();
 export class Conversation<M extends AnyModel = AnyModel> {
     id: string = randomId("conv");
     messages: AnyGPTMessage[] = [];
-    prompt: Prompt<M> = defaultPrompt! as unknown as Prompt<M>;
+    prompt: Prompt<M> = defaultPrompt as unknown as Prompt<M>;
     promptParameterOverrides: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
     modelParameterOverrides: Partial<InferModelParameters<M['parameters']>> = {};
     model: M = models['gpt-4.1-nano'] as unknown as M;
@@ -94,7 +94,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
     }
 
     getModelParameters(): Partial<InferModelParameters<M['parameters']>> {
-        const allParameters = { ...this.prompt.modelParameters, ...this.modelParameterOverrides };
+        const allParameters = { ...(this.prompt?.modelParameters ?? {}), ...this.modelParameterOverrides };
         // filter them
         const filteredParameters: Record<string, Partial<InferModelParameters<M['parameters']>>[string]> = {};
         Object.entries(allParameters).forEach(([k, v]) => {
@@ -105,7 +105,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
     }
 
     getPromptParameters(): Partial<InferModelParameters<typeof promptParameterTypings>> {
-        return { ...this.prompt.promptParameters, ...this.promptParameterOverrides };;
+        return { ...(this.prompt?.promptParameters ?? {}), ...this.promptParameterOverrides };;
     }
 
     getUnansweredToolCalls(): GPTToolCall[] {
@@ -342,16 +342,20 @@ export class Conversation<M extends AnyModel = AnyModel> {
 
     constructor(id?: string) {
         if (id) this.id = id;
+        this.getModelParameters = this.getModelParameters.bind(this);
+        this.getPromptParameters = this.getPromptParameters.bind(this);
     }
 
     async useOverrideData(userid: string) {
         const userPromptDefault = await database("prompt_defaults").where({ user_id: userid }).first();
         if (userPromptDefault) {
-            this.prompt = ((await Prompt.fromName(userPromptDefault.author_id ?? "PepperBot", userPromptDefault.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>;
+            this.prompt = ((await Prompt.fromName(userPromptDefault.author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", userPromptDefault.prompt_name ?? "default")) ?? (await getDefaultPrompt())) as Prompt<M>;
+            log.debug(`changed prompt of conversation ${this.id} to \`${this.prompt.author.username}/${this.prompt.name}\` as it is ${userid}'s default prompt`);
         }
         const data = await database("gpt_starting_data_overrides").where({ user_id: userid }).first();
         if (data) {
-            if (data.prompt_author_id && data.prompt_name) this.prompt = ((await Prompt.fromName(data?.prompt_author_id ?? "PepperBot", data?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>;
+            if (data.prompt_author_id && data.prompt_name) this.prompt = ((await Prompt.fromName(data?.prompt_author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", data?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>;
+            log.debug(`changed prompt of conversation ${this.id} to \`${this.prompt.author.username}/${this.prompt.name}\` as it was set in ${userid}'s starting data overrides`);
             if (data.model) this.model = ((data?.model ?? "") in models ? models[data?.model as keyof typeof models] : models["gpt-4.1-nano"]) as M;
             if (data.prompt_parameter_overrides) this.promptParameterOverrides = JSON.parse(data?.prompt_parameter_overrides ?? "{}");
             if (data.model_parameter_overrides) this.modelParameterOverrides = JSON.parse(data?.model_parameter_overrides ?? "{}");
@@ -372,7 +376,7 @@ export async function getConversation(id?: string, noensure?: boolean): Promise<
     const dbusers = await database("gpt_users").select("*").where({ conversation_id: id });
     const dbmessages = await database("gpt_messages").select("*").where({ conversation_id: id });
 
-    conversation.prompt = (await Prompt.fromName(dbmeta?.prompt_author_id ?? "PepperBot", dbmeta?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!;
+    conversation.prompt = (await Prompt.fromName(dbmeta?.prompt_author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", dbmeta?.prompt_name ?? "default")) ?? (await getDefaultPrompt());
     conversation.model = (dbmeta?.model ?? "") in models ? models[dbmeta?.model as keyof typeof models] : models["gpt-4.1-nano"];
     conversation.promptParameterOverrides = JSON.parse(dbmeta?.prompt_parameter_overrides ?? "{}");
     conversation.modelParameterOverrides = JSON.parse(dbmeta?.model_parameter_overrides ?? "{}");
@@ -463,8 +467,8 @@ export async function getUsersLatestConversation(userid: string, noensure?: bool
 }
 
 export async function shouldForceNextNew(userid: string) {
-    const forceNewEntries = await database("gpt_force_next_new").select("*");
-    const should = forceNewEntries.includes({ user_id: userid });
+    const forceNewEntries = await database("gpt_force_next_new").select("*").where({ user_id: userid });
+    const should = forceNewEntries.length > 0;
     if (should) await database("gpt_force_next_new").where({ user_id: userid }).delete();
     return should;
 }

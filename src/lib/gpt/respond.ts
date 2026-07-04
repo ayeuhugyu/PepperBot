@@ -4,7 +4,6 @@ import { GPTAssistantMessage, GPTAttachment, GPTAttachmentType, GPTMessageType, 
 import * as action from "../discord_action";
 import { CustomTool, ToolErrorResponse } from "./toolTypes";
 import { OmitMethods } from "../omitMethods";
-import { getDefaultPrompt } from "./officialPrompts";
 import * as log from "../log";
 
 let activeCustomToolPrompts: string[] = [];
@@ -44,6 +43,7 @@ export async function respond(message: Message<true>, forceTypingType?: "default
     }
 
     if (await shouldForceNextNew(message.author.id)) {
+        log.debug(`forcing new conversation for ${message.author.id}`);
         conversation = new Conversation();
     }
 

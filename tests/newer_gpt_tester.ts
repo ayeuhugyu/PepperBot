@@ -21,7 +21,7 @@ const channelId = "1312566483569741896";
 
 const conversation = await getConversation();
 // if (!conversation) conversation = new Conversation("gpt-tester");
-const prompt = getDefaultPrompt();
+const prompt = await getDefaultPrompt();
 prompt?.customTools.push(new CustomTool({
     name: "enrich_url",
     description: "enriches a url.",
