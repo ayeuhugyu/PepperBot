@@ -46,7 +46,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
 
     addMessage(...messages: AnyGPTMessage[]) {
         log.debug(`adding gpt messages to conversation ${this.id}`);
-        log.debug(messages);
+        log.debug(messages.map(m => m.id));
         messages.forEach(m => {
             this.emitter.emit("message", m);
             if (m.type === GPTMessageType.User) {
@@ -72,8 +72,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
         conv.prompt = prompt;
         conv.model = prompt.model;
         // no need to update the prompt's model parameters, they'll be filtered later on their own.
-        log.debug(`set prompt on conversation ${this.id} to ${prompt.author.id}/${prompt.name}; full data:`)
-        log.debug(conv);
+        log.debug(`set prompt on conversation ${this.id} to ${prompt.author.id}/${prompt.name}`)
         return conv;
     }
 
@@ -160,7 +159,6 @@ export class Conversation<M extends AnyModel = AnyModel> {
                 unansweredToolCalls = this.getUnansweredToolCalls();
             }
 
-            log.debug(`writing conversation ${this.id}`);
             await this.write();
 
             return response.filter(m => m.type === GPTMessageType.Assistant)[0];
@@ -194,6 +192,8 @@ export class Conversation<M extends AnyModel = AnyModel> {
 
     async write() {
         try {
+            log.debug(`writing conversation ${this.id}`);
+
             await database.transaction(async (trx) => {
                 // write metadata
                 await trx("gpt_conversation_meta")
@@ -220,7 +220,6 @@ export class Conversation<M extends AnyModel = AnyModel> {
 
                 // write messages
                 for (const msg of this.messages) {
-                    log.debug(`writing ${msg.id}`);
                     let attachmentPromises: Promise<any>[] = [];
                     switch (msg.type) {
                         case GPTMessageType.Assistant:
@@ -325,7 +324,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
                             }).onConflict("id").merge();
                         break;
                         default:
-                            log.error(`wrongly typed message (WHADDAFUK)!???!?? on conversation ${this.id}`);
+                            log.error(`wrongly typed message (WHADDAFUK!???!??) on conversation ${this.id}`);
                         break;
                     }
                 }
@@ -349,12 +348,12 @@ export class Conversation<M extends AnyModel = AnyModel> {
     async useOverrideData(userid: string) {
         const userPromptDefault = await database("prompt_defaults").where({ user_id: userid }).first();
         if (userPromptDefault) {
-            this.prompt = ((await Prompt.fromName(userPromptDefault.author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", userPromptDefault.prompt_name ?? "default")) ?? (await getDefaultPrompt())) as Prompt<M>;
+            this.setPrompt(((await Prompt.fromName(userPromptDefault.author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", userPromptDefault.prompt_name ?? "default")) ?? (await getDefaultPrompt())) as Prompt<M>);
             log.debug(`changed prompt of conversation ${this.id} to \`${this.prompt.author.username}/${this.prompt.name}\` as it is ${userid}'s default prompt`);
         }
         const data = await database("gpt_starting_data_overrides").where({ user_id: userid }).first();
         if (data) {
-            if (data.prompt_author_id && data.prompt_name) this.prompt = ((await Prompt.fromName(data?.prompt_author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", data?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>;
+            if (data.prompt_author_id && data.prompt_name) this.setPrompt(((await Prompt.fromName(data?.prompt_author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", data?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>);
             log.debug(`changed prompt of conversation ${this.id} to \`${this.prompt.author.username}/${this.prompt.name}\` as it was set in ${userid}'s starting data overrides`);
             if (data.model) this.model = ((data?.model ?? "") in models ? models[data?.model as keyof typeof models] : models["gpt-4.1-nano"]) as M;
             if (data.prompt_parameter_overrides) this.promptParameterOverrides = JSON.parse(data?.prompt_parameter_overrides ?? "{}");

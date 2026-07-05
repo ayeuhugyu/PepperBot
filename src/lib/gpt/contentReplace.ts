@@ -1,5 +1,6 @@
 import { Client, Role } from "discord.js";
 import * as log from "../log";
+import { Conversation } from "./conversation";
 
 let client: Client | undefined = undefined;
 export function initReplacerClient(inputclient: Client) {
@@ -11,6 +12,7 @@ export async function replaceContentIn(content: string) {
         users: content.matchAll(/<@!?(\d+)>/gm),
         channels: content.matchAll(/<#!?(\d+)>/gm),
         roles: content.matchAll(/<@&!?(\d+)>/gm),
+        guildEmojis: content.matchAll(/<a?(:\w+:)\d+>/gm),
     };
 
     if (mentions.users && client) {
@@ -40,12 +42,17 @@ export async function replaceContentIn(content: string) {
             } catch {}
         }
     }
+    if (mentions.guildEmojis) {
+        for (const mention of mentions.guildEmojis) {
+            content = content.replaceAll(mention[0], mention[1]);
+        }
+    }
     content = content.replaceAll("@everyone", "<@everyone>").replaceAll("@here", "<@here>");
 
     return content;
 }
 
-export function replaceContentOut(content: string) {
+export async function replaceContentOut(content: string, conversation: Conversation) {
     // if (!client) {
         // throw new Error("client is not set"); // theoretically this should never be able to happen since for it to send a message you'd need to first input one
         // return inputContent; // don't do anything to it, itll eventually be defined
@@ -54,6 +61,7 @@ export function replaceContentOut(content: string) {
         users: content.matchAll(/<@\!?(.*?)>/gm),
         channels: content.matchAll(/\!?<#(.*?)>/gm),
         roles: content.matchAll(/<@&\!?(.*?)>/gm),
+        emojis: content.matchAll(/:([\w]+):/gm),
     };
 
     if (mentions.users && client) {
@@ -86,10 +94,12 @@ export function replaceContentOut(content: string) {
         }
     }
 
+    const guild = await conversation.fetchGuild();
+
     if (mentions.roles && client) {
         for (const mention of mentions.roles) {
             try {
-                const role = client.guilds.cache.find(g => g.roles.cache.find(r => r.name === mention[1]))?.roles.cache.find(r => r.name === mention[1])
+                const role = guild?.roles.cache.find(r => r.name === mention[1])
                 if (role) {
                     content = content.replaceAll(mention[0], `<@&${role.id}>`);
                 } else {
@@ -97,6 +107,19 @@ export function replaceContentOut(content: string) {
                 }
             } catch {
                 log.warn(`failed to find role with name ${mention[1]}`);
+            }
+        }
+    }
+
+    if (mentions.emojis) {
+        for (const mention of mentions.emojis) {
+            try {
+                const emoji = guild?.emojis.cache.find(e => e.name === mention[1])
+                if (emoji) {
+                    content = content.replaceAll(mention[0], `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`);
+                }
+            } catch {
+                log.warn(`error finding emoji with name ${mention[1]}`);
             }
         }
     }

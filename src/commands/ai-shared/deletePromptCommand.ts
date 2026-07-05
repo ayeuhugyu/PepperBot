@@ -30,7 +30,7 @@ export async function deletePromptCommand(prompt: AnyPrompt, invoker: FormattedC
         didRemoveDefaultPrompt = true;
     }
 
-    const updatedConversationCount = await database("gpt_conversation_meta").update({ prompt_author_id: invoker.client.user.id, prompt_name: "default" }).where({ prompt_author_id: invoker.author.id, prompt_name: prompt.name });
+    const updatedConversationCount = await database("gpt_conversation_meta").update({ prompt_author_id: invoker.client.user.id, prompt_name: "default", model: "gpt-4.1-nano" }).where({ prompt_author_id: invoker.author.id, prompt_name: prompt.name });
 
     await action.reply(invoker, { content: `deleted prompt: \`${prompt.name}\`\n${didRemoveOverride ? `\nthe next conversation you enter will no longer be set to use \`${prompt.name}\`` : ""}${didRemoveEditing ? `\nyou are no longer editing \`${prompt.name}\`` : ""}${didRemoveDefaultPrompt ? `\nyour default prompt has been reset back to the official default prompt and will no longer use \`${prompt.name}\`` : ""}${(updatedConversationCount > 0) ? `\n${updatedConversationCount} conversation${(updatedConversationCount > 1) ? "s had their prompts" : " had its prompt"} reverted to the default prompt instead of \`${prompt.name}\`` : ""}`, ephemeral: guild_config.other.use_ephemeral_replies });
 }

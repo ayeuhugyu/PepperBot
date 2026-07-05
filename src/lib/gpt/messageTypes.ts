@@ -73,33 +73,41 @@ export class GPTAttachment {
     }
 
     static async new(data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> & { id?: string }) {
+        log.debug(`creating new gpt attachment`);
         const type = lookup(data.filename);
+        log.debug(`found type: ${type}`);
         let expired = data.expiresAt.getTime() < new Date().getTime();
+        log.debug(`expired: ${expired}`);
         if (type) {
             const pureType = type.split("/")[0];
             switch (pureType) {
                 case "image":
+                    log.debug(`detected type: image`);
                     if (expired) {
                         return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the image was never added."});
                     }
                     return new ImageGPTAttachment(data);
                 case "audio":
+                    log.debug(`detected type: audio`);
                     if (expired) {
                         return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the sound was never added."});
                     }
                     return new AudioGPTAttachment(data);
                 case "video":
+                    log.debug(`detected type: video`);
                     if (expired) {
                         return new ErrorGPTAttachment({...data, error: "error creating attachment: the url is now expired. please ignore this message and pretend as though the video was never added."});
                     }
                     return new VideoGPTAttachment(data);
                 case "text":
                 case "application":
+                    log.debug(`detected type: text or application`);
                     // will run for both "text" and "application"
                     // attempt to download the text content and decode it as utf-8
                     try {
                         // check cache
                         if (data.id && existsSync(`cache/attachments/${data.id}`)) {
+                            log.debug(`found already cached attachment: ${data.id}, returning that instead`);
                             const content = readFileSync(`cache/attachments/${data.id}`, "utf-8");
                             return new TextGPTAttachment({...data, content: content});
                         }
@@ -109,14 +117,19 @@ export class GPTAttachment {
                         }
                         const response = await fetch(data.url);
                         if (!response.ok) {
+                            log.debug(`error fetching attachment content: non-200 response from attachment url`);
+                            log.debug(await response.text());
                             return new ErrorGPTAttachment({...data, error: "error fetching attachment content: non-200 response from attachment url"});
                         }
                         const buffer = await response.arrayBuffer();
                         const decoded = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
 
+                        log.debug(`decoded text of size ${decoded.length}`);
+
                         // write cache
                         const att = new TextGPTAttachment({...data, content: decoded});
                         writeFileSync(`cache/attachments/${att.id}`, decoded, "utf-8");
+                        log.debug(`cached and returned attachment`);
                         return att;
                     } catch (err) {
                         log.error(`error while fetching attachment content:`);
@@ -124,6 +137,7 @@ export class GPTAttachment {
                         return new ErrorGPTAttachment({...data, error: `error while fetching attachment content: ${err}`});
                     }
                 default:
+                    log.debug(`detected type: unprocessable (${pureType})`);
                     return new ErrorGPTAttachment({...data, error: "unprocessable attachment type"});
             }
         } else {

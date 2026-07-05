@@ -21,12 +21,13 @@ export async function showEditContentModal(prompt: AnyPrompt, interaction: Butto
         .setCustomId(`editContentModal`)
         .setTitle(`edit ${prompt.name}'s content`)
         .addTextDisplayComponents(new TextDisplay({
-            content: `edit ${prompt.name}'s content`,
+            content: `edit ${prompt.name}'s content\nneed bigger than this? you can use \`${guild_config.other.prefix}prompt set\` with text attachments to achieve ~~Un-~~ Less-limited prompt sizes`,
         }))
         .addLabelComponents(label);
 
     interaction.showModal(modal);
-    const response = await interaction.awaitModalSubmit({ time: 15 * 60 * 60 });
+    const response = await interaction.awaitModalSubmit({ time: 15000 * 60 }).catch(() => {});
+    if (!response) return;
 
     prompt.content = response.fields.getTextInputValue("data_input");
     await prompt.write();

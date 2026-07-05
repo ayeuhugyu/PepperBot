@@ -15,8 +15,6 @@ export const openaiDefault = new OpenAI({
 const supportedImageFileTypes = ["png", "jpg", "jpeg", "webp", "gif"];
 
 async function formatMessage(message: AnyGPTMessage, conversation: Conversation): Promise<ChatCompletionMessageParam[] | null> {
-    log.debug(`formatting gpt message: ${message.id}`);
-
     switch (message.type) {
         case GPTMessageType.System:
             return [{
@@ -42,7 +40,7 @@ async function formatMessage(message: AnyGPTMessage, conversation: Conversation)
                 });
             }
 
-            if (message.attachments.length > 0) { // TODO: make this less shit because oml this sucks
+            if (message.attachments.length > 0) {
                 message.attachments.map((att) => {
                     switch (att.type) {
                         case GPTAttachmentType.Video:
@@ -153,9 +151,19 @@ function formatToolParameters(parameters: Record<string, ToolParameter | CustomT
                 (formatted[param.key] as any).items = { type: (param.schema as any).element?.type };
             }
         } else {
-            formatted[param.key] = {
-                type: param.type,
-                description: param.description,
+            if (param.type == "string[]") {
+                formatted[param.key] = {
+                    type: "array",
+                    items: {
+                        type: "string",
+                    },
+                    description: param.description,
+                }
+            } else {
+                formatted[param.key] = {
+                    type: param.type,
+                    description: param.description,
+                }
             }
         }
     }
@@ -212,6 +220,7 @@ async function formatMessages(conversation: Conversation): Promise<ChatCompletio
     }];
 
 
+    log.debug(`formatting messages for ${conversation.id}`);
     for (const msg of conversation.messages) {
         const formatted = await formatMessage(msg, conversation);
         if (formatted) {
@@ -247,7 +256,7 @@ export async function runOpenAI(conversation: Conversation, openai: OpenAI = ope
 
     let assistantContent = response.choices[0]?.message.content ?? "";
     if (conversation.getPromptParameters().IOReplacements) {
-        assistantContent = replaceContentOut(assistantContent);
+        assistantContent = await replaceContentOut(assistantContent, conversation);
     }
 
     return [

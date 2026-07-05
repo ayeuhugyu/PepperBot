@@ -18,13 +18,21 @@ const command = new Command(
                 long_description: 'the name of the prompt to create',
                 type: CommandOptionType.String,
                 required: true,
+            }),
+            new CommandOption({
+                name: 'useDefaultContent',
+                description: 'if true, will use default content',
+                long_description: 'if true, content will be set to that of the official default prompt. this makes it easier to make small modifications but keep the same personality. to use this from text commands, put "--default" into the input.',
+                type: CommandOptionType.String,
+                required: false,
             })
         ],
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
         example_usage: [
             "p/prompt create",
-            "p/prompt create my prompt"
+            "p/prompt create my prompt",
+            "p/prompt create my prompt --default"
         ],
         aliases: ["new"],
         argument_order: "<name?>"
@@ -39,6 +47,12 @@ const command = new Command(
             });
         }
 
+        let useDefault = args.useDefaultContent;
+        if (args.name.includes("--default")) {
+            useDefault = true;
+            args.name = args.name.replace(/ ?--default/, "");
+        }
+
         if (await Prompt.checkExists(invoker.author.id, args.name)) {
             await action.reply(invoker, { content: `cannot create prompt; you already have a prompt named \`${args.name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies });
             return new CommandResponse({
@@ -47,7 +61,7 @@ const command = new Command(
             });
         }
 
-        const prompt = await Prompt.new(args.name.replaceAll(/[`\n]/g, " "), invoker.author);
+        const prompt = await Prompt.new(args.name.replaceAll(/[`\n]/g, " "), invoker.author, useDefault ?? false);
         await prompt.write();
         await setEditingPrompt(invoker.author.id, prompt.name);
         await action.reply(invoker, { content: `created new prompt: \`${prompt.name}\`. you are now editing prompt \`${prompt.name}\`.`, ephemeral: guild_config.other.use_ephemeral_replies })

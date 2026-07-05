@@ -1,4 +1,4 @@
-import { ButtonInteraction, CacheType, InteractionResponse, LabelBuilder, Message, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ButtonInteraction, CacheType, CheckboxBuilder, InteractionResponse, LabelBuilder, Message, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { AnyPrompt, Prompt, setEditingPrompt } from "../../../lib/gpt/promptManager";
 import { GuildConfig } from "../../../lib/guild_config_manager";
 import { TextDisplay } from "../../../lib/classes/components";
@@ -16,16 +16,25 @@ export async function createNewPrompt(interaction: ButtonInteraction<CacheType>,
         .setLabel("name")
         .setTextInputComponent(data_input);
 
+    const checkbox = new CheckboxBuilder()
+        .setCustomId('checkbox')
+        .setDefault(false);
+
+    const label2 = new LabelBuilder()
+        .setLabel("should this use the default prompt's content?")
+        .setCheckboxComponent(checkbox);
+
     const modal = new ModalBuilder()
         .setCustomId(`newPromptName`)
         .setTitle(`create new prompt`)
         .addTextDisplayComponents(new TextDisplay({
-            content: `enter the new prompt's name`,
+            content: `enter the new prompt's name and if it should use the default prompt's content`,
         }))
-        .addLabelComponents(label);
+        .addLabelComponents(label, label2);
 
     interaction.showModal(modal);
-    const response = await interaction.awaitModalSubmit({ time: 15 * 60 * 60 });
+    const response = await interaction.awaitModalSubmit({ time: 15000 * 60 }).catch(() => {});
+    if (!response) return;
 
     let name = response.fields.getTextInputValue("data_input");
     if (await Prompt.checkExists(interaction.user.id, name)) {
@@ -33,7 +42,9 @@ export async function createNewPrompt(interaction: ButtonInteraction<CacheType>,
         return undefined;
     }
 
-    const prompt = await Prompt.new(name.replaceAll(/[`\n]/g, " "), interaction.user);
+    let usedefault = response.fields.getCheckbox("checkbox");
+
+    const prompt = await Prompt.new(name.replaceAll(/[`\n]/g, " "), interaction.user, usedefault);
     await prompt.write();
     await setEditingPrompt(interaction.user.id, prompt.name);
     await action.edit(sent, { components: await refreshMainPromptEmbed(prompt), components_v2: true });

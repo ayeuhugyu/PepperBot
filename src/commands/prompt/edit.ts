@@ -16,6 +16,7 @@ import { startConfiguringParameters } from "./edit/startConfiguringParameters";
 import { startConfiguringModel } from "./edit/startConfiguringModel";
 import { refreshMainPromptEmbed } from "./edit/refreshMainPromptEmbed";
 import { createNewPrompt } from "./edit/createNewPrompt";
+import { startConfiguringTools } from "./edit/startConfiguringTools";
 
 const command = new Command(
     {
@@ -39,7 +40,7 @@ const command = new Command(
             "p/prompt edit",
             "p/prompt edit my prompt"
         ],
-        aliases: ["get", "build", "builder"],
+        aliases: ["build", "builder"],
         argument_order: "<name?>"
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),
@@ -105,7 +106,8 @@ const command = new Command(
                         await interaction.deferUpdate();
                         return await startConfiguringParameters(sent, prompt, invoker);
                     case "startConfiguringTools": // start configuring tools
-                    break;
+                        await interaction.deferUpdate();
+                        return await startConfiguringTools(sent, prompt, invoker);
                     case "startConfiguringModel": // start configuring the model
                         await interaction.deferUpdate();
                         return await startConfiguringModel(sent, prompt, invoker);

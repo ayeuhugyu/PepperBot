@@ -3,11 +3,17 @@ import { Tool, ToolErrorResponse, ToolSuccessResponse } from "../toolTypes";
 import * as cheerio from "cheerio";
 import TurndownService from 'turndown';
 import puppeteer from 'puppeteer-extra';
+import { DEFAULT_INTERCEPT_RESOLUTION_PRIORITY } from "puppeteer";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import AdBlockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import { Browser } from "puppeteer";
 import * as log from "../../log";
+import UserAgent from "user-agents";
 
 puppeteer.use(StealthPlugin());
+puppeteer.use(AdBlockerPlugin({
+    interceptResolutionPriority: DEFAULT_INTERCEPT_RESOLUTION_PRIORITY,
+}))
 
 let local_ips = ["192.168", "172.16", "10", "localhost"];
 for (let i = 17; i <= 31; i++) {
@@ -28,7 +34,7 @@ async function getBrowser() {
     if (!browserInstance || !browserInstance.connected) {
         browserInstance = await puppeteer.launch({
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--no-first-run', '--no-zygote', '--deterministic-fetch', '--disable-features=IsolateOrigins', '--disable-site-isolation-trails', '--disable-gpu'],
         });
     }
     return browserInstance;
@@ -49,77 +55,81 @@ export default new Tool<typeof parameters, string>({
             }
         }
 
-        try {
-            const browser = await getBrowser();
-            log.debug(`fetched browser at ${browser.process()?.pid}`);
+        let html: string | undefined;
+        const browser = await getBrowser();
+        log.debug(`fetched browser at ${browser.process()?.pid}`);
 
-            const page = await browser.newPage();
+        const page = await browser.newPage();
+        try {
+            await page.setViewport({ width: 1920, height: 1080 });
+            page.setDefaultTimeout(5000);
+            page.setDefaultNavigationTimeout(5000);
             log.debug(`created new page`);
 
-            await page.setViewport({ width: 1920, height: 1080 });
+            log.debug(`waiting for load`);
+            let waitForNaviation = page.waitForNavigation({ waitUntil: "load" }).catch(log.debug);
+            await page.mainFrame().goto(url);
+            await waitForNaviation.catch(log.debug);
+            await page.bringToFront().catch(log.debug);
 
-            log.debug(`waiting for domcontentloaded`);
-            await page.goto(url, {
-                waitUntil: 'domcontentloaded',
-                timeout: 15000
-            });
+            // wait 0.5 seconds
+            log.debug(`waiting for additional redirects`);
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-            const isChallenge = await page.evaluate(() => {
-                const title = document.title.toLowerCase();
-                const bodyText = document.body.innerText.toLowerCase();
+            log.debug(`acquiring page content...`)
+            html = await page.mainFrame().content();
 
-                const challengeIndicators = [
-                    'checking your browser',
-                    'just a moment',
-                    'verify you are human',
-                    'security check',
-                    'ddos protection',
-                    'completing the challenge'
-                ];
+            const startTime = Date.now();
+            const maxTime = 2000; // 2 seconds
+            let mainContentLength = 0;
+            log.debug(`waiting for main content to not be empty`);
+            while (Date.now() - startTime < maxTime) {
+                const copied = cheerio.load(JSON.parse(JSON.stringify(html)));
+                copied('script, style, noscript, iframe, svg, nav, footer').remove();
+                const mainContent = copied('body').text() || copied('main').text() || copied('article').text() || copied('#content').text();
+                mainContentLength = mainContent.length;
+                if (mainContentLength > 0) {
+                    log.debug(`main content is no longer empty`);
+                    break; // we got some content, exit early
+                }
+                // wait 100ms before next poll
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
 
-                // check title or body for "waiting" keywords
-                const hasKeywords = challengeIndicators.some(phrase =>
-                    title.includes(phrase) || bodyText.includes(phrase)
-                );
+            log.debug(`re-acquiring page content...`)
+            html = await page.mainFrame().content();
+        } catch (err) {
+            // fallback to raw fetch
+            log.warn(`failed to fetch ${url} using browser, falling back to node-fetch. error:`);
+            log.warn(err);
+        } finally {
+            setTimeout(async () => {
+                await page.close().catch(log.debug);
+            }, 30000); // put this on a timeout to allow things to keep caching ven if we fail
+        }
 
-                // check if the body is suspiciously empty, but not if its nearly completely empty
-                const bodyLength = document.body.querySelectorAll('*').length
-                const isVerySmall = bodyLength < 10 && bodyLength > 2;
-
-                return hasKeywords || isVerySmall;
-            });
-
-            if (isChallenge) {
-                log.debug("challenge page detected");
-
-                try {
-                    // wait for the url to change or for a 'main' element to appear
-                    await page.waitForFunction(
-                        () => {
-                            const isStillChallenging =
-                                document.title.includes('Just a moment...') ||
-                                !!document.querySelector('#cf-wrapper') ||
-                                !!document.querySelector('.g-recaptcha');
-
-                            const hasContent = !!(document.querySelector('article') || document.querySelector('main') || document.querySelector('h1'));
-
-                            return !isStillChallenging && hasContent;
-                        },
-                        { timeout: 10000, polling: 'mutation' }
-                    );
-
-                    log.debug("bypass successful");
-                    await page.waitForNetworkIdle({ idleTime: 1000, timeout: 5000 });
-                } catch (e) {
-                    log.debug(e);
+        if (!html) {
+            const options: RequestInit = {
+                method: 'GET',
+                headers: {
+                    'User-Agent': new UserAgent().toString(), // prevents a lot of sites that block the default nodejs user agent
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    'Connection': 'keep-alive',
                 }
             }
 
-            const html = await page.content();
-            log.debug(`page content: ${html}`);
-
-            await page.close();
-
+            try {
+                const response = await fetch(url, options);
+                html = await response.text();
+            } catch (err: any) {
+                return new ToolErrorResponse("failed to fetch url: " + err.message);
+            }
+        }
+        try {
+            if (!html) {
+                return new ToolErrorResponse("failed to fetch url: couldn't find html content");
+            }
             const $ = cheerio.load(html);
 
             $('script, style, noscript, iframe, svg, nav, footer').remove();
@@ -137,21 +147,18 @@ export default new Tool<typeof parameters, string>({
             });
 
             const mainContent = $('body').html() || $('main').html() || $('article').html() || $('#content').html();
-            log.debug(`main content: ${mainContent}`);
 
             if (!mainContent) return new ToolErrorResponse("[SYSTEM]: no content found");
 
             let markdown = turndownService.turndown(mainContent);
-            log.debug(`final markdown content: ${markdown}`);
 
             if (markdown.length > 100000) {
                 return new ToolSuccessResponse<string>(markdown.slice(0, 100000) + " ... (truncated)");
             }
 
             return new ToolSuccessResponse<string>(markdown || "[SYSTEM]: no text content returned");
-
         } catch (err: any) {
-            return new ToolErrorResponse(`failed to fetch url: ${err.message}`);
+            return new ToolErrorResponse(`failed to parse html into markdown: ${err.message}`);
         }
     }
 });

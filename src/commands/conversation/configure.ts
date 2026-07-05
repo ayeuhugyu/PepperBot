@@ -68,7 +68,8 @@ const subcommand = new Command(
             const modal = createConfiguratorInputModal(currentValue, editingType, key, schema);
 
             interaction.showModal(modal);
-            const response = await interaction.awaitModalSubmit({ time: 15 * 60 * 60 });
+            const response = await interaction.awaitModalSubmit({ time: 15000 * 60 }).catch(() => {});
+            if (!response) return;
 
             const parsed = await parseConfiguratorInput(response, schema);
             if (!parsed) return;

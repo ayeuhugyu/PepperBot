@@ -26,6 +26,23 @@ export async function refreshMainPromptEmbed(prompt: AnyPrompt, disabled: boolea
                     })
                 }),
                 new Separator(),
+                new Section({
+                    components: [
+                        new TextDisplay({
+                            content: `### __content__:`,
+                        }),
+                    ],
+                    accessory: new Button({
+                        style: ButtonStyle.Primary,
+                        label: "edit content",
+                        custom_id: "editContent",
+                        disabled,
+                    }),
+                }),
+                new TextDisplay({
+                    content: `\n${action.fixMessage({ content: prompt.content.slice(0, 1000), allowOverflow: true }).content!}${(prompt.content.length > 1000) ? "... \n(cut due to length)" : ""}\n`
+                }),
+                new Separator(),
                 new ActionRow({
                     components: [
                         new Button({
@@ -70,23 +87,6 @@ export async function refreshMainPromptEmbed(prompt: AnyPrompt, disabled: boolea
                         }),
                     ]
                 }),
-                new Separator(),
-                new Section({
-                    components: [
-                        new TextDisplay({
-                            content: `### __content__:`,
-                        }),
-                    ],
-                    accessory: new Button({
-                        style: ButtonStyle.Primary,
-                        label: "edit content",
-                        custom_id: "editContent",
-                        disabled,
-                    }),
-                }),
-                new TextDisplay({
-                    content: `\n${action.fixMessage({ content: prompt.content.slice(0, 3500), allowOverflow: true }).content!}${(prompt.content.length > 3500) ? "... \n(cut due to length)" : ""}\n`
-                })
             ]
         })
     ];

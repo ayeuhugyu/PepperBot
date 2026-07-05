@@ -10,7 +10,7 @@ import use from "./use";
 import set from "./set";
 import edit from "./edit";
 import generate from "./generate";
-
+import get from "./get";
 
 const command = new Command(
     {
@@ -22,7 +22,7 @@ const command = new Command(
         options: [],
         subcommands: {
             deploy: SubcommandDeploymentApproach.Split,
-            list: [edit, set, create, remove, list, use, generate],
+            list: [edit, set, create, remove, list, use, generate, get],
         },
         access: CommandAccessTemplates.public,
         input_types: [InvokerType.Message, InvokerType.Interaction],
@@ -33,13 +33,13 @@ const command = new Command(
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}prompt edit\`: edit your current prompt\n\`${guild_config.other.prefix}prompt set\`: set the content of your current prompt\n\`${guild_config.other.prefix}prompt create\`: create a new prompt\n\`${guild_config.other.prefix}prompt delete\`: delete an existing prompt\n\`${guild_config.other.prefix}prompt list\`: list your prompts\n\`${guild_config.other.prefix}prompt use\`: use a specified prompt\n\`${guild_config.other.prefix}prompt generate\`: generate content for a prompt`,
+                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}prompt edit\`: edit your current prompt\n\`${guild_config.other.prefix}prompt set\`: set the content of your current prompt\n\`${guild_config.other.prefix}prompt create\`: create a new prompt\n\`${guild_config.other.prefix}prompt delete\`: delete an existing prompt\n\`${guild_config.other.prefix}prompt list\`: list your prompts\n\`${guild_config.other.prefix}prompt use\`: use a specified prompt\n\`${guild_config.other.prefix}prompt generate\`: generate content for a prompt\n\`${guild_config.other.prefix}prompt get\`: returns the raw data of a prompt`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
         }
         await action.reply(invoker, {
-            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}prompt edit\`: edit your current prompt\n\`${guild_config.other.prefix}prompt set\`: set the content of your current prompt\n\`${guild_config.other.prefix}prompt create\`: create a new prompt\n\`${guild_config.other.prefix}prompt delete\`: delete an existing prompt\n\`${guild_config.other.prefix}prompt list\`: list your prompts\n\`${guild_config.other.prefix}prompt use\`: use a specified prompt\n\`${guild_config.other.prefix}prompt generate\`: generate content for a prompt`,
+            content: `this command does nothing if you don't supply a subcommand. use any of the following subcommands:\n\`${guild_config.other.prefix}prompt edit\`: edit your current prompt\n\`${guild_config.other.prefix}prompt set\`: set the content of your current prompt\n\`${guild_config.other.prefix}prompt create\`: create a new prompt\n\`${guild_config.other.prefix}prompt delete\`: delete an existing prompt\n\`${guild_config.other.prefix}prompt list\`: list your prompts\n\`${guild_config.other.prefix}prompt use\`: use a specified prompt\n\`${guild_config.other.prefix}prompt generate\`: generate content for a prompt\n\`${guild_config.other.prefix}prompt get\`: returns the raw data of a prompt`,
             ephemeral: guild_config.other.use_ephemeral_replies,
         });
     }

@@ -60,7 +60,7 @@ const subcommand = new Command(
         delete data.emitter;
         delete data.isRunningMutex;
         if (!will_be_piped) {
-            await action.reply(invoker, { content: "here's your conversation", files: [textToAttachment(inspect(data, { depth: Infinity }), `${conversation.id}.txt`)], ephemeral: guild_config.other.use_ephemeral_replies });
+            await action.reply(invoker, { content: "here's your conversation", files: [textToAttachment(JSON.stringify(data, null, 4), `${conversation.id}.json`)], ephemeral: guild_config.other.use_ephemeral_replies });
         } else {
             await action.reply(invoker, { content: `piped conversation data`, ephemeral: guild_config.other.use_ephemeral_replies });
         }

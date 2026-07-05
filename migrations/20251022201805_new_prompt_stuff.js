@@ -70,7 +70,11 @@ exports.up = async function(knex) {
                 custom_tools: JSON.stringify([]), // custom tools couldn't be created before this point, while theoretically the data structures for them existed none will have been created
 
                 model_parameters: JSON.stringify(parsedAPIParameters), // these will be autofiltered the next time it is applicable, no need to worry about the "model" key being in them
-                prompt_parameters: JSON.stringify({}) // didn't exist in the previous table
+                prompt_parameters: JSON.stringify({
+                    processingType: "default",
+                    IOReplacements: true,
+                    enableTemplating: true,
+                }) // didn't exist in the previous table, use defaults
             });
         }
 

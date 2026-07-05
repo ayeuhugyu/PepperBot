@@ -58,7 +58,8 @@ export async function startConfiguringParameters(sent: Message<true> | Interacti
             const modal = createConfiguratorInputModal(currentValue, editingType, key, schema);
 
             interaction.showModal(modal);
-            const response = await interaction.awaitModalSubmit({ time: 15 * 60 * 60 });
+            const response = await interaction.awaitModalSubmit({ time: 15000 * 60 }).catch(() => {});
+            if (!response) return; // expired
 
             const parsed = await parseConfiguratorInput(response, schema);
             if (!parsed) return;

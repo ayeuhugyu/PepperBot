@@ -5,14 +5,42 @@ import * as action from "../discord_action";
 import { CustomTool, ToolErrorResponse } from "./toolTypes";
 import { OmitMethods } from "../omitMethods";
 import * as log from "../log";
+import { Mutex } from "async-mutex";
 
 let activeCustomToolPrompts: string[] = [];
+
+class BatchUpdater {
+    private pendingUpdates: { sent: Message; content: string }[] = [];
+    private isProcessing = false;
+
+    constructor(private maxBatchSize: number = 5, private delayMs: number = 1000) {}
+
+    public enqueue(sent: Message, content: string) {
+        this.pendingUpdates.push({ sent, content });
+        if (!this.isProcessing) {
+            this.processBatch();
+        }
+    }
+    private async processBatch() {
+        this.isProcessing = true;
+        while (this.pendingUpdates.length) {
+            const batch = this.pendingUpdates;
+            await Promise.all(
+                batch.map(update => {
+                    return action.edit(update.sent, update.content);
+                })
+            );
+
+            await new Promise((resolve) => setTimeout(resolve, this.delayMs));
+        }
+        this.isProcessing = false;
+    }
+}
 
 export async function respond(message: Message<true>, forceTypingType?: "default" | "typing" | "none", useLatestConversation?: boolean) {
     // if this is a reply to a active custom tool prompt, skip it.
     if (activeCustomToolPrompts.includes(message.reference?.messageId ?? "")) return;
 
-    log.info(`gpt handler invoked`);
     log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
 
     // first, if it includes a direct mention we start a new conversation.
@@ -62,14 +90,34 @@ export async function respond(message: Message<true>, forceTypingType?: "default
         processingMessage = await action.reply(message, "processing...") ?? undefined;
         if (processingMessage) {
             let content = "processing...";
+            let updateScheduled = false;
+            const scheduleUpdate = () => {
+                if (!updateScheduled) {
+                    updateScheduled = true;
+                    setTimeout(async () => {
+                        await action.edit(processingMessage!, content);
+                        updateScheduled = false;
+                    }, 50);
+                }
+            };
+
+            let indexTable: Record<string, number> = {};
+            let index = 0;
+
             const tcListener = async (message: GPTToolCall) => {
-                content += `\n-# processing [${message.toolName}] with args ${JSON.stringify(message.arguments, null, 2).replaceAll(/\s+/g, " ").replaceAll("\n", "")}`
-                action.edit(processingMessage!, content);
+                indexTable[message.toolCallId] = index;
+                index++;
+                const argumentsCopy = JSON.parse(JSON.stringify(message.arguments));
+                if (argumentsCopy.url) {
+                    argumentsCopy.url = `<${message.arguments.url}>`;
+                }
+                content += `\n-# processing [${message.toolName}${indexTable[message.toolCallId]}] with args ${JSON.stringify(argumentsCopy, null, 2).replaceAll(/\s+/g, " ").replaceAll("\n", "")}`
+                scheduleUpdate();
             };
 
             const responseListener = async (message: GPTToolResponse) => {
-                content += `\n-# finished [${message.toolName}]`;
-                action.edit(processingMessage!, content);
+                content += `\n-# finished [${message.toolName}${indexTable[message.toolCallId]}]`;
+                scheduleUpdate();
             }
 
             conversation.emitter.on("toolCall", tcListener);
@@ -80,58 +128,66 @@ export async function respond(message: Message<true>, forceTypingType?: "default
     }
 
     // handle custom tools
+    const isHandlingCustomTool = new Mutex();
+
     const customTCListener = async (tc: GPTToolCall) => {
-        const duration = 5 * 60 // 5 minutes
-        const toolResponseQuestion = await action.reply(message, `the bot is attempting to use a custom tool, please reply with that tool's output:\n-# your message's raw content will be used 1 to 1, do not place your output inside of a codeblock unless you want the ai to see that codeblock too.\n-# this will expire <t:${Math.floor(Date.now() / 1000) + duration}:R>`);
-        if (toolResponseQuestion) {
-            activeCustomToolPrompts.push(toolResponseQuestion.id);
-            const messages = await message.channel.awaitMessages({
-                filter: (m) => (m.author.id === message.author.id) && (m.reference?.messageId === toolResponseQuestion.id),
-                time: duration * 1000,
-                errors: ["time"],
-                max: 1,
-            }).catch(async () => {
-                await action.edit(toolResponseQuestion, "custom tool response expired.")
-            });
+        const release = await isHandlingCustomTool.acquire();
+        try {
+            const duration = 5 * 60 // 5 minutes
+            const toolResponseQuestion = await action.reply(message, `> the bot is attempting to use a custom tool, please reply with that tool's output:\n> -# your message's raw content will be used 1 to 1, do not place your output inside of a codeblock unless you want the ai to see that codeblock too.\n> -# if you attach a text file, its content will be appeneded.\n> -# this will expire <t:${Math.floor(Date.now() / 1000) + duration}:R>\n\n**tool:** \`${tc.toolName}\`\n**parameters:**\n\`\`\`json\n${JSON.stringify(tc.arguments, null, 4)}\n\`\`\``);
+            if (toolResponseQuestion) {
+                activeCustomToolPrompts.push(toolResponseQuestion.id);
+                const messages = await message.channel.awaitMessages({
+                    filter: (m) => (m.author.id === message.author.id) && (m.reference?.messageId === toolResponseQuestion.id),
+                    time: duration * 1000,
+                    errors: ["time"],
+                    max: 1,
+                }).catch(async () => {
+                    await action.edit(toolResponseQuestion, "custom tool response expired.");
+                    setTimeout(async () => {
+                        await action.deleteMessage(toolResponseQuestion).catch(log.debug);
+                    }, 10000);
+                    conversation.addMessage(GPTToolResponse.newCustom(tc, "[SYSTEM]: user failed to provide a response before collector timeout", true));
+                    release();
+                });
 
-            if (!messages) {
-                activeCustomToolPrompts = activeCustomToolPrompts.filter((p) => p !== toolResponseQuestion.id);
-                return;
-            };
+                if (!messages) {
+                    activeCustomToolPrompts = activeCustomToolPrompts.filter((p) => p !== toolResponseQuestion.id);
+                    return;
+                };
 
-            const responseMessage = messages.first();
-            let content = responseMessage?.content ?? "";
+                const responseMessage = messages.first();
+                let content = responseMessage?.content ?? "";
 
-            if ((responseMessage?.attachments.size ?? 0) > 0) {
-                const attachments = await Promise.all(message.attachments.map(async (att) => {
-                    const data: Omit<OmitMethods<GPTAttachment>, "id" | "type"> = {
-                        filename: att.name,
-                        size: att.size,
-                        url: att.url,
-                        expiresAt: new Date(Date.now() + (att.duration ?? (12 * 60 * 60) * 1000)) // 12 hours default
+                if ((responseMessage?.attachments.size ?? 0) > 0) {
+                    const attachment = responseMessage?.attachments.first();
+                    if (attachment) {
+                        const attachmentContent = await fetch(attachment.url).then(res => res.text());
+                        if (attachmentContent) {
+                            content += attachmentContent;
+                        }
                     }
+                }
 
-                    return await GPTAttachment.new(data);
-                }));
-
-                const textAttachment = attachments.find((a) => a.type == GPTAttachmentType.Text);
-                if (textAttachment) {
-                    content += textAttachment.content;
+                if (content.length === 0) {
+                    const noContentResponse = await action.reply(responseMessage as Message<true>, "no content could be detected.")
+                    conversation.addMessage(GPTToolResponse.newCustom(tc, "[SYSTEM]: bot failed to detect this tool's response from the user", true));
+                    activeCustomToolPrompts = activeCustomToolPrompts.filter((p) => p !== toolResponseQuestion.id);
+                    await new Promise((r) => setTimeout(r, 10000));
+                    await action.deleteMessage(toolResponseQuestion);
+                    if (responseMessage) await action.deleteMessage(responseMessage);
+                    if (noContentResponse) await action.deleteMessage(noContentResponse);
+                } else {
+                    await action.edit(toolResponseQuestion, `> custom tool successfully responded to, execution will now continue.\nthis message and your response will be deleted <t:${Math.floor(Date.now()/1000) + 3}:R> to clear up clutter.`);
+                    conversation.addMessage(GPTToolResponse.newCustom(tc, content, false));
+                    await new Promise((r) => setTimeout(r, 3000));
+                    await action.deleteMessage(toolResponseQuestion);
+                    activeCustomToolPrompts = activeCustomToolPrompts.filter((p) => p !== toolResponseQuestion.id)
+                    if (responseMessage) await action.deleteMessage(responseMessage);
                 }
             }
-
-            if (content.length === 0) {
-                await action.reply(responseMessage as Message<true>, "no content could be detected")
-                conversation.addMessage(GPTToolResponse.newCustom(tc, content, true));
-                activeCustomToolPrompts = activeCustomToolPrompts.filter((p) => p !== toolResponseQuestion.id)
-            } else {
-                await action.edit(toolResponseQuestion, "custom tool successfully responded to, execution will now continue.\nthis message and your response will be deleted in 3 seconds to clear up clutter.");
-                conversation.addMessage(GPTToolResponse.newCustom(tc, content, false));
-                await new Promise((r) => setTimeout(r, 3000));
-                await action.deleteMessage(toolResponseQuestion);
-                activeCustomToolPrompts = activeCustomToolPrompts.filter((p) => p !== toolResponseQuestion.id)
-                if (responseMessage) await action.deleteMessage(responseMessage);
-            }
+        } finally {
+            release();
         }
     }
 

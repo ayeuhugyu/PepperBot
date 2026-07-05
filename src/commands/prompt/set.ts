@@ -8,14 +8,14 @@ const command = new Command(
     {
         name: 'set',
         description: 'sets the content of your current prompt',
-        long_description: 'sets the content of your current prompt. also sets it as your used prompt. basically a shorthand, as this can be done in a bunch of other ways',
+        long_description: 'sets the content of your current prompt. also sets it as your used prompt. basically a shorthand, as this can be done in a bunch of other ways. if you cannot fit the content inside of a discord message, you can add it as an attachment and that will be used instead.',
         tags: [CommandTag.AI, CommandTag.TextPipable],
         pipable_to: [],
         options: [
             new CommandOption({
                 name: 'content',
                 description: 'the content to give the prompt',
-                long_description: 'the content to give the prompt',
+                long_description: 'the content to give the prompt. if you cannot fit this inside of a discord message, you can add it as an attachment and that will be used instead.',
                 type: CommandOptionType.String,
                 required: true,
             })

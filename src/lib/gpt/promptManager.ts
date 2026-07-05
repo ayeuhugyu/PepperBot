@@ -9,6 +9,7 @@ import { models } from "./models";
 import * as log from "../log";
 import { Mutex } from "async-mutex";
 import database, { DBPrompt } from "../data_manager";
+import { getDefaultPrompt } from "./officialPrompts";
 
 const boolSchema = z.preprocess((val) => {
     if (typeof val === "boolean") return val;
@@ -33,19 +34,19 @@ export const promptParameterTypings = { // no need to remake this type just beca
     "IOReplacements": {
         key: "IOReplacements",
         description: "whether or not to enable the input / output replacements. when true (default), user, channel, and role mentions will be replaced with their actual names instead of their id's. when false, they will be left untouched. note that the bot will still have mass pings (@everyone, @here, and all role mentions) replaced, assuming the server was not configured otherwise.",
-        schema: boolSchema.default(false),
+        schema: boolSchema.default(true),
     },
     "enableTemplating": {
         key: "enableTemplating",
         description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
-        schema: boolSchema.default(false),
+        schema: boolSchema.default(true),
     }
 }
 
 export const defaultPromptParameters: InferModelParameters<typeof promptParameterTypings> = {
     processingType: "default",
     IOReplacements: true,
-    enableTemplating: false,
+    enableTemplating: true,
 }
 
 type PromptInput = OmitMethods<Prompt<AnyModel>>
@@ -83,7 +84,7 @@ function safeJSONParse(data: any, onFailValue: any) {
         didFail = true;
     }
 
-    return didFail ? parsed : onFailValue;
+    return didFail ? onFailValue : parsed;
 }
 
 export interface PromptAuthor {
@@ -140,8 +141,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
     }
 
     static async fromDB(data: DBPrompt) {
-        log.debug(`creating prompt from DB data:`);
-        log.debug(data);
+        log.debug(`creating prompt from DB data for ${data.author_id}/${data.name}`);
 
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
         if (!model) model = gpt41Nano;
@@ -170,7 +170,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
         return new Prompt(inputData) as AnyPrompt;
     }
 
-    static async new(name: string, author: User) {
+    static async new(name: string, author: User, useDefaultContent: boolean = false) {
         return new Prompt<typeof gpt41Nano>({
             name: name,
             author: {
@@ -178,7 +178,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
                 username: author.username,
                 avatar: author.displayAvatarURL(),
             },
-            content: "[empty prompt]",
+            content: useDefaultContent ? (await getDefaultPrompt()).content : "[empty prompt]",
 
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -206,15 +206,13 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
     }
 
     async delete() {
-        log.debug(`deleting prompt \`${this.author.id}/${this.name}\` with current data:`);
-        log.debug(this);
+        log.debug(`deleting prompt \`${this.author.id}/${this.name}\``);
 
         return await database("prompts").where({ author_id: this.author.id, name: this.name }).delete();
     }
 
     async write() {
-        log.debug(`writing prompt \`${this.author.id}/${this.name}\` with data:`);
-        log.debug(this);
+        log.debug(`writing prompt \`${this.author.id}/${this.name}\``);
 
         const data: DBPrompt = {
             name: this.name,
@@ -235,8 +233,6 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
             prompt_parameters: JSON.stringify(this.promptParameters),
         }
 
-        log.debug(`converted to DB data:`);
-        log.debug(data);
         log.debug(`writing to DB...`)
 
         return await database("prompts").insert(data).onConflict(["author_id", "name"]).merge();
