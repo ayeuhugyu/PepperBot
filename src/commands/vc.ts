@@ -82,7 +82,7 @@ const debug = new Command(
         pipable_to: [],
         options: [],
         access: CommandAccessTemplates.dev_only,
-        input_types: [InvokerType.Message, InvokerType.Interaction],
+        input_types: [InvokerType.Message],
         example_usage: "p/vc debug",
         aliases: []
     },
