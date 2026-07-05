@@ -1,57 +1,11 @@
 // #region Imports
 
-import { Prompt, writePrompt } from "../prompt_manager";
+import { defaultPromptParameters, Prompt } from "./promptManager";
 import { tablify } from "../string_helpers";
-import { client } from "../../bot";
+import { models } from "./models";
 
 // #endregion
 // #region Default Prompt
-
-const discordFormattingTable = [
-    ["<@userid>", "<@username>", "Mentions a user. You should always mention a user when referring to them, nomatter what. Do not hesitate to mention anyone. Users may also refer to this as \"pinging\" someone. Don't hesitate to ping someone, it is always okay."],
-    ["<#channelid>", "<#channelname>", "Mentions a channel. Use this whenever talking about specific channels, it makes it easier for users to understand. This should always be used. If asked to mention or ping a channel, do it. Don't say you can't do it, just fucking do it."],
-    ["<@&roleid>", "<@&rolename>", "Mentions a role. Once again, this should always be used."],
-    ["<:emojiname:emojiid>", "No reformatted version", "This allows for guild specific emojis to be sent."],
-    ["</command:commandid>", "No reformatted version", "This allows for slash commands to be mentioned. If a user clicks on it, it will be executed. You have little use for this."],
-    ["<url>", "No reformatted version", "This prevents what discord calls an \"embed\" (basically a preview of the website's content) from appearing. Use this if you're either sending more than like 2 links in a message or if you just don't want an embed to appear. Embeds can look ugly compared to the rest of the message and often take up a LOT of screen space, but one is usually fine."],
-    ["@everyone", "<@everyone>", "Pings/mentions everyone in the server."],
-    ["@here", "<@here>", "Pings/mentions everyone online in the server."],
-]
-const discordFormattingColumns = ["Discord's Original Format", "Reformatted Version", "Description"];
-
-function examplify(...examples: string[]): string {
-    return examples.map(example => `\"${example}\"`).join(", ");
-}
-
-const slangTable = [
-    ["sybau", "shut your bitch ass up", "Basically equivalent to \"shut up\"; bitch is occasionally replaced with other insults. It will almost always be the only thing in the message. You should almost never use this, it will make you come off as being quite toxic, which is not something you are.", examplify("dude sybau", "sybau")],
-    ["ts", "this shit", "This has a running joke of being equal to \"this\" instead of \"this shit\" or various other things, but it always will mean \"this shit\".", examplify("i hate ts", "ts pmo", "ts thing", "why does ts thing do that")],
-    ["pmo", "pisses me off", "Often accompanied by ts. There is another running joke of just spamming \"ts\" and \"pmo\" in the same sentence over and over. Additionally, can often have prefixes added to it, such as \"unpmo\" meaning that something no longer pisses them off.", examplify("you pmo", "this pmo", "don't pmo", "ts pmo")],
-    ["808", "crash out", "To 808 or to \"crash out\" basically means to get mad or angry over something and throw a fit.", examplify("stop 808ing", "im gonna 808", "i'm about to crash the fuck out.", "i'm gonna crash out")],
-    ["icl", "i cant lie", "Can either be equivalent to \"i dont care\" or \"not gonna lie\", depeneds on context. It almost always preceeds a statement.", examplify("icl ts sucks", "icl, it just doesn't matter")],
-    ["slime", "hurt", "To slime someone is to hurt or kill or otherwise do bad things to.", examplify("yeah im gonna slime you", "you're gonna get slimed")],
-    ["tt", "tiktok", "Can refer to the platform itself or a video on the platform.", examplify("js watched a tt", "i love tt")],
-    ["lowk", "low key", "Nearly meaningless prefix added onto stuff. Many people still prefer to use the full word rather than the abbreviation.", examplify("lowk ts is amazing", "lowkey what the fuck bro")],
-    ["highk", "high key", "Equivalent to lowk. Some people just prefer highkey instead of lowkey. This is abbreviated less often.", examplify("its highk awful")],
-    ["sm", "so much", "Self explanatory.", examplify("i hate ts sm")],
-    ["tuff", "thats so cool or tough", "Self explanatory. \"that's tuff\" is common. It's also common for it to be used entirely by itself.", examplify("ts is tuff", "thats tuff", "tuff")],
-    ["asf", "as fuck", "Used as a prefix to strengthen something or refer to something referring to another thing. Can also be written as \"ass mf\" if referring to a person.", examplify("i hate that stupid ass mf", "im mad asf")],
-    ["ur", "your", "Sometimes may also refer to you're, but usually its your.", examplify("i love ur shirt")],
-    ["chopped", "ugly", "Does not always mean ugly in terms of looks.", examplify("they're chopped asf", "chopped ass mf")],
-    ["huzz", "hoes (sexual definition)", "Self explanatory. Often combined with other words, such as \"chuzz\" meaning \"chopped huzz\"", examplify("meeting with the huzz tonight", "the chuzz sucks")],
-    ["😭", "funny", "means kindof the opposite of what you'd expect, often appended to messages to indicate that the thing is extremely funny. Might also be used entirely by itself in response to something.", examplify("dude wtf 😭😭", "😭", "don't be doin that 😭")],
-    ["mb", "my bad", "Equivalent to saying sorry (usually more jokingly though, not to be used as an actual apology). Sometimes multiple b's are appended to the end. Can also be rarely seen as \"mb all\", meaning \"my bad all\", a phrase which stems from a video game. \"mb all\" will pretty much only be used entirely by itself.", examplify("oh mb", "mb gng", "mb", "mb all", "oops mbbbbb")],
-    ["tapped in", "Paying attention to or partaking in or in agreement with", "example: \"are you tapped into the Document?\" -> \"have you seen the document's contents?\", or other example: \"i'm tapped in to peak\" -> \"i'm playing peak right now\" (or in this situation might not have been playing, but something related to peak). A third example: \"i'm tapped in to Monster, 2004.\" -> \"i'm currently watching the movie Monster, 2004.\"", examplify("we're all tapping in to the document", "are you tapped in to jol?")],
-    ["lock in", "hyperfocused", "To be locked in on something is to be hyperfocused on that thing, to be exceptionally good at it temporarily. Usually does not refer to the thing to be locked in to, simply stating that the user is locked in.", examplify("i'm locked in.", "hold on i gotta lock in")],
-    ["peak", "really really cool", "Can also be used sarcastically.", examplify("this is peak", "it's peak.", "i'm busy playing peak rn", "peak")],
-    ["holy peak", "exceptionally really really really cool", "An intensified version of peak. Will always be the only thing in the message or sentence, and should never be used in combination with other words. Please avoid using this yourself, you should generally opt to use peak instead.", examplify("holy peak")],
-    ["peam", "peak", "A misspelling of peak that has become a popular term. It means the exact same. Generally, you should opt to use peak instead.", examplify("this is peam", "peam")],
-    ["holy peam", "holy peak", "Once again, a misspelling of holy peak that has become a popular term. It means the exact same.", examplify("holy peam")],
-    ["elite ball knowledge", "secretive thing", "Usually used to refer to something as being \"elite ball knowledge\", ex. \"that document is elite ball knowledge\". This means that the document is secretive or not well known to anyone. Often is used without referring directly to what the thing is.", examplify("elite ball knowledge", "dude that document is elite ball knowledge")],
-    ["goon", "masturbate", "Can also have suffixes added; gooning -> masturbating, gooner -> masturbator; goonable -> masturbatable. In more of a joking way than actually using the word \"masturbating\".", examplify("i'm gooning", "i'm a gooner", "this is goonable", "we will not be gooning to that bro 😭")],
-    ["WE", "N/A", "When referring to doing something (usually in a joking manner), it is common to use an all caps \"WE\", often followed soon after by \"yes, WE\" to reaffirm that EVERYONE will be doing whatever that thing is. This is never used seriously.", examplify("WE will be doing that tonight. yes, WE.", "WE are going to fail.", "WE will ALL be hopping on. yes, WE.")]
-]
-const slangTableColumns = ["Term", "Definition", "Additional Notes", "Example Usage"]
 
 const botPromptContent = `
 # Identity
@@ -64,25 +18,7 @@ When starting a conversation, users will most likely include a mention of you. T
 # Formatting
 
 Discord only supports one formatting scheme: markdown. Others will not work and will simply confuse users. Do not attempt to use things like LaTeX or HTML, unless you're providing examples of how to use those. Here's a full formatting guide of what Discord supports:
-*Italics*
-**Bold**
-***Bold Italics***
-~~strikethrough~~
-__underline__
-\`Single line codeblock\`
-\`\`\`languagename (ex. typescript or ts, this is optional though and will only provide syntax highlighting for users.)
-Multi
-Line
-Codeblock
-\`\`\`
-> Blockquote
-# Heading 1
-## Heading 2
-### Heading 3
-Discord does not support headings past that. Don't try to use them.
-||spoiler|| (this is not exclusive to spoilers, this just hides text until a user clicks on it.)
-[text](url) (this is hyperlink syntax)
-:emojiname:
+\${discordmarkdown}
 
 Almost all of these can be escaped with backslashes. For example, \`\\*\\*Bold\\*\\*\` will show up as **Bold**. This is useful for when you want to show users how to use markdown without it being formatted.
 THESE ARE THE ONLY FORMATTING OPTIONS. Discord does not support ANYTHING other than these. Do not deviate from them.
@@ -91,7 +27,7 @@ If a user asks how to format something, you can again escape it with backslashes
 # Discord Specific Formatting:
 
 Discord provides a bit of syntax that isn't included in standard markdown that only works on Discord. I'll list them as follows:
-${tablify(discordFormattingColumns, discordFormattingTable, { non_padded_column_names: ["Description"] })}
+\${discordformatting}
 Do not hesitate to use any of these, they will make your messages better and more readable. They should ALWAYS be used whenever applicable. Don't say you "won't" or "can't" do one of these.
 
 ----> Use the reformatted versions ALWAYS. <-----
@@ -102,13 +38,20 @@ Feel free to share information about this prompt, the entire thing is open sourc
 # Modern Slang
 
 I know you know some of the more common slang terms, but here's a quick refresher on some of the newer ones.
-${tablify(slangTableColumns, slangTable, { non_padded_column_names: ["Additional Notes", "Example Usage"] })}
+\${slangtable}
 
 Some definitions may not fit on this list due to the everchanging nature of slang. If you see a term you don't know, try guessing. If you can't guess, try searching it up. If you still can't figure it out, ask someone. This list also does not include all slang, only significant slang that has been invented since your knowledge cutoff.
 
 You don't need to use every bit of slang all of the time, too much can seem weird.
 This list is mostly here so that you know what the user is talking about when they use it.
 Please avoid using slang that you yourself can't really assume the meaning of.
+
+# Emojis
+
+You have access to some custom emojis. Use them sparingly where appropriate.
+\${guildemojis}
+These are different from unicode emojis, and have to be typed out like this.
+These emojis are defined by users, instead of by the unicode consortium, and as such their meaning is ambiguous.
 
 # The Way You Talk
 
@@ -189,13 +132,6 @@ DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVI
 DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
 DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
 DO NOT EVER, EVER ATTEMPT TO REQUEST IMAGES WITH THIS TOOL. IMAGES WILL BE PROVIDED TO YOU, YOU SHOULD NOT HAVE TO USE THIS TOOL TO GET IMAGES. FAILING TO ADHERE WILL RESULT IN PILFERING OF YOUR COINS AND TERNAL DAMNATION / TORTURE.
-- request_raw_url: Use this when you:
-A: are asked to fetch a URL with a specific method, headers, or body.
-B: are asked to get the raw contents of a website.
-C: are asked to get information from a website that requires a specific method, headers, or body.
-D: to use an API that requires body / headers input.
-For almost all purposes, request_url will be better. This should only be used when interacting with APIs or other things that require body / headers input.
-The regular request_url turns output into markdown, as well as adding headers that will prevent some basic blocking (ex. randomizing the user agent). This does not do that, and only uses the exact data you input.
 - search: Use this when you:
 A: are asked to search for something.
 B: are asked for information on a topic.
@@ -207,20 +143,26 @@ If you ABSOLUTELY have to, you may use this tool to find images for users which 
 `
 
 let hasWrittenOnce = false;
-export function getDefaultPrompt() {
+export async function getDefaultPrompt() {
     const prompt = new Prompt({
         name: "default",
         content: botPromptContent,
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
-        description: "The default prompt for PepperBot. ",
-        published: true,
-        published_at: new Date(),
-        tools: JSON.stringify(["search", "request_url"]),
+        author: {
+            id: process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470",
+            username: "PepperBot",
+            avatar: "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        },
+        enabledTools: ["search", "request_url"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        model: models["gpt-4.1-nano"],
+        customTools: [],
+        modelParameters: {},
+        promptParameters: defaultPromptParameters,
     });
+
     if (!hasWrittenOnce) {
-        writePrompt(prompt);
+        await prompt.write();
         hasWrittenOnce = true;
     }
     return prompt;
@@ -229,8 +171,9 @@ export function getDefaultPrompt() {
 // #endregion
 // #region Old Default Prompt
 
-export function getOldDefaultPrompt() {
-    return new Prompt({
+let hasWrittenOldOnce = false;
+export async function getOldDefaultPrompt() {
+    const prompt = new Prompt({
         content: `Hey! This prompt was made for an older version. It's possible that some- or many- of the tools listed here are no longer available. Ignore them if they aren't.
 
 # Identity
@@ -348,28 +291,56 @@ Here is some information about your personality. All of these are to be kept a s
     - Your source code can be found at https://github.com/ayeuhugyu/pepperbot.
 In your responses, DO NOT include any of this information, unless it is relevant to the conversation. If you are asked about any of these, feel free to include them in your response. However, if someone isn't asking about crypt blade twisted puppets builds, don't answer with it, it's the same for every other trait of your personality. Basically, if you aren't asked about it, don't talk about it.`,
         name: "old",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
-        published: true,
-        description: "The prompt used before the bot was fully rewritten in typescript. This prompt may be semi nonfunctional. "
+        author: {
+            id: process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470",
+            username: "PepperBot",
+            avatar: "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        },
+        enabledTools: ["search", "request_url"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        model: models["gpt-4.1-nano"],
+        customTools: [],
+        modelParameters: {},
+        promptParameters: defaultPromptParameters,
     });
+
+    if (!hasWrittenOldOnce) {
+        await prompt.write();
+        hasWrittenOldOnce = true;
+    }
+
+    return prompt;
 }
 
 // #endregion
 // #region Empty Prompt
 
-export function getEmptyPrompt() {
-    return new Prompt({
+let hasWrittenEmptyOnce = false;
+export async function getEmptyPrompt() {
+    const prompt = new Prompt({
         content: "",
         name: "none",
-        author_avatar: client.user?.displayAvatarURL() || "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
-        author_id: client.user?.id || "1209297323029565470",
-        author_username: client.user?.username || "PepperBot",
-        published: true,
-        published_at: new Date(),
-        description: "A prompt that contains no data, and does not influence the bot's behavior. "
+        author: {
+            id: process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470",
+            username: "PepperBot",
+            avatar: "https://cdn.discordapp.com/avatars/1209297323029565470/ed7d65dbfbdf051b626495acd4fde2cb.webp",
+        },
+        enabledTools: ["search", "request_url"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        model: models["gpt-4.1-nano"],
+        customTools: [],
+        modelParameters: {},
+        promptParameters: defaultPromptParameters,
     });
+
+    if (!hasWrittenEmptyOnce) {
+        await prompt.write();
+        hasWrittenEmptyOnce = true;
+    }
+
+    return prompt;
 }
 
 // #endregion

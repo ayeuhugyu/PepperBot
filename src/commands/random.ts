@@ -256,7 +256,7 @@ const command = new Command(
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}random pepper\`: get a random pepper\n\`${guild_config.other.prefix}random phrase\`: generate a random phrase from a list of parts of speech`,
+                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}random pepper\`: get a random pepper\n\`${guild_config.other.prefix}random phrase\`: generate a random phrase from a list of parts of speech`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;

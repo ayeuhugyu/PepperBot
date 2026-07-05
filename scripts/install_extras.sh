@@ -10,13 +10,13 @@ echo "Installing yt-dlp..."
 pip3 install --upgrade yt-dlp
 
 # Install lune using apt
-echo "Installing lune using apt..."
-if sudo apt install -y lune; then
-    echo "Lune installed successfully using apt."
-else
-    echo "Failed to install lune using apt. Please check if the package is available or install it manually."
-    lune_install_failed=true
-fi
+# echo "Installing lune using apt..."
+# if sudo apt install -y lune; then
+#     echo "Lune installed successfully using apt."
+# else
+#     echo "Failed to install lune using apt. Please check if the package is available or install it manually."
+#     lune_install_failed=true
+# fi
 
 # Cleanup
 echo "Cleaning up..."

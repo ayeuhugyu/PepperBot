@@ -3,7 +3,7 @@ import commands from "../lib/command_manager";
 import { fetchGuildConfig, GuildConfig } from "../lib/guild_config_manager";
 import { Command, CommandInput, CommandInvoker, CommandResponse } from "../lib/classes/command";
 import * as action from "../lib/discord_action";
-import { respond } from "../lib/gpt/main";
+// import { respond } from "../lib/gpt/main";
 import { CommandEntryType, CommandTag, InvokerType } from "../lib/classes/command_enums";
 import { incrementPipedCommands } from "../lib/statistics";
 import { handleDiabolicalEvent } from "../lib/diabolical_events_manager";
@@ -12,15 +12,15 @@ import { getAlias, listAliases } from "../lib/alias_manager";
 import { isMaintenanceModeActive, getMaintenanceEndTimestamp } from "../lib/maintenance_manager";
 import { CommandAccessTemplates } from "../lib/templates";
 import { getPermissionsFromMessage } from "../lib/permissions_utils";
+import { respond } from "../lib/gpt/respond";
 
 async function gptHandler(message: Message<true>) {
-    // Only process if the bot is mentioned.
-    if (!message.mentions || !message.mentions.has(message.client.user?.id)) {
-        return;
-    }
-    // verify bot has permissions to send messages
+    // obviously don't process if its not a mention
+    if (!message.mentions || !message.mentions.has(message.client.user?.id)) return;
+
+    // check that we have the permissions for this
     const permissions = getPermissionsFromMessage(message);
-    const requiredPermissions = [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessagesInThreads];
+    const requiredPermissions = [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessagesInThreads/*, PermissionFlagsBits.AttachFiles*/];
     if (!permissions || (!(permissions.has(PermissionFlagsBits.Administrator) || requiredPermissions.every(perm => permissions.has(perm))))) {
         log.warn(`could not complete gpt handler due to lack of permissions (${message.channel?.id})`);
         return;
@@ -47,7 +47,7 @@ async function gptHandler(message: Message<true>) {
     const gconfig = await fetchGuildConfig(message.guild?.id);
     const prefix = gconfig.other.prefix;
 
-    // Skip if AI responses are disabled, the channel is blacklisted,
+    // skip if AI responses are disabled, the channel is blacklisted,
     // the author is a bot, or the message starts with the command prefix.
     if (
         gconfig.AI.disable_responses ||
@@ -55,12 +55,8 @@ async function gptHandler(message: Message<true>) {
         message.author.bot ||
         message.content.startsWith(prefix) ||
         message.author.id === message.client.user?.id
-    ) {
-        return;
-    }
+    ) return;
 
-    log.info(`gpt handler invoked`);
-    log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
     await respond(message);
 }
 

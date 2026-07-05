@@ -270,7 +270,7 @@ const command = new Command(
     async function execute ({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}thesaurus get\`: get antonyms and synonyms of a specific word\n\`${guild_config.other.prefix}thesaurus translate\`: translate a phrase into synonyms`,
+                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}thesaurus get\`: get antonyms and synonyms of a specific word\n\`${guild_config.other.prefix}thesaurus translate\`: translate a phrase into synonyms`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;

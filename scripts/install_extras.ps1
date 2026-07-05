@@ -20,6 +20,6 @@ if (-Not (Test-Path -Path $ytDlpPath)) {
 }
 
 # Display warning for lune-org/lune
-Write-Host "WARNING: lune-org/lune cannot be easily installed on a Windows OS using this script. Please manually install it from the instructions provided at https://lune-org.github.io/docs/getting-started/1-installation" -ForegroundColor Red
+# Write-Host "WARNING: lune-org/lune cannot be easily installed on a Windows OS using this script. Please manually install it from the instructions provided at https://lune-org.github.io/docs/getting-started/1-installation" -ForegroundColor Red
 
 Write-Host "Installation process completed!" -ForegroundColor Cyan

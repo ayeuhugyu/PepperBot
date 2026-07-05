@@ -9,6 +9,7 @@ export const DiscordAnsi = {
     red: (str: string) => `[2;32m[2;31m${str}[0m`,
     green: (str: string) => `[2;32m${str}[0m`,
     gold: (str: string) => `[2;33m${str}[0m`,
+    yellow: (str: string) => `[2;33m${str}[0m`,
     blue: (str: string) => `[2;34m${str}[0m`,
     magenta: (str: string) => `[2;35m${str}[0m`,
     cyan: (str: string) => `[2;36m${str}[0m`,

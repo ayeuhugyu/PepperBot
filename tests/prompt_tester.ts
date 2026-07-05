@@ -1,4 +1,4 @@
-import { writePrompt, Prompt } from "../src/lib/prompt_manager";
+import { writePrompt, Prompt } from "../src/lib/prompt_manager_old";
 
 console.log(await writePrompt(new Prompt({
     name: "test2",

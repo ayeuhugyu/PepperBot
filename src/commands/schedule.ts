@@ -219,7 +219,8 @@ const command = new Command(
                             }) as any
                         ]
                     });
-                    let submitted = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 });
+                    let submitted = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 }).catch(() => {});
+                    if (!submitted) return; // expired
                     (submitted as unknown as FormattedCommandInteraction).author = submitted.user;
                     Object.assign(submitted, { author: submitted.user });
                     if (submitted.customId == 'schedule_date_modal') {
@@ -289,7 +290,8 @@ const command = new Command(
                             }) as any
                         ]
                     });
-                    const submittedMessage = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 });
+                    const submittedMessage = await interaction.awaitModalSubmit({ time: 2 * 60 * 1000 }).catch(() => {});
+                    if (!submittedMessage) return; // expired
                     (submittedMessage as unknown as FormattedCommandInteraction).author = submittedMessage.user;
                     if (submittedMessage.customId == 'schedule_message_modal') {
                         const messageInput = submittedMessage.fields.getTextInputValue('message_input');

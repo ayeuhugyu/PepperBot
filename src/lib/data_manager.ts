@@ -60,6 +60,7 @@ const expectedOther: string[] = [
     "cache",
     "cache/containers",
     "cache/luau",
+    "cache/attachments",
     "logs",
 ];
 const expectedLogs: string[] = [
@@ -154,6 +155,182 @@ const database = knex({
     useNullAsDefault: true,
 });
 log.info("opened database connection");
+
+/**
+ *         await knex.schema.createTable('prompts', (table) => {
+            table.string('name').notNullable();
+            table.string('author_id').notNullable();
+            table.string('author_username').notNullable();
+            table.string('author_avatar')
+            table.text('content').notNullable();
+
+            table.bigInteger('created_at').notNullable();
+            table.bigInteger('updated_at').notNullable();
+
+            table.bigInteger('published_at').nullable();
+            table.boolean('published').notNullable();
+            table.string('description').notNullable();
+
+            table.string('origin').nullable();
+
+            table.string('model').notNullable();
+
+            table.text('enabled_tools').notNullable();
+            table.text('custom_tools').notNullable();
+
+            table.text('model_parameters').notNullable();
+            table.text('prompt_parameters').notNullable();
+
+            table.primary(['author_id', 'name']);
+        });
+ */
+
+
+export interface DBPrompt {
+    name: string;
+    author_id: string;
+    author_username: string;
+    author_avatar: string | null;
+    content: string;
+
+    created_at: number;
+    updated_at: number;
+
+    model: string;
+
+    enabled_tools: string;
+    custom_tools: string;
+
+    model_parameters: string;
+    prompt_parameters: string;
+}
+declare module "knex/types/tables" {
+    interface DBPromptEditingMetadata {
+        user: string;
+        editingPrompt: string;
+    }
+    interface SoundEntry {
+        guild: string | null;
+        user: string | null;
+        name: string;
+        path: string;
+        created_at: string;
+    }
+
+    interface ScheduledEventEntry {
+        id: string;
+        creator_id: string;
+        channel_id: string | null;
+        content: string;
+        time: string;
+        type: string;
+    }
+
+    interface MaintenanceEntry {
+        id: number;
+        enabled: boolean;
+        end_timestamp: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+    }
+
+    interface ConfigEntry {
+        guild: string;
+        key: string;
+        value: string;
+        category: string;
+    }
+    interface ThesaurusCacheEntry {
+        id: number;
+        word: string;
+        data: string;
+        created_at: number;
+    }
+    interface PromptDefaultEntry {
+        user_id: string;
+        author_id: string;
+        prompt_name: string;
+    }
+
+    interface DBGPTConversationMeta {
+        id: string;
+        prompt_author_id: string;
+        prompt_name: string;
+        prompt_parameter_overrides: string; // json
+        model_parameter_overrides: string; // json
+        model: string;
+    }
+    interface DBGPTUser {
+        conversation_id: string;
+        id: string;
+        username: string;
+        avatar: string;
+    }
+
+    interface DBGPTAttachment {
+        message_id: string;
+        type: "image" | "video" | "audio" | "text" | "unknown" | "error";
+        id: string;
+        filename: string;
+        url: string;
+        url_as_file: boolean;
+        size: number;
+        expires_at: Date | string | number;
+        content?: string;
+        error?: string;
+    }
+    interface DBGPTMessage {
+        id: string;
+        conversation_id: string;
+        type: "user" | "assistant" | "tool_call" | "tool_response" | "system";
+        created_at: Date | string | number;
+
+        content: string | null;
+
+        author_id: string | null; // specific to user messages
+
+        discord_message_id?: string;
+        discord_reference_id?: string | null;
+        discord_channel_id?: string | null;
+        discord_guild_id?: string | null;
+
+        tool_call_id?: string; // specific to tool calls & responses
+        tool_name?: string; // specific to tool calls & responses
+        arguments?: string; // json
+        response?: string; // json
+        tool_call_ids?: string; // specific to assistant messages, json
+
+        been_deleted?: boolean; // specific to discordable messages
+        sent?: boolean; // specific to assistant messages
+        answered?: boolean; // specific to tool calls
+    }
+
+    interface Tables {
+        prompts: DBPrompt;
+        prompt_defaults: PromptDefaultEntry;
+        prompt_editing_metadata: DBPromptEditingMetadata;
+
+        sounds: SoundEntry;
+        configs: ConfigEntry;
+        scheduled: ScheduledEventEntry;
+        thesaurus_cache: ThesaurusCacheEntry;
+        maintenance_mode: MaintenanceEntry;
+
+        gpt_conversation_meta: DBGPTConversationMeta;
+        gpt_starting_data_overrides: Partial<Omit<DBGPTConversationMeta, "id"> & { user_id: string }>;
+        gpt_force_next_new: { user_id: string };
+        gpt_users: DBGPTUser;
+
+        gpt_messages: DBGPTMessage;
+        gpt_attachments: DBGPTAttachment;
+
+        gpt_user_messages: DBGPTMessage;
+        gpt_assistant_messages: DBGPTMessage;
+        gpt_tool_call_messages: DBGPTMessage;
+        gpt_tool_response_messages: DBGPTMessage;
+        gpt_system_messages: DBGPTMessage;
+    }
+}
 
 export default database;
 async function getTables(): Promise<string[]> {

@@ -191,7 +191,7 @@ const aliasCommand = new Command(
     async function execute({ invoker, args, guild_config }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}alias create\`: create a new alias\n\`${guild_config.other.prefix}alias delete\`: delete an existing alias\n\`${guild_config.other.prefix}alias list\`: list your aliases`,
+                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}alias create\`: create a new alias\n\`${guild_config.other.prefix}alias delete\`: delete an existing alias\n\`${guild_config.other.prefix}alias list\`: list your aliases`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;

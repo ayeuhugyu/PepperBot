@@ -270,7 +270,7 @@ const command = new Command(
     async function execute ({ invoker, guild_config, args }) {
         if (args.subcommand) {
             action.reply(invoker, {
-                content: `invalid subcommand: ${args.subcommand}; use any of the following subcommands:\n\`${guild_config.other.prefix}sound get\`: get a sound\n\`${guild_config.other.prefix}sound add\`: add a sound\n\`${guild_config.other.prefix}sound list\`: list all sounds\n\`${guild_config.other.prefix}sound play\`: play a sound`,
+                content: `invalid subcommand: \`${args.subcommand}\`; use any of the following subcommands:\n\`${guild_config.other.prefix}sound get\`: get a sound\n\`${guild_config.other.prefix}sound add\`: add a sound\n\`${guild_config.other.prefix}sound list\`: list all sounds\n\`${guild_config.other.prefix}sound play\`: play a sound`,
                 ephemeral: guild_config.other.use_ephemeral_replies,
             });
             return;
