@@ -27,7 +27,7 @@ $SPLIT$
   - `processingType`: allows you to swap between various "processing..." types. there's the `default`, where it just sends a message containing "processing..." and edits it with updates and stuff. there's `typing`, where it just starts typing in the channel, and finally there's `none`, which makes it do nothing as expected.
   - `enableTemplating`: whether or not to enable prompt templating. this is a new system that will replace some of the prompt's content with generated content, sometimes static sometimes dynamic. some of it is just like a shorthand, ex. `${slangtable}` is static and just outputs my slang table. others are dynamic, ex. `${guildemojis}` which outputs a list of all guild-based emojis available.
 -# if you have suggestions for more dynamic prompt stuff like this lmk
-$SPLIT$
+$SPLIT_EMBED$
 ## a basically brand new p/prompt command
 the p/prompt command has been almost completely redone from the ground up
 -# this is the main reason why i even did this in the first place, the last iteration was a ~1000 line horrendous nigh-unreadable mess of a file which was basically impossible to build anything into.
@@ -47,7 +47,7 @@ the p/prompt command has been almost completely redone from the ground up
 - moderately related side note: `p/conversation configure` now uses the same configurator thing as `p/prompt edit` does
 -# idk if it did this before but i dont think it did!
 -# either way its Different now
-$SPLIT$
+$SPLIT_EMBED$
 ## tool changes
 - request_url has been greatly improved:
   - no longer uses just plain fetch(), instead uses an actual browser. means that the resulting content will be much closer to what actual people see.

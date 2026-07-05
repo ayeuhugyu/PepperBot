@@ -61,7 +61,7 @@ export async function replaceContentOut(content: string, conversation: Conversat
         users: content.matchAll(/<@\!?(.*?)>/gm),
         channels: content.matchAll(/\!?<#(.*?)>/gm),
         roles: content.matchAll(/<@&\!?(.*?)>/gm),
-        emojis: content.matchAll(/:([\w]+):/gm),
+        emojis: content.matchAll(/<?:([\w]+):>?/gm),
     };
 
     if (mentions.users && client) {
