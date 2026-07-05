@@ -39,23 +39,27 @@ export function makePromptRefresher(sent: Message<true> | InteractionResponse<bo
 }
 
 export function makeModelRefresher(sent: Message<true> | InteractionResponse<boolean>, model: AnyModel, getParameters: () => ReturnType<Conversation<AnyModel>["getModelParameters"]>) {
+    const components: ActionRow[] = [];
+
+    for (let i = 0; i < Math.ceil(Object.values(model.parameters).length / 5); i++) {
+        components.push(new ActionRow({ components: [] }));
+    }
+
+    Object.values(model.parameters).forEach((p, i) => {
+        (components[Math.floor(i / 5)] as ActionRow).components.push(new Button({
+            custom_id: `editmodel_${p.key}`,
+            label: p.key,
+            style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
+        }));
+    });
+
     return async () => {
         await action.edit(sent, {
             components: [
                 new TextDisplay({
                     content: `which model parameter would you like to configure?\ncurrent values:\n\`\`\`json\n${JSON.stringify(getParameters(), null, 4)}\n\`\`\``,
                 }),
-                new ActionRow({
-                    components: [
-                        ...Object.values(model.parameters).map((p, i) => {
-                            return new Button({
-                                custom_id: `editmodel_${p.key}`,
-                                label: p.key,
-                                style: (i % 2 == 0) ? ButtonStyle.Primary : ButtonStyle.Secondary,
-                            });
-                        })
-                    ]
-                }),
+                ...components,
                 new ActionRow({
                     components: [
                         new Button({
