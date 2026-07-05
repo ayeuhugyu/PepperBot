@@ -111,7 +111,10 @@ export class CommandManager {
         const rest = new REST().setToken(process.env.DISCORD_TOKEN!);
         const json = Array.from(this.mappings.values())
             .filter(({ command, type }) => type === CommandEntryType.Command && command.input_types.includes(InvokerType.Interaction))
-            .map(({ command }) => command.toJSON())
+            .map(({ command }) => command.toJSON());
+
+        log.debug(`deploying commands with target ${target} and json`);
+        log.debug(json);
 
         const route = target
             ? Routes.applicationGuildCommands
