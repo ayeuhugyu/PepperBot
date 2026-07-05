@@ -20,7 +20,7 @@ const command = new Command(
                 required: true,
             }),
             new CommandOption({
-                name: 'useDefaultContent',
+                name: 'use-default-content',
                 description: 'if true, will use default content',
                 long_description: 'if true, content will be set to that of the official default prompt. this makes it easier to make small modifications but keep the same personality. to use this from text commands, put "--default" into the input.',
                 type: CommandOptionType.String,
