@@ -92,9 +92,15 @@ async function formatMessage(message: AnyGPTMessage, conversation: Conversation)
 
             return [userdata];
         case GPTMessageType.Assistant:
+            let content = message.content;
+
+            if (conversation.getPromptParameters().IOReplacements) {
+                content = await replaceContentIn(message.content);
+            }
+
             const assistantdata: ChatCompletionAssistantMessageParam = {
                 role: "assistant",
-                content: message.content,
+                content: content,
                 tool_calls: undefined,
             };
             let toolResponseData: ChatCompletionToolMessageParam[] | undefined = undefined;
