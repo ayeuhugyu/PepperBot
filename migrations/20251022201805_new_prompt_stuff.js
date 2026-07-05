@@ -46,7 +46,7 @@ exports.up = async function(knex) {
                     user_id: record.author_id,
                     author_id: record.author_id,
                     prompt_name: record.name,
-                }).onConflict("author_id").merge();
+                }).onConflict("user_id").merge();
             }
             await knex("prompts").insert({
                 name: record.name,
