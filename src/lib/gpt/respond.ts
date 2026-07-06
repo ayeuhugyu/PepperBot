@@ -44,6 +44,7 @@ export async function respond(message: Message<true>, forceTypingType?: "default
     log.debug(`gpt handler invoked for ${message.author.username} in ${message.channel?.name} (${message.channel?.id}) with content "${message.content}"`);
 
     // first, if it includes a direct mention we start a new conversation.
+    let isNewConversation = true;
     let conversation = new Conversation();
     const directMention = message.content.replaceAll("@!", "@").includes(`<@${message.client.user?.id}>`)
 
@@ -54,7 +55,10 @@ export async function respond(message: Message<true>, forceTypingType?: "default
         if (!directMention) {
             // if it wasn't a direct mention, use the referenced conversation
             log.debug(`found conversation ${referencedConversation?.id} based on reference id ${message.reference.messageId}`);
-            if (referencedConversation) conversation = referencedConversation;
+            if (referencedConversation) {
+                conversation = referencedConversation;
+                isNewConversation = false;
+            }
         }
 
         // if there was no referenced conversation OR it WAS a direct mention, add the referenced message to the conversation
@@ -68,15 +72,17 @@ export async function respond(message: Message<true>, forceTypingType?: "default
 
     if (useLatestConversation) {
         conversation = await getUsersLatestConversation(message.author.id);
+        isNewConversation = false;
     }
 
     if (await shouldForceNextNew(message.author.id)) {
         log.debug(`forcing new conversation for ${message.author.id}`);
         conversation = new Conversation();
+        isNewConversation = true;
     }
 
     // now that we're done making sure our conversation is right, use the overides
-    await conversation.useOverrideData(message.author.id);
+    await conversation.useOverrideData(message.author.id, isNewConversation);
 
     // add our message
     conversation.addMessage(await GPTUserMessage.fromMessage(message));

@@ -345,9 +345,9 @@ export class Conversation<M extends AnyModel = AnyModel> {
         this.getPromptParameters = this.getPromptParameters.bind(this);
     }
 
-    async useOverrideData(userid: string) {
+    async useOverrideData(userid: string, isNewConversation: boolean = true) {
         const userPromptDefault = await database("prompt_defaults").where({ user_id: userid }).first();
-        if (userPromptDefault) {
+        if (userPromptDefault && isNewConversation) {
             this.setPrompt(((await Prompt.fromName(userPromptDefault.author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", userPromptDefault.prompt_name ?? "default")) ?? (await getDefaultPrompt())) as Prompt<M>);
             log.debug(`changed prompt of conversation ${this.id} to \`${this.prompt.author.username}/${this.prompt.name}\` as it is ${userid}'s default prompt`);
         }
