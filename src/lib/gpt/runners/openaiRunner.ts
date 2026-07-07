@@ -5,7 +5,7 @@ import { Conversation } from "../conversation";
 import * as log from "../../log";
 import { AnyTool, CustomTool, CustomToolParameter, Tool, ToolParameter } from "../toolTypes";
 import { ModelName } from "../models";
-import { replaceContentIn, replaceContentOut } from "../contentReplace";
+import { omitSelfMentions, replaceContentIn, replaceContentOut } from "../contentReplace";
 import { applyPromptTemplating } from "../promptTemplating";
 
 export const openaiDefault = new OpenAI({
@@ -30,8 +30,12 @@ async function formatMessage(message: AnyGPTMessage, conversation: Conversation)
             if (message.content.length > 0) {
                 let content = message.content;
 
+                if (conversation.getPromptParameters().omitSelfMentions) {
+                    content = await omitSelfMentions(content);
+                }
+
                 if (conversation.getPromptParameters().IOReplacements) {
-                    content = await replaceContentIn(message.content);
+                    content = await replaceContentIn(content);
                 }
 
                 (userdata.content as ChatCompletionContentPart[]).push({

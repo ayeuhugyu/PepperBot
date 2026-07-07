@@ -7,6 +7,10 @@ export function initReplacerClient(inputclient: Client) {
     client = inputclient
 }
 
+export async function omitSelfMentions(content: string) {
+    return content.replaceAll(new RegExp(` ?<@!?${process.env.DISCORD_OAUTH_CLIENT_ID}>`, "gm"), ""); // TODO: this could be innacurate for things like codeblocks which wouldn't actually mention stuff
+}
+
 export async function replaceContentIn(content: string) {
     const mentions = {
         users: content.matchAll(/<@!?(\d+)>/gm),

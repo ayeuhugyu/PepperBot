@@ -40,7 +40,7 @@ const command = new Command(
             "p/prompt edit",
             "p/prompt edit my prompt"
         ],
-        aliases: ["build", "builder"],
+        aliases: ["build", "builder", "configure"],
         argument_order: "<name?>"
     },
     getArgumentsTemplate(GetArgumentsTemplateType.SingleStringWholeMessage, ["name"]),

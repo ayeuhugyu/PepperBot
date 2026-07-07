@@ -36,6 +36,11 @@ export const promptParameterTypings = { // no need to remake this type just beca
         description: "whether or not to enable the input / output replacements. when true (default), user, channel, and role mentions will be replaced with their actual names instead of their id's. when false, they will be left untouched. note that the bot will still have mass pings (@everyone, @here, and all role mentions) replaced, assuming the server was not configured otherwise.",
         schema: boolSchema.default(true),
     },
+    "omitSelfMentions": {
+        key: "omitSelfMentions",
+        description: "if true, self mentions will be hidden from the bot. self mentions can be annoying and cause the bot to hallucinate you talking to someone else, so this solves that issue.",
+        schema: boolSchema.default(true),
+    },
     "enableTemplating": {
         key: "enableTemplating",
         description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
@@ -46,6 +51,7 @@ export const promptParameterTypings = { // no need to remake this type just beca
 export const defaultPromptParameters: InferModelParameters<typeof promptParameterTypings> = {
     processingType: "default",
     IOReplacements: true,
+    omitSelfMentions: true,
     enableTemplating: true,
 }
 
