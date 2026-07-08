@@ -32,7 +32,7 @@ export async function showEditContentModal(prompt: AnyPrompt, interaction: Butto
     prompt.content = response.fields.getTextInputValue("data_input");
     await prompt.write();
     await action.edit(sent, { components: await refreshMainPromptEmbed(prompt), components_v2: true });
-    await response.reply({ content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 15) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using \`${guild_config.other.prefix}prompt generate\` to make it longer.` : ""}`, flags: MessageFlags.Ephemeral });
+    await response.reply({ content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content.slice(0, 1500)}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 15) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using \`${guild_config.other.prefix}prompt generate\` to make it longer.` : ""}`, flags: MessageFlags.Ephemeral });
 
     return;
 }

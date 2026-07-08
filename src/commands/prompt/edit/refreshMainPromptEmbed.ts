@@ -40,7 +40,7 @@ export async function refreshMainPromptEmbed(prompt: AnyPrompt, disabled: boolea
                     }),
                 }),
                 new TextDisplay({
-                    content: `\n${action.fixMessage({ content: prompt.content.slice(0, 1000), allowOverflow: true }).content!}${(prompt.content.length > 1000) ? "... \n(cut due to length)" : ""}\n`
+                    content: `\n${action.fixMessage({ content: prompt.content.slice(0, 1000) }).content!}${(prompt.content.length > 1000) ? "... \n(cut due to length)" : ""}\n`
                 }),
                 new Separator(),
                 new ActionRow({
