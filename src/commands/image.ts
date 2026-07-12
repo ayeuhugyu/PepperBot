@@ -4,6 +4,8 @@ import { getArgumentsTemplate, GetArgumentsTemplateType, CommandAccessTemplates 
 import { CommandTag, InvokerType, CommandOptionType, SubcommandDeploymentApproach } from "../lib/classes/command_enums";
 import { generateImage } from "../lib/gpt/basic";
 import { Message } from "discord.js";
+import * as log from "../lib/log";
+import { textToAttachment } from "../lib/attachment_manager";
 
 let lastUsedImageAt: { [key: string]: number } = {};
 let currentlyGenerating: { [key: string]: boolean } = {};
@@ -59,20 +61,22 @@ const image = new Command(
         try {
             if (args.prompt) {
                 const sent = await action.reply(invoker, { content: "generating image, please wait...", ephemeral: guild_config.useEphemeralReplies }) as Message;
-                const url: any = await generateImage(args.prompt); // string | Error (but ts screams at me because its unknown)
-                if (typeof url !== "string") {
+                const data_base64: any = await generateImage(args.prompt); // string | Error (but ts screams at me because its unknown)
+                if (typeof data_base64 !== "string") {
                     await action.edit(sent, {
-                        content: "failed to generate image. error: " + url.invoker,
+                        content: "failed to generate image. error: " + (data_base64?.message ?? JSON.stringify(data_base64)),
                         ephemeral: guild_config.useEphemeralReplies
                     });
+                    log.error(data_base64);
                     return;
                 }
                 lastUsedImageAt[userId] = Date.now();
+                const image_bytes = Buffer.from(data_base64, "base64");
                 action.edit(sent, {
-                    files: [{ name: "image.png", attachment: url }],
-                    content: `image generated from prompt: \`${args.prompt}\`\nopenai deletes these images after 60 minutes, so save the file if you want it for later. the next time you can generate an image is <t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:T>). (this stuff's expensive, sorry!)`,
+                    files: [{ name: "image.png", attachment: image_bytes }],
+                    content: `image generated from prompt: \`${args.prompt}\`\nthe next time you can generate an image is <t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:R> (<t:${Math.floor((lastUsedImageAt[userId] + imageCooldown) / 1000)}:T>). (this stuff's expensive, sorry!)`,
                 });
-                return new CommandResponse({ pipe_data: { image_url: url }});
+                return new CommandResponse({ pipe_data: { image_url: data_base64 }});
             } else {
                 action.reply(invoker, "provide a prompt to use you baffoon!");
                 return;

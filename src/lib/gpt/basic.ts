@@ -6,17 +6,18 @@ export async function generateImage(prompt: string) {
     try {
         const now = performance.now()
         const completion = await openai.images.generate({
-            model: "dall-e-3",
+            model: "gpt-image-1-mini",
             prompt: prompt,
             n: 1,
             size: "1024x1024",
         });
         log.info(`generated gpt image in ${(performance.now() - now).toFixed(3)}ms`)
         await incrementGPTResponses();
+        log.debug(completion);
         if (!completion.data) { // this shouldn't happen
             return new Error("no completion data")
         }
-        return completion.data[0].url;
+        return completion.data[0].b64_json;
     } catch (err) {
         return err; // 99% of errors are due to filtering
     }
