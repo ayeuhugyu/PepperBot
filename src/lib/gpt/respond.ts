@@ -219,12 +219,14 @@ export async function respond(message: Message<true>, forceTypingType?: "default
 
     if (sent) {
         const latestAssistantMessage = conversation.getLatestMessage(GPTMessageType.Assistant);
-        (conversation.messages.find(m => m.id === latestAssistantMessage?.id) as GPTAssistantMessage).discordData = {
-            messageId: sent.id,
-            channelId: sent.channelId,
-            referenceMessageId: sent.reference?.messageId,
-            guildId: sent.guildId ?? undefined,
-        };
+        if (latestAssistantMessage && conversation.messages.find(m => m.id === latestAssistantMessage.id)) {
+            (conversation.messages.find(m => m.id === latestAssistantMessage.id) as GPTAssistantMessage).discordData = {
+                messageId: sent.id,
+                channelId: sent.channelId,
+                referenceMessageId: sent.reference?.messageId,
+                guildId: sent.guildId ?? undefined,
+            };
+        }
     }
 
     await conversation.write();
