@@ -116,16 +116,20 @@ export async function replaceContentOut(content: string, conversation: Conversat
     }
 
     if (mentions.emojis) {
+        const mentionMap: Record<string, string> = {};
         for (const mention of mentions.emojis) {
             try {
                 const emoji = guild?.emojis.cache.find(e => e.name === mention[1])
                 if (emoji) {
-                    content = content.replaceAll(mention[0], `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`);
+                    mentionMap[mention[0]] = `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
                 }
             } catch {
                 log.warn(`error finding emoji with name ${mention[1]}`);
             }
         }
+        Object.entries(mentionMap).forEach(([input, output]) => {
+            content = content.replaceAll(input, output);
+        });
     }
 
     content = content.replaceAll("<@everyone>", "@everyone").replaceAll("<@here>", "@here"); // the handling of these not pinging everyone is done by the action script, dont worry.
