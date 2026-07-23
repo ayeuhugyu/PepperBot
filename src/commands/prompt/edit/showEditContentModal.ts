@@ -1,5 +1,5 @@
 import { ButtonInteraction, CacheType, InteractionResponse, LabelBuilder, Message, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import { AnyPrompt } from "../../../lib/gpt/promptManager";
+import { AnyPrompt, setActivePrompt } from "../../../lib/gpt/promptManager";
 import { GuildConfig } from "../../../lib/guild_config_manager";
 import { TextDisplay } from "../../../lib/classes/components";
 import * as action from "../../../lib/discord_action";
@@ -32,6 +32,7 @@ export async function showEditContentModal(prompt: AnyPrompt, interaction: Butto
     prompt.content = response.fields.getTextInputValue("data_input");
     await prompt.write();
     await action.edit(sent, { components: await refreshMainPromptEmbed(prompt), components_v2: true });
+    await setActivePrompt(response.user.id, response.user.id, prompt.name);
     await response.reply({ content: `prompt content of \`${prompt.name}\` set to \`\`\`\n${prompt.content.slice(0, 1500)}\`\`\`\nyour next conversation will also now use this prompt.${(prompt.content.split(" ").length < 15) ? `\n\ni suspect your prompt is too short to cause any meaningful change, consider using \`${guild_config.other.prefix}prompt generate\` to make it longer.` : ""}`, flags: MessageFlags.Ephemeral });
 
     return;

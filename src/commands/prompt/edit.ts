@@ -17,6 +17,7 @@ import { startConfiguringModel } from "./edit/startConfiguringModel";
 import { refreshMainPromptEmbed } from "./edit/refreshMainPromptEmbed";
 import { createNewPrompt } from "./edit/createNewPrompt";
 import { startConfiguringTools } from "./edit/startConfiguringTools";
+import { showGenerateContentModal } from "./edit/showGeneratePromptModal";
 
 const command = new Command(
     {
@@ -113,6 +114,8 @@ const command = new Command(
                         return await startConfiguringModel(sent, prompt, invoker);
                     case "editContent": // edit the content
                         return await showEditContentModal(prompt, interaction, sent, guild_config);
+                    case "generateContent":
+                        return await showGenerateContentModal(prompt, interaction, sent, guild_config);
                 }
             });
 
