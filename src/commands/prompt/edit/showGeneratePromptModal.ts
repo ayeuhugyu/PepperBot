@@ -20,9 +20,9 @@ export async function showGenerateContentModal(prompt: AnyPrompt, interaction: B
 
     const modal = new ModalBuilder()
         .setCustomId(`generateContentModal`)
-        .setTitle(`generate ${prompt.name}'s content`)
+        .setTitle(`generate prompt content`)
         .addTextDisplayComponents(new TextDisplay({
-            content: `not wanting to write the whole prompt yourself? you can AI-generate its content using this menu, equivalent to \`${guild_config.other.prefix}prompt generate\``,
+            content: `generate ${prompt.name}'s content\n\nnot wanting to write the whole prompt yourself? you can AI-generate its content using this menu, equivalent to \`${guild_config.other.prefix}prompt generate\``,
         }))
         .addLabelComponents(label);
 

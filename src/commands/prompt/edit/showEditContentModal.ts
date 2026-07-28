@@ -19,9 +19,9 @@ export async function showEditContentModal(prompt: AnyPrompt, interaction: Butto
 
     const modal = new ModalBuilder()
         .setCustomId(`editContentModal`)
-        .setTitle(`edit ${prompt.name}'s content`)
+        .setTitle(`edit prompt content`)
         .addTextDisplayComponents(new TextDisplay({
-            content: `edit ${prompt.name}'s content\nneed bigger than this? you can use \`${guild_config.other.prefix}prompt set\` with text attachments to achieve ~~Un-~~ Less-limited prompt sizes`,
+            content: `edit ${prompt.name}'s content\n\nneed bigger than this? you can use \`${guild_config.other.prefix}prompt set\` with text attachments to achieve ~~Un-~~ Less-limited prompt sizes`,
         }))
         .addLabelComponents(label);
 
