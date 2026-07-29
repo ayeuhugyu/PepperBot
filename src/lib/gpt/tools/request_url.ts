@@ -3,7 +3,7 @@ import { Tool, ToolErrorResponse, ToolSuccessResponse } from "../toolTypes";
 import * as cheerio from "cheerio";
 import TurndownService from 'turndown';
 import puppeteer from 'puppeteer-extra';
-import { DEFAULT_INTERCEPT_RESOLUTION_PRIORITY } from "puppeteer";
+import { DEFAULT_INTERCEPT_RESOLUTION_PRIORITY, Page } from "puppeteer";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import AdBlockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import { Browser } from "puppeteer";
@@ -56,11 +56,13 @@ export default new Tool<typeof parameters, string>({
         }
 
         let html: string | undefined;
-        const browser = await getBrowser();
-        log.debug(`fetched browser at ${browser.process()?.pid}`);
 
-        const page = await browser.newPage();
+        let page: Page;
         try {
+            const browser = await getBrowser();
+            log.debug(`fetched browser at ${browser.process()?.pid}`);
+
+            page = await browser.newPage();
             await page.setViewport({ width: 1920, height: 1080 });
             page.setDefaultTimeout(5000);
             page.setDefaultNavigationTimeout(5000);
@@ -104,7 +106,7 @@ export default new Tool<typeof parameters, string>({
             log.warn(err);
         } finally {
             setTimeout(async () => {
-                await page.close().catch(log.debug);
+                await page?.close().catch(log.debug);
             }, 30000); // put this on a timeout to allow things to keep caching ven if we fail
         }
 
