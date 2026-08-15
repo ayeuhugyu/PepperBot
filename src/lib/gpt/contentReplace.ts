@@ -119,7 +119,7 @@ export async function replaceContentOut(content: string, conversation: Conversat
         const mentionMap: Record<string, string> = {};
         for (const mention of mentions.emojis) {
             try {
-                const emoji = guild?.emojis.cache.find(e => e.name === mention[1])
+                const emoji = guild?.emojis.cache.find(e => e.name === mention[1]) ?? guild?.emojis.cache.find(e => e.name.toLowerCase() === mention[1].toLowerCase());
                 if (emoji) {
                     mentionMap[mention[0]] = `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
                 }
