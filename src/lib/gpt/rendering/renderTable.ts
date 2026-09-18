@@ -3,6 +3,7 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { writeFile } from "node:fs/promises";
 
 const parser = unified()
     .use(remarkParse)
@@ -252,8 +253,13 @@ export async function renderTable(
                     dpi: 72,
                 },
             })
+                .toColourspace("srgb")
                 .png()
                 .toBuffer({ resolveWithObject: true });
+
+            if (rowIndex === 0 && column === 0) {
+                await writeFile("cache/attachments/table-cell.png", data);
+            }
 
             row.push({
                 data,
@@ -355,6 +361,7 @@ export async function renderTable(
     `;
 
     return sharp(Buffer.from(svg))
+        .toColourspace("srgb")
         .composite(overlays)
         .png()
         .toBuffer();
