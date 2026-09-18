@@ -6,6 +6,8 @@ import { CustomTool, ToolErrorResponse } from "./toolTypes";
 import { OmitMethods } from "../omitMethods";
 import * as log from "../log";
 import { Mutex } from "async-mutex";
+import { formatComponents } from "./rendering/formatComponents";
+import { ComponentType, TextDisplay } from "../classes/components";
 
 let activeCustomToolPrompts: string[] = [];
 
@@ -206,14 +208,39 @@ export async function respond(message: Message<true>, forceTypingType?: "default
 
     // and then send the response
     let usedFunction: typeof action.reply | typeof action.edit = action.reply;
-    let firstArgument = message;
+    let applicableMessage = message;
     if (processingMessage) {
         usedFunction = action.edit;
-        firstArgument = processingMessage as Message<true>;
+        applicableMessage = processingMessage as Message<true>;
     }
 
-    const sent = await usedFunction(firstArgument, {
-        content: response?.content,
+    if (!response) {
+        await usedFunction(applicableMessage, { content: "something went wrong, response was undefined." });
+        return;
+    }
+
+    const formatted = await formatComponents(response.content).catch((err) => {
+        log.warn(`component formatter errored: ${err}`);
+    });
+
+    const formattedIsWorthwhile = !formatted?.components.every((component) => component.type == ComponentType.TextDisplay);
+
+    if (formatted && formattedIsWorthwhile) {
+        usedFunction = action.reply;
+        applicableMessage = message;
+        await processingMessage?.delete().catch((err) => {
+            log.warn(`failed to delete processing message: ${err}`);
+        });
+    }
+
+    const sent = (conversation.getPromptParameters().componentMessages && formatted && formattedIsWorthwhile) ? await usedFunction(applicableMessage, {
+        // content: response?.content,
+        // attachments: // eventually....
+        components: formatted.components,
+        files: formatted.attachments,
+        components_v2: true,
+    }) : await usedFunction(applicableMessage, {
+        content: response.content,
         // attachments: // eventually....
     });
 

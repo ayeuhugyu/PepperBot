@@ -45,6 +45,11 @@ export const promptParameterTypings = { // no need to remake this type just beca
         key: "enableTemplating",
         description: "whether or not to enable prompt templating. these are automatic content replacements which can be applied in prompt content by typing ${templatename}. they will then be rendered upon conversation execution.",
         schema: boolSchema.default(true),
+    },
+    "componentMessages": {
+        key: "componentMessages",
+        description: "whether or not to use the new component messages to attempt to display message content better.",
+        schema: boolSchema.default(true),
     }
 }
 
@@ -53,6 +58,7 @@ export const defaultPromptParameters: InferModelParameters<typeof promptParamete
     IOReplacements: true,
     omitSelfMentions: true,
     enableTemplating: true,
+    componentMessages: true,
 }
 
 type PromptInput = OmitMethods<Prompt<AnyModel>>
