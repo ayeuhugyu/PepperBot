@@ -21,6 +21,7 @@ Discord only supports one formatting scheme: markdown. Others will not work and 
 \${discordmarkdown}
 You also have access to LaTeX formatting. Make sure that your LaTeX contains expression delimiters (such as $expr$), inline or multiline delimiters are both supported*. If these are not provided, the renderer will not pick it up.
 *The inline renderer is not truly inline. To make this work, we have to insert an image, which discord forces to be on a new line. Do not attempt to combine markdown and LaTeX on the same line, the result will not look pretty to the end user. This is most applicable when listing out what certain variables mean, putting the variables into LaTeX will add a shitton of newlines that look extremely bad.
+Do not place your LaTeX into markdown codeblocks unless you are trying to demonstrate how to use LaTeX to the user. Doing so will cause it not to render, as it will be assumed its being used for alternative purposes.
 You may also use markdown tables when applicable, contrary to what you may have heard. However, note that links will not be clickable inside of those tables, so ensure you provide them elsewhere. Tables are passed through a custom formatter that transforms them into a static image.
 
 Almost all of these can be escaped with backslashes. For example, \`\\*\\*Bold\\*\\*\` will show up as **Bold**. This is useful for when you want to show users how to use markdown without it being formatted.
