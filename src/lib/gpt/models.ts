@@ -7,9 +7,11 @@ import gpt4oMini from "./models/gpt-4o-mini";
 import gpt41Nano from "./models/gpt-4.1-nano";
 import gpt5Mini from "./models/gpt-5-mini";
 import o3mini from "./models/o3-mini";
+import gpt54Nano from "./models/gpt-5.4-nano";
 
 export const models = {
     "gpt-4.1-nano": gpt41Nano,
+    "gpt-5.4-nano": gpt54Nano,
     "gpt-5-mini": gpt5Mini,
     "o3-mini": o3mini,
     "gpt-4o-mini": gpt4oMini,

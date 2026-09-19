@@ -10,6 +10,7 @@ export type ModelRunner = (conversation: Conversation) => Promise<(GPTAssistantM
 
 export const modelRunnerIndex: Record<ModelName, ModelRunner> = {
     "gpt-3.5-turbo": runOpenAI,
+    "gpt-5.4-nano": runOpenAI,
     "gpt-4.1-nano": runOpenAI,
     "gpt-4o-mini": runOpenAI,
     "gpt-5-mini": runOpenAI,
