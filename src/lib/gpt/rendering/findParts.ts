@@ -128,6 +128,27 @@ export function findMath(content: string): MathMatch[] {
             return;
         }
 
+        const raw = content.slice(range.start, range.end);
+
+        const isSingleDollarInline =
+            node.type === "inlineMath" &&
+            raw.startsWith("$") &&
+            !raw.startsWith("$$");
+
+        if (isSingleDollarInline) {
+            const afterOpening = content[range.start + 1] ?? "";
+            const beforeClosing = content[range.end - 2] ?? "";
+            const afterClosing = content[range.end] ?? "";
+
+            if (
+                /\s/.test(afterOpening) ||
+                /\s/.test(beforeClosing) ||
+                /[0-9]/.test(afterClosing)
+            ) {
+                return;
+            }
+        }
+
         candidates.push({
             ...range,
             latex: node.value ?? "",
