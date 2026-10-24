@@ -30,7 +30,7 @@ function refreshModelSelector(currentModel: AnyModel) {
         (components[1 + Math.floor(i / 5)] as ActionRow).components.push(new Button({
             custom_id: `selectModel_${model.name}`,
             label: model.name,
-            style: (model.name === currentModel.name) ? ButtonStyle.Success : (model.name === "gpt-4.1-nano" ? ButtonStyle.Primary : ButtonStyle.Secondary),
+            style: (model.name === currentModel.name) ? ButtonStyle.Success : (model.name === "gpt-6-luna" ? ButtonStyle.Primary : ButtonStyle.Secondary),
             disabled: model.name === currentModel.name
         }));
     });
@@ -71,7 +71,7 @@ export async function startConfiguringModel(sent: Message<true> | InteractionRes
             if (selectModel == "selectModel") {
                 const model = Object.values(models).find(m => m.name === modelName);
                 if (!model) {
-                    currentModel = models['gpt-4.1-nano'];
+                    currentModel = models['gpt-6-luna'];
                 } else {
                     currentModel = model;
                 }

@@ -64,7 +64,7 @@ exports.up = async function(knex) {
 
                 origin: null, // origin doesn't exist in the previous table
 
-                model: parsedAPIParameters["model"] ?? "gpt-4.1-nano",
+                model: parsedAPIParameters["model"] ?? "gpt-6-luna",
 
                 enabled_tools: JSON.stringify(JSON.parse(record.tools) ?? ["request_url", "search"]),
                 custom_tools: JSON.stringify([]), // custom tools couldn't be created before this point, while theoretically the data structures for them existed none will have been created

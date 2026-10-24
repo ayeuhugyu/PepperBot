@@ -9,7 +9,7 @@ exports.up = async function(knex) {
         table.string("prompt_name").notNullable();
         table.json("prompt_parameter_overrides").notNullable().defaultTo("{}");
         table.json("model_parameter_overrides").notNullable().defaultTo("{}");
-        table.string("model").notNullable().defaultTo("gpt-4.1-nano");
+        table.string("model").notNullable().defaultTo("gpt-6-luna");
 
         table.foreign(["prompt_author_id", "prompt_name"])
             .references(["author_id", "name"])
@@ -22,7 +22,7 @@ exports.up = async function(knex) {
         table.string("prompt_name");
         table.json("prompt_parameter_overrides").defaultTo("{}");
         table.json("model_parameter_overrides").defaultTo("{}");
-        table.string("model").defaultTo("gpt-4.1-nano");
+        table.string("model").defaultTo("gpt-6-luna");
 
         table.foreign(["prompt_author_id", "prompt_name"])
             .references(["author_id", "name"])

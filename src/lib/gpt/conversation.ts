@@ -34,7 +34,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
     prompt: Prompt<M> = defaultPrompt as unknown as Prompt<M>;
     promptParameterOverrides: Partial<InferModelParameters<typeof promptParameterTypings>> = {};
     modelParameterOverrides: Partial<InferModelParameters<M['parameters']>> = {};
-    model: M = models['gpt-4.1-nano'] as unknown as M;
+    model: M = models['gpt-6-luna'] as unknown as M;
     users: GPTUser[] = [];
     isRunningMutex: Mutex = new Mutex();
     readonly emitter = new EventEmitter() as TypedEventEmitter<{
@@ -355,7 +355,7 @@ export class Conversation<M extends AnyModel = AnyModel> {
         if (data) {
             if (data.prompt_author_id && data.prompt_name) this.setPrompt(((await Prompt.fromName(data?.prompt_author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", data?.prompt_name ?? "default")) ?? (await getDefaultPrompt())!) as Prompt<M>);
             log.debug(`changed prompt of conversation ${this.id} to \`${this.prompt.author.username}/${this.prompt.name}\` as it was set in ${userid}'s starting data overrides`);
-            if (data.model) this.model = ((data?.model ?? "") in models ? models[data?.model as keyof typeof models] : models["gpt-4.1-nano"]) as M;
+            if (data.model) this.model = ((data?.model ?? "") in models ? models[data?.model as keyof typeof models] : models["gpt-6-luna"]) as M;
             if (data.prompt_parameter_overrides) this.promptParameterOverrides = JSON.parse(data?.prompt_parameter_overrides ?? "{}");
             if (data.model_parameter_overrides) this.modelParameterOverrides = JSON.parse(data?.model_parameter_overrides ?? "{}");
             // now that this conversation has used these overrides, drop them
@@ -376,7 +376,7 @@ export async function getConversation(id?: string, noensure?: boolean): Promise<
     const dbmessages = await database("gpt_messages").select("*").where({ conversation_id: id });
 
     conversation.prompt = (await Prompt.fromName(dbmeta?.prompt_author_id ?? process.env.DISCORD_OAUTH_CLIENT_ID ?? "1209297323029565470", dbmeta?.prompt_name ?? "default")) ?? (await getDefaultPrompt());
-    conversation.model = (dbmeta?.model ?? "") in models ? models[dbmeta?.model as keyof typeof models] : models["gpt-4.1-nano"];
+    conversation.model = (dbmeta?.model ?? "") in models ? models[dbmeta?.model as keyof typeof models] : models["gpt-6-luna"];
     conversation.promptParameterOverrides = JSON.parse(dbmeta?.prompt_parameter_overrides ?? "{}");
     conversation.modelParameterOverrides = JSON.parse(dbmeta?.model_parameter_overrides ?? "{}");
     conversation.users = dbusers;

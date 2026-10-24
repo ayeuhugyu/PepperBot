@@ -8,8 +8,10 @@ import gpt41Nano from "./models/gpt-4.1-nano";
 import gpt5Mini from "./models/gpt-5-mini";
 import o3mini from "./models/o3-mini";
 import gpt54Nano from "./models/gpt-5.4-nano";
+import gpt6Luna from "./models/gpt-6-luna";
 
 export const models = {
+    "gpt-6-luna": gpt6Luna,
     "gpt-4.1-nano": gpt41Nano,
     "gpt-5.4-nano": gpt54Nano,
     "gpt-5-mini": gpt5Mini,

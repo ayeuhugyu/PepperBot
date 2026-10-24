@@ -4,7 +4,7 @@ import { ToolName, tools } from "./tools";
 import { AnyTool, CustomTool, Tool } from "./toolTypes";
 import z from "zod";
 import { OmitMethods } from "../omitMethods";
-import gpt41Nano from "./models/gpt-4.1-nano";
+import gpt41Nano from "./models/gpt-6-luna";
 import { models } from "./models";
 import * as log from "../log";
 import { Mutex } from "async-mutex";
