@@ -219,13 +219,13 @@ function formatToolParameters(
                 formatted[param.key].items = {
                     type: (param.schema as any).element?.type,
                 };
-            } else if (param.schema.type === "record") {
-                const record = param.schema as any;
+            } else if (param.schema.type === "default") {
+                const inner = (param.schema as any).innerType;
                 formatted[param.key] = {
-                    type: "object",
-                    additionalProperties: {
-                        type: record.valueType?.type ?? record.value?.type ?? "string",
-                    },
+                    type: inner.type === "record" ? "object" : inner.type,
+                    ...(inner.type === "record"
+                        ? { additionalProperties: { type: inner.valueType?.type ?? inner.value?.type ?? "string" } }
+                        : {}),
                     description: param.description,
                 };
             }
