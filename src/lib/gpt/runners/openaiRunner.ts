@@ -30,6 +30,7 @@ import {
     replaceContentOut,
 } from "../contentReplace";
 import { applyPromptTemplating } from "../promptTemplating";
+import z, { ZodRecord } from "zod";
 
 export const openaiDefault = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -205,36 +206,18 @@ function formatToolParameters(
     parameters: Record<string, ToolParameter | CustomToolParameter>,
 ): ParameterProperties {
     const formatted: ParameterProperties = {};
-
-    for (const paramKey in parameters) {
-        const param = parameters[paramKey];
-
+    for (const param of Object.values(parameters)) {
         if ("schema" in param) {
+            const jsonSchema = z.toJSONSchema(param.schema, { "target": "openapi-3.0" })
+            const { $schema, ...schema } = jsonSchema;
             formatted[param.key] = {
-                type: param.schema.type,
+                ...schema,
                 description: param.description,
             };
-
-            if (param.schema.type === "array") {
-                formatted[param.key].items = {
-                    type: (param.schema as any).element?.type,
-                };
-            } else if (param.schema.type === "default") {
-                const inner = (param.schema as any).innerType;
-                formatted[param.key] = {
-                    type: inner.type === "record" ? "object" : inner.type,
-                    ...(inner.type === "record"
-                        ? { additionalProperties: { type: inner.valueType?.type ?? inner.value?.type ?? "string" } }
-                        : {}),
-                    description: param.description,
-                };
-            }
         } else if (param.type === "string[]") {
             formatted[param.key] = {
                 type: "array",
-                items: {
-                    type: "string",
-                },
+                items: { type: "string" },
                 description: param.description,
             };
         } else {
@@ -244,7 +227,6 @@ function formatToolParameters(
             };
         }
     }
-
     return formatted;
 }
 
@@ -343,6 +325,8 @@ export async function runOpenAI(
     const tools: FunctionTool[] = supportsTools
         ? conversation.prompt.getTools().map(formatTool)
         : [];
+
+    log.debug("formatted tools: ", tools);
 
     const params = conversation.getModelParameters();
 
