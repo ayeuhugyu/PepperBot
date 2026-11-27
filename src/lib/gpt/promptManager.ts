@@ -4,7 +4,7 @@ import { ToolName, tools } from "./tools";
 import { AnyTool, CustomTool, Tool } from "./toolTypes";
 import z from "zod";
 import { OmitMethods } from "../omitMethods";
-import gpt41Nano from "./models/gpt-6-luna";
+import gpt6luna from "./models/gpt-6-luna";
 import { models } from "./models";
 import * as log from "../log";
 import { Mutex } from "async-mutex";
@@ -105,7 +105,7 @@ export interface PromptAuthor {
     avatar?: string,
 }
 
-export class Prompt<M extends AnyModel = typeof gpt41Nano> {
+export class Prompt<M extends AnyModel = typeof gpt6luna> {
     name: string;
     author: PromptAuthor;
     content: string = "[empty prompt]";
@@ -113,7 +113,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
     createdAt: Date = new Date();
     updatedAt: Date = new Date();
 
-    model: M = gpt41Nano as unknown as M;
+    model: M = gpt6luna as unknown as M;
 
     enabledTools: ToolName[] = defaultTools;
     customTools: CustomTool[] = [];
@@ -156,7 +156,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
         log.debug(`creating prompt from DB data for ${data.author_id}/${data.name}`);
 
         let model = models[data.model as keyof typeof models] as (AnyModel | undefined); // there's always a possibility i remove a model, in those cases we must be Prepared:tm:
-        if (!model) model = gpt41Nano;
+        if (!model) model = gpt6luna;
 
         const inputData: PromptInput = {
             name: data.name,
@@ -183,7 +183,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
     }
 
     static async new(name: string, author: User, useDefaultContent: boolean = false) {
-        return new Prompt<typeof gpt41Nano>({
+        return new Prompt<typeof gpt6luna>({
             name: name,
             author: {
                 id: author.id,
@@ -195,7 +195,7 @@ export class Prompt<M extends AnyModel = typeof gpt41Nano> {
             createdAt: new Date(),
             updatedAt: new Date(),
 
-            model: gpt41Nano,
+            model: gpt6luna,
 
             enabledTools: defaultTools,
             customTools: [],
